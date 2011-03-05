@@ -9,7 +9,7 @@ require 'set'
 class IRCMessageRouter
 	def initialize(connection)
 		@connection = connection
-		@listeners = Set.new
+		@listeners = Array.new
 	end
 
 	def route(msg)
@@ -20,11 +20,11 @@ class IRCMessageRouter
 	end
 
 	def register(listener)
-		@listeners.add listener
+		@listeners << listener
 	end
 
 	def unregister(listener)
-		@listeners.delete listener
+		@listeners.delete_if{|l| l == listener}
 	end
 
 	def send(raw)

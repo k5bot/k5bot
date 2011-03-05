@@ -2,14 +2,12 @@
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
 
-# IRCDefaultListener is the default message handler
+# IRCListener is the superclass to all listeners
 
-class IRCDefaultListener
+require 'IRC/IRCMessageRouter'
+
+class IRCListener
 	def initialize(router)
 		(@router = router).register self
-	end
-
-	def on_ping(msg)
-		@router.send(msg.params ? "PONG :#{msg.params.first}" : 'PONG')
 	end
 end

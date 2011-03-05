@@ -6,7 +6,9 @@
 # The proper way to end a connection is to call its disconnect method.
 
 require 'IRC/IRCConnection'
-require 'IRC/IRCDefaultListener'
+require 'IRC/IRCFirstListener'
+require 'IRC/IRCUserManager'
+require 'IRC/IRCChannelManager'
 
 class IRCClient
 	attr_reader :connections
@@ -17,7 +19,9 @@ class IRCClient
 
 	def connect(server, port, username, realname, nick, pass=nil, channels=nil)
 		@connections << c = IRCConnection.new(server, port, username, realname, nick, pass, channels)
-		IRCDefaultListener.new c.router	# Set default listener
+		fl = IRCFirstListener.new c.router	# Set first listener
+		um = IRCUserManager.new c.router	# Add user manager
+		cm = IRCChannelManager.new c.router	# Add channel manager
 		c.start
 	end
 
