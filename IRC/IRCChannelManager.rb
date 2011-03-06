@@ -4,9 +4,11 @@
 
 # IRCChannelManager keeps track of all joined channels.
 
+require 'IRC/IRCChannel'
+
 class IRCChannelManager < IRCListener
-	def initialize(router)
-		super
+	def initialize(bot)
+		super(bot.router)
 		@channels = {}
 	end
 

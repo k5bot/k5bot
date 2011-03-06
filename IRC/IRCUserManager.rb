@@ -8,8 +8,8 @@
 require 'IRC/IRCUser'
 
 class IRCUserManager < IRCListener
-	def initialize(router)
-		super
+	def initialize(bot)
+		super(bot.router)
 		@usernames = {}
 		@nicknames = {}
 	end

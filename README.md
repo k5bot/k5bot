@@ -3,6 +3,11 @@ K5 bot
 
 This is an IRC bot implemented in Ruby.
 
+Usage
+--------------------------------
+1. Copy `config_example.yaml` to `config.yaml` and set proper configuration.
+2. `./bot.rb`
+
 License
 --------------------------------
 This program is free software: you can redistribute it and/or modify

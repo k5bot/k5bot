@@ -6,7 +6,6 @@
 # messages that are important for things to function properly.
 
 require 'IRC/IRCListener'
-require 'IRC/IRCChannel'
 
 class IRCFirstListener < IRCListener
 	def on_ping(msg)

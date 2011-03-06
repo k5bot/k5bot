@@ -1,0 +1,12 @@
+# IRCBot config example
+---
+:server: irc.freenode.net
+:port: 6667
+:serverpass:
+:username: bot
+:nickname: bot
+:realname: Bot
+:userpass:
+:channels:
+- "#channel_one"
+- "#channel_two"
