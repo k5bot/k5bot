@@ -18,31 +18,31 @@ class IRCChannel < IRCListener
 
 	def on_332(msg)
 		return unless msg.params[1].eql? @name
-		@topic = msg.params.last
+		@topic = msg.message
 		false
 	end
 
 	def on_353(msg)
 		return unless msg.params[2].eql? @name
-		msg.params.last.split(/ /).each{|nickname| @nicknames.add nickname}
+		msg.message.split(/ /).each{|nickname| @nicknames.add nickname}
 		false
 	end
 
 	def on_join(msg)
-		return unless msg.params.last.eql? @name
+		return unless msg.message.eql? @name
 		@nicknames.add msg.nick
 		false
 	end
 
 	def on_part(msg)
-		return unless msg.params.last.eql? @name
+		return unless msg.message.eql? @name
 		@nicknames.delete msg.nick
 		false
 	end
 
 	def on_topic(msg)
 		return unless msg.params.first.eql? @name
-		@topic = msg.params.last
+		@topic = msg.message
 		false
 	end
 

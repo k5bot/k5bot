@@ -72,7 +72,7 @@ class IRCBot
 	end
 
 	def on_notice(msg)
-		if msg.params && (msg.params.last =~ /^You are now identified for .*#{@config[:username]}.*\.$/)
+		if msg.message && (msg.message =~ /^You are now identified for .*#{@config[:username]}.*\.$/)
 			@router.unregister self
 			joinChannels
 			true

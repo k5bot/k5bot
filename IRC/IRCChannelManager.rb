@@ -14,7 +14,7 @@ class IRCChannelManager < IRCListener
 
 	def on_join(msg)
 		return unless msg.nick.eql? @bot.config[:nickname]
-		msg.params.last.split(/ /).each do |c|
+		msg.message.split.each do |c|
 			@channels[c] = IRCChannel.new(@bot, c)
 		end
 		false
@@ -22,7 +22,7 @@ class IRCChannelManager < IRCListener
 
 	def on_part(msg)
 		return unless msg.nick.eql? @bot.config[:nickname]
-		msg.params.last.split(/ /).each do |c|
+		msg.message.split.each do |c|
 			@channels.delete(c)
 		end
 		false

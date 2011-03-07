@@ -58,10 +58,21 @@ class IRCMessage
 		@server ||= @prefix
 	end
 
+	# The first word of the message if it starts with !
 	def botcommand
 		return unless @command == :privmsg
-		bc = @params.last[/^\s*(#{@bot.config[:nickname]}\s*[:>,]?\s*)?!([\S]+)/i, 2]
+		bc = message[/^\s*(#{@bot.config[:nickname]}\s*[:>,]?\s*)?!([\S]+)/i, 2] if message
 		bc.to_sym if bc
+	end
+
+	# The last parameter
+	def message
+		@params.last if @params
+	end
+
+	# The message with nick prefix and botcommand removed if it exists, otherwise the whole message
+	def tail
+		message[/^\s*(#{@bot.config[:nickname]}\s*[:>,]?\s*)?!([\S]+)(.*)\s*/i, 3] || message if message
 	end
 
 	def private?
