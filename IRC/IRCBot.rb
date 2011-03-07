@@ -5,15 +5,15 @@
 # IRCBot
 
 require 'socket'
+require 'IRC/IRCUser'
 require 'IRC/IRCMessage'
 require 'IRC/IRCMessageRouter'
 require 'IRC/IRCFirstListener'
 require 'IRC/IRCUserManager'
 require 'IRC/IRCChannelManager'
-require 'IRC/IRCUser'
 
 class IRCBot
-	attr_reader :router, :userManager, :channelManager, :config
+	attr_reader :router, :userManager, :channelManager, :config, :lastsent, :lastreceived
 
 	def initialize(config = nil)
 		@config = config || {
@@ -35,7 +35,7 @@ class IRCBot
 		@router = IRCMessageRouter.new self
 		@router.register self
 
-		@firstListener = IRCFirstListener.new @router	# Set first listener
+		@firstListener = IRCFirstListener.new self	# Set first listener
 		@userManager = IRCUserManager.new self	# Add user manager
 		@channelManager = IRCChannelManager.new self	# Add channel manager
 	end
@@ -45,6 +45,7 @@ class IRCBot
 	end
 
 	def send(raw)
+		@lastsent = raw
 		str = raw.dup
 		str.gsub!(@config[:serverpass], '*****') if @config[:serverpass]
 		str.gsub!(@config[:userpass], '*****') if @config[:userpass]
@@ -53,8 +54,9 @@ class IRCBot
 	end
 
 	def receive(raw)
+		@lastreceived = raw
 		puts raw
-		@router.route IRCMessage.new(raw.chomp)
+		@router.route IRCMessage.new(self, raw.chomp)
 	end
 
 	def start

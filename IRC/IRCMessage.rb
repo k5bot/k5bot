@@ -16,8 +16,9 @@
 class IRCMessage
 	attr_reader :prefix, :command, :params
 
-	def initialize(raw)
+	def initialize(bot, raw)
 		@prefix, @command, @params = nil
+		@bot = bot
 		parse @raw = raw
 	end
 
@@ -55,5 +56,11 @@ class IRCMessage
 	def server
 		return if @prefix =~ /[@!]/
 		@server ||= @prefix
+	end
+
+	def botcommand
+		return unless @command.downcase.eql? 'privmsg'
+		bc = @params.last[/^\s*(#{@bot.config[:nickname]}\s*[:>,]?\s*)?!([\S]+)/i, 2]
+		bc.to_sym if bc
 	end
 end

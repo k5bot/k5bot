@@ -9,6 +9,10 @@ require 'IRC/IRCListener'
 
 class IRCFirstListener < IRCListener
 	def on_ping(msg)
-		@router.send(msg.params ? "PONG :#{msg.params.first}" : 'PONG')
+		@bot.send(msg.params ? "PONG :#{msg.params.first}" : 'PONG')
+	end
+
+	def on_263
+		@bot.send(@bot.lastsent)
 	end
 end

@@ -9,19 +9,21 @@ require 'IRC/IRCUser'
 
 class IRCUserManager < IRCListener
 	def initialize(bot)
-		super(bot.router)
+		super
 		@usernames = {}
 		@nicknames = {}
 	end
 
 	def on_353(msg)
 		msg.params.last.split(/ /).each{|nickname| update nickname}
+		false
 	end
-	alias on_rpl_namreply on_353
 
 	def on_privmsg(msg)
 		update msg.nick, msg.user, msg.host
+		false
 	end
+	alias on_join on_privmsg
 
 	private
 	def update(nickname=nil, username=nil, host=nil, realname=nil)

@@ -8,15 +8,57 @@ require 'set'
 require 'IRC/IRCListener'
 
 class IRCChannel < IRCListener
-	attr_reader :nicknames
+	attr_reader :name, :topic, :nicknames
 
-	def initialize(name, router)
-		super(router)
+	def initialize(bot, name)
+		super(bot)
+		@bot, @name = bot, name
 		@nicknames = Set.new
 	end
 
-	def on_353(msg)
-		msg.params.last.split(/ /).each{|nickname| @nicknames.add nickname}
+	def on_332(msg)
+		return unless msg.params[1].eql? @name
+		@topic = msg.params.last
+		false
 	end
-	alias on_rpl_namreply on_353
+
+	def on_353(msg)
+		return unless msg.params[2].eql? @name
+		msg.params.last.split(/ /).each{|nickname| @nicknames.add nickname}
+		false
+	end
+
+	def on_join(msg)
+		return unless msg.params.last.eql? @name
+		@nicknames.add msg.nick
+		false
+	end
+
+	def on_part(msg)
+		return unless msg.params.last.eql? @name
+		@nicknames.delete msg.nick
+		false
+	end
+
+	def on_topic(msg)
+		return unless msg.params.first.eql? @name
+		@topic = msg.params.last
+		false
+	end
+
+	def on_privmsg(msg)
+		return unless msg.params.first.eql? @name
+		return unless msg.botcommand
+		case msg.botcommand
+		when :nicks
+			privmsg("#{@nicknames.to_a.sort * ', '}")
+		when :topic
+			@bot.send("PRIVMSG #{@name} :#{@topic}")
+		end
+		false
+	end
+
+	def privmsg(text)
+		@bot.send("PRIVMSG #@name :#{text}") unless !text || text.strip.empty?
+	end
 end

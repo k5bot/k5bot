@@ -7,7 +7,7 @@
 require 'IRC/IRCMessageRouter'
 
 class IRCListener
-	def initialize(router)
-		(@router = router).register self
+	def initialize(bot)
+		(@bot = bot).router.register self
 	end
 end

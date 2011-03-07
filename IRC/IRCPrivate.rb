@@ -6,6 +6,6 @@
 
 class IRCPrivate < IRCListener
 	def on_privmsg(msg)
-		@router.send "PRIVMSG #{msg.nick} :You said #{msg.params.last}"
+		@bot.send "PRIVMSG #{msg.nick} :You said #{msg.params.last}"
 	end
 end
