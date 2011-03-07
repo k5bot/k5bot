@@ -15,6 +15,7 @@ class IRCMessageRouter
 	def route(msg)
 		meth = "on_#{msg.command.to_s}"
 		@listeners.each do |listener|
+			next unless listener
 			break if listener.__send__ meth, msg if listener.respond_to? meth
 		end
 	end

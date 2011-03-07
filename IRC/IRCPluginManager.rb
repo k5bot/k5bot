@@ -22,6 +22,9 @@ class IRCPluginManager < IRCListener
 			if p = @plugins[name.to_sym]
 				p.commands.keys.each{|c| @commands.delete c} if p.commands
 				@plugins.delete name.to_sym
+				@bot.router.unregister p
+				Object.send :remove_const, name.to_sym
+				true
 			end
 		rescue Exception => e
 			puts "Cannot unload plugin '#{name}': #{e}\n\t#{e.backtrace.join("\n\t")}"

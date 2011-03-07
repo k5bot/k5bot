@@ -8,6 +8,7 @@ require 'IRC/IRCPlugin'
 
 class Loader < IRCPlugin
 	def on_privmsg(msg)
+		return unless msg.tail
 		case msg.botcommand
 		when :load
 			msg.tail.split.each do |name|
@@ -17,17 +18,26 @@ class Loader < IRCPlugin
 				else
 					msg.reply "Cannot load '#{name}'."
 				end
-			end if msg.tail
+			end
+		when :unload
+			msg.tail.split.each do |name|
+				if @bot.pluginManager.unloadPlugin name
+					msg.reply "'#{name}' unloaded."
+				else
+					msg.reply "Cannot unload '#{name}'."
+				end
+			end
 		end
 	end
 
 	def describe
-		"Loads or reloads plugins."
+		"Loads, reloads, and unloads plugins."
 	end
 
 	def commands
 		{
-			:load => "reloads specified plugin"
+			:load => "loads or reloads specified plugin",
+			:unload => "unloads specified plugin"
 		}
 	end
 end
