@@ -10,3 +10,6 @@
 :channels:
 - "#channel_one"
 - "#channel_two"
+:plugins:
+- :Help
+- :Clock

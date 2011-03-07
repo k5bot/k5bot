@@ -24,6 +24,7 @@ class IRCMessage
 
 	def parse(raw)
 		return unless raw
+		raw.strip!
 		msgParts = raw.to_s.split(/ /)
 		@prefix = msgParts.shift[1..-1] if msgParts.first.start_with? ':'
 		@command = msgParts.shift.downcase.to_sym
@@ -72,7 +73,8 @@ class IRCMessage
 
 	# The message with nick prefix and botcommand removed if it exists, otherwise the whole message
 	def tail
-		message[/^\s*(#{@bot.config[:nickname]}\s*[:>,]?\s*)?!([\S]+)(.*)\s*/i, 3] || message if message
+		tail = message[/^\s*(#{@bot.config[:nickname]}\s*[:>,]?\s*)?!([\S]+)\s*(.*)\s*/i, 3] || message if message
+		tail.empty? ? nil : tail if tail	# Return nil if tail is empty or nil, otherwise tail
 	end
 
 	def private?
