@@ -13,3 +13,5 @@
 :plugins:
 - :Help
 - :Clock
+- :Example
+- :Loader

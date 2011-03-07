@@ -14,15 +14,30 @@ class IRCPluginManager < IRCListener
 	end
 
 	def loadPlugins(plugins)
-		return unless plugins
-		plugins.each do |plugin|
-			begin
-				load "IRC/plugins/#{plugin.to_s}.rb"
-				p = @plugins[plugin.to_sym] = Kernel.const_get(plugin.to_sym).new(@bot)
-				p.commands.keys.each{|c| @commands[c] = p} if p.commands
-#			rescue Exception => e
-#				puts "Cannot load plugin '#{plugin}': #{e}"
+		plugins.each{|name| loadPlugin name} if plugins
+	end
+
+	def unloadPlugin(name)
+		begin
+			if p = @plugins[name.to_sym]
+				p.commands.keys.each{|c| @commands.delete c} if p.commands
+				@plugins.delete name.to_sym
 			end
+		rescue Exception => e
+			puts "Cannot unload plugin '#{name}': #{e}\n\t#{e.backtrace.join("\n\t")}"
+			false
+		end
+	end
+
+	def loadPlugin(name)
+		begin
+			load "IRC/plugins/#{name.to_s}.rb"
+			p = @plugins[name.to_sym] = Kernel.const_get(name.to_sym).new(@bot)
+			p.commands.keys.each{|c| @commands[c] = p} if p.commands
+			true
+		rescue Exception => e
+			puts "Cannot load plugin '#{name}': #{e}\n\t#{e.backtrace.join("\n\t")}"
+			false
 		end
 	end
 end
