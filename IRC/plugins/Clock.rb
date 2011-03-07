@@ -4,7 +4,7 @@
 
 # Clock plugin tells the time
 
-require 'IRC/IRCPlugin'
+require_relative '../IRCPlugin'
 
 class Clock < IRCPlugin
 	def on_privmsg(msg)

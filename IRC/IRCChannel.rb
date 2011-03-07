@@ -5,7 +5,7 @@
 # IRCChannel handles a channel
 
 require 'set'
-require 'IRC/IRCListener'
+require_relative 'IRCListener'
 
 class IRCChannel < IRCListener
 	attr_reader :name, :topic, :nicknames

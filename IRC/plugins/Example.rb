@@ -4,7 +4,7 @@
 
 # Example plugin
 
-require 'IRC/IRCPlugin'
+require_relative '../IRCPlugin'
 
 class Example < IRCPlugin
 	def on_privmsg(msg)

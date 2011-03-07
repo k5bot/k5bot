@@ -4,7 +4,7 @@
 
 # IRCListener is the superclass to all listeners
 
-require 'IRC/IRCMessageRouter'
+require_relative 'IRCMessageRouter'
 
 class IRCListener
 	def initialize(bot)

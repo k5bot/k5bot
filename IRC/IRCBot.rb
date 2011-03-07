@@ -5,13 +5,13 @@
 # IRCBot
 
 require 'socket'
-require 'IRC/IRCUser'
-require 'IRC/IRCMessage'
-require 'IRC/IRCMessageRouter'
-require 'IRC/IRCFirstListener'
-require 'IRC/IRCUserManager'
-require 'IRC/IRCChannelManager'
-require 'IRC/IRCPluginManager'
+require_relative 'IRCUser'
+require_relative 'IRCMessage'
+require_relative 'IRCMessageRouter'
+require_relative 'IRCFirstListener'
+require_relative 'IRCUserManager'
+require_relative 'IRCChannelManager'
+require_relative 'IRCPluginManager'
 
 class IRCBot
 	attr_reader :router, :userManager, :channelManager, :pluginManager, :config, :lastsent, :lastreceived

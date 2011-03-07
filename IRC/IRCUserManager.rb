@@ -5,7 +5,7 @@
 # IRCUserManager keeps track of all users. It keeps the user database
 # updated by listening to user-related messages.
 
-require 'IRC/IRCUser'
+require_relative 'IRCUser'
 
 class IRCUserManager < IRCListener
 	def initialize(bot)

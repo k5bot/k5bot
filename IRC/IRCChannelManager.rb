@@ -4,7 +4,7 @@
 
 # IRCChannelManager keeps track of all joined channels.
 
-require 'IRC/IRCChannel'
+require_relative 'IRCChannel'
 
 class IRCChannelManager < IRCListener
 	def initialize(bot)

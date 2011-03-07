@@ -4,7 +4,7 @@
 
 # Loader plugin loads or reloads plugins
 
-require 'IRC/IRCPlugin'
+require_relative '../IRCPlugin'
 
 class Loader < IRCPlugin
 	def on_privmsg(msg)

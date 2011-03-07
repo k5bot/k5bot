@@ -5,7 +5,7 @@
 # IRCFirstListener is the first listener that is called and handles
 # messages that are important for things to function properly.
 
-require 'IRC/IRCListener'
+require_relative 'IRCListener'
 
 class IRCFirstListener < IRCListener
 	def on_ping(msg)

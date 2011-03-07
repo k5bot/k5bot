@@ -4,7 +4,7 @@
 # See files README.md and COPYING for copyright and licensing information.
 
 require 'yaml'
-require 'IRC/IRCBot'
+require_relative 'IRC/IRCBot'
 
 bot = IRCBot.new(YAML.load_file('config.yaml'))
 bot.start
