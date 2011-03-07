@@ -51,14 +51,10 @@ class IRCChannel < IRCListener
 		return unless msg.botcommand
 		case msg.botcommand
 		when :nicks
-			privmsg("#{@nicknames.to_a.sort * ', '}")
+			msg.reply "#{@nicknames.to_a.sort * ', '}"
 		when :topic
-			@bot.send("PRIVMSG #{@name} :#{@topic}")
+			msg.reply "#{@name} :#{@topic}"
 		end
 		false
-	end
-
-	def privmsg(text)
-		@bot.send("PRIVMSG #@name :#{text}") unless !text || text.strip.empty?
 	end
 end

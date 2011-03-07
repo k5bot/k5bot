@@ -26,7 +26,7 @@ class IRCMessage
 		return unless raw
 		msgParts = raw.to_s.split(/ /)
 		@prefix = msgParts.shift[1..-1] if msgParts.first.start_with? ':'
-		@command = msgParts.shift
+		@command = msgParts.shift.downcase.to_sym
 		@params = []
 		@params << msgParts.shift while msgParts.first and !msgParts.first.start_with? ':'
 		msgParts.first.slice!(0) if msgParts.first
@@ -59,8 +59,18 @@ class IRCMessage
 	end
 
 	def botcommand
-		return unless @command.downcase.eql? 'privmsg'
+		return unless @command == :privmsg
 		bc = @params.last[/^\s*(#{@bot.config[:nickname]}\s*[:>,]?\s*)?!([\S]+)/i, 2]
 		bc.to_sym if bc
+	end
+
+	def private?
+		(@command == :privmsg) && (@params.first.eql? @bot.config[:nickname])
+	end
+
+	def reply(text)
+		return unless @command == :privmsg
+		recipient = private? ? nick : @params.first
+		@bot.send "PRIVMSG #{recipient} :#{text}"
 	end
 end

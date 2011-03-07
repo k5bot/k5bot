@@ -60,10 +60,14 @@ class IRCBot
 	end
 
 	def start
-		@sock = TCPSocket.open @config[:server], @config[:port]
-		login
-		until @sock.eof? do
-			receive @sock.gets
+		begin
+			@sock = TCPSocket.open @config[:server], @config[:port]
+			login
+			until @sock.eof? do
+				receive @sock.gets
+			end
+		rescue SocketError => e
+			puts "Cannot connect: #{e}"
 		end
 	end
 
