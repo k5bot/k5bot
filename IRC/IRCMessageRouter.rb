@@ -16,7 +16,11 @@ class IRCMessageRouter
 		meth = "on_#{msg.command.to_s}"
 		@listeners.each do |listener|
 			next unless listener
-			break if listener.__send__ meth, msg if listener.respond_to? meth
+			begin
+				break if listener.__send__ meth, msg if listener.respond_to? meth
+			rescue => e
+				puts "Listener error: #{e}\n\t#{e.backtrace.join("\n\t")}"
+			end
 		end
 	end
 
