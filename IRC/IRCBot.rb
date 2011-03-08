@@ -49,7 +49,7 @@ class IRCBot
 	end
 
 	def send(raw)
-		raw.force_encoding('utf-8')
+		raw = encode raw
 		@lastsent = raw
 		str = raw.dup
 		str.gsub!(@config[:serverpass], '*****') if @config[:serverpass]
@@ -59,7 +59,7 @@ class IRCBot
 	end
 
 	def receive(raw)
-		raw.force_encoding('utf-8')
+		raw = encode raw
 		@lastreceived = raw
 		puts raw
 		@router.route IRCMessage.new(self, raw.chomp)
@@ -99,5 +99,16 @@ class IRCBot
 
 	def joinChannels
 		send "JOIN #{@config[:channels]*','}" if @config[:channels]
+	end
+
+	# Checks to see if a string looks like valid UTF-8.
+	# If not, it is re-encoded to UTF-8 from assumed CP1252.
+	# This is to fix strings like "abcd\xE9f".
+	def encode(str)
+		str.force_encoding('UTF-8')
+		if !str.valid_encoding?
+			str.force_encoding('CP1252').encode!("UTF-8", {:invalid => :replace, :undef => :replace})
+		end
+		str
 	end
 end
