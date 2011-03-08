@@ -5,6 +5,11 @@
 # IRCPlugin is the superclass of all plugins
 
 class IRCPlugin < IRCListener
+	# Returns the root dir of the plugin
+	def plugin_root
+		"IRC/plugins/#{name}"
+	end
+
 	# Returns the name of the plugin
 	def name
 		self.class.to_s
