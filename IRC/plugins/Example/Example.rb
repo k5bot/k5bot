@@ -2,25 +2,25 @@
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
 
-# Clock plugin tells the time
+# Example plugin
 
-require_relative '../IRCPlugin'
+require_relative '../../IRCPlugin'
 
-class Clock < IRCPlugin
+class Example < IRCPlugin
 	def on_privmsg(msg)
 		case msg.botcommand
-		when :time
-			msg.reply(Time.now)
+		when :example
+			msg.reply "An example message"
 		end
 	end
 
 	def describe
-		"The Clock plugin tells the time."
+		"An example plugin."
 	end
 
 	def commands
 		{
-			:time => 'tells the current time'
+			:example => "returns an example message"
 		}
 	end
 end

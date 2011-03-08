@@ -34,7 +34,7 @@ class IRCPluginManager < IRCListener
 
 	def loadPlugin(name)
 		begin
-			load "IRC/plugins/#{name.to_s}.rb"
+			load "IRC/plugins/#{name.to_s}/#{name.to_s}.rb"
 			p = @plugins[name.to_sym] = Kernel.const_get(name.to_sym).new(@bot)
 			p.commands.keys.each{|c| @commands[c] = p} if p.commands
 			true

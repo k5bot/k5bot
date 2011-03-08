@@ -4,7 +4,7 @@
 
 # Help plugin displays help
 
-require_relative '../IRCPlugin'
+require_relative '../../IRCPlugin'
 
 class Help < IRCPlugin
 	def initialize(bot)
