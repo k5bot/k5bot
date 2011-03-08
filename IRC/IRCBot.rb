@@ -49,6 +49,7 @@ class IRCBot
 	end
 
 	def send(raw)
+		raw.force_encoding('utf-8')
 		@lastsent = raw
 		str = raw.dup
 		str.gsub!(@config[:serverpass], '*****') if @config[:serverpass]
@@ -58,6 +59,7 @@ class IRCBot
 	end
 
 	def receive(raw)
+		raw.force_encoding('utf-8')
 		@lastreceived = raw
 		puts raw
 		@router.route IRCMessage.new(self, raw.chomp)
