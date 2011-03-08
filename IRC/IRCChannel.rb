@@ -34,6 +34,11 @@ class IRCChannel < IRCListener
 		false
 	end
 
+	def on_quit(msg)
+		@nicknames.delete msg.nick
+		false
+	end
+
 	def on_part(msg)
 		return unless msg.message.eql? @name
 		@nicknames.delete msg.nick
