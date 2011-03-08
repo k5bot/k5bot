@@ -5,25 +5,22 @@
 # IRCPlugin is the superclass of all plugins
 
 class IRCPlugin < IRCListener
-	# Returns the root dir of the plugin
-	def plugin_root
-		"IRC/plugins/#{name}"
-	end
+	# A short description of this plugin
+	Description = nil
 
-	# Returns the name of the plugin
-	def name
-		self.class.to_s
-	end
+	# A hash with available commands and their descriptions
+	Commands = nil
 
-	# Returns a short description of the plugin
-	def describe
-	end
+	# A hash containing the names of the plugins this plugin depends on
+	Dependencies = nil
 
-	# Returns a hash with available commands and their descriptions
-	def commands
-	end
+	# Returns the name of this plugin
+	def name; self.class.name; end
 
-	# Returns a hash with the names of all plugins this plugin depends on
-	def self.dependencies
-	end
+	# Returns the root dir of this plugin
+	def plugin_root; "IRC/plugins/#{name}"; end
+
+	def description;  self.class::Description;  end
+	def commands;     self.class::Commands;     end
+	def dependencies; self.class::Dependencies; end
 end

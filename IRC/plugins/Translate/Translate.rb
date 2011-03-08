@@ -10,6 +10,19 @@ require 'nokogiri'
 require 'net/http'
 
 class Translate < IRCPlugin
+	Description = "Uses the translation engine from www.ocn.ne.jp to translate between Japanese and English."
+	Commands = {
+		:t	=> "determines if specified text is Japanese or not, then translates appropriately J>E or E>J",
+		:je	=> "translates specified text from Japanese to English",
+		:ej	=> "translates specified text from English to Japanese",
+		:cj	=> "translates specified text from Simplified Chinese to Japanese",
+		:jc	=> "translates specified text from Japanese to Simplified Chinese",
+		:twj	=> "translates specified text from Traditional Chinese to Japanese",
+		:jtw	=> "translates specified text from Japanese to Traditional Chinese",
+		:kj	=> "translates specified text from Korean to Japanese",
+		:jk	=> "translates specified text from Japanese to Korean"
+	}
+
 	TranslationPairs = {
 		:je	=> 'jaen',
 		:ej	=> 'enja',
@@ -34,24 +47,6 @@ class Translate < IRCPlugin
 			end
 		end
 		false
-	end
-
-	def describe
-		"Uses the translation engine from www.ocn.ne.jp to translate between Japanese and English."
-	end
-
-	def commands
-		{
-			:t	=> "determines if specified text is Japanese or not, then translates appropriately J>E or E>J",
-			:je	=> "translates specified text from Japanese to English",
-			:ej	=> "translates specified text from English to Japanese",
-			:cj	=> "translates specified text from Simplified Chinese to Japanese",
-			:jc	=> "translates specified text from Japanese to Simplified Chinese",
-			:twj	=> "translates specified text from Traditional Chinese to Japanese",
-			:jtw	=> "translates specified text from Japanese to Traditional Chinese",
-			:kj	=> "translates specified text from Korean to Japanese",
-			:jk	=> "translates specified text from Japanese to Korean"
-		}
 	end
 
 	def ocnTranslate(text, lp)

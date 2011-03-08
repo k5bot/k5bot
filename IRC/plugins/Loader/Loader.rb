@@ -7,6 +7,13 @@
 require_relative '../../IRCPlugin'
 
 class Loader < IRCPlugin
+	Description = "Loads, reloads, and unloads plugins."
+	Commands = {
+		:load => "loads or reloads specified plugin",
+		:unload => "unloads specified plugin",
+		# :reload_core => "reloads core files"
+	}
+
 	def on_privmsg(msg)
 		case msg.botcommand
 		when :load
@@ -47,17 +54,5 @@ class Loader < IRCPlugin
 			load 'IRC/IRCUserManager.rb'
 			msg.reply "Core files reloaded."
 		end
-	end
-
-	def describe
-		"Loads, reloads, and unloads plugins."
-	end
-
-	def commands
-		{
-			:load => "loads or reloads specified plugin",
-			:unload => "unloads specified plugin",
-#			:reload_core => "reloads core files"
-		}
 	end
 end

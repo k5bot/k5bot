@@ -7,20 +7,13 @@
 require_relative '../../IRCPlugin'
 
 class Example < IRCPlugin
+	Description = "An example plugin."
+	Commands = { :example => "returns an example message" }
+
 	def on_privmsg(msg)
 		case msg.botcommand
 		when :example
 			msg.reply "An example message"
 		end
-	end
-
-	def describe
-		"An example plugin."
-	end
-
-	def commands
-		{
-			:example => "returns an example message"
-		}
 	end
 end

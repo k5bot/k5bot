@@ -7,6 +7,9 @@
 require_relative '../../IRCPlugin'
 
 class Help < IRCPlugin
+	Description = "The help plugin displays help."
+	Commands = { :help => 'displays help' }
+
 	def initialize(bot)
 		super
 		@pm = @bot.pluginManager
@@ -22,16 +25,6 @@ class Help < IRCPlugin
 		end
 	end
 
-	def describe
-		"The help plugin displays help."
-	end
-
-	def commands
-		{
-			:help => 'displays help'
-		}
-	end
-
 	private
 	def allCommands
 		@pm.commands.keys.collect{|c| "!#{c.to_s}"}*', '
@@ -39,7 +32,7 @@ class Help < IRCPlugin
 
 	def describeWord(msg, word)
 		if plugin = @pm.plugins[word.to_sym]
-			msg.reply(plugin.describe || "#{plugin.name} has no description.")
+			msg.reply(plugin.description || "#{plugin.name} has no description.")
 		elsif plugin = @pm.commands[c = word[/^\s*!?(\S*)\s*/, 1].downcase.to_sym]
 			msg.reply(plugin.commands ? "!#{c.to_s} #{plugin.commands[c]}." : "There is no description for !#{c.to_s}.")
 		end

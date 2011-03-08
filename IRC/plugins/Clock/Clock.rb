@@ -7,20 +7,13 @@
 require_relative '../../IRCPlugin'
 
 class Clock < IRCPlugin
+	Description = "The Clock plugin tells the time."
+	Commands = { :time => 'tells the current time' }
+
 	def on_privmsg(msg)
 		case msg.botcommand
 		when :time
 			msg.reply(Time.now)
 		end
-	end
-
-	def describe
-		"The Clock plugin tells the time."
-	end
-
-	def commands
-		{
-			:time => 'tells the current time'
-		}
 	end
 end
