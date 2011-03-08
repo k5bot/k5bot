@@ -8,7 +8,10 @@ require_relative '../../IRCPlugin'
 
 class Help < IRCPlugin
 	Description = "The help plugin displays help."
-	Commands = { :help => 'displays help' }
+	Commands = {
+		:help => "lists available commands or shows information about specified command or plugin",
+		:plugins => "lists the loaded plugins"
+	}
 
 	def initialize(bot)
 		super
@@ -16,12 +19,17 @@ class Help < IRCPlugin
 	end
 
 	def on_privmsg(msg)
-		return unless msg.botcommand == :help
-		case (tail = msg.tail.split.shift if msg.tail)
-		when nil
-			msg.reply "Available commands: #{allCommands}"
-		else
-			describeWord(msg, tail)
+		case msg.botcommand
+		when :help
+			case (tail = msg.tail.split.shift if msg.tail)
+			when nil
+				msg.reply "Available commands: #{allCommands}"
+			else
+				describeWord(msg, tail)
+			end
+		when :plugins
+			p = @pm.plugins.keys*', '
+			msg.reply "Loaded plugins: #{p}" if p && !p.empty?
 		end
 	end
 
