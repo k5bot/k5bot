@@ -35,7 +35,7 @@ class IRCPluginManager < IRCListener
 	end
 
 	def loadPlugin(name)
-		return if name !~ /^[a-zA-Z0-9]+$/
+		return if name !~ /\A[a-zA-Z0-9]+\Z/m
 		begin
 			load "IRC/plugins/#{name.to_s}/#{name.to_s}.rb"
 			p = @plugins[name.to_sym] = Kernel.const_get(name.to_sym).new(@bot)
