@@ -10,6 +10,17 @@ require 'nokogiri'
 require 'net/http'
 
 class Translate < IRCPlugin
+	TranslationPairs = {
+		:je	=> 'jaen',
+		:ej	=> 'enja',
+		:cj	=> 'zhja',
+		:jc	=> 'jazh',
+		:twj	=> 'twja',
+		:jtw	=> 'jatw',
+		:kj	=> 'koja',
+		:jk	=> 'jako'
+	}
+
 	def on_privmsg(msg)
 		return unless msg.tail
 		if msg.botcommand == :t
@@ -17,17 +28,7 @@ class Translate < IRCPlugin
 			t = containsJapanese?(text) ? (translate text, 'jaen') : (translate text, 'enja')
 			msg.reply t if t
 		else
-			pairs = {
-				:je	=> 'jaen',
-				:ej	=> 'enja',
-				:cj	=> 'zhja',
-				:jc	=> 'jazh',
-				:twj	=> 'twja',
-				:jtw	=> 'jatw',
-				:kj	=> 'koja',
-				:jk	=> 'jako'
-			}
-			if lp = pairs[msg.botcommand]
+			if lp = TranslationPairs[msg.botcommand]
 				t = translate msg.tail, lp
 				msg.reply t if t
 			end
