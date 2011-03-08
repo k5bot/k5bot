@@ -14,7 +14,9 @@ class IRCPluginManager < IRCListener
 	end
 
 	def loadPlugins(plugins)
+		@loading = plugins
 		plugins.each{|name| loadPlugin name} if plugins
+		@loading = nil
 	end
 
 	def unloadPlugin(name)

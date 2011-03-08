@@ -17,4 +17,8 @@ class IRCPlugin < IRCListener
 	# Returns a hash with available commands and their descriptions
 	def commands
 	end
+
+	# Returns a hash with the names of all plugins this plugin depends on
+	def self.dependencies
+	end
 end
