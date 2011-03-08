@@ -12,27 +12,27 @@ require 'net/http'
 class Translate < IRCPlugin
 	def on_privmsg(msg)
 		return unless msg.tail
-		t = nil
-		case msg.botcommand
-		when :t
-			msg.reply t if (t = translate msg.tail)
-		when :je
-			msg.reply t if (t = japaneseToEnglish msg.tail)
-		when :ej
-			msg.reply t if (t = englishToJapanese msg.tail)
-		when :cj
-			msg.reply t if (t = simplifiedChineseToJapanese msg.tail)
-		when :jc
-			msg.reply t if (t = japaneseToSimplifiedChinese msg.tail)
-		when :twj
-			msg.reply t if (t = traditionalChineseToJapanese msg.tail)
-		when :jtw
-			msg.reply t if (t = japaneseToTraditionalChinese msg.tail)
-		when :kj
-			msg.reply t if (t = koreanToJapanese msg.tail)
-		when :jk
-			msg.reply t if (t = japaneseToKorean msg.tail)
+		if msg.botcommand == :t
+			text = msg.tail
+			t = containsJapanese?(text) ? (translate text, 'jaen') : (translate text, 'enja')
+			msg.reply t if t
+		else
+			pairs = {
+				:je	=> 'jaen',
+				:ej	=> 'enja',
+				:cj	=> 'zhja',
+				:jc	=> 'jazh',
+				:twj	=> 'twja',
+				:jtw	=> 'jatw',
+				:kj	=> 'koja',
+				:jk	=> 'jako'
+			}
+			if lp = pairs[msg.botcommand]
+				t = translate msg.tail, lp
+				msg.reply t if t
+			end
 		end
+		false
 	end
 
 	def describe
@@ -53,56 +53,20 @@ class Translate < IRCPlugin
 		}
 	end
 
-	def translate(text)
-		containsJapanese?(text) ? (japaneseToEnglish text) : (englishToJapanese text)
-	end
-
-	def englishToJapanese(text)
-		ocnTranslate text, 'enja'
-	end
-
-	def japaneseToEnglish(text)
-		ocnTranslate text, 'jaen'
-	end
-
-	def simplifiedChineseToJapanese(text)
-		ocnTranslate text, 'zhja'
-	end
-
-	def japaneseToSimplifiedChinese(text)
-		ocnTranslate text, 'jazh'
-	end
-
-	def traditionalChineseToJapanese(text)
-		ocnTranslate text, 'twja'
-	end
-
-	def japaneseToTraditionalChinese(text)
-		ocnTranslate text, 'jatw'
-	end
-
-	def koreanToJapanese(text)
-		ocnTranslate text, 'koja'
-	end
-
-	def japaneseToKorean(text)
-		ocnTranslate text, 'jako'
-	end
-
 	def ocnTranslate(text, lp)
-		begin
-			result = Net::HTTP.post_form(
-				URI.parse('http://cgi01.ocn.ne.jp/cgi-bin/translation/index.cgi'),
-				{'sourceText' => text, 'langpair' => lp})
-			result.body.force_encoding 'utf-8'
-			return if [Net::HTTPSuccess, Net::HTTPRedirection].include? result
-			doc = Nokogiri::HTML result.body
-			doc.css('textarea[name = "responseText"]').text.chomp
-		rescue => e
-			puts "Cannot translate: #{e}\n\t#{e.backtrace.join("\n\t")}"
-			false
-		end
+		result = Net::HTTP.post_form(
+			URI.parse('http://cgi01.ocn.ne.jp/cgi-bin/translation/index.cgi'),
+			{'sourceText' => text, 'langpair' => lp})
+		result.body.force_encoding 'utf-8'
+		return if [Net::HTTPSuccess, Net::HTTPRedirection].include? result
+		doc = Nokogiri::HTML result.body
+		doc.css('textarea[name = "responseText"]').text.chomp
+	rescue => e
+		puts "Cannot translate: #{e}\n\t#{e.backtrace.join("\n\t")}"
+		false
 	end
+
+	alias translate ocnTranslate
 
 	def containsJapanese?(text)
 		# 3040-309F hiragana
