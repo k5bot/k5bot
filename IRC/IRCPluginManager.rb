@@ -26,7 +26,7 @@ class IRCPluginManager < IRCListener
 				Object.send :remove_const, name.to_sym
 				true
 			end
-		rescue Exception => e
+		rescue LoadError, StandardError => e
 			puts "Cannot unload plugin '#{name}': #{e}\n\t#{e.backtrace.join("\n\t")}"
 			false
 		end
@@ -38,7 +38,7 @@ class IRCPluginManager < IRCListener
 			p = @plugins[name.to_sym] = Kernel.const_get(name.to_sym).new(@bot)
 			p.commands.keys.each{|c| @commands[c] = p} if p.commands
 			true
-		rescue Exception => e
+		rescue LoadError, StandardError => e
 			puts "Cannot load plugin '#{name}': #{e}\n\t#{e.backtrace.join("\n\t")}"
 			false
 		end

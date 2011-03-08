@@ -88,8 +88,8 @@ class IRCBot
 	private
 	def login
 		send "PASS #{@config[:serverpass]}" if @config[:serverpass]
-		send "NICK #{@config[:nickname]}"
-		send "USER #{@config[:username]} 0 * :#{@config[:realname]}"
+		send "NICK #{@config[:nickname]}" if @config[:nickname]
+		send "USER #{@config[:username]} 0 * :#{@config[:realname]}" if @config[:username] && @config[:realname]
 		if @config[:userpass]
 			send "PRIVMSG NickServ :IDENTIFY #{@config[:username]} #{@config[:userpass]}"
 		else

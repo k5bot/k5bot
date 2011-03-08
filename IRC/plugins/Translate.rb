@@ -50,7 +50,7 @@ class Translate < IRCPlugin
 			return if [Net::HTTPSuccess, Net::HTTPRedirection].include? result
 			doc = Nokogiri::HTML result.body
 			doc.css('textarea[name = "responseText"]').text.chomp
-		rescue Exception => e
+		rescue => e
 			puts "Cannot translate: #{e}\n\t#{e.backtrace.join("\n\t")}"
 			false
 		end
@@ -65,10 +65,6 @@ class Translate < IRCPlugin
 		# 3000-303F CJK punctuation
 		#
 		# Source: http://www.unicode.org/charts/
-		begin
-			!!(text =~ /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FC2\uFF61-\uFF9D\u31F0-\u31FF\u3000-\u303F]/)
-		rescue Exception => e
-			puts "#{e}\n\t#{e.backtrace.join("\n\t")}"
-		end
+		!!(text =~ /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FC2\uFF61-\uFF9D\u31F0-\u31FF\u3000-\u303F]/)
 	end
 end
