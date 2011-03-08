@@ -22,6 +22,10 @@ class Loader < IRCPlugin
 		when :unload
 			return unless msg.tail
 			msg.tail.split.each do |name|
+				if name.eql? 'Loader'
+					msg.reply "Refusing to unload the loader plugin."
+					next
+				end
 				if @bot.pluginManager.unloadPlugin name
 					msg.reply "'#{name}' unloaded."
 				else
