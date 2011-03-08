@@ -62,7 +62,7 @@ class IRCMessage
 	# The first word of the message if it starts with !
 	def botcommand
 		return unless @command == :privmsg
-		bc = message[/^\s*(#{@bot.config[:nickname]}\s*[:>,]?\s*)?!([\S]+)/i, 2] if message
+		bc = message[/^\s*(#{@bot.config[:nickname]}\s*[:>,]?\s*)?!([\S]+)/i, 2].downcase if message
 		bc.to_sym if bc
 	end
 
