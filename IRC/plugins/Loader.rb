@@ -12,9 +12,9 @@ class Loader < IRCPlugin
 		when :load
 			return unless msg.tail
 			msg.tail.split.each do |name|
-				@bot.pluginManager.unloadPlugin name
+				unloaded = !!(@bot.pluginManager.unloadPlugin name)
 				if @bot.pluginManager.loadPlugin name
-					msg.reply "'#{name}' loaded."
+					msg.reply "'#{name}' #{'re' if unloaded}loaded."
 				else
 					msg.reply "Cannot load '#{name}'."
 				end
