@@ -28,14 +28,14 @@ class Help < IRCPlugin
 				describeWord(msg, tail)
 			end
 		when :plugins
-			p = @pm.plugins.keys*', '
+			p = @pm.plugins.keys.sort*', '
 			msg.reply "Loaded plugins: #{p}" if p && !p.empty?
 		end
 	end
 
 	private
 	def allCommands
-		@pm.commands.keys.collect{|c| "!#{c.to_s}"}*', '
+		@pm.commands.keys.sort.collect{|c| "!#{c.to_s}"}*', '
 	end
 
 	def describeWord(msg, word)
