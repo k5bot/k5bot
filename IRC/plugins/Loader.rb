@@ -8,9 +8,9 @@ require_relative '../IRCPlugin'
 
 class Loader < IRCPlugin
 	def on_privmsg(msg)
-		return unless msg.tail
 		case msg.botcommand
 		when :load
+			return unless msg.tail
 			msg.tail.split.each do |name|
 				@bot.pluginManager.unloadPlugin name
 				if @bot.pluginManager.loadPlugin name
@@ -20,6 +20,7 @@ class Loader < IRCPlugin
 				end
 			end
 		when :unload
+			return unless msg.tail
 			msg.tail.split.each do |name|
 				if @bot.pluginManager.unloadPlugin name
 					msg.reply "'#{name}' unloaded."
@@ -27,6 +28,20 @@ class Loader < IRCPlugin
 					msg.reply "Cannot unload '#{name}'."
 				end
 			end
+		when :reload_core
+			load 'IRC/IRCBot.rb'
+			load 'IRC/IRCChannel.rb'
+			load 'IRC/IRCChannelManager.rb'
+			load 'IRC/IRCFirstListener.rb'
+			load 'IRC/IRCListener.rb'
+			load 'IRC/IRCMessage.rb'
+			load 'IRC/IRCMessageRouter.rb'
+			load 'IRC/IRCPlugin.rb'
+			load 'IRC/IRCPluginManager.rb'
+			load 'IRC/IRCPrivate.rb'
+			load 'IRC/IRCUser.rb'
+			load 'IRC/IRCUserManager.rb'
+			msg.reply "Core files reloaded."
 		end
 	end
 
@@ -37,7 +52,8 @@ class Loader < IRCPlugin
 	def commands
 		{
 			:load => "loads or reloads specified plugin",
-			:unload => "unloads specified plugin"
+			:unload => "unloads specified plugin",
+#			:reload_core => "reloads core files"
 		}
 	end
 end
