@@ -40,7 +40,7 @@ class Help < IRCPlugin
 	def describeWord(msg, word)
 		if plugin = @pm.plugins[word.to_sym]
 			msg.reply(plugin.describe || "#{plugin.name} has no description.")
-		elsif plugin = @pm.commands[c = word[/^\s*!?(\S*)\s*/, 1].to_sym]
+		elsif plugin = @pm.commands[c = word[/^\s*!?(\S*)\s*/, 1].downcase.to_sym]
 			msg.reply(plugin.commands ? "!#{c.to_s} #{plugin.commands[c]}." : "There is no description for !#{c.to_s}.")
 		end
 	end
