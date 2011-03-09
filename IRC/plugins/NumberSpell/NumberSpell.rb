@@ -98,6 +98,8 @@ class NumberSpell < IRCPlugin
 	# Converts a number to a hash containing the value for each place with respect to possible places
 	# 1234 with ones tens and hundreds but no thousands -> 4 x ones, 3 x tens, 12 x hundreds
 	# as a hash: {0=>4, 1=>3, 2=>12}
+	# although, as 12 is also needs to be parsed since it is >9, we recurse and store a sub-hash
+	# result is like so: {0=>4, 1=>3, 2=>{0=>2, 1=>1}}
 	def numberToPlaceHash(number)
 		number = number.to_s.delete ' '
 		return unless number =~ /^\d+$/
