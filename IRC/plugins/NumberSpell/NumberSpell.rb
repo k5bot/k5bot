@@ -108,11 +108,21 @@ class NumberSpell < IRCPlugin
 		power = 0
 		while d = digits.pop
 			if place == 0 || self.class::Places[place]
+				lastPlaceValue = placeValues[lastPlace]
+				if lastPlaceValue && (lastPlaceValue > 9)
+					placeValues[lastPlace] = numberToPlaceHash lastPlaceValue
+				end
 				placeValues[place] = 0
 				lastPlace = place
 				power = 0
 			end
 			placeValues[lastPlace] += d * (10**power)
+			if digits.empty?
+				lastPlaceValue = placeValues[lastPlace]
+				if lastPlaceValue && (lastPlaceValue > 9)
+					placeValues[lastPlace] = numberToPlaceHash lastPlaceValue
+				end
+			end
 			place += 1
 			power +=1
 		end
