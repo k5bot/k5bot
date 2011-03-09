@@ -109,6 +109,7 @@ class NumberSpell < IRCPlugin
 		while d = digits.pop
 			if place == 0 || self.class::Places[place]
 				lastPlaceValue = placeValues[lastPlace]
+				placeValues.delete lastPlace if lastPlaceValue == 0
 				if lastPlaceValue && (lastPlaceValue > 9)
 					placeValues[lastPlace] = numberToPlaceHash lastPlaceValue
 				end
