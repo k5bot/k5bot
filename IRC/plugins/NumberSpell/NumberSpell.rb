@@ -111,20 +111,24 @@ class NumberSpell < IRCPlugin
 		while d = digits.pop
 			if place == 0 || self.class::Places[place]
 				lastPlaceValue = placeValues[lastPlace]
-				placeValues.delete lastPlace if lastPlaceValue == 0
+
+				placeValues.delete lastPlace if lastPlaceValue == 0		## This is a bit ugly, the same code repeated below
 				if lastPlaceValue && (lastPlaceValue > 9)
 					placeValues[lastPlace] = numberToPlaceHash lastPlaceValue
 				end
+
 				placeValues[place] = 0
 				lastPlace = place
 				power = 0
 			end
 			placeValues[lastPlace] += d * (10**power)
 			if digits.empty?
-				lastPlaceValue = placeValues[lastPlace]
+
+				lastPlaceValue = placeValues[lastPlace]		## Here, repeated code from above, because the loop exits when there are no digits left
 				if lastPlaceValue && (lastPlaceValue > 9)
 					placeValues[lastPlace] = numberToPlaceHash lastPlaceValue
 				end
+
 			end
 			place += 1
 			power +=1
