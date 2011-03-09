@@ -13,9 +13,10 @@ class NumberSpell < IRCPlugin
 	Digits = { 0 => 'ゼロ', 1 => '一', 2 => '二', 3 => '三', 4 => '四', 5 => '五', 6 => '六', 7 => '七', 8 => '八', 9 => '九' }
 
 	Places = {
+		0  => nil,
 		1  => '十',
 		2  => '百',
-#		3  => '千',
+		3  => '千',
 		4  => '万',
 		8  => '億',
 		12 => '兆',
@@ -92,46 +93,28 @@ class NumberSpell < IRCPlugin
 	end
 
 	def spell(number)
-		numberToPlaceHash number
+		return unless num = sanitize(number)
+		placeTree(num)
+	end
+
+	def sanitize(numberString)
+		num = numberString.to_s.delete ' '
+		return unless num =~ /^\d+$/
+		num.to_i
 	end
 
 	# Converts a number to a hash containing the value for each place with respect to possible places
-	# 1234 with ones tens and hundreds but no thousands -> 4 x ones, 3 x tens, 12 x hundreds
-	# as a hash: {0=>4, 1=>3, 2=>12}
-	# although, as 12 is also needs to be parsed since it is >9, we recurse and store a sub-hash
-	# result is like so: {0=>4, 1=>3, 2=>{0=>2, 1=>1}}
-	def numberToPlaceHash(number)
-		number = number.to_s.delete ' '
-		return unless number =~ /^\d+$/
+	# 1234 with ones tens and hundreds but no thousands -> 4 x ones, 3 x tens, 12 x hundreds.
+	# Like so: {0=>4, 1=>3, 2=>12}
+	# Although, as 12 is also needs to be parsed since it is >9, we recurse and store a sub-hash.
+	# Like so: {0=>4, 1=>3, 2=>{0=>2, 1=>1}}
+	def placeTree(num)
+		pk = self.class::Places.keys.sort.reverse
 		placeValues = {}
-		digits = number.to_s.split('').collect{|s| s.to_i}
-		place = 0
-		lastPlace = 0
-		power = 0
-		while d = digits.pop
-			if place == 0 || self.class::Places[place]
-				lastPlaceValue = placeValues[lastPlace]
-
-				placeValues.delete lastPlace if lastPlaceValue == 0		## This is a bit ugly, the same code repeated below
-				if lastPlaceValue && (lastPlaceValue > 9)
-					placeValues[lastPlace] = numberToPlaceHash lastPlaceValue
-				end
-
-				placeValues[place] = 0
-				lastPlace = place
-				power = 0
-			end
-			placeValues[lastPlace] += d * (10**power)
-			if digits.empty?
-
-				lastPlaceValue = placeValues[lastPlace]		## Here, repeated code from above, because the loop exits when there are no digits left
-				if lastPlaceValue && (lastPlaceValue > 9)
-					placeValues[lastPlace] = numberToPlaceHash lastPlaceValue
-				end
-
-			end
-			place += 1
-			power +=1
+		pk.each do |p|
+			value = num / 10**p
+			num %= 10**p
+			placeValues[p] = (value > 9 ? placeTree(value) : value) unless value == 0
 		end
 		placeValues
 	end
