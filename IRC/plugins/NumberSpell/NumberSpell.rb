@@ -94,13 +94,49 @@ class NumberSpell < IRCPlugin
 
 	def spell(number)
 		return unless num = sanitize(number)
-		placeTree(num)
+		return "〇 (#{self.class::Digits[0]})" if num == 0
+		kanji = kanjiNum(placeTree(num))
+		kana = translate(kanji, self.class::Readings)
+		kana = translate(kana, self.class::Shifts)
+		"#{kanji} (#{kana})"
+	end
+
+	# Sorts hash by descending key length, then loops and search/replaces each key found in string with the corresponding value
+	def translate(string, hash)
+		string = string.dup
+		keys = hash.keys.sort_by{|key| key.length}.reverse
+		keys.each{|key| string.gsub!(key, hash[key])}
+		string
 	end
 
 	def sanitize(numberString)
 		num = numberString.to_s.delete ' '
 		return unless num =~ /^\d+$/
 		num.to_i
+	end
+
+	# Translates a digit tree into a kanji number
+	def kanjiNum(tree)
+		result = ''
+		pk = tree.keys.sort.reverse
+		pk.each do |p|
+			if pk[p].is_a? Hash
+				result += kanjiNum(pk[p])
+			else
+				# append digit to the result
+				# unless the digit is 0 and the number of digits is greater than 1
+				# or the digit is 1 and the place is tens or hundreds
+				# or the digit is 1, the place is thousands, and it's the first digit to be printed
+				result += self.class::Digits[tree[p]] \
+					unless (tree[p] == 0 && tree.size > 1) \
+					or (tree[p] == 1 && (p == 1 || p == 2)) \
+					or (tree[p] == 1 && p == 3 && result.empty?)
+				if pl = self.class::Places[p]
+					result += pl
+				end
+			end
+		end
+		result
 	end
 
 	# Converts a number to a hash containing the value for each place with respect to possible places
