@@ -120,8 +120,8 @@ class NumberSpell < IRCPlugin
 		result = ''
 		pk = tree.keys.sort.reverse
 		pk.each do |p|
-			if pk[p].is_a? Hash
-				result += kanjiNum(pk[p])
+			if tree[p].is_a? Hash
+				result += kanjiNum(tree[p])
 			else
 				# append digit to the result
 				# unless the digit is 0 and the number of digits is greater than 1
@@ -131,9 +131,9 @@ class NumberSpell < IRCPlugin
 					unless (tree[p] == 0 && tree.size > 1) \
 					or (tree[p] == 1 && (p == 1 || p == 2)) \
 					or (tree[p] == 1 && p == 3 && result.empty?)
-				if pl = self.class::Places[p]
-					result += pl
-				end
+			end
+			if pl = self.class::Places[p]
+				result += pl
 			end
 		end
 		result
