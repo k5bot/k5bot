@@ -54,15 +54,19 @@ class IRCBot
 		str = raw.dup
 		str.gsub!(@config[:serverpass], '*****') if @config[:serverpass]
 		str.gsub!(@config[:userpass], '*****') if @config[:userpass]
-		puts "\e[#34m#{str}\e[0m"
+		puts "#{timestamp} \e[#34m#{str}\e[0m"
 		@sock.write "#{raw}\r\n"
 	end
 
 	def receive(raw)
 		raw = encode raw
 		@lastreceived = raw
-		puts raw
+		puts "#{timestamp} #{raw}"
 		@router.route IRCMessage.new(self, raw.chomp)
+	end
+
+	def timestamp
+		"\e[#37m#{Time.now}\e[0m"
 	end
 
 	def start
