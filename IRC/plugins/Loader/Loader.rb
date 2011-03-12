@@ -49,7 +49,6 @@ class Loader < IRCPlugin
 			load 'IRC/IRCMessageRouter.rb'
 			load 'IRC/IRCPlugin.rb'
 			load 'IRC/IRCPluginManager.rb'
-			load 'IRC/IRCPrivate.rb'
 			load 'IRC/IRCUser.rb'
 			load 'IRC/IRCUserManager.rb'
 			msg.reply "Core files reloaded."
