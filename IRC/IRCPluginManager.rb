@@ -15,7 +15,8 @@ class IRCPluginManager < IRCListener
 
 	def loadPlugins(plugins)
 		@loading = plugins
-		plugins.each{|name| loadPlugin name} if plugins
+		plugins.each{|name| loadPlugin(name, false)} if plugins
+		plugins.each{|name| @plugins[name.to_sym].afterLoad}
 		@loading = nil
 	end
 
@@ -33,7 +34,7 @@ class IRCPluginManager < IRCListener
 		end
 	end
 
-	def loadPlugin(name)
+	def loadPlugin(name, callAfterLoad = true)
 		return if name !~ /\A[a-zA-Z0-9]+\Z/m
 		begin
 			load "IRC/plugins/#{name.to_s}/#{name.to_s}.rb"
@@ -49,6 +50,7 @@ class IRCPluginManager < IRCListener
 			end
 			p = @plugins[name.to_sym] = pluginClass.new(@bot)
 			p.commands.keys.each{|c| @commands[c] = p} if p.commands
+			p.afterLoad if callAfterLoad
 			true
 		rescue ScriptError, StandardError => e
 			puts "Cannot load plugin '#{name}': #{e}"
