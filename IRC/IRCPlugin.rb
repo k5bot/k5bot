@@ -14,6 +14,11 @@ class IRCPlugin < IRCListener
 	# A hash containing the names of the plugins this plugin depends on
 	Dependencies = nil
 
+	# Called by the plugin manager before the plugin is unloaded
+	# If this method returns anthing other than nil or false, the plugin
+	# will not be unloaded and its return value will be displayed in the log.
+	def beforeUnload; end
+
 	# Returns the name of this plugin
 	def name; self.class.name; end
 
