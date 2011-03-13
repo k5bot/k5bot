@@ -19,13 +19,13 @@ class Loader < IRCPlugin
 		when :load
 			return unless msg.tail
 			msg.tail.split.each do |name|
-				exists = (@bot.pluginManager.plugins[name.to_sym])
+				exists = !!(@bot.pluginManager.plugins[name.to_sym])
 				unloadSuccessful = !!(@bot.pluginManager.unloadPlugin name)
 				if unloadSuccessful || !exists
 					if @bot.pluginManager.loadPlugin name
 						msg.reply "'#{name}' #{'re' if exists}loaded."
 					else
-						msg.reply "Cannot load '#{name}'."
+						msg.reply "Cannot #{'re' if exists}load '#{name}'."
 					end
 				else
 					msg.reply "Cannot reload '#{name}'."
