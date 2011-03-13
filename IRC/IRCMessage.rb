@@ -88,6 +88,7 @@ class IRCMessage
 	end
 
 	def reply(text)
+		return if !text || text.empty?
 		return unless @command == :privmsg
 		@bot.send "PRIVMSG #{replyTo} :#{text}"
 	end
