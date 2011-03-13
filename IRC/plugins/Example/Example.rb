@@ -11,10 +11,18 @@ class Example < IRCPlugin
 	Commands = { :example => "returns an example message" }
 	Dependencies = [ :Clock ]
 
+	def afterLoad
+		@clock = @bot.pluginManager.plugins[:Clock]
+	end
+
 	def on_privmsg(msg)
 		case msg.botcommand
 		when :example
 			msg.reply "An example message"
+		when :time_example
+			if @clock
+				msg.reply @clock.time
+			end
 		end
 	end
 end

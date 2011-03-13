@@ -13,7 +13,11 @@ class Clock < IRCPlugin
 	def on_privmsg(msg)
 		case msg.botcommand
 		when :time
-			msg.reply(Time.now)
+			msg.reply time
 		end
+	end
+
+	def time
+		Time.now
 	end
 end
