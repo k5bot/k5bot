@@ -83,9 +83,12 @@ class IRCMessage
 		(@command == :privmsg) && (@params.first.eql? @bot.config[:nickname])
 	end
 
+	def replyTo
+		@replyTo ||= private? ? nick : @params.first
+	end
+
 	def reply(text)
 		return unless @command == :privmsg
-		recipient = private? ? nick : @params.first
-		@bot.send "PRIVMSG #{recipient} :#{text}"
+		@bot.send "PRIVMSG #{replyTo} :#{text}"
 	end
 end
