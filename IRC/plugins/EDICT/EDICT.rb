@@ -20,6 +20,7 @@ class EDICTEntry
 		@japanese = nil
 		@reading = nil
 		@english = nil
+		@info = nil
 	end
 
 	def japanese
@@ -37,6 +38,12 @@ class EDICTEntry
 
 	def english
 		# Not yet implemented
+	end
+
+	def info
+		@info if @info
+		info = @raw[/^.*?\/\((.*?)\)/, 1]
+		@info = info && info.strip
 	end
 
 	def to_s
