@@ -8,7 +8,7 @@ class IRCPluginManager < IRCListener
 	attr_reader :plugins, :commands
 
 	def initialize(bot)
-		super(bot)
+		super
 		@plugins = {}
 		@commands = {}
 	end
