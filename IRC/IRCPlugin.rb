@@ -14,7 +14,13 @@ class IRCPlugin < IRCListener
 	# A list containing the names of the plugins this plugin depends on
 	Dependencies = nil
 
-	# Called by the plugin manager before the plugin is unloaded
+	# Called by the plugin manager after all plugins have been loaded.
+	# Use this method to initialize anything dependent on other plugins.
+	# Convenient also to use it as a replacement for initialize, since
+	# there is no need to keep track of arguments call super.
+	def afterLoad; end
+
+	# Called by the plugin manager before the plugin is unloaded.
 	# If this method returns anthing other than nil or false, the plugin
 	# will not be unloaded and its return value will be displayed in the log.
 	def beforeUnload; end
