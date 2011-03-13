@@ -14,8 +14,7 @@ class Help < IRCPlugin
 		:plugins => "lists the loaded plugins"
 	}
 
-	def initialize(bot)
-		super
+	def afterLoad
 		@pm = @bot.pluginManager
 	end
 
