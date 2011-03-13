@@ -16,7 +16,11 @@ class IRCPluginManager < IRCListener
 	def loadPlugins(plugins)
 		@loading = plugins
 		plugins.each{|name| loadPlugin(name, false)} if plugins
-		plugins.each{|name| @plugins[name.to_sym].afterLoad}
+		plugins.each do |name|
+			if p = @plugins[name.to_sym]
+				p.afterLoad
+			end
+		end
 		@loading = nil
 	end
 
