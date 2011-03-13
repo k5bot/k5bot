@@ -16,12 +16,10 @@ class IRCUserManager < IRCListener
 
 	def on_353(msg)
 		msg.params.last.split(/ /).each{|nickname| update nickname}
-		false
 	end
 
 	def on_privmsg(msg)
 		update msg.nick, msg.user, msg.host
-		false
 	end
 	alias on_join on_privmsg
 

@@ -30,7 +30,6 @@ class IRCPluginManager < IRCListener
 			end
 		rescue => e
 			puts "Cannot unload plugin '#{name}': #{e}\n\t#{e.backtrace.join("\n\t")}"
-			false
 		end
 	end
 
@@ -43,7 +42,6 @@ class IRCPluginManager < IRCListener
 			true
 		rescue ScriptError, StandardError => e
 			puts "Cannot load plugin '#{name}': #{e}"
-			false
 		end
 	end
 end

@@ -85,7 +85,6 @@ class IRCBot
 		if msg.message && (msg.message =~ /^You are now identified for .*#{@config[:username]}.*\.$/)
 			@router.unregister self
 			joinChannels
-			true
 		end
 	end
 

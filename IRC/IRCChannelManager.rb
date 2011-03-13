@@ -17,7 +17,6 @@ class IRCChannelManager < IRCListener
 		msg.message.split.each do |c|
 			@channels[c] = IRCChannel.new(@bot, c)
 		end
-		false
 	end
 
 	def on_part(msg)
@@ -25,6 +24,5 @@ class IRCChannelManager < IRCListener
 		msg.message.split.each do |c|
 			@channels.delete(c)
 		end
-		false
 	end
 end

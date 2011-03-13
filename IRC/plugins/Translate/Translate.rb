@@ -46,7 +46,6 @@ class Translate < IRCPlugin
 				msg.reply t if t
 			end
 		end
-		false
 	end
 
 	def ocnTranslate(text, lp)
@@ -59,7 +58,6 @@ class Translate < IRCPlugin
 		doc.css('textarea[name = "responseText"]').text.chomp
 	rescue => e
 		puts "Cannot translate: #{e}\n\t#{e.backtrace.join("\n\t")}"
-		false
 	end
 
 	alias translate ocnTranslate
