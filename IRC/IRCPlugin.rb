@@ -11,7 +11,7 @@ class IRCPlugin < IRCListener
 	# A hash with available commands and their descriptions
 	Commands = nil
 
-	# A hash containing the names of the plugins this plugin depends on
+	# A list containing the names of the plugins this plugin depends on
 	Dependencies = nil
 
 	# Called by the plugin manager before the plugin is unloaded

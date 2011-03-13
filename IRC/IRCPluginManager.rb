@@ -37,7 +37,17 @@ class IRCPluginManager < IRCListener
 		return if name !~ /\A[a-zA-Z0-9]+\Z/m
 		begin
 			load "IRC/plugins/#{name.to_s}/#{name.to_s}.rb"
-			p = @plugins[name.to_sym] = Kernel.const_get(name.to_sym).new(@bot)
+			pluginClass = Kernel.const_get(name.to_sym)
+			if pluginClass::Dependencies
+				lacking = []
+				pluginClass::Dependencies.each do |d|
+					lacking << d unless (@plugins[d]) || (@loading && @loading.include?(d))
+				end
+				unless lacking.empty?
+					return false
+				end
+			end
+			p = @plugins[name.to_sym] = pluginClass.new(@bot)
 			p.commands.keys.each{|c| @commands[c] = p} if p.commands
 			true
 		rescue ScriptError, StandardError => e
