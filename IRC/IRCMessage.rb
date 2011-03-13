@@ -27,7 +27,7 @@ class IRCMessage
 	def parse(raw)
 		return unless raw
 		raw.strip!
-		msgParts = raw.to_s.split(/ /)
+		msgParts = raw.to_s.split(/[ 　]/)
 		@prefix = msgParts.shift[1..-1] if msgParts.first.start_with? ':'
 		@command = msgParts.shift.downcase.to_sym
 		@params = []
