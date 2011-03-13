@@ -59,6 +59,8 @@ class EDICT < IRCPlugin
 	}
 	Dependencies = [ :Language ]
 
+	attr_reader :japanese
+
 	def afterLoad
 		@l = @bot.pluginManager.plugins[:Language]
 		@japanese = {}
