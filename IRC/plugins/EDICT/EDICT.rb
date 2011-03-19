@@ -24,13 +24,13 @@ class EDICTEntry
 	end
 
 	def japanese
-		@japanese if @japanese
+		return @japanese if @japanese
 		japanese = @raw[/^[\s　]*([^\[\/]+)[\s　]*[\[\/]/, 1]
 		@japanese = japanese && japanese.strip
 	end
 
 	def reading
-		@reading if @reading
+		return @reading if @reading
 		reading = @raw[/^[\s　]*[^\[\/]+[\s　]*\[(.*)\]/, 1]
 		@reading = reading && reading.strip
 		(!@reading || @reading.empty?) ? japanese : reading
@@ -41,7 +41,7 @@ class EDICTEntry
 	end
 
 	def info
-		@info if @info
+		return @info if @info
 		info = @raw[/^.*?\/\((.*?)\)/, 1]
 		@info = info && info.strip
 	end
