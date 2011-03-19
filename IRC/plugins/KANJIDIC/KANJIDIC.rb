@@ -11,6 +11,7 @@
 
 require_relative '../../IRCPlugin'
 require 'iconv'
+require 'uri'
 
 class KANJIDICEntry
 	attr_reader :raw
@@ -21,15 +22,19 @@ class KANJIDICEntry
 	end
 
 	def kanji
-		@kanji if @kanji
-		kanji = @raw[/^\s*(\S+)/, 1]
-		@kanji = kanji && kanji.strip
+		@kanji ||= @raw[/^\s*(\S+)/, 1]
 	end
 
 	def skip
-		@skip if @skip
-		skip = @raw[/\s+P(\S+)\s*/, 1]
-		@skip = skip && skip.strip
+		@skip ||= @raw[/\s+P(\S+)\s*/, 1]
+	end
+
+	def radicalnumber
+		@radicalnumber ||= @raw[/\s+B(\S+)\s*/, 1]
+	end
+
+	def strokecount
+		@strokecount ||= @raw[/\s+S(\S+)\s*/, 1]
 	end
 
 	def to_s
@@ -39,7 +44,10 @@ end
 
 class KANJIDIC < IRCPlugin
 	Description = "A KANJIDIC plugin."
-	Commands = { :k => "looks up a kanji in KANJIDIC" }
+	Commands = {
+		:k => "looks up a kanji in KANJIDIC",
+		:kl => "gives a link to the kanji entry of the specified kanji at jisho.org"
+	}
 	Dependencies = [ :Language ]
 
 	attr_reader :kanji, :skip
@@ -63,8 +71,13 @@ class KANJIDIC < IRCPlugin
 		when :k
 			if entry = @kanji[msg.tail]
 				msg.reply (entry.to_s || notFoundMsg(msg.tail))
-			elsif entryarray = @skip[msg.tail]
-				msg.reply (entryarray.map{|entry| entry.kanji}*', ' || notFoundMsg(msg.tail))
+			elsif radicalgroup = @skip[msg.tail]
+				kanjilist = radicalgroup.keys.sort.map{|key| radicalgroup[key].map{|kanji| kanji.kanji}*''}*' '
+				msg.reply (kanjilist || notFoundMsg(msg.tail))
+			end
+		when :kl
+			if entry = @kanji[msg.tail]
+				msg.reply (("Info on #{entry.kanji}: " + URI.escape("http://jisho.org/kanji/details/#{entry.kanji}")) || notFoundMsg(msg.tail))
 			end
 		end
 	end
@@ -79,8 +92,9 @@ class KANJIDIC < IRCPlugin
 			io.each_line do |l|
 				entry = KANJIDICEntry.new(Iconv.conv('UTF-8', 'EUC-JP', l))
 				@kanji[entry.kanji] = entry
-				@skip[entry.skip] ||= []
-				@skip[entry.skip] << entry
+				@skip[entry.skip] ||= {}
+				@skip[entry.skip][entry.radicalnumber] ||= []
+				@skip[entry.skip][entry.radicalnumber] << entry
 			end
 		end
 	end
