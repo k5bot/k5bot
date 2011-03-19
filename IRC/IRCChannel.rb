@@ -44,16 +44,4 @@ class IRCChannel < IRCListener
 		return unless msg.params.first.eql? @name
 		@topic = msg.message
 	end
-
-	def on_privmsg(msg)
-		return unless msg.params.first.eql? @name
-		return unless msg.botcommand
-		case msg.botcommand
-		when :nicks
-			msg.reply "#{@nicknames.to_a.sort * ', '}"
-		when :topic
-			msg.reply "#{@name} :#{@topic}"
-		end
-		false
-	end
 end
