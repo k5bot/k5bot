@@ -45,8 +45,8 @@ class KANJIDIC < IRCPlugin
 	end
 
 	def beforeUnload
-		@l = {}
-		@kanji = {}
+		@l = nil
+		@kanji = nil
 		false
 	end
 

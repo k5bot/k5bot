@@ -69,9 +69,9 @@ class EDICT < IRCPlugin
 	end
 
 	def beforeUnload
-		@l = {}
-		@japanese = {}
-		@english = {}
+		@l = nil
+		@japanese = nil
+		@english = nil
 		false
 	end
 
