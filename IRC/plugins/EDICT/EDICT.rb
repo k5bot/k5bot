@@ -68,6 +68,13 @@ class EDICT < IRCPlugin
 		loadEdict
 	end
 
+	def beforeUnload
+		@l = {}
+		@japanese = {}
+		@english = {}
+		false
+	end
+
 	def on_privmsg(msg)
 		return unless msg.tail
 		case msg.botcommand
