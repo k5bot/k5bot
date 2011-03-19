@@ -26,6 +26,12 @@ class KANJIDICEntry
 		@kanji = kanji && kanji.strip
 	end
 
+	def skip
+		@skip if @skip
+		skip = @raw[/\s+P(\S+)\s*/, 1]
+		@skip = skip && skip.strip
+	end
+
 	def to_s
 		@raw
 	end
@@ -36,11 +42,12 @@ class KANJIDIC < IRCPlugin
 	Commands = { :k => "looks up a kanji in KANJIDIC" }
 	Dependencies = [ :Language ]
 
-	attr_reader :kanji
+	attr_reader :kanji, :skip
 
 	def afterLoad
 		@l = @bot.pluginManager.plugins[:Language]
 		@kanji = {}
+		@skip = {}
 		loadKanjidic
 	end
 
@@ -54,8 +61,11 @@ class KANJIDIC < IRCPlugin
 		return unless msg.tail
 		case msg.botcommand
 		when :k
-			entry = @kanji[msg.tail]
-			msg.reply (entry.to_s || notFoundMsg(msg.tail))
+			if entry = @kanji[msg.tail]
+				msg.reply (entry.to_s || notFoundMsg(msg.tail))
+			elsif entryarray = @skip[msg.tail]
+				msg.reply (entryarray.map{|entry| entry.kanji}*', ' || notFoundMsg(msg.tail))
+			end
 		end
 	end
 
@@ -69,6 +79,8 @@ class KANJIDIC < IRCPlugin
 			io.each_line do |l|
 				entry = KANJIDICEntry.new(Iconv.conv('UTF-8', 'EUC-JP', l))
 				@kanji[entry.kanji] = entry
+				@skip[entry.skip] ||= []
+				@skip[entry.skip] << entry
 			end
 		end
 	end
