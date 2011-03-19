@@ -10,7 +10,7 @@ require 'nokogiri'
 require 'net/http'
 
 class Translate < IRCPlugin
-	Description = "Uses the translation engine from www.ocn.ne.jp to translate between Japanese and English."
+	Description = "Uses the translation engine from www.ocn.ne.jp to translate between languages."
 	Commands = {
 		:t	=> "determines if specified text is Japanese or not, then translates appropriately J>E or E>J",
 		:je	=> "translates specified text from Japanese to English",
