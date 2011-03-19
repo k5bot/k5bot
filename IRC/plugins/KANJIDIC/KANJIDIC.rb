@@ -38,7 +38,7 @@ class KANJIDICEntry
 	end
 
 	def to_s
-		@raw
+		@raw.dup
 	end
 end
 

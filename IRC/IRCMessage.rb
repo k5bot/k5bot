@@ -38,7 +38,7 @@ class IRCMessage
 	end
 
 	def to_s
-		@raw
+		@raw.dup
 	end
 
 	def user
