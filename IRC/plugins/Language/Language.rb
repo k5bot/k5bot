@@ -4,10 +4,33 @@
 
 # Language plugin
 
+require 'yaml'
 require_relative '../../IRCPlugin'
 
 class Language < IRCPlugin
-	Description = "Provides language-related functionality to other plugins."
+	Description = "Provides language-related functionality."
+	Commands = {
+		:kana => 'converts specified romazi to kana'
+	}
+
+	def afterLoad
+		@rom2kana = YAML.load_file("#{plugin_root}/rom2kana.yaml") rescue nil
+		@rom = @rom2kana.keys.sort_by{|x| -x.length}
+	end
+
+	def on_privmsg(msg)
+		return unless msg.tail
+		case msg.botcommand
+		when :kana
+			msg.reply(kana msg.tail)
+		end
+	end
+
+	def kana(text)
+		kana = text.dup.downcase
+		@rom.each{|r| kana.gsub!(r, @rom2kana[r])}
+		kana
+	end
 
 	def containsJapanese?(text)
 		# 3040-309F hiragana
