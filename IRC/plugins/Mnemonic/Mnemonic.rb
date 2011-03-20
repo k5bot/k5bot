@@ -20,7 +20,7 @@ class Mnemonic < IRCPlugin
 	end
 
 	def mnemonic(character)
-		m = YAML.load_file("#{plugin_root}/mnemonics") rescue nil
+		m = YAML.load_file("#{plugin_root}/mnemonics.yaml") rescue nil
 		"#{character} - #{m[character]}" if m && m[character]
 	end
 end
