@@ -28,12 +28,12 @@ class EDICTEntry
 		@reading = (!reading || reading.empty?) ? japanese : reading
 	end
 
-	# Returns an array of the english translations and meta information.
+	# Returns an array of the English translations and meta information.
 	def english
 		@english ||= @raw.split('/')[1..-1].map{|e| e.strip}
 	end
 
-	# Returns a list of english keywords, extracted from the translations.
+	# Returns a list of keywords created from the English translations and meta information.
 	# Each keyword is a symbol.
 	def keywords
 		@keywords ||= english.map{|e| e.downcase.gsub(/[^a-z0-9 ]/, ' ').split}.flatten.map{|e| e.strip.to_sym}.sort.uniq
