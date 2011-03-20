@@ -55,7 +55,8 @@ class EDICT < IRCPlugin
 	Description = "An EDICT plugin."
 	Commands = {
 		:j => "looks up a Japanese word in EDICT",
-		:e => "looks up an English word in EDICT"
+		:e => "looks up an English word in EDICT",
+		:next => "returns the next entry from EDICT; supply a number to return multiple results"
 	}
 	Dependencies = [ :Language ]
 
@@ -79,7 +80,17 @@ class EDICT < IRCPlugin
 			return unless msg.tail
 			msg.reply(lookup(msg.tail, [:english]) || notFoundMsg(msg.tail))
 		when :next
-			msg.reply(lookupNext || notFoundMsg)
+			count = msg.tail.to_i
+			count = (count > 0) ? count : 1
+			count = 5 if count > 5
+			count.times do
+				if nextReply = lookupNext
+					msg.reply(nextReply)
+				else
+					msg.reply(notFoundMsg)
+					break
+				end
+			end
 		end
 	end
 
@@ -104,7 +115,7 @@ class EDICT < IRCPlugin
 	def notFoundMsg(requested = nil)
 		return "No entry for '#{requested}'." if requested
 		return "No more entries for '#{@lastWord}'." if !requested && @lastWord
-		"No more entries."
+		"Nothing to show."
 	end
 
 	def loadEdict
