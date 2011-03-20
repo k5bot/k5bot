@@ -17,9 +17,11 @@ class IRCPluginManager < IRCListener
 		@loading = plugins
 		plugins.each{|name| loadPlugin(name, false)} if plugins
 		plugins.each do |name|
+			print "Initializing #{name}..."
 			if p = @plugins[name.to_sym]
 				p.afterLoad
 			end
+			puts "done."
 		end
 		@loading = nil
 	end
@@ -61,9 +63,11 @@ class IRCPluginManager < IRCListener
 						return false
 					end
 				end
+				print "Loading #{name}..."
 				p = @plugins[name.to_sym] = pluginClass.new(@bot)
 				p.commands.keys.each{|c| @commands[c] = p} if p.commands
 				p.afterLoad if callAfterLoad
+				puts "done."
 				true
 			else
 				puts "Cannot find plugin '#{name.to_s}'."
