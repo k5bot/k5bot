@@ -54,52 +54,76 @@ end
 class EDICT < IRCPlugin
 	Description = "An EDICT plugin."
 	Commands = {
-		:d => "looks up a word in EDICT",
-		:r => "looks up the reading for a japanese word in EDICT"
+		:j => "looks up a Japanese word in EDICT",
+		:e => "looks up an English word in EDICT"
 	}
 	Dependencies = [ :Language ]
 
-	attr_reader :japanese
-
 	def afterLoad
 		@l = @bot.pluginManager.plugins[:Language]
-		@japanese = {}
-		@english = {}
 		loadEdict
 	end
 
 	def beforeUnload
 		@l = nil
-		@japanese = nil
-		@english = nil
+		@hash = nil
 		false
 	end
 
 	def on_privmsg(msg)
-		return unless msg.tail
 		case msg.botcommand
-		when :d
-			entry = @l.containsJapanese?(msg.tail) ? @japanese[msg.tail] : @english[msg.tail]
-			msg.reply (entry.to_s || notFoundMsg(msg.tail))
-		when :r
-			if entry = @japanese[msg.tail]
-				msg.reply entry.reading
-			else
-				notFoundMsg msg.tail
-			end
+		when :j
+			return unless msg.tail
+			msg.reply(lookup(@l.kana(msg.tail), [:japanese, :readings]) || notFoundMsg(msg.tail))
+		when :e
+			return unless msg.tail
+			msg.reply(lookup(msg.tail, [:english]) || notFoundMsg(msg.tail))
+		when :next
+			msg.reply(lookupNext || notFoundMsg)
 		end
 	end
 
-	def notFoundMsg(requested)
-		"No entry for '#{requested}'."
+	# Looks up a word in specified hash.
+	def lookup(word, hashes)
+		@lastWord = word
+		@lookupResult = []
+		@lastIndex = nil
+		hashes.each do |h|
+			entryArray = @hash[h][word]
+			@lookupResult |= entryArray if entryArray
+		end
+		lookupNext
+	end
+
+	def lookupNext
+		return unless @lookupResult
+		@lastIndex ||= -1
+		if entry = @lookupResult[@lastIndex + 1]
+			@lastIndex += 1
+			entry.to_s
+		end
+	end
+
+	def notFoundMsg(requested = nil)
+		return "No entry for '#{requested}'." if requested
+		return "No more entries for '#{@lastWord}'." if !requested && @lastWord
+		"No more entries."
 	end
 
 	def loadEdict
+		@hash = {}
+		@hash[:japanese] = {}
+		@hash[:readings] = {}
+		@hash[:english] = {}
+		@lastWord = nil
+		@lookupResult = nil
+		@lastIndex = nil
 		edictfile = "#{(File.dirname __FILE__)}/edict"
 		File.open(edictfile, 'r') do |io|
 			io.each_line do |l|
-				entry = EDICTEntry.new(Iconv.conv('UTF-8', 'EUC-JP', l))
-				@japanese[entry.japanese] = entry
+				entry = EDICTEntry.new(Iconv.conv('UTF-8', 'EUC-JP', l).strip)
+				(@hash[:japanese][entry.japanese] ||= []) << entry
+				(@hash[:readings][entry.reading] ||= []) << entry
 			end
 		end
 	end
