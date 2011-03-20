@@ -87,7 +87,6 @@ class EDICT < IRCPlugin
 	def lookup(word, hashes)
 		@lastWord = word
 		@lookupResult = []
-		@lastIndex = nil
 		hashes.each do |h|
 			entryArray = @hash[h][word]
 			@lookupResult |= entryArray if entryArray
@@ -97,9 +96,7 @@ class EDICT < IRCPlugin
 
 	def lookupNext
 		return unless @lookupResult
-		@lastIndex ||= -1
-		if entry = @lookupResult[@lastIndex + 1]
-			@lastIndex += 1
+		if entry = @lookupResult.shift
 			entry.to_s
 		end
 	end
@@ -117,7 +114,6 @@ class EDICT < IRCPlugin
 		@hash[:english] = {}
 		@lastWord = nil
 		@lookupResult = nil
-		@lastIndex = nil
 		edictfile = "#{(File.dirname __FILE__)}/edict"
 		File.open(edictfile, 'r') do |io|
 			io.each_line do |l|
