@@ -70,15 +70,27 @@ class KANJIDIC < IRCPlugin
 		return unless msg.tail
 		case msg.botcommand
 		when :k
-			if entry = @kanji[msg.tail]
-				msg.reply (entry.to_s || notFoundMsg(msg.tail))
-			elsif radicalgroup = @skip[msg.tail]
+			if radicalgroup = @skip[msg.tail]
 				kanjilist = radicalgroup.keys.sort.map{|key| radicalgroup[key].map{|kanji| kanji.kanji}*''}*' '
 				msg.reply (kanjilist || notFoundMsg(msg.tail))
+			else
+				resultCount = 0
+				msg.tail.split('').each do |c|
+					break if resultCount > 5
+					if entry = @kanji[c]
+						msg.reply (entry.to_s || notFoundMsg(c))
+						resultCount += 1
+					end
+				end
 			end
 		when :kl
-			if entry = @kanji[msg.tail]
-				msg.reply (("Info on #{entry.kanji}: " + URI.escape("http://jisho.org/kanji/details/#{entry.kanji}")) || notFoundMsg(msg.tail))
+			resultCount = 0
+			msg.tail.split('').each do |c|
+				break if resultCount > 5
+				if entry = @kanji[c]
+					msg.reply (("Info on #{entry.kanji}: " + URI.escape("http://jisho.org/kanji/details/#{entry.kanji}")) || notFoundMsg(c))
+					resultCount += 1
+				end
 			end
 		end
 	end
