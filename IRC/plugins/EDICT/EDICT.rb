@@ -43,14 +43,14 @@ class EDICT < IRCPlugin
 		when :j
 			return unless msg.tail
 			if entry = lookup(@l.kana(msg.tail), [:japanese, :readings])
-				msg.reply formatEntry(entry)
+				msg.reply "#{entry.to_s} #{hitsLeftStr}"
 			else
 				msg.reply notFoundMsg(msg.tail)
 			end
 		when :e
 			return unless msg.tail
 			if entry = keywordLookup(msg.tail)
-				msg.reply formatEntry(entry)
+				msg.reply "#{entry.to_s} #{hitsLeftStr}"
 			else
 				msg.reply notFound(msg.tail)
 			end
@@ -58,9 +58,15 @@ class EDICT < IRCPlugin
 			count = msg.tail.to_i
 			count = (count > 0) ? count : 1
 			count = 5 if count > 5
+			n = 0
 			count.times do
+				n += 1
 				if nextReply = lookupNext
-					msg.reply nextReply.to_s
+					if n == count
+						msg.reply "#{nextReply.to_s} #{hitsLeftStr}"
+					else
+						msg.reply nextReply.to_s
+					end
 				else
 					msg.reply notFoundMsg
 					break
@@ -73,12 +79,12 @@ class EDICT < IRCPlugin
 		end
 	end
 
-	def formatEntry(entry)
+	def hitsLeftStr
 		resultCount = @lookupResult.size
 		if resultCount > 0
-			"#{entry.to_s} [#{resultCount} more hit#{'s' if resultCount != 1}]"
+			"[#{resultCount} more hit#{'s' if resultCount != 1}]"
 		else
-			entry.to_s
+			''
 		end
 	end
 
@@ -130,8 +136,8 @@ class EDICT < IRCPlugin
 	end
 
 	def notFoundMsg(requested = nil)
-		return "No entry for '#{requested}'." if requested
-		return "No more entries for '#{@lastWord}'." if !requested && @lastWord
+		return "No hit for '#{requested}'." if requested
+		return "No more hits for '#{@lastWord}'." if !requested && @lastWord
 		"Nothing to show."
 	end
 
