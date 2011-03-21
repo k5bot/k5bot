@@ -123,9 +123,7 @@ class EDICT < IRCPlugin
 	end
 
 	def sortResult
-		if @lookupResult
-			@lookupResult.sort_by!{|e| [(e.common? ? -1 : 1), (!e.xrated? ? -1 : 1), (!e.vulgar? ? -1 : 1), e.keywords.size]}
-		end
+		@lookupResult.sort_by!{|e| e.sortKey} if @lookupResult
 	end
 
 	def lookupNext

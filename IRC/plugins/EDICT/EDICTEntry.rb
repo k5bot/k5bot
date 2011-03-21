@@ -6,6 +6,7 @@
 
 class EDICTEntry
 	attr_reader :raw
+	attr_accessor :sortKey
 
 	def initialize(raw)
 		@raw = raw
@@ -14,6 +15,7 @@ class EDICTEntry
 		@english = nil
 		@info = nil
 		@keywords = nil
+		@sortKey = nil
 	end
 
 	def japanese
@@ -62,10 +64,10 @@ class EDICTEntry
 	end
 
 	def marshal_dump
-		@raw
+		[@sortKey, @raw]
 	end
 
 	def marshal_load(data)
-		@raw = data
+		@sortKey, @raw = data
 	end
 end

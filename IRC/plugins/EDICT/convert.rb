@@ -22,6 +22,7 @@ class EDICTConverter
 		@hash[:japanese] = {}
 		@hash[:readings] = {}
 		@hash[:keywords] = {}
+		@allEntries = []
 
 		# Duplicated two lines from ../Language/Language.rb
 		@kata2hira = YAML.load_file("../Language/kata2hira.yaml") rescue nil
@@ -37,12 +38,22 @@ class EDICTConverter
 					next
 				end
 				entry = EDICTEntry.new(Iconv.conv('UTF-8', 'EUC-JP', l).strip)
+				@allEntries << entry
 				(@hash[:japanese][entry.japanese] ||= []) << entry
 				(@hash[:readings][hiragana(entry.reading)] ||= []) << entry
 				entry.keywords.each do |k|
 					(@hash[:keywords][k] ||= []) << entry
 				end
 			end
+		end
+	end
+
+	def sort
+		count = 0
+		@allEntries.sort_by!{|e| [(e.common? ? -1 : 1), (!e.xrated? ? -1 : 1), (!e.vulgar? ? -1 : 1), e.keywords.size, e.raw]}
+		@allEntries.each do |e|
+			e.sortKey = count
+			count += 1
 		end
 	end
 
@@ -59,6 +70,10 @@ ec = EDICTConverter.new("#{(File.dirname __FILE__)}/edict")
 
 print "Indexing EDICT..."
 ec.read
+puts "done."
+
+print "Sorting EDICT..."
+ec.sort
 puts "done."
 
 print "Marshalling hash..."
