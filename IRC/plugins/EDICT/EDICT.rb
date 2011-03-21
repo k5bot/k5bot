@@ -42,12 +42,18 @@ class EDICT < IRCPlugin
 		case msg.botcommand
 		when :j
 			return unless msg.tail
-			entry = lookup(@l.kana(msg.tail), [:japanese, :readings])
-			msg.reply(entry ? entry.to_s : notFoundMsg(msg.tail))
+			if entry = lookup(@l.kana(msg.tail), [:japanese, :readings])
+				msg.reply formatEntry(entry)
+			else
+				msg.reply notFoundMsg(msg.tail)
+			end
 		when :e
 			return unless msg.tail
-			entry = keywordLookup(msg.tail)
-			msg.reply(entry ? entry.to_s : notFoundMsg(msg.tail))
+			if entry = keywordLookup(msg.tail)
+				msg.reply formatEntry(entry)
+			else
+				msg.reply notFound(msg.tail)
+			end
 		when :next
 			count = msg.tail.to_i
 			count = (count > 0) ? count : 1
@@ -64,6 +70,15 @@ class EDICT < IRCPlugin
 			if entry = lookup(@l.kana(msg.tail), [:japanese, :readings])
 				msg.reply entry.keywords*', '
 			end
+		end
+	end
+
+	def formatEntry(entry)
+		resultCount = @lookupResult.size
+		if resultCount > 0
+			"#{entry.to_s} [#{resultCount} more hit#{'s' if resultCount != 1}]"
+		else
+			entry.to_s
 		end
 	end
 
