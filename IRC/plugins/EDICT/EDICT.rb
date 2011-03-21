@@ -52,7 +52,7 @@ class EDICT < IRCPlugin
 			if entry = keywordLookup(msg.tail)
 				msg.reply "#{entry.to_s} #{hitsLeftStr}"
 			else
-				msg.reply notFound(msg.tail)
+				msg.reply notFoundMsg(msg.tail)
 			end
 		when :next
 			count = msg.tail.to_i
