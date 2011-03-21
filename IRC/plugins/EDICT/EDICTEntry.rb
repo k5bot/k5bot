@@ -43,6 +43,14 @@ class EDICTEntry
 		keywords.include? :p
 	end
 
+	def xrated?
+		keywords.include? :x
+	end
+
+	def vulgar?
+		keywords.include? :vulg
+	end
+
 	def info
 		return @info if @info
 		info = @raw[/^.*?\/\((.*?)\)/, 1]

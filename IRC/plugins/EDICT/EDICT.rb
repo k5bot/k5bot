@@ -90,6 +90,7 @@ class EDICT < IRCPlugin
 			entryArray = @hash[h][word]
 			@lookupResult |= entryArray if entryArray
 		end
+		sortResult
 		lookupNext
 	end
 
@@ -111,10 +112,14 @@ class EDICT < IRCPlugin
 				@lookupResult = Array.new(entryArray)
 			end
 		end
-		if @lookupResult
-			@lookupResult.sort_by!{|e| [(e.common? ? -1 : 1), e.keywords.size]}
-		end
+		sortResult
 		lookupNext
+	end
+
+	def sortResult
+		if @lookupResult
+			@lookupResult.sort_by!{|e| [(e.common? ? -1 : 1), (!e.xrated? ? -1 : 1), (!e.vulgar? ? -1 : 1), e.keywords.size]}
+		end
 	end
 
 	def lookupNext
