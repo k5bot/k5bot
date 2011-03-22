@@ -38,7 +38,7 @@ class EDICTEntry
 	# Returns a list of keywords created from the English translations and meta information.
 	# Each keyword is a symbol.
 	def keywords
-		@keywords ||= english.map{|e| e.downcase.gsub(/[^a-z0-9 ]/, ' ').split}.flatten.map{|e| e.strip.to_sym}.sort.uniq
+		@keywords ||= english.map{|e| e.downcase.gsub(/[^a-z0-9'\- ]/, ' ').split}.flatten.map{|e| e.strip.to_sym}.sort.uniq
 	end
 
 	def common?
