@@ -76,7 +76,7 @@ class KANJIDIC < IRCPlugin
 			else
 				resultCount = 0
 				msg.tail.split('').each do |c|
-					break if resultCount > 5
+					break if resultCount > 2
 					if entry = @kanji[c]
 						msg.reply (entry.to_s || notFoundMsg(c))
 						resultCount += 1
@@ -86,7 +86,7 @@ class KANJIDIC < IRCPlugin
 		when :kl
 			resultCount = 0
 			msg.tail.split('').each do |c|
-				break if resultCount > 5
+				break if resultCount > 2
 				if entry = @kanji[c]
 					msg.reply (("Info on #{entry.kanji}: " + URI.escape("http://jisho.org/kanji/details/#{entry.kanji}")) || notFoundMsg(c))
 					resultCount += 1
