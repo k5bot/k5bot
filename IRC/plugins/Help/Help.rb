@@ -35,7 +35,7 @@ class Help < IRCPlugin
 
 	private
 	def allCommands
-		@pm.commands.keys.sort.collect{|c| "#{IRCMessage::BotCommandPrefix}#{c.to_s}"}*', '
+		@pm.plugins.values.collect {|p| '[' + p.commands.keys.collect {|c| "#{IRCMessage::BotCommandPrefix}#{c.to_s}" }*', ' + ']' }*', '
 	end
 
 	def describeWord(msg, word)
