@@ -14,84 +14,84 @@
 # unless it is the 15th <param> in which case ':' is optional.
 
 class IRCMessage
-	attr_reader :prefix, :command, :params
+  attr_reader :prefix, :command, :params
 
-	BotCommandPrefix = '!'
+  BotCommandPrefix = '!'
 
-	def initialize(bot, raw)
-		@prefix, @command, @params = nil
-		@bot = bot
-		parse @raw = raw
-	end
+  def initialize(bot, raw)
+    @prefix, @command, @params = nil
+    @bot = bot
+    parse @raw = raw
+  end
 
-	def parse(raw)
-		return unless raw
-		raw.strip!
-		msgParts = raw.to_s.split(/[ 　]/)
-		@prefix = msgParts.shift[1..-1] if msgParts.first.start_with? ':'
-		@command = msgParts.shift.downcase.to_sym
-		@params = []
-		@params << msgParts.shift while msgParts.first and !msgParts.first.start_with? ':'
-		msgParts.first.slice!(0) if msgParts.first
-		@params.delete_if{|param| param.empty?}
-		@params << msgParts.join(' ') if !msgParts.empty?
-	end
+  def parse(raw)
+    return unless raw
+    raw.strip!
+    msgParts = raw.to_s.split(/[ 　]/)
+    @prefix = msgParts.shift[1..-1] if msgParts.first.start_with? ':'
+    @command = msgParts.shift.downcase.to_sym
+    @params = []
+    @params << msgParts.shift while msgParts.first and !msgParts.first.start_with? ':'
+    msgParts.first.slice!(0) if msgParts.first
+    @params.delete_if{|param| param.empty?}
+    @params << msgParts.join(' ') if !msgParts.empty?
+  end
 
-	def to_s
-		@raw.dup
-	end
+  def to_s
+    @raw.dup
+  end
 
-	def user
-		return unless @prefix
-		@user ||= @prefix[/^\S+!(\S+)@/, 1]
-	end
+  def user
+    return unless @prefix
+    @user ||= @prefix[/^\S+!(\S+)@/, 1]
+  end
 
-	def host
-		return unless @prefix
-		@host ||= @prefix[/@(\S+)$/, 1]
-	end
+  def host
+    return unless @prefix
+    @host ||= @prefix[/@(\S+)$/, 1]
+  end
 
-	def nick
-		return unless @prefix
-		@nick ||= @prefix[/^(\S+)!/, 1]
-	end
+  def nick
+    return unless @prefix
+    @nick ||= @prefix[/^(\S+)!/, 1]
+  end
 
-	def server
-		return if @prefix =~ /[@!]/
-		@server ||= @prefix
-	end
+  def server
+    return if @prefix =~ /[@!]/
+    @server ||= @prefix
+  end
 
-	# The first word of the message if it starts with !
-	def botcommand
-		return unless @command == :privmsg
-		bc = message[/^\s*(#{@bot.config[:nickname]}\s*[:>,]?\s*)?#{self.class::BotCommandPrefix}([\S]+)/i, 2] if message
-		bc.downcase.to_sym if bc
-	end
+  # The first word of the message if it starts with !
+  def botcommand
+    return unless @command == :privmsg
+    bc = message[/^\s*(#{@bot.config[:nickname]}\s*[:>,]?\s*)?#{self.class::BotCommandPrefix}([\S]+)/i, 2] if message
+    bc.downcase.to_sym if bc
+  end
 
-	# The last parameter
-	def message
-		@params.last if @params
-	end
+  # The last parameter
+  def message
+    @params.last if @params
+  end
 
-	# The message with nick prefix and botcommand removed if it exists, otherwise the whole message
-	def tail
-		tail = message[/^\s*(#{@bot.config[:nickname]}\s*[:>,]?\s*)?#{self.class::BotCommandPrefix}([\S]+)\s*(.*)\s*/i, 3] || message if message
-		tail.empty? ? nil : tail if tail	# Return nil if tail is empty or nil, otherwise tail
-	end
+  # The message with nick prefix and botcommand removed if it exists, otherwise the whole message
+  def tail
+    tail = message[/^\s*(#{@bot.config[:nickname]}\s*[:>,]?\s*)?#{self.class::BotCommandPrefix}([\S]+)\s*(.*)\s*/i, 3] || message if message
+    tail.empty? ? nil : tail if tail  # Return nil if tail is empty or nil, otherwise tail
+  end
 
-	def private?
-		(@command == :privmsg) && (@params.first.eql? @bot.config[:nickname])
-	end
+  def private?
+    (@command == :privmsg) && (@params.first.eql? @bot.config[:nickname])
+  end
 
-	def replyTo
-		@replyTo ||= private? ? nick : @params.first
-	end
+  def replyTo
+    @replyTo ||= private? ? nick : @params.first
+  end
 
-	def reply(text)
-		return if !text
-		s = text.to_s
-		return if s.empty?
-		return unless @command == :privmsg
-		@bot.send "PRIVMSG #{replyTo} :#{s}"
-	end
+  def reply(text)
+    return if !text
+    s = text.to_s
+    return if s.empty?
+    return unless @command == :privmsg
+    @bot.send "PRIVMSG #{replyTo} :#{s}"
+  end
 end

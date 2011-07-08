@@ -7,22 +7,22 @@
 require_relative 'IRCChannel'
 
 class IRCChannelManager < IRCListener
-	def initialize(bot)
-		super
-		@channels = {}
-	end
+  def initialize(bot)
+    super
+    @channels = {}
+  end
 
-	def on_join(msg)
-		return unless msg.nick.eql? @bot.config[:nickname]
-		msg.message.split.each do |c|
-			@channels[c] = IRCChannel.new(@bot, c)
-		end
-	end
+  def on_join(msg)
+    return unless msg.nick.eql? @bot.config[:nickname]
+    msg.message.split.each do |c|
+      @channels[c] = IRCChannel.new(@bot, c)
+    end
+  end
 
-	def on_part(msg)
-		return unless msg.nick.eql? @bot.config[:nickname]
-		msg.message.split.each do |c|
-			@channels.delete(c)
-		end
-	end
+  def on_part(msg)
+    return unless msg.nick.eql? @bot.config[:nickname]
+    msg.message.split.each do |c|
+      @channels.delete(c)
+    end
+  end
 end

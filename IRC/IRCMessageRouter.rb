@@ -7,28 +7,28 @@
 require 'set'
 
 class IRCMessageRouter
-	def initialize(bot)
-		@bot = bot
-		@listeners = []
-	end
+  def initialize(bot)
+    @bot = bot
+    @listeners = []
+  end
 
-	def route(msg)
-		meth = "on_#{msg.command.to_s}"
-		@listeners.each do |listener|
-			next unless listener
-			begin
-				listener.__send__ meth, msg if listener.respond_to? meth
-			rescue => e
-				puts "Listener error: #{e}\n\t#{e.backtrace.join("\n\t")}"
-			end
-		end
-	end
+  def route(msg)
+    meth = "on_#{msg.command.to_s}"
+    @listeners.each do |listener|
+      next unless listener
+      begin
+        listener.__send__ meth, msg if listener.respond_to? meth
+      rescue => e
+        puts "Listener error: #{e}\n\t#{e.backtrace.join("\n\t")}"
+      end
+    end
+  end
 
-	def register(listener)
-		@listeners << listener
-	end
+  def register(listener)
+    @listeners << listener
+  end
 
-	def unregister(listener)
-		@listeners.delete_if{|l| l == listener}
-	end
+  def unregister(listener)
+    @listeners.delete_if{|l| l == listener}
+  end
 end
