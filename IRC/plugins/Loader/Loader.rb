@@ -22,7 +22,9 @@ class Loader < IRCPlugin
         exists = !!(@bot.pluginManager.plugins[name.to_sym])
         unloadSuccessful = !!(@bot.pluginManager.unloadPlugin name)
         if unloadSuccessful || !exists
-          if @bot.pluginManager.loadPlugin name
+          pconf = @bot.config[:plugins].find { |i| i.is_a?(Hash) ? (i.keys && name.to_sym == i.keys.first.to_sym) : name.to_sym == i.to_sym }
+          config = pconf.is_a?(Hash) ? pconf.values.first : {}
+          if @bot.pluginManager.loadPlugin(name, config)
             msg.reply "'#{name}' #{'re' if exists}loaded."
           else
             msg.reply "Cannot #{'re' if exists}load '#{name}'."

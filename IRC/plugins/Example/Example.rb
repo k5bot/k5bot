@@ -39,6 +39,8 @@ class Example < IRCPlugin
     when :example_unlock
       msg.reply((@locked ? "Example plugin will now accept unload." : "Example plugin hasn't been locked."))
       @locked = false
+    when :example_config
+      msg.reply @config.to_s
     end
   end
 end

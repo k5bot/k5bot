@@ -14,14 +14,25 @@ class IRCPluginManager < IRCListener
   end
 
   def loadPlugins(plugins)
+    return unless plugins
     @loading = plugins
-    plugins.each{|name| loadPlugin(name, false)} if plugins
-    plugins.each do |name|
-      print "Initializing #{name}..."
-      if p = @plugins[name.to_sym]
-        p.afterLoad
+    plugins.each do |p|
+      if p.is_a?(Hash)
+        name = p.keys.first
+        config = p[name]
+      else
+        name = p
+        config = nil
       end
-      puts "done."
+      loadPlugin(name, config, false)
+    end
+    plugins.each do |p|
+      name = p.is_a?(Hash) ? p.keys.first : p
+      if plugin = @plugins[name.to_sym]
+        print "Initializing #{name}..."
+        plugin.afterLoad
+        puts "done."
+      end
     end
     @loading = nil
   end
@@ -45,7 +56,7 @@ class IRCPluginManager < IRCListener
     end
   end
 
-  def loadPlugin(name, callAfterLoad = true)
+  def loadPlugin(name, config, callAfterLoad = true)
     return if name !~ /\A[a-zA-Z0-9]+\Z/m
     begin
       requested = "IRC/plugins/#{name.to_s}/#{name.to_s}.rb"
@@ -65,6 +76,7 @@ class IRCPluginManager < IRCListener
         end
         print "Loading #{name}..."
         p = @plugins[name.to_sym] = pluginClass.new(@bot)
+        p.config = (config || {}).freeze
         p.commands.keys.each{|c| @commands[c] = p} if p.commands
         p.afterLoad if callAfterLoad
         puts "done."

@@ -13,7 +13,9 @@
 :plugins:
 - :Help
 - :Clock
-- :Example
+- :Example:
+    :foo: baz
+    :bar: qux
 - :Loader
 - :Translate
 - :Mnemonic
