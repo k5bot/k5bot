@@ -68,6 +68,11 @@ class EDICTEntry
   end
 
   def marshal_load(data)
+    @japanese = nil
+    @reading = nil
+    @english = nil
+    @info = nil
+    @keywords = nil
     @sortKey, @raw = data
   end
 end

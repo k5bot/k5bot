@@ -61,4 +61,11 @@ class Language < IRCPlugin
     # Source: http://www.unicode.org/charts/
     !!(text =~ /[\u30A0-\u30FF\uFF61-\uFF9D\u31F0-\u31FF]/)
   end
+
+  def containsKanji?(text)
+    # 4E00-9FC2 kanji
+    #
+    # Source: http://www.unicode.org/charts/
+    !!(text =~ /[\u4E00-\u9FC2]/)
+  end
 end
