@@ -55,7 +55,7 @@ class Loader < IRCPlugin
       load 'IRC/IRCPlugin.rb'
       load 'IRC/IRCPluginManager.rb'
       load 'IRC/IRCUser.rb'
-      load 'IRC/IRCUserManager.rb'
+      load 'IRC/IRCUserPool.rb'
       msg.reply "Core files reloaded."
     end
   end

@@ -6,10 +6,9 @@
 
 class IRCUser
   attr_reader :name
-  attr_accessor :realname, :host, :lastnick
+  attr_accessor :realname, :host, :nick
 
-  def initialize(name=nil, host=nil, realname=nil)
-    @name, @host, @realname = name, host, realname
-    @lastnick = nil
+  def initialize(name=nil, host=nil, realname=nil, nick=nil)
+    @name, @host, @realname, @nick = name, host, realname, nick
   end
 end

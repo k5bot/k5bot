@@ -42,8 +42,12 @@ class IRCMessage
   end
 
   def user
+    @bot.userPool.findUser(self)
+  end
+
+  def username
     return unless @prefix
-    @user ||= @prefix[/^\S+!(\S+)@/, 1]
+    @username ||= @prefix[/^\S+!(\S+)@/, 1]
   end
 
   def host
