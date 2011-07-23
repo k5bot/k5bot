@@ -10,11 +10,11 @@ require_relative 'IRCMessage'
 require_relative 'IRCMessageRouter'
 require_relative 'IRCFirstListener'
 require_relative 'IRCUserPool'
-require_relative 'IRCChannelManager'
+require_relative 'IRCChannelPool'
 require_relative 'IRCPluginManager'
 
 class IRCBot
-  attr_reader :router, :userPool, :channelManager, :pluginManager, :config, :lastsent, :lastreceived
+  attr_reader :router, :userPool, :channelPool, :pluginManager, :config, :lastsent, :lastreceived
 
   def initialize(config = nil)
     @config = config || {
@@ -38,7 +38,7 @@ class IRCBot
 
     @firstListener = IRCFirstListener.new self  # Set first listener
     @userPool = IRCUserPool.new self  # Add user pool
-    @channelManager = IRCChannelManager.new self  # Add channel manager
+    @channelPool = IRCChannelPool.new self  # Add channel pool
     @pluginManager = IRCPluginManager.new self  # Add plugin manager
     @pluginManager.loadPlugins @config[:plugins]  # Load plugins
 

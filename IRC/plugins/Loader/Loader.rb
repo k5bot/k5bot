@@ -47,7 +47,7 @@ class Loader < IRCPlugin
     when :reload_core
       load 'IRC/IRCBot.rb'
       load 'IRC/IRCChannel.rb'
-      load 'IRC/IRCChannelManager.rb'
+      load 'IRC/IRCChannelPool.rb'
       load 'IRC/IRCFirstListener.rb'
       load 'IRC/IRCListener.rb'
       load 'IRC/IRCMessage.rb'

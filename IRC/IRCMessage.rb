@@ -72,6 +72,15 @@ class IRCMessage
     bc.downcase.to_sym if bc
   end
 
+  # The channel name (e.g. '#channel')
+  def channelname
+    @params[-2] if @params[-2] && @params[-2][/^#/]
+  end
+
+  def channel
+    @bot.channelPool.findChannel(self)
+  end
+
   # The last parameter
   def message
     @params.last if @params
