@@ -42,7 +42,7 @@ class Karma < IRCPlugin
         msg.reply('Cannot map this nick to a user at the moment, sorry.')
       end
     end
-    if nick = msg.message[/(\S+)\s*\+[\+1]/, 1]
+    if !msg.private? && (nick = msg.message[/(\S+)\s*\+[\+1]/, 1])
       user = @bot.userPool.findUserByNick(nick)
       if user && user.name
         if user != msg.user
