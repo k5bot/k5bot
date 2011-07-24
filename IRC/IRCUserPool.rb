@@ -29,6 +29,14 @@ class IRCUserPool < IRCListener
     @nicks[user.nick] = user
   end
 
+  # Finds a user from nick.
+  # Does not modify the user database.
+  # If the user is not found, nil will be returned.
+  def findUserByNick(nick)
+    return if !nick || nick.empty?
+    @nicks[nick]
+  end
+
   def on_nick(msg)
     user = findUser(msg)
     return if msg.message.eql?(user.nick)
