@@ -18,10 +18,10 @@ class IRCUserPool < IRCListener
   # Finds and returns the user who send the specified message.
   # If the user is not known, a new user will be created and returned.
   # If the user is the bot itself, nil will be returned.
-  # If the message is not sent by a user, the method will return nil.
+  # If the message is not sent by a user, nil will be returned.
   def findUser(msg)
-    return nil unless msg.username && msg.nick
-    return nil if msg.nick.eql?(@bot.config[:nickname])
+    return unless msg.username && msg.nick
+    return if msg.nick.eql?(@bot.config[:nickname])
     user = @users[msg.username] || @nicks[msg.nick] || IRCUser.new(msg.username, msg.host, nil, msg.nick)
     @nicks.delete(user.nick) if @nicks[user.nick] == user
     user.nick = msg.nick unless msg.nick.eql?(user.nick)

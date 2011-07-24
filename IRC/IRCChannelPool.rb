@@ -13,7 +13,7 @@ class IRCChannelPool < IRCListener
   end
 
   def findChannel(msg)
-    return nil unless msg.channelname
+    return unless msg.channelname
     @channels[msg.channelname] ||= IRCChannel.new(msg.channelname)
   end
 

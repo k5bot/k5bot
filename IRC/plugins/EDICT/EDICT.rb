@@ -123,7 +123,7 @@ class EDICT < IRCPlugin
       entryArray = @hash[h][word]
       lookupResult |= entryArray if entryArray
     end
-    return nil if lookupResult.empty?
+    return if lookupResult.empty?
     sortResult(lookupResult)
     lookupResult
   end
@@ -135,7 +135,7 @@ class EDICT < IRCPlugin
     lookupResult = nil
     keywords = word.downcase.gsub(/[^a-z0-9 ]/, '').split(' ').uniq
     keywords.each do |k|
-      return nil unless (entryArray = @hash[:keywords][k.to_sym])
+      return unless (entryArray = @hash[:keywords][k.to_sym])
       if lookupResult
         lookupResult &= entryArray
       else
