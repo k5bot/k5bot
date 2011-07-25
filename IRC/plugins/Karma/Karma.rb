@@ -9,7 +9,7 @@ require_relative '../../IRCPlugin'
 class Karma < IRCPlugin
   Description = "Stores karma points for users. Give a user a karma point by writing their nick followed by '++'."
   Commands = {
-    :karma => "shows the karma points for the specified user"
+    :karma => "shows how many karma points the specified user has"
   }
   Dependencies = [ :Store ]
 
@@ -34,7 +34,7 @@ class Karma < IRCPlugin
       user = @bot.userPool.findUserByNick(nick)
       if user && user.name
         if k = @karma[user.name]
-          msg.reply("#{user.nick} [#{k}]")
+          msg.reply("Karma for #{user.nick}: #{thousandSeparate k}")
         else
           msg.reply("#{user.nick} has no karma.")
         end
@@ -53,6 +53,10 @@ class Karma < IRCPlugin
         end
       end
     end
+  end
+
+  def thousandSeparate(num)
+    num.to_s.reverse.scan(/..?.?/).join(' ').reverse.sub('- ', '-') if num.is_a? Integer
   end
 
   def randomMessage(sender, receiver)
