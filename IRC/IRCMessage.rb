@@ -19,7 +19,7 @@ class IRCMessage
   BotCommandPrefix = '!'
 
   def initialize(bot, raw)
-    @prefix, @command, @params = nil
+    @prefix, @command, @params, @user = nil
     @bot = bot
     parse @raw = raw
   end
@@ -42,7 +42,7 @@ class IRCMessage
   end
 
   def user
-    @bot.userPool.findUser(self)
+    @user ||= @bot.userPool.findUser(self)
   end
 
   def username
