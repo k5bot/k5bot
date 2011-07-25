@@ -43,9 +43,11 @@ class LP < IRCPlugin
         msg.reply('Cannot map this nick to a user at the moment, sorry.')
       end
     else
-      @lp[msg.user.name] = 0 unless @lp[msg.user.name]
-      @lp[msg.user.name] += @l.containsJapanese?(msg.message) ? 1 : -1 unless msg.private?
-      store
+      unless msg.private?
+        @lp[msg.user.name] = 0 unless @lp[msg.user.name]
+        @lp[msg.user.name] += @l.containsJapanese?(msg.message) ? 1 : -1
+        store
+      end
     end
   end
 
