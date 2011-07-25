@@ -7,7 +7,7 @@
 require_relative '../../IRCPlugin'
 
 class LP < IRCPlugin
-  Description = "A plugin that counts and manages language points. The more Japanese you use, the more points you get."
+  Description = "A plugin that counts and manages language points. +1 if a message contains Japanese, otherwise -1."
   Commands = {
     :lp => "shows how many language points the specified user has"
   }
@@ -17,13 +17,11 @@ class LP < IRCPlugin
     @s = @bot.pluginManager.plugins[:Store]
     @l = @bot.pluginManager.plugins[:Language]
     @lp = @s.read('lp') || {}
-    @lastlpmsg = {}
   end
 
   def beforeUnload
     @s = nil
     @lp = nil
-    @lastlpmsg = {}
   end
 
   def store
@@ -44,21 +42,14 @@ class LP < IRCPlugin
       else
         msg.reply('Cannot map this nick to a user at the moment, sorry.')
       end
-    end
-    if !msg.private? && !msg.message.eql?(@lastlpmsg[msg.user.name]) && @l.containsJapanese?(msg.message)
+    else
       @lp[msg.user.name] = 0 unless @lp[msg.user.name]
-      @lp[msg.user.name] += calcLP(msg.message)
+      @lp[msg.user.name] += @l.containsJapanese?(msg.message) ? 1 : -1 unless msg.private?
       store
-      @lastlpmsg[msg.user.name] = msg.message
     end
   end
 
   def thousandSeparate(num)
     num.to_s.reverse.scan(/..?.?/).join(' ').reverse.sub('- ', '-') if num.is_a? Integer
-  end
-
-  def calcLP(str)
-    # Calculate the number of unique japanese characters in str
-    str.split('').uniq.select { |c| @l.containsJapanese?(c) }.length
   end
 end
