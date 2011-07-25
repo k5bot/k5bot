@@ -53,6 +53,13 @@ class Language < IRCPlugin
     !!(text =~ /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FC2\uFF61-\uFF9D\u31F0-\u31FF\u3000-\u303F]/)
   end
 
+  def containsHiragana?(text)
+    # 3040-309F hiragana
+    #
+    # Source: http://www.unicode.org/charts/
+    !!(text =~ /[\u3040-\u309F]/)
+  end
+
   def containsKatakana?(text)
     # 30A0-30FF katakana
     # FF61-FF9D half-width katakana
@@ -67,5 +74,12 @@ class Language < IRCPlugin
     #
     # Source: http://www.unicode.org/charts/
     !!(text =~ /[\u4E00-\u9FC2]/)
+  end
+
+  def containsCJKPunctuation?(text)
+    # 3000-303F CJK punctuation
+    #
+    # Source: http://www.unicode.org/charts/
+    !!(text =~ /[\u3000-\u303F]/)
   end
 end

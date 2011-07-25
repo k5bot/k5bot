@@ -40,7 +40,6 @@ class EDICT < IRCPlugin
     @resultLists = nil
     @resultListMarks = nil
     @enquiryTimes = nil
-    @readingsDisplay = nil
   end
 
   def expireLookups
@@ -52,7 +51,6 @@ class EDICT < IRCPlugin
     @resultLists.delete(enquirer)
     @resultListMarks.delete(enquirer)
     @enquiryTimes.delete(enquirer)
-    @readingsDisplay.delete(enquirer)
   end
 
   def on_privmsg(msg)
@@ -61,7 +59,6 @@ class EDICT < IRCPlugin
     when :j
       return unless msg.tail
       resetResults(msg.replyTo)
-      @readingsDisplay[msg.replyTo] = true if @l.containsKanji?(msg.tail)
       replyToEnquirer(lookup(@l.kana(msg.tail), [:japanese, :readings]), msg)
     when :e
       return unless msg.tail
@@ -99,8 +96,9 @@ class EDICT < IRCPlugin
           msg.reply(lr.first.to_s)
         else
           menuItems = lr[mark, @menusize]
+          readingsDisplay = menuItems.collect { |e| e.japanese }.uniq.length == 1
           if menuItems
-            menu = menuItems.map.with_index { |e, i| "#{i + mark + 1} #{@readingsDisplay[msg.replyTo] ? e.reading : e.japanese}" }.join(' | ')
+            menu = menuItems.map.with_index { |e, i| "#{i + mark + 1} #{readingsDisplay ? e.reading : e.japanese}" }.join(' | ')
             menu = "#{lr.length} hits: " + menu if mark == 0
             menu += " [!n for next]" if (mark + @menusize) < lr.length
             msg.reply(menu)
@@ -154,7 +152,6 @@ class EDICT < IRCPlugin
     @resultLists = {}
     @resultListMarks = {}
     @enquiryTimes = {}
-    @readingsDisplay = {}
     File.open("#{(File.dirname __FILE__)}/edict.marshal", 'r') do |io|
       @hash = Marshal.load(io)
     end
