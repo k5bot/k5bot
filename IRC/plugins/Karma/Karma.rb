@@ -33,7 +33,7 @@ class Karma < IRCPlugin
       nick = msg.tail || msg.nick
       user = @bot.userPool.findUserByNick(nick)
       if user && user.name
-        if k = @karma[user.name]
+        if k = @karma[user.name.downcase]
           msg.reply("Karma for #{user.nick}: #{thousandSeparate k}")
         else
           msg.reply("#{user.nick} has no karma.")
@@ -46,8 +46,8 @@ class Karma < IRCPlugin
       user = @bot.userPool.findUserByNick(nick)
       if user && user.name
         if user != msg.user
-          @karma[user.name] = 0 unless @karma[user.name]
-          @karma[user.name] += 1
+          @karma[user.name.downcase] = 0 unless @karma[user.name.downcase]
+          @karma[user.name.downcase] += 1
           store
           msg.reply(randomMessage(msg.nick, user.nick))
         end

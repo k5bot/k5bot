@@ -34,7 +34,7 @@ class LP < IRCPlugin
       nick = msg.tail || msg.nick
       user = @bot.userPool.findUserByNick(nick)
       if user && user.name
-        if lp = @lp[user.name]
+        if lp = @lp[user.name.downcase]
           msg.reply("Language points for #{user.nick}: #{thousandSeparate lp}")
         else
           msg.reply("#{user.nick} has no language points.")
@@ -44,8 +44,8 @@ class LP < IRCPlugin
       end
     else
       unless msg.private?
-        @lp[msg.user.name] = 0 unless @lp[msg.user.name]
-        @lp[msg.user.name] += @l.containsJapanese?(msg.message) ? 1 : -1
+        @lp[msg.user.name.downcase] = 0 unless @lp[msg.user.name.downcase]
+        @lp[msg.user.name.downcase] += @l.containsJapanese?(msg.message) ? 1 : -1
         store
       end
     end

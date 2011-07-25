@@ -22,11 +22,11 @@ class IRCUserPool < IRCListener
   def findUser(msg)
     return unless msg.username && msg.nick
     return if msg.nick.eql?(@bot.config[:nickname])
-    user = @users[msg.username] || @nicks[msg.nick] || IRCUser.new(msg.username, msg.host, nil, msg.nick)
-    @nicks.delete(user.nick) if @nicks[user.nick] == user
+    user = @users[msg.username.downcase] || @nicks[msg.nick.downcase] || IRCUser.new(msg.username, msg.host, nil, msg.nick)
+    @nicks.delete(user.nick.downcase) if @nicks[user.nick.downcase] == user
     user.nick = msg.nick unless msg.nick.eql?(user.nick)
-    @users[user.name] = user
-    @nicks[user.nick] = user
+    @users[user.name.downcase] = user
+    @nicks[user.nick.downcase] = user
   end
 
   # Finds a user from nick.
@@ -34,15 +34,15 @@ class IRCUserPool < IRCListener
   # If the user is not found, nil will be returned.
   def findUserByNick(nick)
     return if !nick || nick.empty?
-    @nicks[nick]
+    @nicks[nick.downcase]
   end
 
   def on_nick(msg)
     user = findUser(msg)
     return if msg.message.eql?(user.nick)
-    @nicks.delete(user.nick)
+    @nicks.delete(user.nick.downcase)
     user.nick = msg.message
-    @nicks[user.nick] = user
+    @nicks[user.nick.downcase] = user
   end
 
   def on_privmsg(msg)
