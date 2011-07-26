@@ -22,7 +22,7 @@ class IRCUserPool < IRCListener
   def findUser(msg)
     return unless msg.username && msg.nick
     return if msg.nick.eql?(@bot.config[:nickname])
-    user = @users[msg.username.downcase] || @nicks[msg.nick.downcase] || IRCUser.new(msg.username, msg.host, nil, msg.nick)
+    user = @users[msg.username.downcase.sub(/^~/, '')] || @nicks[msg.nick.downcase] || IRCUser.new(msg.username, msg.host, nil, msg.nick)
     @nicks.delete(user.nick.downcase) if @nicks[user.nick.downcase] == user
     user.nick = msg.nick unless msg.nick.eql?(user.nick)
     @users[user.name.downcase] = user

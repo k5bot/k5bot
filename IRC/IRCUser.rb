@@ -9,6 +9,10 @@ class IRCUser
   attr_accessor :realname, :host, :nick
 
   def initialize(name=nil, host=nil, realname=nil, nick=nil)
-    @name, @host, @realname, @nick = name, host, realname, nick
+    @ident = !(name =~ /^~/)
+    @name = name.sub(/^~/, '')
+    @host, @realname, @nick = host, realname, nick
   end
+
+  def ident?; @ident; end
 end
