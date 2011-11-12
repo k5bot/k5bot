@@ -141,6 +141,7 @@ class EDICT < IRCPlugin
       end
     end
     sortResult(lookupResult)
+    lookupResult = nil if lookupResult.empty?
     lookupResult
   end
 
