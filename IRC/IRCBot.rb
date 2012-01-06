@@ -14,7 +14,7 @@ require_relative 'IRCChannelPool'
 require_relative 'IRCPluginManager'
 
 class IRCBot
-  attr_reader :router, :userPool, :channelPool, :pluginManager, :config, :lastsent, :lastreceived
+  attr_reader :router, :userPool, :channelPool, :pluginManager, :config, :lastsent, :lastreceived, :startTime
 
   def initialize(config = nil)
     @config = config || {
@@ -72,6 +72,7 @@ class IRCBot
   end
 
   def start
+    @startTime = Time.now
     begin
       @sock = TCPSocket.open @config[:server], @config[:port]
       login
