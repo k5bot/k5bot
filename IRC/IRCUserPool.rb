@@ -21,7 +21,7 @@ class IRCUserPool < IRCListener
   # If the message is not sent by a user, nil will be returned.
   def findUser(msg)
     return unless msg.username && msg.nick
-    return if msg.nick.eql?(@bot.config[:nickname])
+    return if msg.nick.eql?(@bot.user.nick)
     user = @users[msg.username.downcase.sub(/^~/, '')] || @nicks[msg.nick.downcase] || IRCUser.new(msg.username, msg.host, nil, msg.nick)
     @nicks.delete(user.nick.downcase) if @nicks[user.nick.downcase] == user
     user.nick = msg.nick unless msg.nick.eql?(user.nick)

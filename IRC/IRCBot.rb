@@ -14,7 +14,7 @@ require_relative 'IRCChannelPool'
 require_relative 'IRCPluginManager'
 
 class IRCBot
-  attr_reader :router, :userPool, :channelPool, :pluginManager, :config, :lastsent, :lastreceived, :startTime
+  attr_reader :router, :userPool, :channelPool, :pluginManager, :config, :lastsent, :lastreceived, :startTime, :user
 
   def initialize(config = nil)
     @config = config || {
@@ -31,7 +31,7 @@ class IRCBot
 
     @config.freeze  # Don't want anything modifying this
 
-    @botUser = IRCUser.new(@config[:username], nil, @config[:realname], @config[:nickname])
+    @user = IRCUser.new(@config[:username], nil, @config[:realname], @config[:nickname])
 
     @router = IRCMessageRouter.new self
     @router.register self

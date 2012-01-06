@@ -68,7 +68,7 @@ class IRCMessage
   # The first word of the message if it starts with !
   def botcommand
     return unless @command == :privmsg
-    bc = message[/^\s*(#{@bot.config[:nickname]}\s*[:>,]?\s*)?#{self.class::BotCommandPrefix}([\S]+)/i, 2] if message
+    bc = message[/^\s*(#{@bot.user.nick}\s*[:>,]?\s*)?#{self.class::BotCommandPrefix}([\S]+)/i, 2] if message
     bc.downcase.to_sym if bc
   end
 
@@ -88,12 +88,12 @@ class IRCMessage
 
   # The message with nick prefix and botcommand removed if it exists, otherwise the whole message
   def tail
-    tail = message[/^\s*(#{@bot.config[:nickname]}\s*[:>,]?\s*)?#{self.class::BotCommandPrefix}([\S]+)\s*(.*)\s*/i, 3] || message if message
+    tail = message[/^\s*(#{@bot.user.nick}\s*[:>,]?\s*)?#{self.class::BotCommandPrefix}([\S]+)\s*(.*)\s*/i, 3] || message if message
     tail.empty? ? nil : tail if tail  # Return nil if tail is empty or nil, otherwise tail
   end
 
   def private?
-    (@command == :privmsg) && (@params.first.eql? @bot.config[:nickname])
+    (@command == :privmsg) && (@params.first.eql? @bot.user.nick)
   end
 
   def replyTo
