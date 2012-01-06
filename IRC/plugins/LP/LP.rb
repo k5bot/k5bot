@@ -2,7 +2,7 @@
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
 
-# Karma plugin
+# Language points plugin
 
 require_relative '../../IRCPlugin'
 
