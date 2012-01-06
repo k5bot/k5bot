@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby -w
+#!/usr/bin/env ruby
 # encoding: utf-8
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
@@ -8,6 +8,8 @@
 # Converts the EDICT file to a marshalled hash, readable by the EDICT plugin.
 # When there are changes to EDICTEntry or EDICT is updated, run this script
 # to re-index (./convert.rb), then reload the EDICT plugin (!load EDICT).
+
+$VERBOSE = true
 
 require 'iconv'
 require 'yaml'
