@@ -72,13 +72,13 @@ class KANJIDIC < IRCPlugin
     when :k
       if radicalgroup = @skip[msg.tail]
         kanjilist = radicalgroup.keys.sort.map{|key| radicalgroup[key].map{|kanji| kanji.kanji}*''}*' '
-        msg.reply (kanjilist || notFoundMsg(msg.tail))
+        msg.reply(kanjilist || notFoundMsg(msg.tail))
       else
         resultCount = 0
         msg.tail.split('').each do |c|
           break if resultCount > 2
           if entry = @kanji[c]
-            msg.reply (entry.to_s || notFoundMsg(c))
+            msg.reply(entry.to_s || notFoundMsg(c))
             resultCount += 1
           end
         end
@@ -88,7 +88,7 @@ class KANJIDIC < IRCPlugin
       msg.tail.split('').each do |c|
         break if resultCount > 2
         if entry = @kanji[c]
-          msg.reply (("Info on #{entry.kanji}: " + URI.escape("http://jisho.org/kanji/details/#{entry.kanji}")) || notFoundMsg(c))
+          msg.reply(("Info on #{entry.kanji}: " + URI.escape("http://jisho.org/kanji/details/#{entry.kanji}")) || notFoundMsg(c))
           resultCount += 1
         end
       end
