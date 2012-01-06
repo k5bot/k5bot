@@ -21,8 +21,8 @@
 - :Mnemonic
 - :NumberSpell
 - :Language
-- :EDICT
-- :KANJIDIC
+#- :EDICT     # EDICT and KANJIDIC need dictionary files that are not distributed
+#- :KANJIDIC  # with this project. See the plugin directories for more information.
 - :Converter
 - :Store
 - :Karma
