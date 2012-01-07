@@ -14,12 +14,13 @@
 # unless it is the 15th <param> in which case ':' is optional.
 
 class IRCMessage
-  attr_reader :prefix, :command, :params
+  attr_reader :prefix, :command, :params, :timestamp
 
   BotCommandPrefix = '!'
 
   def initialize(bot, raw)
     @prefix, @command, @params, @user = nil
+    @timestamp = Time.now
     @bot = bot
     parse @raw = raw
   end
