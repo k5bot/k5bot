@@ -55,6 +55,8 @@ class IRCBot
 
   def send(raw)
     raw = encode raw
+    raw.gsub!(/[\n]+/, ' ')
+    raw.strip!
     raw = raw[0, 512] # Trim to max 512 characters
     @lastsent = raw
     str = raw.dup
