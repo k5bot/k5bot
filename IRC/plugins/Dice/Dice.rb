@@ -17,13 +17,17 @@ class Dice < IRCPlugin
     when :roll
       die1 = roll
       die2 = roll
-      rollResult = '%s and %s, total is %s' % [ numberToText(die1), numberToText(die2), numberToText(die1 + die2) ]
+      rollResult = '%s %s ⇒ %s' % [ numberToDie(die1), numberToDie(die2), numberToText(die1 + die2) ]
       msg.reply(rollResult)
     end
   end
 
   def roll
     rand(6) + 1
+  end
+
+  def numberToDie(num)
+    '|%s|' % ['•' * num]
   end
 
   def numberToText(num)
