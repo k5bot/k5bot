@@ -7,8 +7,8 @@
 # The message data is stored as @tell[recipient][sender][sendernick, message].
 # @tell is a hash of recipient usernames.
 # recipient is a hash of sender usernames.
-# sender is an array of tuples.
-# each tuple contains the nick the sender had at the time, and the message that was sent.
+# sender is an array of triples.
+# each triple contains the timestamp, the nick the sender had at the time, and the message that was sent.
 
 require_relative '../../IRCPlugin'
 
@@ -48,10 +48,10 @@ class Tell < IRCPlugin
           @tell[user.name.downcase] ||= {}
           rcpt = @tell[user.name.downcase]
           tellMessages = rcpt[msg.user.name.downcase] ||= []
-          if tellMessages.index { |n, m| m == tellMessage }
+          if tellMessages.index { |t, n, m| m == tellMessage }
             msg.reply("#{msg.nick}: Already noted.")
           else
-            tellMessages << [msg.nick, tellMessage]
+            tellMessages << [Time.now, msg.nick, tellMessage]
             store
             msg.reply("#{msg.nick}: Will do.")
           end
@@ -63,17 +63,35 @@ class Tell < IRCPlugin
     unless msg.private?
       if @tell[msg.user.name.downcase]
         @tell[msg.user.name.downcase].each do |senderName, tellMsgs|
-          senderNick = tellMsgs.last.first  # default to use the first element ( = the nick) of the last message as the sender nick
+          senderNick = tellMsgs.last[1]  # default to use the second element ( = the nick) of the last message as the sender nick
           if senderUser = @bot.userPool.findUserByUsername(senderName)
             senderNick = senderUser.nick
           end
-          tellMsgs.each do |n, tellMsg|
-            msg.reply("#{msg.nick}, #{senderNick} tells you: #{tellMsg}")
+          tellMsgs.each do |t, n, tellMsg|
+            as = agoStr(t)
+            msg.reply("#{msg.nick}, #{senderNick} told me #{as + ' ' if as}to tell you: #{tellMsg}")
           end
         end
         @tell.delete(msg.user.name.downcase)
         store
       end
     end
+  end
+
+  def agoStr(time)
+    ago = Time.now - time
+    return 'just now' if ago <= 5
+    a = {}
+    a[:min], a[:sec] = ago.divmod(60)
+    a[:hour], a[:min] = a[:min].divmod(60)
+    a[:day], a[:hour] = a[:hour].divmod(24)
+    a[:week], a[:day] = a[:day].divmod(7)
+    [:week, :day, :hour, :min, :sec].each do |unit|
+      return '%d %s ago' % [a[unit], pluralize(unit.to_s, a[unit])] if a[unit] != 0
+    end
+  end
+
+  def pluralize(str, num)
+    num != 1 ? str + 's' : str
   end
 end
