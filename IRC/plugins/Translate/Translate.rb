@@ -54,9 +54,12 @@ class Translate < IRCPlugin
   end
 
   def ocnTranslate(text, lp)
+    prm = '63676930312e6f6' + '36e2e6e652e6a70'
+    result = Net::HTTP.get(URI.parse("http://cgi01.ocn.ne.jp/cgi-bin/translation/counter.cgi?prm=#{prm}"))
+    key = result[/value='([^']+)'/, 1]
     result = Net::HTTP.post_form(
       URI.parse('http://cgi01.ocn.ne.jp/cgi-bin/translation/index.cgi'),
-      {'sourceText' => text, 'langpair' => lp})
+      {'sourceText' => text, 'langpair' => lp, 'auth' => key})
     result.body.force_encoding 'utf-8'
     return if [Net::HTTPSuccess, Net::HTTPRedirection].include? result
     doc = Nokogiri::HTML result.body
@@ -64,6 +67,5 @@ class Translate < IRCPlugin
   rescue => e
     puts "Cannot translate: #{e}\n\t#{e.backtrace.join("\n\t")}"
   end
-
   alias translate ocnTranslate
 end
