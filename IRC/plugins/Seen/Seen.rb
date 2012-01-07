@@ -30,7 +30,7 @@ class Seen < IRCPlugin
   def on_privmsg(msg)
     unless msg.private?
       @seen[msg.user.name.downcase] = {
-        :timestamp => msg.timestamp,
+        :time => msg.timestamp,
         :channel => msg.channelname,
         :nick => msg.nick,
         :message => msg.message }
@@ -44,7 +44,7 @@ class Seen < IRCPlugin
       soughtUser = @bot.userPool.findUserByNick(soughtNick)
       if soughtUser && soughtUser.name
         if seenData = @seen[soughtUser.name.downcase]
-          as = agoStr(seenData[:timestamp])
+          as = agoStr(seenData[:time])
           cs = seenData[:channel] == msg.channelname ? 'in this channel' : 'in another channel' if seenData[:channel] and msg.channelname
           msg.reply("#{soughtUser.nick} was last seen #{as + ' ' if as}#{cs + ' ' if cs}")
         else
