@@ -37,6 +37,14 @@ class IRCUserPool < IRCListener
     @nicks[nick.downcase]
   end
 
+  # Finds a user from user name.
+  # Does not modify the user database.
+  # If the user is not found, nil will be returned.
+  def findUserByUsername(username)
+    return if !username || username.empty?
+    @users[username.downcase]
+  end
+
   def on_nick(msg)
     user = findUser(msg)
     return if msg.message.eql?(user.nick)
