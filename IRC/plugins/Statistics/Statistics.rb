@@ -26,10 +26,11 @@ class Statistics < IRCPlugin
     u[:hour], u[:minute] = u[:minute].divmod(60)
     u[:day], u[:hour] = u[:hour].divmod(24)
     u[:week], u[:day] = u[:day].divmod(7)
-    'up ' + [:week, :day, :hour, :minute, :second].map { |unit| u[unit] == 0 ? nil : "%d %s" % [u[unit], pluralize(unit.to_s, u[unit])] }.reject { |unit| unit.nil? }.join(', ')
+    'up ' + [:week, :day, :hour, :minute, :second].map { |unit| u[unit].floor == 0 ? nil : "%d %s" % [u[unit], pluralize(unit.to_s, u[unit])] }.reject { |unit| unit.nil? }.join(', ')
   end
 
   def pluralize(str, num)
-    num != 1 ? str + 's' : str
+    return unless num
+    num.floor != 1 ? str + 's' : str
   end
 end

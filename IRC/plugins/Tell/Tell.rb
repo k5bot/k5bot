@@ -84,11 +84,12 @@ class Tell < IRCPlugin
     a[:day], a[:hour] = a[:hour].divmod(24)
     a[:week], a[:day] = a[:day].divmod(7)
     [:week, :day, :hour, :min, :sec].each do |unit|
-      return '%d %s ago' % [a[unit], pluralize(unit.to_s, a[unit])] if a[unit] != 0
+      return '%d %s ago' % [a[unit], pluralize(unit.to_s, a[unit])] if a[unit].floor != 0
     end
   end
 
   def pluralize(str, num)
-    num != 1 ? str + 's' : str
+    return unless num
+    num.floor != 1 ? str + 's' : str
   end
 end
