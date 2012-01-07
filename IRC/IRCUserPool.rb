@@ -11,8 +11,10 @@ require_relative 'IRCUser'
 class IRCUserPool < IRCListener
   def initialize(bot)
     super
-    @users = {}
+    @bot = bot
+    @users = @bot.storage.read('users') || {}
     @nicks = {}
+    @users.values.each { |u| @nicks[u.nick] = u }
   end
 
   # Finds and returns the user who send the specified message.
@@ -26,6 +28,7 @@ class IRCUserPool < IRCListener
     @nicks.delete(user.nick.downcase) if @nicks[user.nick.downcase] == user
     user.nick = msg.nick unless msg.nick.eql?(user.nick)
     @users[user.name.downcase] = user
+    store
     @nicks[user.nick.downcase] = user
   end
 
@@ -50,6 +53,7 @@ class IRCUserPool < IRCListener
     return if msg.message.eql?(user.nick)
     @nicks.delete(user.nick.downcase)
     user.nick = msg.message
+    store
     @nicks[user.nick.downcase] = user
   end
 
@@ -57,4 +61,8 @@ class IRCUserPool < IRCListener
     findUser(msg)
   end
   alias on_join on_privmsg
+
+  def store
+    @bot.storage.write('users', @users)
+  end
 end
