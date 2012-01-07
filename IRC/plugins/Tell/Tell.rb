@@ -40,8 +40,8 @@ class Tell < IRCPlugin
       stop = true unless msg.tail
       recipientNick, tellMessage = msg.tail.scan(/^\s*(\S+)\s*(.+)\s*$/).flatten
       stop = true unless recipientNick and tellMessage
-      stop = true if recipientNick == msg.nick
-      stop = true if recipientNick == @bot.user.nick
+      stop = true if recipientNick.casecmp(msg.nick) == 0
+      stop = true if recipientNick.casecmp(@bot.user.nick) == 0
       unless stop
         user = @bot.userPool.findUserByNick(recipientNick)
         if user && user.name
