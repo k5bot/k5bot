@@ -11,21 +11,19 @@ class LP < IRCPlugin
   Commands = {
     :lp => "shows how many language points the specified user has"
   }
-  Dependencies = [ :Store, :Language ]
+  Dependencies = [ :Language ]
 
   def afterLoad
-    @s = @bot.pluginManager.plugins[:Store]
     @l = @bot.pluginManager.plugins[:Language]
-    @lp = @s.read('lp') || {}
+    @lp = @bot.storage.read('lp') || {}
   end
 
   def beforeUnload
-    @s = nil
     @lp = nil
   end
 
   def store
-    @s.write('lp', @lp)
+    @bot.storage.write('lp', @lp)
   end
 
   def on_privmsg(msg)

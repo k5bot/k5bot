@@ -17,20 +17,17 @@ class Tell < IRCPlugin
   Commands = {
     :tell => "[nick] [message] (ex.: !tell K5 I will be back later) sends [message] to [nick] when he/she/it says something the next time"
   }
-  Dependencies = [ :Store ]
 
   def afterLoad
-    @s = @bot.pluginManager.plugins[:Store]
-    @tell = @s.read('tell') || {}
+    @tell = @bot.storage.read('tell') || {}
   end
 
   def beforeUnload
-    @s = nil
     @tell = nil
   end
 
   def store
-    @s.write('tell', @tell)
+    @bot.storage.write('tell', @tell)
   end
 
   def on_privmsg(msg)

@@ -12,9 +12,10 @@ require_relative 'IRCFirstListener'
 require_relative 'IRCUserPool'
 require_relative 'IRCChannelPool'
 require_relative 'IRCPluginManager'
+require_relative 'Storage'
 
 class IRCBot
-  attr_reader :router, :userPool, :channelPool, :pluginManager, :config, :lastsent, :lastreceived, :startTime, :user
+  attr_reader :router, :userPool, :channelPool, :pluginManager, :storage, :config, :lastsent, :lastreceived, :startTime, :user
 
   def initialize(config = nil)
     @config = config || {
@@ -26,10 +27,13 @@ class IRCBot
       :realname => 'Bot',
       :userpass => nil,
       :channels => nil,
-      :plugins  => nil
+      :plugins  => nil,
+      :storagedirectory => nil
     }
 
     @config.freeze  # Don't want anything modifying this
+
+    @storage = Storage.new @config[:storagedirectory] # Add storage
 
     @user = IRCUser.new(@config[:username], nil, @config[:realname], @config[:nickname])
 

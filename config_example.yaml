@@ -10,6 +10,7 @@
 :channels:
 - "#channel_one"
 - "#channel_two"
+:datadirectory: "~/.ircbot"
 :plugins:
 - :Help
 - :Clock
@@ -24,7 +25,6 @@
 #- :EDICT     # EDICT and KANJIDIC need dictionary files that are not distributed
 #- :KANJIDIC  # with this project. See the plugin directories for more information.
 - :Converter
-- :Store
 - :Karma
 - :LP
 - :Statistics
