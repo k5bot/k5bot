@@ -14,7 +14,7 @@ class IRCUserPool < IRCListener
     @bot = bot
     @users = @bot.storage.read('users') || {}
     @nicks = {}
-    @users.values.each { |u| @nicks[u.nick] = u }
+    @users.values.each { |u| @nicks[u.nick.downcase] = u }
   end
 
   # Finds and returns the user who send the specified message.
