@@ -34,29 +34,37 @@ class Tell < IRCPlugin
     stop = false
     case msg.botcommand
     when :tell
-      stop = true unless msg.tail
-      recipientNick, tellMessage = msg.tail.scan(/^\s*(\S+)\s*(.+)\s*$/).flatten
-      stop = true unless recipientNick and tellMessage
-      stop = true if recipientNick.casecmp(msg.nick) == 0
-      stop = true if recipientNick.casecmp(@bot.user.nick) == 0
-      unless stop
-        user = @bot.userPool.findUserByNick(recipientNick)
-        if user && user.name
-          @tell[user.name.downcase] ||= {}
-          rcpt = @tell[user.name.downcase]
-          tellMessages = rcpt[msg.user.name.downcase] ||= []
-          if tellMessages.index { |t, n, m| m == tellMessage }
-            msg.reply("#{msg.nick}: Already noted.")
-          else
-            tellMessages << [Time.now, msg.nick, tellMessage]
-            store
-            msg.reply("#{msg.nick}: Will do.")
-          end
-        else
-          msg.reply("#{msg.nick}: I do not know who that is. Sorry.")
-        end
-      end
+      storeTell(msg)
     end
+    doTell(msg)
+  end
+
+  # Stores a message from the sender
+  def storeTell(msg)
+    return unless msg.tail
+    recipientNick, tellMessage = msg.tail.scan(/^\s*(\S+)\s*(.+)\s*$/).flatten
+    return unless recipientNick and tellMessage
+    return if recipientNick.casecmp(msg.nick) == 0
+    return if recipientNick.casecmp(@bot.user.nick) == 0
+    user = @bot.userPool.findUserByNick(recipientNick)
+    if user && user.name
+      @tell[user.name.downcase] ||= {}
+      rcpt = @tell[user.name.downcase]
+      tellMessages = rcpt[msg.user.name.downcase] ||= []
+      if tellMessages.index { |t, n, m| m == tellMessage }
+        msg.reply("#{msg.nick}: Already noted.")
+      else
+        tellMessages << [Time.now, msg.nick, tellMessage]
+        store
+        msg.reply("#{msg.nick}: Will do.")
+      end
+    else
+      msg.reply("#{msg.nick}: I do not know who that is. Sorry.")
+    end
+  end
+
+  # Checks if the sender has any messages and delivers them
+  def doTell(msg)
     unless msg.private?
       if @tell[msg.user.name.downcase]
         @tell[msg.user.name.downcase].each do |senderName, tellMsgs|
