@@ -9,4 +9,7 @@ require 'yaml'
 require_relative 'IRC/IRCBot'
 
 bot = IRCBot.new(YAML.load_file('config.yaml'))
-bot.start
+loop do
+  bot.start
+  sleep 15  # wait a bit before reconnecting
+end
