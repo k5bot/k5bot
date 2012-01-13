@@ -42,7 +42,7 @@ class Tell < IRCPlugin
   # Stores a message from the sender
   def storeTell(msg)
     return unless msg.tail
-    recipientNick, tellMessage = msg.tail.scan(/^\s*(\S+)\s*(.+)\s*$/).flatten
+    recipientNick, tellMessage = msg.tail.scan(/^\s*(\S+)\s+(.+)\s*$/).flatten
     return unless recipientNick and tellMessage
     return if recipientNick.casecmp(msg.nick) == 0
     return if recipientNick.casecmp(@bot.user.nick) == 0
