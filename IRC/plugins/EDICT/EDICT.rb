@@ -100,7 +100,7 @@ class EDICT < IRCPlugin
           if menuItems
             menu = menuItems.map.with_index { |e, i| "#{i + mark + 1} #{readingsDisplay ? e.reading : e.japanese}" }.join(' | ')
             menu = "#{lr.length} hits: " + menu if mark == 0
-            menu += " [!n for next]" if (mark + @menusize) < lr.length
+            menu += " [#{IRCMessage::BotCommandPrefix}n for next]" if (mark + @menusize) < lr.length
             msg.reply(menu)
           else
             @resultListMarks.delete(msg.replyTo)
