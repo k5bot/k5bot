@@ -5,6 +5,7 @@
 # Storage provides disk storage functionality
 
 require 'yaml'
+YAML::ENGINE.yamler = 'syck'
 require 'fileutils'
 
 class Storage
