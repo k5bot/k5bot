@@ -31,7 +31,6 @@ class Tell < IRCPlugin
   end
 
   def on_privmsg(msg)
-    stop = false
     case msg.botcommand
     when :tell
       storeTell(msg)
