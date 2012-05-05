@@ -13,6 +13,7 @@ $VERBOSE = true
 
 require 'iconv'
 require 'yaml'
+YAML::ENGINE.yamler = 'syck'
 require_relative 'EDICTEntry'
 
 class EDICTConverter

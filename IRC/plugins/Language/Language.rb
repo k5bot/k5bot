@@ -5,7 +5,7 @@
 # Language plugin
 
 require 'yaml'
-#YAML::ENGINE.yamler = 'syck'
+YAML::ENGINE.yamler = 'syck'
 require_relative '../../IRCPlugin'
 
 class Language < IRCPlugin

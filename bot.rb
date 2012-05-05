@@ -6,6 +6,7 @@
 $VERBOSE = true
 
 require 'yaml'
+YAML::ENGINE.yamler = 'syck'
 require_relative 'IRC/IRCBot'
 
 bot = IRCBot.new(YAML.load_file('config.yaml'))
