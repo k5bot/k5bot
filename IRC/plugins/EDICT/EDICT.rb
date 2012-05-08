@@ -22,7 +22,7 @@ class EDICT < IRCPlugin
   Dependencies = [ :Language ]
 
   def afterLoad
-    @menusize = 10  # size of menu
+    @menusize = 12  # size of menu
     @expire = 300  # time in seconds until entry expires
     begin
       Object.send :remove_const, :EDICTEntry
