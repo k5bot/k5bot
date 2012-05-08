@@ -23,7 +23,7 @@ class EDICT < IRCPlugin
 
   def afterLoad
     @menusize = 12  # size of menu
-    @expire = 300  # time in seconds until entry expires
+    @expire = 1920  # time in seconds until entry expires
     begin
       Object.send :remove_const, :EDICTEntry
       load "#{plugin_root}/EDICTEntry.rb"
