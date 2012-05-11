@@ -86,11 +86,11 @@ class Tell < IRCPlugin
     ago = Time.now - time
     return 'just now' if ago <= 5
     a = {}
-    a[:min], a[:sec] = ago.divmod(60)
-    a[:hour], a[:min] = a[:min].divmod(60)
+    a[:minute], a[:second] = ago.divmod(60)
+    a[:hour], a[:minute] = a[:minute].divmod(60)
     a[:day], a[:hour] = a[:hour].divmod(24)
     a[:week], a[:day] = a[:day].divmod(7)
-    [:week, :day, :hour, :min, :sec].each do |unit|
+    [:week, :day, :hour, :minute, :second].each do |unit|
       return '%d %s ago' % [a[unit], pluralize(unit.to_s, a[unit])] if a[unit].floor != 0
     end
   end
