@@ -33,7 +33,7 @@ class Statistics < IRCPlugin
   end
 
   def versionString
-    `GIT_DIR=#{File.dirname($0)}/.git $(which git) rev-parse --short HEAD`;
+    `GIT_DIR=#{File.dirname($0)}/.git $(which git) rev-parse --short HEAD`.to_s.chomp
   end
 
   def pluralize(str, num)
