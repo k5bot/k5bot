@@ -36,8 +36,14 @@ class Seen < IRCPlugin
     case msg.botcommand
     when :seen
       return unless soughtNick = msg.tail[/\s*(\S+)/, 1]
-      return if soughtNick.casecmp(msg.nick) == 0
-      return if soughtNick.casecmp(@bot.user.nick) == 0
+      if soughtNick.casecmp(msg.nick) == 0
+        msg.reply("#{msg.nick}: watching your every move.")
+        return
+      end
+      if soughtNick.casecmp(@bot.user.nick) == 0
+        msg.reply("#{msg.nick}: o/")
+        return
+      end
       soughtUser = @bot.userPool.findUserByNick(soughtNick)
       if soughtUser && soughtUser.name
         if seenData = @seen[soughtUser.name.downcase]
