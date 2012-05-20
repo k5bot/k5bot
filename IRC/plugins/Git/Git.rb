@@ -36,6 +36,6 @@ class Git < IRCPlugin
   end
 
   def gitPull
-    `pushd #{File.dirname($0)} && $(which git) pull && popd`
+    `pushd #{File.dirname($0)} && $(which git) fetch && $(which git) reset --hard origin/master && popd`
   end
 end
