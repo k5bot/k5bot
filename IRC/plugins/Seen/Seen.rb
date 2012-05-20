@@ -51,10 +51,10 @@ class Seen < IRCPlugin
           cs = seenData[:channel] == msg.channelname ? 'in this channel' : 'in another channel' if seenData[:channel] and msg.channelname
           msg.reply("#{soughtUser.nick} was last seen #{as + ' ' if as}#{cs + ' ' if cs}")
         else
-          msg.reply("#{msg.nick}: I have not seen #{soughtUser.nick}. Sorry.")
+          msg.reply("#{msg.nick}: I have not seen #{soughtUser.nick}.")
         end
       else
-        msg.reply("#{msg.nick}: I do not know who that is. Sorry.")
+        msg.reply("#{msg.nick}: I do not know who that is.")
       end
     end
   end
