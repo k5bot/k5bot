@@ -15,6 +15,7 @@ class LP < IRCPlugin
 
   def afterLoad
     @l = @bot.pluginManager.plugins[:Language]
+    @ns = @bot.pluginManager.plugins[:NumberSpell]
     @lp = @bot.storage.read('lp') || {}
   end
 
@@ -33,7 +34,7 @@ class LP < IRCPlugin
       user = @bot.userPool.findUserByNick(nick)
       if user && user.name
         if lp = @lp[user.name.downcase]
-          msg.reply("Language points for #{user.nick}: #{thousandSeparate lp}")
+          msg.reply("Language points for #{user.nick}: #{format(lp)}")
         else
           msg.reply("#{user.nick} has no language points.")
         end
@@ -47,6 +48,15 @@ class LP < IRCPlugin
         store
       end
     end
+  end
+
+  def format(num)
+    r = @ns.spell(num.abs)
+    if num < 0
+      r.gsub!(/^/, 'マイナス')
+      r.gsub!(/\(/, '(マイナス')
+    end
+    r
   end
 
   def thousandSeparate(num)
