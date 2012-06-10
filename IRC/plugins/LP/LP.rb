@@ -51,12 +51,7 @@ class LP < IRCPlugin
   end
 
   def format(num)
-    r = @ns.spell(num.abs)
-    if num < 0
-      r.gsub!(/^/, 'マイナス')
-      r.gsub!(/\(/, '(マイナス')
-    end
-    r
+    @ns.spell(num)
   end
 
   def thousandSeparate(num)
