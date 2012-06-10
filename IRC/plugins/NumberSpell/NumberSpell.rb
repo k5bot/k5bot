@@ -96,7 +96,9 @@ class NumberSpell < IRCPlugin
   def spell(number)
     return unless num = sanitize(number)
     return "〇 (#{self.class::Digits[0]})" if num == 0
-    kanji = kanjiNum(placeTree(num))
+    absnum = num.abs
+    kanji = kanjiNum(placeTree(absnum))
+    kanji = 'マイナス' + kanji if absnum != num
     kana = translate(kanji, self.class::Readings)
     kana = translate(kana, self.class::Shifts)
     "#{kanji} (#{kana})"
@@ -112,7 +114,7 @@ class NumberSpell < IRCPlugin
 
   def sanitize(numberString)
     num = numberString.to_s.delete ' '
-    return unless num =~ /^\d+$/
+    return unless num =~ /^[-\d]+$/
     num.to_i
   end
 
