@@ -11,12 +11,15 @@ class Karma < IRCPlugin
   Commands = {
     :karma => "shows how many karma points the specified user has"
   }
+  Dependencies = [ :Language ]
 
   def afterLoad
     @karma = @bot.storage.read('karma') || {}
+    @ns = @bot.pluginManager.plugins[:NumberSpell]
   end
 
   def beforeUnload
+    @ns = nil
     @karma = nil
   end
 
@@ -31,7 +34,7 @@ class Karma < IRCPlugin
       user = @bot.userPool.findUserByNick(nick)
       if user && user.name
         if k = @karma[user.name.downcase]
-          msg.reply("Karma for #{user.nick}: #{thousandSeparate k}")
+          msg.reply("Karma for #{user.nick}: #{format(k)}")
         else
           msg.reply("#{user.nick} has no karma.")
         end
@@ -50,6 +53,10 @@ class Karma < IRCPlugin
         end
       end
     end
+  end
+
+  def format(num)
+    @ns.spell(num)
   end
 
   def thousandSeparate(num)
