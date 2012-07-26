@@ -96,7 +96,7 @@ class EDICT < IRCPlugin
           msg.reply(lr.first.to_s)
         else
           menuItems = lr[mark, @menusize]
-          readingsDisplay = menuItems.collect { |e| e.japanese }.uniq.length == 1
+          readingsDisplay = (menuItems.length > 1) && (menuItems.collect { |e| e.japanese }.uniq.length == 1)
           if menuItems
             menu = menuItems.map.with_index { |e, i| "#{i + mark + 1} #{readingsDisplay ? e.reading : e.japanese}" }.join(' | ')
             menu = "#{lr.length} hits: " + menu if mark == 0
