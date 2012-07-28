@@ -9,16 +9,17 @@ YAML::ENGINE.yamler = 'syck'
 require 'fileutils'
 
 class Storage
-  def initialize(storagedirectory)
-    @storagedirectory = storagedirectory || File.expand_path('~/.ircbot').chomp('/')
-    FileUtils.mkdir_p(@storagedirectory)
+  def initialize(datadirectory)
+    @datadirectory = datadirectory || '~/.ircbot'
+    @datadirectory = File.expand_path(@datadirectory).chomp('/')
+    FileUtils.mkdir_p(@datadirectory)
   end
 
   # Writes data to store
   def write(store, data)
     return unless store && data
-    FileUtils.mkdir_p(@storagedirectory)
-    file = "#{@storagedirectory}/#{store}"
+    FileUtils.mkdir_p(@datadirectory)
+    file = "#{@datadirectory}/#{store}"
     File.open(file, 'w') do |io|
       YAML.dump(data, io)
     end
@@ -27,7 +28,7 @@ class Storage
   # Reads data from store
   def read(store)
     return unless store
-    file = "#{@storagedirectory}/#{store}"
+    file = "#{@datadirectory}/#{store}"
     return unless File.exist?(file)
     YAML.load_file(file)
   end

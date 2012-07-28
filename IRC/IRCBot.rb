@@ -28,12 +28,12 @@ class IRCBot
       :userpass => nil,
       :channels => nil,
       :plugins  => nil,
-      :storagedirectory => nil
+      :datadirectory => nil
     }
 
     @config.freeze  # Don't want anything modifying this
 
-    @storage = Storage.new @config[:storagedirectory] # Add storage
+    @storage = Storage.new @config[:datadirectory] # Add storage
 
     @user = IRCUser.new(@config[:username], nil, @config[:realname], @config[:nickname])
 
