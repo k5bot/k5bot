@@ -51,9 +51,9 @@ class Seen < IRCPlugin
           if seenData[:channel] && msg.channelname
             thisChannel = seenData[:channel] == msg.channelname
             cs = thisChannel ? 'in this channel' : 'in another channel'
-            m = thisChannel && seenData[:message] ? 'saying: ' + truncate(seenData[:message], 80) : ''
+            m = thisChannel && seenData[:message] ? 'saying: ' + truncate(seenData[:message], 80) : '.'
           end
-          msg.reply("#{soughtUser.nick} was last seen #{as + ' ' if as}#{cs + ' ' if cs}#{m}".rstrip + '.')
+          msg.reply("#{soughtUser.nick} was last seen #{as + ' ' if as}#{cs + ' ' if cs}".rstrip + m)
         else
           msg.reply("#{msg.nick}: I have not seen #{soughtUser.nick}.")
         end
