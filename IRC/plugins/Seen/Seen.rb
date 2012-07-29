@@ -48,8 +48,12 @@ class Seen < IRCPlugin
       if soughtUser && soughtUser.name
         if seenData = @seen[soughtUser.name.downcase]
           as = agoStr(seenData[:time])
-          cs = seenData[:channel] == msg.channelname ? 'in this channel' : 'in another channel' if seenData[:channel] && msg.channelname
-          msg.reply("#{soughtUser.nick} was last seen #{as + ' ' if as}#{cs if cs}".rstrip + '.')
+          if seenData[:channel] && msg.channelname
+            thisChannel = seenData[:channel] == msg.channelname
+            cs = thisChannel ? 'in this channel' : 'in another channel'
+            m = thisChannel && seenData[:message] ? 'saying: ' + truncate(seenData[:message], 80) : ''
+          end
+          msg.reply("#{soughtUser.nick} was last seen #{as + ' ' if as}#{cs + ' ' if cs}#{m}".rstrip + '.')
         else
           msg.reply("#{msg.nick}: I have not seen #{soughtUser.nick}.")
         end
@@ -74,5 +78,14 @@ class Seen < IRCPlugin
 
   def pluralize(str, num)
     num != 1 ? str + 's' : str
+  end
+
+  def truncate(str, length)
+    s = str.strip
+    if s.length > length
+      s[0, length - 3].strip + '...'
+    else
+      s
+    end
   end
 end
