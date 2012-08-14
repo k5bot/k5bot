@@ -14,5 +14,7 @@ class IRCUser
     @host, @realname, @nick = host, realname, nick
   end
 
-  def ident?; @ident; end
+  def ident?
+    !!@ident
+  end
 end
