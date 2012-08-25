@@ -9,7 +9,7 @@ require_relative '../../IRCPlugin'
 
 class Mnemonic < IRCPlugin
   Description = "Returns mnemonics for characters."
-  Commands = { :m => "returns an mnemonic for the specified character" }
+  Commands = { :m => "returns a mnemonic for the specified character" }
 
   def on_privmsg(msg)
     m = nil
