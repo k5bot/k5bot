@@ -16,6 +16,7 @@ class DaijirinEntry
   ENGLISH_MATCHER=/<\?>([^%]+)<\?>/
   TYPE_MATCHER=/((?:（名・代）|（動.下二・動.変）|（副助）|（接助）|（動｛サ五［四］）|（他サ五）|（動ハ四・動ハ下二）|（動ハ特活）|（動特活）|（動ハ四・ハ下二）|（助動）|〔動詞五［四］段型活用〕|（終助）|（動）|（動詞五［四］段型活用）|（名・副）|（動サ特活）|（名・形動タリ）|（副）|（接続）|（連体）|（連語）|（感）|（連語）|（連語）|（連体）|(ト\|タル)|（名）|（形）|（代）|（接頭）|（形動）|（動.五［ハ四］）|（動.五［四］）|（動ハ四）|（動カ五［四］）|（動カ四）|（動.変）|（形シク）|（動ラ五［四］）|（動マ五［四］）|（動ア下一）|（動ガ五［四］）|（動マ下一）|（動サ五［四］）|（形動ナリ）|（動ナ上一）|（動バ四）|（動マ上一）|（動ハ下二）|（名・形動）|（動サ四）|（形ク）|（枕詞）|（動タ四）|（動ラ下二）|（動マ四）|（動カ下一）|（動ラ四）|（動マ下二）|（動バ下二）|（動バ上二）|（動ラ上一）|（動カ上一）|（動ガ下二）|（動ラ下一）|（動ナ下一）|（名・形動ナリ）|（動ラ五）|（動サ下二）|（動カ下二）|（動バ五［四］）|（動サ下一）|（動ヤ下二）|（動.下二）|（形動タリ）|（動タ下一）|（動.下一）|（動.上一）|（動.上二）|（接尾）|（動五［四］）|（動.五）|（動.四）)(?:スル)?)/
   BUNKA_MATCHER=/(\[文\] ?(?:ナ四・ナ変|形動タリ|シク|ナリ|.変|ハ下二|ク|マ下二|タ下二|マ上一|カ下二|サ下二|ラ下二|ガ下二|.上二|.下二|.上一|マ 下二|))/
+  KANJI_OPTIONAL_MATCHER=/\((.+)\)/
 
   def initialize(raw)
     @raw = raw
@@ -117,8 +118,23 @@ class DaijirinEntry
     s = (s or "").strip
 
     @kanji, s = split(s,KANJI_MATCHER,'%k%')
+
+    # Process entries like 【掛(か)る・懸(か)る】
     @kanji = @kanji.collect do |k|
-      k.split('・').map {|x| x.strip}
+      k.split('・').map do |x|
+        x.strip!
+        f = x.split(KANJI_OPTIONAL_MATCHER)
+        if f.length > 1
+          # if kanji word contains optional elements in parentheses, generate
+          # two words: with all of them present, and all omitted
+          _, omit = separate(f)
+          full = f.join('')
+          omit = omit.join('')
+          [full, omit]
+        else
+          [x]
+        end
+      end.flatten!
     end
     @kanji.flatten!
 
@@ -158,15 +174,15 @@ class DaijirinEntry
   end
 
   def separate(x)
-    a = []
-    b = []
+    odd = []
+    even = []
     x.each_with_index { |y, index|
       if index.odd?
-        a << y
+        odd << y
       else
-        b << y
+        even << y
       end
     }
-    [a, b]
+    [odd, even]
   end
 end
