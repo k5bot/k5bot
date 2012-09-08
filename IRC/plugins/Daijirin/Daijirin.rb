@@ -54,11 +54,11 @@ class Daijirin < IRCPlugin
     when :dj
       return unless msg.tail
       resetResults(msg.replyTo)
-      replyToEnquirer(lookup(@l.kana(msg.tail), [:kanji, :kana]), msg)
+      replyToEnquirer(lookup([@l.kana(msg.tail), @l.hiragana(msg.tail)], [:kanji, :kana]), msg)
     when :de
       return unless msg.tail
       resetResults(msg.replyTo)
-      replyToEnquirer(lookup(msg.tail, [:english]), msg)
+      replyToEnquirer(lookup([msg.tail], [:english]), msg)
     when :dn
       if @resultListMarks[msg.replyTo]
         @resultListMarks[msg.replyTo] += @menusize
@@ -133,15 +133,17 @@ class Daijirin < IRCPlugin
   end
 
   # Looks up a word in specified hash(es) and returns the result as an array of entries
-  def lookup(word, hashes)
-    lookupResult = []
+  def lookup(words, hashes)
+    lookup_result = []
     hashes.each do |h|
-      entryArray = @hash[h][word]
-      lookupResult |= entryArray if entryArray
+      words.each do |word|
+        entry_array = @hash[h][word]
+        lookup_result |= entry_array if entry_array
+      end
     end
-    return if lookupResult.empty?
-    sortResult(lookupResult)
-    lookupResult
+    return if lookup_result.empty?
+    sortResult(lookup_result)
+    lookup_result
   end
 
   # Looks up keywords in the keyword hash.
