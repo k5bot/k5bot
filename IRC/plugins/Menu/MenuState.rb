@@ -84,9 +84,11 @@ class MenuState
       unless self.move_down_to!(new_items[0], msg)
         # the single entry was a chain (no forks),
         # can't stay in it, rollback entering.
-        @location.pop
-        @items = old_items
-        @mark = old_mark
+        if @location.size > 1
+          @location.pop
+          @items = old_items
+          @mark = old_mark
+        end
         return false
       end
       return true
