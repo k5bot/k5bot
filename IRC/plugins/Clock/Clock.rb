@@ -18,6 +18,6 @@ class Clock < IRCPlugin
   end
 
   def time
-    Time.now
+    Time.now.utc
   end
 end
