@@ -108,4 +108,12 @@ class IRCMessage
     return unless @command == :privmsg
     @bot.send "PRIVMSG #{replyTo} :#{s}"
   end
+
+  def notice_user(text)
+    return if !text
+    s = text.to_s
+    return if s.empty?
+    return unless @command == :privmsg
+    @bot.send "NOTICE #{nick} :#{s}"
+  end
 end
