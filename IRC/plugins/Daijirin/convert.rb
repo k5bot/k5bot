@@ -55,7 +55,8 @@ class DaijirinConverter
             (@hash[:kanji][x] ||= []) << entry
           end
 
-          (@hash[:kana][hiragana(entry.kana)] ||= []) << entry
+          hiragana = hiragana(entry.kana)
+          (@hash[:kana][hiragana] ||= []) << entry
 
           if entry.english
             entry.english.each do |x|
@@ -77,7 +78,6 @@ class DaijirinConverter
 
   # Duplicated method from ../Language/Language.rb
   def hiragana(katakana)
-    return katakana unless katakana =~ /[\u30A0-\u30FF\uFF61-\uFF9D\u31F0-\u31FF]/
     hiragana = katakana.dup
     @katakana.each{|k| hiragana.gsub!(k, @kata2hira[k])}
 
