@@ -54,18 +54,47 @@ class IRCBot
     yield @config
   end
 
-  def send(raw)
-    raw = encode raw
-    raw.gsub!(/[\n]+/, ' ')
+  #truncates truncates a string, so that it contains no more than 510 characters
+  def truncate_for_irc(raw)
+    raw = encode raw.dup
+
+    #char-per-char correspondence replace, to make the returned count meaningful
+    raw.gsub!("\n", ' ')
     raw.strip!
-    raw = raw[0, 512] # Trim to max 512 characters
+
+    #raw = raw[0, 512] # Trim to max 512 characters
+    #the above is wrong. characters can be of different size in bytes.
+
+    #we trim to 510 bytes, b/c the limit is 512, and we need to accommodate for cr/lf
+    truncated = raw.byteslice(0, 510)
+
+    #the above might have resulted in a malformed string
+    #try to guess the necessary resulting length in chars, and
+    #make a clean cut on a character boundary
+    i = truncated.length
+    loop do
+      truncated = raw[0, i]
+      break if truncated.bytesize <= 510
+      i-=1
+    end
+
+    truncated
+  end
+
+  #returns number of characters written from given string
+  def send(raw)
+    raw = truncate_for_irc(raw)
+
     @lastsent = raw
     str = raw.dup
     str.gsub!(@config[:serverpass], '*****') if @config[:serverpass]
     str.gsub!(@config[:userpass], '*****') if @config[:userpass]
     puts "#{timestamp} \e[#34m#{str}\e[0m"
     @sock.write "#{raw}\r\n"
+
+    raw.length
   end
+
 
   def receive(raw)
     @watch_time = Time.now
