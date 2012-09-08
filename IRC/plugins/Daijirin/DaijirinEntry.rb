@@ -67,11 +67,16 @@ class DaijirinEntry
     @info
   end
 
-  def to_s
+  def to_lines
     tmp = []
     tmp << raw[0].chop
     tmp += info
-    tmp.join("\n")
+    tmp
+  end
+
+  def to_s
+   tmp = to_lines
+   tmp.join("\n")
   end
 
   def marshal_dump

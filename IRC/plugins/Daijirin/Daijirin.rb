@@ -72,7 +72,7 @@ class Daijirin < IRCPlugin
         index = indexstr.to_i if indexstr
         if index > 0 && index < lr.length + 1
           entry = lr[index - 1]
-          msg.reply(entry.to_s) if entry
+          do_reply(msg, entry) if entry
         end
       end
     end
@@ -88,7 +88,7 @@ class Daijirin < IRCPlugin
       if mark < lr.length then
         if lr.length == 1 then
           @resultListMarks[msg.replyTo] = 1
-          msg.reply(lr.first.to_s)
+          do_reply(msg, lr.first)
         else
           menuItems = lr[mark, @menusize]
           readingsDisplay = (menuItems.length > 1) && (menuItems.collect { |e| e.kana }.uniq.length == 1)
@@ -106,6 +106,12 @@ class Daijirin < IRCPlugin
       end
     else
       msg.reply("No hit for '#{msg.tail}'.")
+    end
+  end
+
+  def do_reply(msg, entry)
+    entry.to_lines.each do |line|
+      msg.reply(line)
     end
   end
 
