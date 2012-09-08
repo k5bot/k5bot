@@ -112,6 +112,11 @@ class DaijirinEntry
     s = (s or "").strip
 
     @kanji, s = split(s,KANJI_MATCHER,'%k%')
+    @kanji = @kanji.collect do |k|
+      k.split('・').map {|x| x.strip}
+    end
+    @kanji.flatten!
+
     @accent, s = split(s,ACCENT_MATCHER,'%a%')
     @english, s = split(s,ENGLISH_MATCHER,'%e%')
     @type, s = split(s,TYPE_MATCHER,'%t%')
