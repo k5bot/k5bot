@@ -121,8 +121,14 @@ class Daijirin < IRCPlugin
   end
 
   def do_reply(msg, entry)
-    entry.to_lines.each do |line|
-      msg.reply(line)
+    show_publicly = true
+    entry.to_lines.each_with_index do |line, i|
+      if show_publicly
+        msg.reply(line)
+      else
+        msg.notice_user(line)
+      end
+      show_publicly = false if line.match(/^\s*（(?:１|1)）/) or i > 2
     end
   end
 
