@@ -91,11 +91,22 @@ class Daijirin < IRCPlugin
           do_reply(msg, lr.first)
         else
           menuItems = lr[mark, @menusize]
-          readingsDisplay = (menuItems.length > 1) && (menuItems.collect { |e| e.kana }.uniq.length == 1)
+          amb_chk_kanji = Hash.new(0)
+          amb_chk_kana = Hash.new(0)
+          menuItems.each do |e|
+            amb_chk_kanji[e.kanji.join(',')] += 1
+            amb_chk_kana[e.kana] += 1
+          end
+          render_kanji = amb_chk_kana.any? { |x,y| y > 1 } # || !render_kana
           if menuItems
-            menu = menuItems.map.with_index { |e, i| "#{i + mark + 1} #{readingsDisplay ? e.kana : e.kanji}" }.join(' | ')
+            menu = menuItems.map.with_index { |e, i|
+              kanji_list = e.kanji.join(',')
+              render_kana = amb_chk_kanji[kanji_list] > 1 || kanji_list.empty? # || !render_kanji
+              res = (render_kanji and !kanji_list.empty?) ? (render_kana ? "#{kanji_list} (#{e.kana})" : kanji_list) : e.kana
+              "#{i + mark + 1} #{res}"
+            }.join(' | ')
             menu = "#{lr.length} hits: " + menu if mark == 0
-            menu += " [#{IRCMessage::BotCommandPrefix}n for next]" if (mark + @menusize) < lr.length
+            menu += " [#{IRCMessage::BotCommandPrefix}dn for next]" if (mark + @menusize) < lr.length
             msg.reply(menu)
           else
             @resultListMarks.delete(msg.replyTo)
