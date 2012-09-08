@@ -36,7 +36,7 @@ class Daijirin < IRCPlugin
 
     @l = @bot.pluginManager.plugins[:Language]
     @m = @bot.pluginManager.plugins[:Menu]
-    loadDaijirin
+    load_daijirin
   end
 
   def beforeUnload
@@ -97,15 +97,15 @@ class Daijirin < IRCPlugin
       end
     end
     return if lookup_result.empty?
-    sortResult(lookup_result)
+    sort_result(lookup_result)
     lookup_result
   end
 
-  def sortResult(lr)
+  def sort_result(lr)
     lr.sort_by! { |e| e.sort_key } if lr
   end
 
-  def loadDaijirin
+  def load_daijirin
     File.open("#{(File.dirname __FILE__)}/daijirin.marshal", 'r') do |io|
       @hash = Marshal.load(io)
     end
