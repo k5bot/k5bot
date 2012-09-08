@@ -8,7 +8,7 @@ require_relative '../../IRCPlugin'
 require_relative 'DaijirinEntry'
 
 class Daijirin < IRCPlugin
-  Description = "An Daijirin plugin."
+  Description = "A Daijirin plugin."
   Commands = {
     :dj => "looks up a Japanese word in Daijirin",
     :de => "looks up an English word in Daijirin",
@@ -69,7 +69,7 @@ class Daijirin < IRCPlugin
         @enquiryTimes[msg.replyTo] = Time.now.to_i
         indexstr = msg.message[/^\s*[dD][0-9]+\s*$/]
         index = 0
-        index = indexstr.gsub(/[dD]/,'').to_i if indexstr
+        index = indexstr.gsub(/[dD]/, '').to_i if indexstr
         if index > 0 && index < lr.length + 1
           entry = lr[index - 1]
           do_reply(msg, entry) if entry
@@ -97,11 +97,11 @@ class Daijirin < IRCPlugin
             amb_chk_kanji[e.kanji.join(',')] += 1
             amb_chk_kana[e.kana] += 1
           end
-          render_kanji = amb_chk_kana.any? { |x,y| y > 1 } # || !render_kana
+          render_kanji = amb_chk_kana.any? { |x, y| y > 1 }
           if menuItems
             menu = menuItems.map.with_index { |e, i|
               kanji_list = e.kanji.join(',')
-              render_kana = amb_chk_kanji[kanji_list] > 1 || kanji_list.empty? # || !render_kanji
+              render_kana = amb_chk_kanji[kanji_list] > 1 || kanji_list.empty?
               res = (render_kanji and !kanji_list.empty?) ? (render_kana ? "#{kanji_list} (#{e.kana})" : kanji_list) : e.kana
               "#{i + mark + 1} #{res}"
             }.join(' | ')
@@ -166,7 +166,7 @@ class Daijirin < IRCPlugin
   end
 
   def sortResult(lr)
-    lr.sort_by!{|e| e.sort_key} if lr
+    lr.sort_by! { |e| e.sort_key } if lr
   end
 
   def loadDaijirin
