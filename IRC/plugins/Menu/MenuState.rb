@@ -35,7 +35,8 @@ class MenuState
     @menu_size = menu_size
     @expiry_duration = expiry_duration
     @access_time = Time.now.to_i
-
+    @items = nil
+    @mark = nil
     @location = []
   end
 
@@ -52,17 +53,47 @@ class MenuState
     items[index - 1]
   end
 
-  def move_down_to!(node)
+  def move_down_to!(node, msg)
     return false unless node # get_child failed or something
 
     self.do_access!
 
-    new_items = node.enter(null)
-    return false unless new_items # do nothing else if node is not enterable
+    new_items = node.enter(nil, msg)
+    puts "new_items:"
+    puts new_items.inspect
+    unless new_items
+      # do nothing else if node is not enterable
+      return false
+    end
+    if new_items.empty?
+      # if node is enterable but empty,
+      # print that there's nothing to look at, and don't enter
+      msg.reply("No hits.")
+      return false
+    end
 
     @location << node
+
+    old_items = @items
     @items = new_items
-    @mark = nil
+
+    old_mark = @mark
+    @mark = 0
+
+    if new_items.length == 1
+      unless self.move_down_to!(new_items[0], msg)
+        # the single entry was a chain (no forks),
+        # can't stay in it, rollback entering.
+        @location.pop
+        @items = old_items
+        @mark = old_mark
+        return false
+      end
+      return true
+    end
+
+    #finally, a fork! print choices and remain there
+    self.show_descriptions!(msg)
 
     true
   end
@@ -70,17 +101,21 @@ class MenuState
   def show_descriptions!(msg)
     self.do_access!
 
-    @mark = 0 unless @mark # continue showing menu from the beginning
+    unless @mark
+      msg.reply("No more hits.")
+      @mark = 0 # continue showing menu from the beginning
+      return
+    end
 
     menu_text = @items[@mark, @menu_size].map.with_index do |e, i|
-      "#{i + @mark + 1} #{e.definition}"
+      "#{i + @mark + 1} #{e.description}"
     end.join(' | ')
 
-    menu_text = "#{lr.length} hits: " + menu_text if mark == 0
+    menu_text = "#{@items.length} hits: " + menu_text if mark == 0
 
     @mark += @menu_size
 
-    if @mark < lr.length
+    if @mark < @items.length
       menu_text += " [#{IRCMessage::BotCommandPrefix}n for next]"
     else
       @mark = nil
@@ -89,7 +124,7 @@ class MenuState
     msg.reply(menu_text)
   end
 
-  def move_up!()
+  def move_up!(msg)
     self.do_access!
 
     # don't allow to pop higher than topmost node
@@ -99,9 +134,11 @@ class MenuState
     parent = @location[-1]
 
     # in case, if node is somehow no longer enterable
-    @items = parent.enter(child) || []
+    @items = parent.enter(child, msg) || []
 
     @mark = nil
+
+    self.show_descriptions!(msg)
 
     true
   end

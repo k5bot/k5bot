@@ -32,6 +32,13 @@ class Menu < IRCPlugin
     rescue ScriptError, StandardError => e
       puts "Cannot load MenuNode: #{e}"
     end
+
+    begin
+      Object.send :remove_const, :MenuNodeSimple
+      load "#{plugin_root}/MenuNodeSimple.rb"
+    rescue ScriptError, StandardError => e
+      puts "Cannot load MenuNodeSimple: #{e}"
+    end
   end
 
   def beforeUnload
@@ -40,32 +47,30 @@ class Menu < IRCPlugin
 
   def on_privmsg(msg)
     self.evict_expired_menus!
-    return unless msg.tail
+    menu_state = @menu_states[msg.replyTo]
+    return unless menu_state
     case msg.botcommand
       when :n
-        menu_state = @menu_states[msg.replyTo]
-        return unless menu_state
         menu_state.show_descriptions!(msg)
       when :u
-        menu_state = @menu_states[msg.replyTo]
-        return unless menu_state
-        menu_state.show_descriptions!(msg) if menu_state.move_up!()
+        menu_state.move_up!(msg)
       else
-        menu_state = @menu_states[msg.replyTo]
-        return unless menu_state
         index_str = msg.message[/^\s*[0-9]+\s*$/]
         index = 0
         index = index_str.to_i if index_str
-        menu_state.show_descriptions! (msg) if menu_state.move_down_to!(menu_state.get_child(index))
+        menu_state.move_down_to!(menu_state.get_child(index), msg)
     end
   end
 
   def put_new_menu(plugin, root_node, msg, menu_size = 12, expire_duration = 1920)
+    puts root_node.inspect
     menu_state = MenuState.new(plugin, menu_size, expire_duration)
-    if menu_state.move_down_to!(root_node)
-      menu_state.show_descriptions! (msg)
-      @menu_states[reply_to] = menu_state
-    end
+    menu_state.move_down_to!(root_node, msg)
+    @menu_states[msg.replyTo] = menu_state
+  end
+
+  def delete_menu(plugin, msg)
+    @menu_states.delete(msg.replyTo)
   end
 
   def evict_plugin_menus!(plugin)
