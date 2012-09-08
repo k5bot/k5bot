@@ -67,9 +67,9 @@ class Daijirin < IRCPlugin
     else
       if lr = @resultLists[msg.replyTo]
         @enquiryTimes[msg.replyTo] = Time.now.to_i
-        indexstr = msg.message[/^\s*[0-9]+\s*$/]
+        indexstr = msg.message[/^\s*[dD][0-9]+\s*$/]
         index = 0
-        index = indexstr.to_i if indexstr
+        index = indexstr.gsub(/[dD]/,'').to_i if indexstr
         if index > 0 && index < lr.length + 1
           entry = lr[index - 1]
           do_reply(msg, entry) if entry
