@@ -82,10 +82,10 @@ class IRCBot
     begin
       @sock = TCPSocket.open @config[:server], @config[:port]
       login
-      until @sock.eof? do
+      until @sock.eof? do # Throws Errno::ECONNRESET
         receive @sock.gets
       end
-    rescue SocketError => e
+    rescue SocketError, Errno::ECONNRESET => e
       puts "Cannot connect: #{e}"
     end
   end
