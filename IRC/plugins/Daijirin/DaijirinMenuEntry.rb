@@ -27,7 +27,7 @@ class DaijirinMenuEntry < MenuNode
       else
         msg.notice_user(line)
       end
-      show_publicly = false if line.match(/^\s*（(?:１|1)）/) or i > 2
+      show_publicly = false if !msg.private? && (line.match(/^\s*（(?:１|1)）/) || i > 2)
     end
   end
 end
