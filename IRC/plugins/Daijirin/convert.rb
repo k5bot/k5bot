@@ -57,8 +57,10 @@ class DaijirinConverter
 
           (@hash[:kana][hiragana(entry.kana)] ||= []) << entry
 
-          entry.english.each do |x|
-            (@hash[:english][x.downcase.strip] ||= []) << entry
+          if entry.english
+            entry.english.each do |x|
+              (@hash[:english][x.downcase.strip] ||= []) << entry
+            end
           end
         end
       end
