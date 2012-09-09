@@ -6,7 +6,8 @@ This is an IRC bot implemented in Ruby.
 Usage
 --------------------------------
 1. Copy `config_example.yaml` to `config.yaml` and set proper configuration.
-2. `./bot.rb`
+2. Optional: run `./init_dictionaries.sh` to grab and initialise third-party dictionaries.
+3. `./bot.rb`
 
 License
 --------------------------------
