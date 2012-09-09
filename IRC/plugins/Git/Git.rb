@@ -9,7 +9,7 @@ require_relative '../../IRCPlugin'
 class Git < IRCPlugin
   Description = "Plugin to run git pull."
   Commands = {
-    :pull => "runs git pull"
+    :pull => "fetches changes from upstream and resets current branch and working directory to reflect it"
   }
   Dependencies = [ :Statistics ]
 
