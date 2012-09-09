@@ -76,7 +76,7 @@ class DaijirinConverter
     end
   end
 
-  # Duplicated method from ../Language/Language.rb
+  # Based on method from ../Language/Language.rb
   def hiragana(katakana)
     hiragana = katakana.dup
     @katakana.each{|k| hiragana.gsub!(k, @kata2hira[k])}
