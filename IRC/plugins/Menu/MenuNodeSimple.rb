@@ -4,6 +4,8 @@
 
 # MenuNodeSimple is a straightforward implementation of MenuNode interface
 
+require_relative 'MenuNode'
+
 class MenuNodeSimple < MenuNode
   def initialize(description, entries)
     @description = description

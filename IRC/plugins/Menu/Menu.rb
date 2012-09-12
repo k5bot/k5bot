@@ -8,6 +8,7 @@ require 'yaml'
 require_relative '../../IRCPlugin'
 require_relative 'MenuState'
 require_relative 'MenuNode'
+require_relative 'MenuNodeSimple'
 
 class Menu < IRCPlugin
   Description = "Provides Menu-related functionality."
