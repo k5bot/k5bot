@@ -12,6 +12,7 @@ class DaijirinMenuEntry < MenuNode
   def initialize(description, entry)
     @description = description
     @entry = entry
+    @to_show = 0
   end
 
   def enter(from_child, msg)
@@ -20,14 +21,36 @@ class DaijirinMenuEntry < MenuNode
   end
 
   def do_reply(msg, entry)
-    show_publicly = true
-    entry.to_lines.each_with_index do |line, i|
-      if show_publicly
-        msg.reply(line)
-      else
-        msg.notice_user(line)
+    if msg.private?
+      # Just output everything. No need for circling logic.
+      entry.info.flatten.each do |line|
+          msg.reply(line)
       end
-      show_publicly = false if !msg.private? && (line.match(/^\s*（(?:１|1)）/) || i > 2)
+      return
     end
+
+    unless @to_show
+      # Restart from the first entry
+      msg.reply("No more sub-entries.")
+      @to_show = 0
+      return
+    end
+
+    entry.info.each_with_index do |subentry, i|
+      if i > @to_show
+        subentry.each do |line|
+          msg.notice_user(line)
+        end
+      elsif i == @to_show
+        subentry.each do |line|
+          msg.reply(line)
+        end
+      else
+        # Do nothing. the entries above were printed already.
+      end
+    end
+
+    @to_show += 1
+    @to_show = nil if @to_show >= entry.info.length
   end
 end

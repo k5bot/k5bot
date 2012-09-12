@@ -69,10 +69,7 @@ class DaijirinEntry
   end
 
   def to_lines
-    tmp = []
-    tmp << raw[0].chop
-    tmp += info
-    tmp
+    info.flatten
   end
 
   def to_s
@@ -104,7 +101,13 @@ class DaijirinEntry
       @parsed = "skip"
       return @parsed
     end
+
     @info = parse_rest_of_lines(raw[1..-1])
+
+    # We actually add the first line all over again, so that
+    # it will be printed with the lines of first entry.
+    @info[0].unshift raw[0]
+
     @parsed = true
   end
 
@@ -151,12 +154,12 @@ class DaijirinEntry
 
   def parse_rest_of_lines(s)
     result = []
-    intermediate = ''
+    intermediate = []
     s.each { | line |
       line = line.chop
       if line.match(/^\s*（[\d１２３４５６７８９０]+）/)
         result << intermediate unless intermediate.empty?
-        intermediate = ''
+        intermediate = []
       end
       intermediate << line
     }
