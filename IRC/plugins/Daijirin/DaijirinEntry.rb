@@ -155,11 +155,17 @@ class DaijirinEntry
   def parse_rest_of_lines(s)
     result = []
     intermediate = []
+    met_first_entry = false
     s.each { | line |
       line = line.chop
       if line.match(/^\s*（[\d１２３４５６７８９０]+）/)
-        result << intermediate unless intermediate.empty?
-        intermediate = []
+        if met_first_entry
+          result << intermediate unless intermediate.empty?
+          intermediate = []
+        else
+          #everything up to and including the (1) subentry should go into the same array.
+          met_first_entry = true
+        end
       end
       intermediate << line
     }
