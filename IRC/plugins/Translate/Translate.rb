@@ -13,6 +13,7 @@ class Translate < IRCPlugin
   Description = "Uses the translation engine from www.ocn.ne.jp to translate between languages."
   Commands = {
     :t  => "determines if specified text is Japanese or not, then translates appropriately J>E or E>J",
+    :gt => "same as .t, but uses Google Translate",
     :je => "translates specified text from Japanese to English",
     :ej => "translates specified text from English to Japanese",
     :cj => "translates specified text from Simplified Chinese to Japanese",
@@ -45,6 +46,10 @@ class Translate < IRCPlugin
       text = msg.tail
       t = @l.containsJapanese?(text) ? (translate text, 'jaen') : (translate text, 'enja')
       msg.reply t if t
+    elsif msg.botcommand == :gt
+      text = msg.tail
+      t = @l.containsJapanese?(text) ? (gtranslate text, 'jaen') : (gtranslate text, 'enja')
+      msg.reply t if t
     else
       if lp = TranslationPairs[msg.botcommand]
         t = translate msg.tail, lp
@@ -67,5 +72,16 @@ class Translate < IRCPlugin
   rescue => e
     puts "Cannot translate: #{e}\n\t#{e.backtrace.join("\n\t")}"
   end
+
+  def googleTranslate(text, lp)
+    result = Net::HTTP.post_form(
+      URI.parse('http://translate.google.com'),
+      {'sl' => lp[0..1], 'tl' => lp[2..3], 'text' => text})
+    return if [Net::HTTPSuccess, Net::HTTPRedirection].include? result
+    doc = Nokogiri::HTML result.body
+    doc.css('span[id="result_box"] span').text.chomp
+  end
+
   alias translate ocnTranslate
+  alias gtranslate googleTranslate
 end
