@@ -13,6 +13,7 @@ require_relative 'IRCUserPool'
 require_relative 'IRCChannelPool'
 require_relative 'IRCPluginManager'
 require_relative 'Storage'
+require_relative 'Timer'
 
 class IRCBot
   attr_reader :router, :userPool, :channelPool, :pluginManager, :storage, :config, :lastsent, :lastreceived, :startTime, :user
@@ -67,6 +68,8 @@ class IRCBot
   end
 
   def receive(raw)
+    @watch_time = Time.now
+
     raw = encode raw
     @lastreceived = raw
     puts "#{timestamp} #{raw}"
@@ -80,6 +83,19 @@ class IRCBot
   def start
     @startTime = Time.now
     begin
+      if @config[:watchdog]
+        @watch_time = @startTime
+        @watchdog = Timer.new(30) do
+          interval = @config[:watchdog]
+          elapsed = Time.now - @watch_time
+          if elapsed > interval
+            puts "#{timestamp} Watchdog interval (#{interval}) elapsed, restarting bot"
+            self.stop
+            stop
+          end
+        end
+      end
+
       @sock = TCPSocket.open @config[:server], @config[:port]
       login
       until @sock.eof? do # Throws Errno::ECONNRESET
@@ -87,6 +103,21 @@ class IRCBot
       end
     rescue SocketError, Errno::ECONNRESET => e
       puts "Cannot connect: #{e}"
+    rescue IOError => e
+      puts "IOError: #{e}"
+    ensure
+        if @watchdog
+          @watchdog.stop
+          @watchdog = nil
+        end
+      @sock = nil
+    end
+  end
+
+  def stop
+    if @sock
+      puts "Forcibly closing socket"
+      @sock.close
     end
   end
 
