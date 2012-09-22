@@ -14,7 +14,15 @@ class IRCUserPool < IRCListener
     @bot = bot
     @users = @bot.storage.read('users') || {}
     @nicks = {}
-    @users.values.each { |u| @nicks[u.nick.downcase] = u }
+    @users.values.each { |u| @nicks[normalize(u.nick)] = u }
+  end
+
+  def normalize(s)
+    IRCUserPool.normalize(s)
+  end
+
+  def self.normalize(s)
+    s.downcase
   end
 
   # Finds and returns the user who send the specified message.
@@ -22,14 +30,34 @@ class IRCUserPool < IRCListener
   # If the user is the bot itself, nil will be returned.
   # If the message is not sent by a user, nil will be returned.
   def findUser(msg)
-    return unless msg.username && msg.nick
+    return unless msg.ident && msg.nick
     return if msg.nick.eql?(@bot.user.nick)
-    user = @users[msg.username.downcase.sub(/^~/, '')] || @nicks[msg.nick.downcase] || IRCUser.new(msg.username, msg.host, nil, msg.nick)
-    @nicks.delete(user.nick.downcase) if @nicks[user.nick.downcase] == user
-    user.nick = msg.nick unless msg.nick.eql?(user.nick)
-    @users[user.name.downcase] = user
+    user = @users[normalize(IRCUser.ident_to_name(msg.ident))] ||
+        @nicks[normalize(msg.nick)] ||
+        IRCUser.new(msg.ident, msg.host, nil, msg.nick)
+
+    update_user(user, msg.nick, msg.ident, msg.host)
+    user
+  end
+
+  def maybe_update_user_map(user, user_map, old_val, new_val)
+    return false unless new_val
+    return true if user == @bot.user #bot mustn't end up in user maps.
+    old_val = normalize(old_val)
+    new_val = normalize(new_val)
+
+    user_map.delete(old_val) if user_map[old_val] == user
+    user_map[new_val] = user
+
+    !old_val.eql?(new_val)
+  end
+
+  def update_user(user, nick, ident=nil, host=nil, realname=nil)
+    user.nick = nick if maybe_update_user_map(user, @nicks, user.nick, nick)
+    user.ident = ident if maybe_update_user_map(user, @users, user.name, IRCUser.ident_to_name(ident))
+    user.host = host if host
+    user.realname = realname if realname
     store
-    @nicks[user.nick.downcase] = user
   end
 
   # Finds a user from nick.
@@ -37,7 +65,7 @@ class IRCUserPool < IRCListener
   # If the user is not found, nil will be returned.
   def findUserByNick(nick)
     return if !nick || nick.empty?
-    @nicks[nick.downcase]
+    @nicks[normalize(nick)]
   end
 
   # Finds a user from user name.
@@ -45,22 +73,48 @@ class IRCUserPool < IRCListener
   # If the user is not found, nil will be returned.
   def findUserByUsername(username)
     return if !username || username.empty?
-    @users[username.downcase]
+    @users[normalize(username)]
   end
 
   def on_nick(msg)
     user = findUser(msg)
-    return if msg.message.eql?(user.nick)
-    @nicks.delete(user.nick.downcase)
-    user.nick = msg.message
-    store
-    @nicks[user.nick.downcase] = user
+    return unless user
+
+    new_nick = msg.message
+    return if new_nick.eql?(user.nick)
+
+    update_user(user, new_nick)
   end
 
   def on_privmsg(msg)
     findUser(msg)
   end
   alias on_join on_privmsg
+
+  #RPL_WHOISUSER
+  #albel727 ~kvirc unaffiliated/albel727 * :4KVIrc 4.1.0 'Equilibrium' http://kvirc.net/
+  def on_311(msg)
+    nick = msg.params[1]
+    user = findUserByNick(nick) || (nick.eql?(@bot.user.nick) ? @bot.user : nil)
+    return unless user
+    ident = msg.params[2]
+    host = msg.params[3]
+    realname = msg.params.last
+
+    update_user(user, nick, ident, host, realname)
+  end
+
+  #RPL_HOSTHIDDEN:
+  #K5 unaffiliated/albel727 :is now your hidden host (set by services.)
+  def on_396(msg)
+    host = msg.params[1]
+
+    update_user(@bot.user, nil, nil, host)
+  end
+
+  def request_whois(nick)
+    @bot.send "WHOIS #{nick}"
+  end
 
   def store
     @bot.storage.write('users', @users)
