@@ -10,6 +10,7 @@ class Timer
     extend MonitorMixin
     @handler = handler
     @interval = interval
+    @run = nil
     start
   end
 
