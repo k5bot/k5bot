@@ -16,7 +16,7 @@ class Manage < IRCPlugin
   def on_privmsg(msg)
     case msg.botcommand
     when :join
-      @bot.send "JOIN #{msg.tail.split(/[;,\s]+/).join(',')}"
+      @bot.join_channels(msg.tail.split(/[;,\s]+/))
     when :part
       @bot.send "PART #{msg.tail.split(/[;,\s]+/).join(',')}"
     end

@@ -23,7 +23,7 @@ class Statistics < IRCPlugin
   end
 
   def uptimeString
-    uptime = (Time.now - @bot.startTime)
+    uptime = (Time.now - @bot.start_time)
     u = {}
     u[:minute], u[:second] = uptime.divmod(60)
     u[:hour], u[:minute] = u[:minute].divmod(60)

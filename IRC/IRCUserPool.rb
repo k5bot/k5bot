@@ -113,7 +113,7 @@ class IRCUserPool < IRCListener
   end
 
   def request_whois(nick)
-    @bot.send "WHOIS #{nick}"
+    @bot.send_raw "WHOIS #{nick}"
   end
 
   def store

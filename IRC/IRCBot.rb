@@ -16,7 +16,7 @@ require_relative 'Storage'
 require_relative 'Timer'
 
 class IRCBot
-  attr_reader :router, :userPool, :channelPool, :pluginManager, :storage, :config, :lastsent, :lastreceived, :startTime, :user
+  attr_reader :router, :userPool, :channelPool, :pluginManager, :storage, :config, :last_sent, :last_received, :start_time, :user
 
   def initialize(config = nil)
     @config = config || {
@@ -54,8 +54,11 @@ class IRCBot
     yield @config
   end
 
-  #truncates truncates a string, so that it contains no more than 510 characters
-  def truncate_for_irc(raw)
+  #truncates truncates a string, so that it contains no more than byte_limit bytes
+  #returns hash with key :truncated, containing resulting string.
+  #hash is used to avoid double truncation and for future truncation customization.
+  def truncate_for_irc(raw, byte_limit)
+    return raw if (raw.instance_of? Hash) #already truncated
     raw = encode raw.dup
 
     #char-per-char correspondence replace, to make the returned count meaningful
@@ -65,8 +68,7 @@ class IRCBot
     #raw = raw[0, 512] # Trim to max 512 characters
     #the above is wrong. characters can be of different size in bytes.
 
-    #we trim to 510 bytes, b/c the limit is 512, and we need to accommodate for cr/lf
-    truncated = raw.byteslice(0, 510)
+    truncated = raw.byteslice(0, byte_limit)
 
     #the above might have resulted in a malformed string
     #try to guess the necessary resulting length in chars, and
@@ -74,25 +76,48 @@ class IRCBot
     i = truncated.length
     loop do
       truncated = raw[0, i]
-      break if truncated.bytesize <= 510
+      break if truncated.bytesize <= byte_limit
       i-=1
     end
 
-    truncated
+    {:truncated => truncated}
+  end
+
+  #truncates truncates a string, so that it contains no more than 510 bytes
+  #we trim to 510 bytes, b/c the limit is 512, and we need to accommodate for cr/lf
+  def truncate_for_irc_server(raw)
+    truncate_for_irc(raw, 510)
+  end
+
+  #this is like truncate_for_irc_server(),
+  #but it also tries to compensate for truncation, that
+  #will occur, if this command is broadcast to other clients.
+  def truncate_for_irc_client(raw)
+    truncate_for_irc(raw, 510-@user.host_mask.bytesize-2)
+  end
+
+  def send(raw)
+    send_raw(truncate_for_irc_client(raw))
   end
 
   #returns number of characters written from given string
-  def send(raw)
-    raw = truncate_for_irc(raw)
+  def send_raw(raw)
+    raw = truncate_for_irc_server(raw)
 
-    @lastsent = raw
-    str = raw.dup
-    str.gsub!(@config[:serverpass], '*****') if @config[:serverpass]
-    str.gsub!(@config[:userpass], '*****') if @config[:userpass]
-    puts "#{timestamp} \e[#34m#{str}\e[0m"
+    @last_sent = raw
+    raw = raw[:truncated]
+    log_sent_message(raw)
+
     @sock.write "#{raw}\r\n"
 
     raw.length
+  end
+
+  def log_sent_message(raw)
+    str = raw.dup
+    str.gsub!(@config[:serverpass], '*SRP*') if @config[:serverpass]
+    str.gsub!(@config[:userpass], '*USP*') if @config[:userpass]
+    puts "#{timestamp} \e[#34m#{str}\e[0m"
   end
 
 
@@ -100,7 +125,7 @@ class IRCBot
     @watch_time = Time.now
 
     raw = encode raw
-    @lastreceived = raw
+    @last_received = raw
     puts "#{timestamp} #{raw}"
     @router.route IRCMessage.new(self, raw.chomp)
   end
@@ -110,10 +135,10 @@ class IRCBot
   end
 
   def start
-    @startTime = Time.now
+    @start_time = Time.now
     begin
       if @config[:watchdog]
-        @watch_time = @startTime
+        @watch_time = @start_time
         @watchdog = Timer.new(30) do
           interval = @config[:watchdog]
           elapsed = Time.now - @watch_time
@@ -123,6 +148,8 @@ class IRCBot
             stop
           end
         end
+      else
+        @watchdog = nil
       end
 
       @sock = TCPSocket.open @config[:server], @config[:port]
@@ -152,7 +179,7 @@ class IRCBot
 
   def on_notice(msg)
     if msg.message && (msg.message =~ /^You are now identified for .*#{@config[:username]}.*\.$/)
-      joinChannels
+      post_login
     end
   end
 
@@ -164,12 +191,24 @@ class IRCBot
     if @config[:userpass]
       send "PRIVMSG NickServ :IDENTIFY #{@config[:username]} #{@config[:userpass]}"
     else
-      joinChannels
+      post_login
     end
   end
 
-  def joinChannels
-    send "JOIN #{@config[:channels]*','}" if @config[:channels]
+  def post_login
+    #refresh our user info once,
+    #so that truncate_for_irc_client()
+    #will truncate messages properly
+    @userPool.request_whois(@user.nick)
+    join_channels(@config[:channels])
+  end
+
+  def join_channels(channels)
+    send "JOIN #{channels*','}" if channels
+  end
+
+  def part_channels(channels)
+    send "PART #{channels*','}" if channels
   end
 
   # Checks to see if a string looks like valid UTF-8.
@@ -183,3 +222,28 @@ class IRCBot
     str
   end
 end
+
+=begin
+# The IRC protocol requires that each raw message must be not longer
+# than 512 characters. From this length with have to subtract the EOL
+# terminators (CR+LF) and the length of ":botnick!botuser@bothost "
+# that will be prepended by the server to all of our messages.
+
+# The maximum raw message length we can send is therefore 512 - 2 - 2
+# minus the length of our hostmask.
+
+max_len = 508 - myself.fullform.size
+
+# On servers that support IDENTIFY-MSG, we have to subtract 1, because messages
+# will have a + or - prepended
+if server.capabilities["identify-msg""identify-msg"]
+  max_len -= 1
+end
+
+# When splitting the message, we'll be prefixing the following string:
+# (e.g. "PRIVMSG #rbot :")
+fixed = "#{type} #{where} :"
+
+# And this is what's left
+left = max_len - fixed.size
+=end
