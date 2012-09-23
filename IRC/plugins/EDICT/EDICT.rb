@@ -102,8 +102,8 @@ class EDICT < IRCPlugin
         lookup_result = Array.new(entry_array)
       end
     end
+    return unless lookup_result && !lookup_result.empty?
     sort_result(lookup_result)
-    lookup_result = nil if lookup_result.empty?
     lookup_result
   end
 
