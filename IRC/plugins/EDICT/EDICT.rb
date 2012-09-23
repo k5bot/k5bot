@@ -71,7 +71,7 @@ class EDICT < IRCPlugin
 
     @m.put_new_menu(
       self.name,
-      MenuNodeSimple.new("EDICT query for #{word}", menu),
+      MenuNodeSimple.new("\"#{word}\" in EDICT", menu),
       msg
     )
   end

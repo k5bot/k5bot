@@ -83,7 +83,7 @@ class Daijirin < IRCPlugin
     }
 
     @m.put_new_menu(self.name,
-                    MenuNodeSimple.new("Daijirin query for #{word}", menu),
+                    MenuNodeSimple.new("\"#{word}\" in Daijirin", menu),
                     msg)
   end
 

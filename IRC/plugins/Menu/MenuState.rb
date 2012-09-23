@@ -68,7 +68,7 @@ class MenuState
     if new_items.empty?
       # if node is enterable but empty,
       # print that there's nothing to look at, and don't enter
-      msg.reply("No hits.")
+      msg.reply(node.description ? "No hits for #{node.description}." : "No hits.")
       return false
     end
 
