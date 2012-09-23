@@ -183,6 +183,14 @@ class IRCBot
     end
   end
 
+  def join_channels(channels)
+    send "JOIN #{channels*','}" if channels
+  end
+
+  def part_channels(channels)
+    send "PART #{channels*','}" if channels
+  end
+
   private
   def login
     send "PASS #{@config[:serverpass]}" if @config[:serverpass]
@@ -201,14 +209,6 @@ class IRCBot
     #will truncate messages properly
     @userPool.request_whois(@user.nick)
     join_channels(@config[:channels])
-  end
-
-  def join_channels(channels)
-    send "JOIN #{channels*','}" if channels
-  end
-
-  def part_channels(channels)
-    send "PART #{channels*','}" if channels
   end
 
   # Checks to see if a string looks like valid UTF-8.
