@@ -17,8 +17,7 @@ class EDICT < IRCPlugin
   Description = "An EDICT plugin."
   Commands = {
     :j => "looks up a Japanese word in EDICT",
-    :e => "looks up an English word in EDICT",
-    :n => "returns the next list of entries from EDICT"
+    :e => "looks up an English word in EDICT"
   }
   Dependencies = [ :Language, :Menu ]
 
