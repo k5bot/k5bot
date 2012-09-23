@@ -18,10 +18,17 @@ class Timer
     return if @run
     @run = true
     @th = Thread.new do
-      t = Time.now
+      t = Time.now + @interval
       while run?
-        t += @interval
-        (sleep(t - Time.now) rescue nil) and @handler.call(nil) rescue nil
+        to_sleep = [t - Time.now, 1].min
+        if to_sleep > 0
+          sleep(to_sleep) rescue nil
+        else
+          if run?
+            @handler.call(nil) rescue nil
+            t += @interval
+          end
+        end
       end
     end
   end
