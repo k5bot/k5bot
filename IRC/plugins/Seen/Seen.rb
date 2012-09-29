@@ -12,16 +12,22 @@ class Seen < IRCPlugin
     :seen => "[nick] (ex.: !seen K5) gives information on when [nick] was last seen"
   }
 
+  Dependencies = [ :StorageYAML ]
+
   def afterLoad
-    @seen = @bot.storage.read('seen') || {}
+    @storage = @plugin_manager.plugins[:StorageYAML]
+
+    @seen = @storage.read('seen') || {}
   end
 
   def beforeUnload
     @seen = nil
+
+    @storage = nil
   end
 
   def store
-    @bot.storage.write('seen', @seen)
+    @storage.write('seen', @seen)
   end
 
   def on_privmsg(msg)

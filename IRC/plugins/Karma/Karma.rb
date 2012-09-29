@@ -11,21 +11,24 @@ class Karma < IRCPlugin
   Commands = {
     :karma => "shows how many karma points the specified user has"
   }
-  Dependencies = [ :NumberSpell ]
+  Dependencies = [ :NumberSpell, :StorageYAML ]
 
   def afterLoad
-    @karma = @bot.storage.read('karma') || {}
     @ns = @plugin_manager.plugins[:NumberSpell]
+    @storage = @plugin_manager.plugins[:StorageYAML]
+
+    @karma = @storage.read('karma') || {}
   end
 
   def beforeUnload
     @karma = nil
 
+    @storage = nil
     @ns = nil
   end
 
   def store
-    @bot.storage.write('karma', @karma)
+    @storage.write('karma', @karma)
   end
 
   def on_privmsg(msg)
