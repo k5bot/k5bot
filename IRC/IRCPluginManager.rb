@@ -7,10 +7,10 @@
 class IRCPluginManager < IRCListener
   attr_reader :plugins, :commands, :config
 
-  def initialize(bot, config)
-    @bot = bot
+  def initialize(router, config)
     @plugins = {}
     @commands = {}
+    @router = router
     @config = config
     @loading = nil
   end
@@ -42,7 +42,7 @@ class IRCPluginManager < IRCListener
       if (plugin = @plugins[name])
         print "Initializing #{name}..."
         plugin.afterLoad
-        @bot.router.register plugin
+        @router.register plugin
         puts "done."
       end
     end
@@ -84,7 +84,7 @@ class IRCPluginManager < IRCListener
 
       p.commands.keys.each{|c| @commands.delete c} if p.commands
       @plugins.delete name.to_sym
-      @bot.router.unregister p
+      @router.unregister p
       Object.send :remove_const, name.to_sym
     rescue => e
       puts "Cannot unload plugin '#{name}': #{e}\n\t#{e.backtrace.join("\n\t")}"
@@ -120,7 +120,7 @@ class IRCPluginManager < IRCListener
       end
 
       print "Loading #{name}..."
-      p = @plugins[name.to_sym] = pluginClass.new(self, @bot)
+      p = @plugins[name.to_sym] = pluginClass.new(self)
       p.config = (config || {}).freeze
       p.commands.keys.each{|c| @commands[c] = p} if p.commands
       p.afterLoad if callAfterLoad

@@ -40,7 +40,7 @@ class IRCBot < IRCListener
     @firstListener = IRCFirstListener.new # Set first listener
     @router.register @firstListener
 
-    @pluginManager = IRCPluginManager.new(self, @config[:plugins]) # Add plugin manager
+    @pluginManager = IRCPluginManager.new(@router, @config[:plugins]) # Add plugin manager
 
     @pluginManager.load_plugin(:StorageYAML)
     @storage = @pluginManager.plugins[:StorageYAML] # Add storage
