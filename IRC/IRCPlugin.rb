@@ -25,7 +25,7 @@ class IRCPlugin < IRCListener
   def afterLoad; end
 
   # Called by the plugin manager before the plugin is unloaded.
-  # If this method returns anthing other than nil or false, the plugin
+  # If this method returns anything other than nil or false, the plugin
   # will not be unloaded and its return value will be displayed in the log.
   def beforeUnload; end
 
