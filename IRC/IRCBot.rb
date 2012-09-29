@@ -12,7 +12,7 @@ require_relative 'IRCFirstListener'
 require_relative 'IRCUserPool'
 require_relative 'IRCChannelPool'
 require_relative 'IRCPluginManager'
-require_relative 'Storage'
+require_relative '../IRC/plugins/StorageYAML/StorageYAML'
 require_relative 'Timer'
 
 class IRCBot < IRCListener
