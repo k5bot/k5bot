@@ -18,6 +18,10 @@ class IRCPlugin < IRCListener
   # A list containing the names of the plugins this plugin depends on
   Dependencies = nil
 
+  def initialize(bot)
+    @bot = bot
+  end
+
   # Called by the plugin manager after all plugins have been loaded.
   # Use this method to initialize anything dependent on other plugins.
   # Convenient also to use it as a replacement for initialize, since

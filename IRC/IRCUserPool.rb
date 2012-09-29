@@ -10,7 +10,6 @@ require_relative 'IRCUser'
 
 class IRCUserPool < IRCListener
   def initialize(bot)
-    super
     @bot = bot
     @users = @bot.storage.read('users') || {}
     @nicks = {}

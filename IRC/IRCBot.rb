@@ -15,7 +15,7 @@ require_relative 'IRCPluginManager'
 require_relative 'Storage'
 require_relative 'Timer'
 
-class IRCBot
+class IRCBot < IRCListener
   attr_reader :router, :userPool, :channelPool, :pluginManager, :storage, :config, :last_sent, :last_received, :start_time, :user
 
   def initialize(config = nil)
@@ -42,8 +42,14 @@ class IRCBot
     @router.register self
 
     @firstListener = IRCFirstListener.new self  # Set first listener
+    @router.register @firstListener
+
     @userPool = IRCUserPool.new self  # Add user pool
+    @router.register @userPool
+
     @channelPool = IRCChannelPool.new self  # Add channel pool
+    @router.register @channelPool
+
     @pluginManager = IRCPluginManager.new self  # Add plugin manager
     @pluginManager.load_plugins @config[:plugins]  # Load plugins
 
@@ -175,12 +181,6 @@ class IRCBot
       puts "Forcibly closing socket"
       @sock.close
     end
-  end
-
-  # Temporarily copied over from IRCListener
-  def receive_message(msg)
-    meth = "on_#{msg.command.to_s}"
-    self.__send__ meth, msg if self.respond_to? meth
   end
 
   def on_notice(msg)

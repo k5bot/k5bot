@@ -8,8 +8,10 @@ require_relative 'IRCChannel'
 
 class IRCChannelPool < IRCListener
   def initialize(bot)
-    super
     @channels = {}
+    # the bot field is not really needed at the moment,
+    # but we must not forget, that channels are a per-bot information.
+    @bot = bot
   end
 
   def findChannel(msg)

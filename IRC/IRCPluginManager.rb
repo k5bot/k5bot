@@ -8,7 +8,7 @@ class IRCPluginManager < IRCListener
   attr_reader :plugins, :commands
 
   def initialize(bot)
-    super
+    @bot = bot
     @plugins = {}
     @commands = {}
   end
@@ -33,9 +33,10 @@ class IRCPluginManager < IRCListener
     end
     plugins.each do |p|
       name, _ = parse_config_entry(p)
-      if plugin = @plugins[name.to_sym]
+      if (plugin = @plugins[name.to_sym])
         print "Initializing #{name}..."
         plugin.afterLoad
+        @bot.router.register plugin
         puts "done."
       end
     end

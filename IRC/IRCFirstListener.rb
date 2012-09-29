@@ -8,6 +8,10 @@
 require_relative 'IRCListener'
 
 class IRCFirstListener < IRCListener
+  def initialize(bot)
+    @bot = bot
+  end
+
   def on_ping(msg)
     @bot.send_raw(msg.params ? "PONG :#{msg.params.first}" : 'PONG')
   end

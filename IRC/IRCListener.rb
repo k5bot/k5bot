@@ -7,10 +7,6 @@
 require_relative 'IRCMessageRouter'
 
 class IRCListener
-  def initialize(bot)
-    (@bot = bot).router.register self
-  end
-
   # Default listener behavior is to dispatch the message
   # to command-specific methods. This allows listeners to
   # override the behavior, if they need generic message handling.
