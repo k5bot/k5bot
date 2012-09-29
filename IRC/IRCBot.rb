@@ -44,14 +44,15 @@ class IRCBot < IRCListener
     @firstListener = IRCFirstListener.new # Set first listener
     @router.register @firstListener
 
+    @pluginManager = IRCPluginManager.new(self, @config[:plugins]) # Add plugin manager
+
     @userPool = IRCUserPool.new self  # Add user pool
     @router.register @userPool
 
     @channelPool = IRCChannelPool.new self  # Add channel pool
     @router.register @channelPool
 
-    @pluginManager = IRCPluginManager.new self  # Add plugin manager
-    @pluginManager.load_plugins @config[:plugins]  # Load plugins
+    @pluginManager.load_all_plugins  # Load plugins
 
     $stdout.sync = true
   end

@@ -5,12 +5,14 @@
 # IRCPluginManager manages all plugins
 
 class IRCPluginManager < IRCListener
-  attr_reader :plugins, :commands
+  attr_reader :plugins, :commands, :config
 
-  def initialize(bot)
+  def initialize(bot, config)
     @bot = bot
     @plugins = {}
     @commands = {}
+    @config = config
+    @loading = nil
   end
 
   def parse_config_entry(p)
@@ -24,14 +26,14 @@ class IRCPluginManager < IRCListener
     return name, config
   end
 
-  def load_plugins(plugins)
-    return unless plugins
-    @loading = plugins
-    plugins.each do |p|
+  def load_all_plugins()
+    return unless @config
+    @loading = @config
+    @config.each do |p|
       name, config = parse_config_entry(p)
-      load_plugin(name, config, false)
+      do_load_plugin(name, config, false)
     end
-    plugins.each do |p|
+    @config.each do |p|
       name, _ = parse_config_entry(p)
       if (plugin = @plugins[name.to_sym])
         print "Initializing #{name}..."
@@ -43,6 +45,16 @@ class IRCPluginManager < IRCListener
     @loading = nil
   end
 
+  def load_plugin(name)
+    config_entry = @config.find do |p|
+      n, _ = parse_config_entry(p)
+      n.to_sym == name.to_sym
+    end
+
+    _, config = parse_config_entry(config_entry || name)
+
+    do_load_plugin(name, config)
+  end
 
   def unload_plugin(name)
     begin
@@ -76,7 +88,9 @@ class IRCPluginManager < IRCListener
     true
   end
 
-  def load_plugin(name, config, callAfterLoad = true)
+  private
+
+  def do_load_plugin(name, config, callAfterLoad = true)
     return if name !~ /\A[a-zA-Z0-9]+\Z/m
     begin
       requested = "IRC/plugins/#{name.to_s}/#{name.to_s}.rb"
