@@ -27,9 +27,13 @@ class IRCPluginManager < IRCListener
   end
 
   def load_all_plugins()
-    return unless @config
+    do_load_plugins(@config)
+  end
+
+  def do_load_plugins(to_load)
+    return unless to_load
     @loading = []
-    @config.each do |p|
+    to_load.each do |p|
       name, config = parse_config_entry(p)
       unless plugins[name]
         @loading << [name, config]
@@ -51,14 +55,13 @@ class IRCPluginManager < IRCListener
 
   def load_plugin(name)
     name = name.to_sym
+
     config_entry = @config.find do |p|
       n, _ = parse_config_entry(p)
       n == name
     end
 
-    _, config = parse_config_entry(config_entry || name)
-
-    do_load_plugin(name, config)
+    do_load_plugins([config_entry || name])
   end
 
   def unload_plugin(name)
