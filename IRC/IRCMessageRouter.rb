@@ -7,8 +7,7 @@
 require 'set'
 
 class IRCMessageRouter
-  def initialize(bot)
-    @bot = bot
+  def initialize()
     @listeners = []
   end
 

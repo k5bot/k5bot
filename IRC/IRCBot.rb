@@ -38,7 +38,7 @@ class IRCBot
 
     @user = IRCUser.new(@config[:username], nil, @config[:realname], @config[:nickname])
 
-    @router = IRCMessageRouter.new self
+    @router = IRCMessageRouter.new
     @router.register self
 
     @firstListener = IRCFirstListener.new self  # Set first listener
