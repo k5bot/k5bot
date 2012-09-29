@@ -4,8 +4,6 @@
 
 # IRCListener is the superclass to all listeners
 
-require_relative 'IRCMessageRouter'
-
 class IRCListener
   # Default listener behavior is to dispatch the message
   # to command-specific methods. This allows listeners to

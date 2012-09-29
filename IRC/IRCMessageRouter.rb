@@ -5,12 +5,14 @@
 # IRCMessageHandler routes messages to its listeners
 
 require 'set'
+require_relative 'IRCListener'
 
-class IRCMessageRouter
+class IRCMessageRouter < IRCListener
   def initialize()
     @listeners = []
   end
 
+  alias :dispatch_message_to_self :receive_message
   def receive_message(msg)
     @listeners.each do |listener|
       next unless listener
@@ -21,6 +23,7 @@ class IRCMessageRouter
       end
     end
   end
+  alias :dispatch_message_to_children :receive_message
 
   def register(listener)
     @listeners << listener
