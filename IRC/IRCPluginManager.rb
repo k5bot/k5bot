@@ -13,44 +13,11 @@ class IRCPluginManager < IRCListener
     @router = router
     @config = config
     @loading = nil
-  end
 
-  def parse_config_entry(p)
-    if p.is_a?(Hash)
-      name = p.keys.first
-      config = p[name]
-    else
-      name = p
-      config = nil
-    end
-    return name.to_sym, config
   end
 
   def load_all_plugins()
     do_load_plugins(@config)
-  end
-
-  def do_load_plugins(to_load)
-    return unless to_load
-    @loading = []
-    to_load.each do |p|
-      name, config = parse_config_entry(p)
-      unless plugins[name]
-        @loading << [name, config]
-      end
-    end
-    @loading.each do |name, config|
-      do_load_plugin(name, config, false)
-    end
-    @loading.each do |name, _|
-      if (plugin = @plugins[name])
-        print "Initializing #{name}..."
-        plugin.afterLoad
-        @router.register plugin
-        puts "done."
-      end
-    end
-    @loading = nil
   end
 
   def load_plugin(name)
@@ -97,6 +64,40 @@ class IRCPluginManager < IRCListener
   end
 
   private
+
+  def parse_config_entry(p)
+    if p.is_a?(Hash)
+      name = p.keys.first
+      config = p[name]
+    else
+      name = p
+      config = nil
+    end
+    return name.to_sym, config
+  end
+
+  def do_load_plugins(to_load)
+    return unless to_load
+    @loading = []
+    to_load.each do |p|
+      name, config = parse_config_entry(p)
+      unless plugins[name]
+        @loading << [name, config]
+      end
+    end
+    @loading.each do |name, config|
+      do_load_plugin(name, config, false)
+    end
+    @loading.each do |name, _|
+      if (plugin = @plugins[name])
+        print "Initializing #{name}..."
+        plugin.afterLoad
+        @router.register plugin
+        puts "done."
+      end
+    end
+    @loading = nil
+  end
 
   def do_load_plugin(name, config, callAfterLoad = true)
     return true if plugins[name.to_sym] # success, if already loaded
