@@ -15,7 +15,6 @@ class IRCMessageRouter < IRCListener
   alias :dispatch_message_to_self :receive_message
   def receive_message(msg)
     @listeners.each do |listener|
-      next unless listener
       begin
         listener.receive_message(msg)
       rescue => e
@@ -26,7 +25,7 @@ class IRCMessageRouter < IRCListener
   alias :dispatch_message_to_children :receive_message
 
   def register(listener)
-    @listeners << listener
+    @listeners << listener if listener
   end
 
   def unregister(listener)
