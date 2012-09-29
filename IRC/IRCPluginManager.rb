@@ -13,6 +13,22 @@ class IRCPluginManager < IRCListener
     @router = router
     @config = config
 
+    @listeners = [] # IRCPluginListener-s of plugin attach/detach events
+  end
+
+  def register(listener)
+    if listener && listener.attached_to_manager(self)
+      @listeners << listener
+    end
+  end
+
+  def unregister(listener)
+    old_size = @listeners.size
+    @listeners.delete_if{|l| l == listener}
+    while old_size > @listeners.size
+      listener.detached_from_manager(self)
+      old_size -= 1
+    end
   end
 
   def load_all_plugins()
@@ -26,6 +42,14 @@ class IRCPluginManager < IRCListener
   end
 
   def unload_plugin(name)
+    unloading = [find_config_entry(name)]
+
+    error = notify_listeners(:before_unload, unloading)
+    if error
+      puts "A PluginManager listener refuses unloading of plugins: #{error}"
+      return false
+    end
+
     begin
       p = @plugins[name.to_sym]
       return false unless p
@@ -54,7 +78,10 @@ class IRCPluginManager < IRCListener
     rescue => e
       puts "Cannot unload plugin '#{name}': #{e}\n\t#{e.backtrace.join("\n\t")}"
       return false
+    ensure
+      notify_listeners(:after_unload, unloading)
     end
+
     true
   end
 
@@ -92,26 +119,37 @@ class IRCPluginManager < IRCListener
       end
     end
 
-    overall = nil
-    loading.each do |name, config|
-      overall = false if !do_load_plugin(name, config, loading)
+    error = notify_listeners(:before_load, loading)
+    if error
+      puts "A PluginManager listener refuses accepting plugins: #{error}"
+      return false
     end
 
-    loading.each do |name, _|
-      if (plugin = @plugins[name])
-        begin
-          print "Initializing plugin #{name}..."
-          plugin.afterLoad
-          @router.register plugin
-          puts "done."
-        rescue ScriptError, StandardError => e
-          puts "Cannot initialize plugin '#{name}': #{e}"
-          overall = false
+    overall = nil
+    begin
+      loading.each do |name, config|
+        overall = false if !do_load_plugin(name, config, loading)
+      end
+
+      loading.each do |name, _|
+        if (plugin = @plugins[name])
+          begin
+            print "Initializing plugin #{name}..."
+            plugin.afterLoad
+            @router.register plugin
+            puts "done."
+          rescue ScriptError, StandardError => e
+            puts "Cannot initialize plugin '#{name}': #{e}"
+            overall = false
+          end
         end
       end
+
+      overall = true if overall == nil
+    ensure
+      notify_listeners(:after_load, loading)
     end
 
-    overall = true if overall == nil
     overall
   end
 
@@ -149,5 +187,27 @@ class IRCPluginManager < IRCListener
       return false
     end
     true
+  end
+
+  def notify_listeners(method, list)
+    @listeners.each do |listener|
+      result = case method
+                 when :before_load
+                   listener.before_plugin_load(self, list)
+                 when :after_load
+                   listener.after_plugin_load(self, list)
+                   nil # ignore returned value
+                 when :before_unload
+                   listener.before_plugin_unload(self, list)
+                 when :after_unload
+                   listener.after_plugin_unload(self, list)
+                   nil # ignore returned value
+                 else
+                   raise ArgumentError, "Bug! Not one of predefined methods: #{method}"
+               end
+      return result if result # stop on first disagreeing handler
+    end
+
+    nil
   end
 end
