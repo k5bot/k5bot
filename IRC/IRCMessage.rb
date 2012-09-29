@@ -14,7 +14,7 @@
 # unless it is the 15th <param> in which case ':' is optional.
 
 class IRCMessage
-  attr_reader :prefix, :command, :params, :timestamp
+  attr_reader :prefix, :command, :params, :timestamp, :bot
 
   BotCommandPrefix = '.'
 
