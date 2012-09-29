@@ -10,9 +10,10 @@
 :channels:
 - "#channel_one"
 - "#channel_two"
-:datadirectory: "~/.ircbot"
 :plugins:
 - :Help
+- :StorageYaml:
+    :datadirectory: "~/.ircbot"
 - :Clock
 - :Example:
     :foo: baz

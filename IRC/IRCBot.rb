@@ -12,7 +12,6 @@ require_relative 'IRCFirstListener'
 require_relative 'IRCUserPool'
 require_relative 'IRCChannelPool'
 require_relative 'IRCPluginManager'
-require_relative '../IRC/plugins/StorageYAML/StorageYAML'
 require_relative 'Timer'
 
 class IRCBot < IRCListener
@@ -29,12 +28,9 @@ class IRCBot < IRCListener
       :userpass => nil,
       :channels => nil,
       :plugins  => nil,
-      :datadirectory => nil
     }
 
     @config.freeze  # Don't want anything modifying this
-
-    @storage = Storage.new @config[:datadirectory] # Add storage
 
     @user = IRCUser.new(@config[:username], nil, @config[:realname], @config[:nickname])
 
@@ -45,6 +41,9 @@ class IRCBot < IRCListener
     @router.register @firstListener
 
     @pluginManager = IRCPluginManager.new(self, @config[:plugins]) # Add plugin manager
+
+    @pluginManager.load_plugin(:StorageYAML)
+    @storage = @pluginManager.plugins[:StorageYAML] # Add storage
 
     @userPool = IRCUserPool.new self  # Add user pool
     @router.register @userPool
