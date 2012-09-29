@@ -23,19 +23,23 @@ class IRCPluginManager < IRCListener
       name = p
       config = nil
     end
-    return name, config
+    return name.to_sym, config
   end
 
   def load_all_plugins()
     return unless @config
-    @loading = @config
+    @loading = []
     @config.each do |p|
       name, config = parse_config_entry(p)
+      unless plugins[name]
+        @loading << [name, config]
+      end
+    end
+    @loading.each do |name, config|
       do_load_plugin(name, config, false)
     end
-    @config.each do |p|
-      name, _ = parse_config_entry(p)
-      if (plugin = @plugins[name.to_sym])
+    @loading.each do |name, _|
+      if (plugin = @plugins[name])
         print "Initializing #{name}..."
         plugin.afterLoad
         @bot.router.register plugin
@@ -46,9 +50,10 @@ class IRCPluginManager < IRCListener
   end
 
   def load_plugin(name)
+    name = name.to_sym
     config_entry = @config.find do |p|
       n, _ = parse_config_entry(p)
-      n.to_sym == name.to_sym
+      n == name
     end
 
     _, config = parse_config_entry(config_entry || name)
@@ -91,7 +96,8 @@ class IRCPluginManager < IRCListener
   private
 
   def do_load_plugin(name, config, callAfterLoad = true)
-    return if name !~ /\A[a-zA-Z0-9]+\Z/m
+    return true if plugins[name.to_sym] # success, if already loaded
+    return false if name !~ /\A[a-zA-Z0-9]+\Z/m
     begin
       requested = "IRC/plugins/#{name.to_s}/#{name.to_s}.rb"
       filename = Dir.glob(requested, File::FNM_CASEFOLD).first
@@ -108,7 +114,7 @@ class IRCPluginManager < IRCListener
           lacking << d unless (@plugins[d]) || (@loading && @loading.include?(d))
         end
         unless lacking.empty?
-          Object.send(:remove_const, name.to_sym) unless @plugins[name.to_sym]
+          Object.send(:remove_const, name.to_sym)
           return false
         end
       end
