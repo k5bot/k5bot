@@ -14,10 +14,12 @@ require_relative 'IRCChannelPool'
 require_relative 'IRCPluginManager'
 require_relative 'Timer'
 
-class IRCBot < IRCListener
-  attr_reader :router, :userPool, :channelPool, :pluginManager, :storage, :config, :last_sent, :last_received, :start_time, :user
+class IRCBot < IRCMessageRouter
+  attr_reader :userPool, :channelPool, :pluginManager, :storage, :config, :last_sent, :last_received, :start_time, :user
 
   def initialize(config = nil)
+    super()
+
     @config = config || {
       :server => 'localhost',
       :port => 6667,
@@ -34,22 +36,19 @@ class IRCBot < IRCListener
 
     @user = IRCUser.new(@config[:username], nil, @config[:realname], @config[:nickname])
 
-    @router = IRCMessageRouter.new
-    @router.register self
-
     @firstListener = IRCFirstListener.new # Set first listener
-    @router.register @firstListener
+    self.register @firstListener
 
-    @pluginManager = IRCPluginManager.new(@router, @config[:plugins]) # Add plugin manager
+    @pluginManager = IRCPluginManager.new(self, @config[:plugins]) # Add plugin manager
 
     @pluginManager.load_plugin(:StorageYAML)
     @storage = @pluginManager.plugins[:StorageYAML] # Add storage
 
     @userPool = IRCUserPool.new self  # Add user pool
-    @router.register @userPool
+    self.register @userPool
 
     @channelPool = IRCChannelPool.new self  # Add channel pool
-    @router.register @channelPool
+    self.register @channelPool
 
     @pluginManager.load_all_plugins  # Load plugins
 
@@ -126,14 +125,20 @@ class IRCBot < IRCListener
     puts "#{timestamp} \e[#34m#{str}\e[0m"
   end
 
-
   def receive(raw)
     @watch_time = Time.now
 
     raw = encode raw
     @last_received = raw
     puts "#{timestamp} #{raw}"
-    @router.receive_message IRCMessage.new(self, raw.chomp)
+    self.receive_message IRCMessage.new(self, raw.chomp)
+  end
+
+  def receive_message(msg)
+    # We override the method to listen to messages ourselves during login.
+    # Maybe it's better to extract it into IRCLoginListener.
+    dispatch_message_to_self(msg)
+    dispatch_message_to_children(msg)
   end
 
   def timestamp
