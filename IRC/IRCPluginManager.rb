@@ -21,14 +21,9 @@ class IRCPluginManager < IRCListener
   end
 
   def load_plugin(name)
-    name = name.to_sym
+    config_entry = find_config_entry(name)
 
-    config_entry = @config.find do |p|
-      n, _ = parse_config_entry(p)
-      n == name
-    end
-
-    do_load_plugins([config_entry || name])
+    do_load_plugins([config_entry])
   end
 
   def unload_plugin(name)
@@ -41,7 +36,8 @@ class IRCPluginManager < IRCListener
         pluginClass = Kernel.const_get(suspectName.to_sym)
         dependants << suspectName if pluginClass::Dependencies and pluginClass::Dependencies.include? name.to_sym
       end
-      if not dependants.empty?
+
+      unless dependants.empty?
         puts "Cannot unload plugin '#{name}', the following plugins depend on it: #{dependants.join(', ')}"
         return false
       end
@@ -64,6 +60,16 @@ class IRCPluginManager < IRCListener
   end
 
   private
+
+  def find_config_entry(name)
+    name = name.to_sym
+
+    config_entry = @config.find do |p|
+      n, _ = parse_config_entry(p)
+      n == name
+    end
+    config_entry || name
+  end
 
   def parse_config_entry(p)
     if p.is_a?(Hash)
