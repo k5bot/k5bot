@@ -11,7 +11,7 @@ class Karma < IRCPlugin
   Commands = {
     :karma => "shows how many karma points the specified user has"
   }
-  Dependencies = [ :Language ]
+  Dependencies = [ :NumberSpell ]
 
   def afterLoad
     @karma = @bot.storage.read('karma') || {}
@@ -19,8 +19,9 @@ class Karma < IRCPlugin
   end
 
   def beforeUnload
-    @ns = nil
     @karma = nil
+
+    @ns = nil
   end
 
   def store

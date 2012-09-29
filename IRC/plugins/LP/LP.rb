@@ -21,7 +21,9 @@ class LP < IRCPlugin
 
   def beforeUnload
     @lp = nil
+
     @ns = nil
+    @l = nil
   end
 
   def store
