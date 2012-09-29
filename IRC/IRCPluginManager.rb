@@ -71,10 +71,12 @@ class IRCPluginManager < IRCListener
         return false
       end
 
-      p.commands.keys.each{|c| @commands.delete c} if p.commands
       @plugins.delete name.to_sym
+
+      p.commands.keys.each{|c| @commands.delete c} if p.commands
       @router.unregister p
-      Object.send :remove_const, name.to_sym
+
+      unload_plugin_class(name)
     rescue => e
       puts "Cannot unload plugin '#{name}': #{e}\n\t#{e.backtrace.join("\n\t")}"
       return false
@@ -172,8 +174,7 @@ class IRCPluginManager < IRCListener
           lacking << d unless (@plugins[d]) || (loading && loading.include?(d))
         end
         unless lacking.empty?
-          Object.send(:remove_const, name.to_sym)
-          return false
+          raise "lacking dependencies: #{lacking}"
         end
       end
 
@@ -183,10 +184,15 @@ class IRCPluginManager < IRCListener
       p.commands.keys.each{|c| @commands[c] = p} if p.commands
       puts "done."
     rescue ScriptError, StandardError => e
+      unload_plugin_class(name)
       puts "Cannot load plugin '#{name}': #{e}"
       return false
     end
     true
+  end
+
+  def unload_plugin_class(name)
+    Object.send(:remove_const, name.to_sym)
   end
 
   def notify_listeners(method, list)
