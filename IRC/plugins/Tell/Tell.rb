@@ -51,7 +51,7 @@ class Tell < IRCPlugin
     return unless recipientNick and tellMessage
     return if recipientNick.casecmp(msg.nick) == 0
     return if recipientNick.casecmp(msg.bot.user.nick) == 0
-    user = @bot.userPool.findUserByNick(recipientNick)
+    user = msg.bot.userPool.findUserByNick(recipientNick)
     if user && user.name
       @tell[user.name.downcase] ||= {}
       rcpt = @tell[user.name.downcase]
@@ -74,7 +74,7 @@ class Tell < IRCPlugin
       if @tell[msg.user.name.downcase]
         @tell[msg.user.name.downcase].each do |senderName, tellMsgs|
           senderNick = tellMsgs.last[1]  # default to use the second element ( = the nick) of the last message as the sender nick
-          if senderUser = @bot.userPool.findUserByUsername(senderName)
+          if senderUser = msg.bot.userPool.findUserByUsername(senderName)
             senderNick = senderUser.nick
           end
           tellMsgs.each do |t, n, tellMsg|

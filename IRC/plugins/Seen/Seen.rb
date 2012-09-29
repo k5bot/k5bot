@@ -46,11 +46,11 @@ class Seen < IRCPlugin
         msg.reply("#{msg.nick}: watching your every move.")
         return
       end
-      if soughtNick.casecmp(@bot.user.nick) == 0
+      if soughtNick.casecmp(msg.bot.user.nick) == 0
         msg.reply("#{msg.nick}: o/")
         return
       end
-      soughtUser = @bot.userPool.findUserByNick(soughtNick)
+      soughtUser = msg.bot.userPool.findUserByNick(soughtNick)
       if soughtUser && soughtUser.name
         if seenData = @seen[soughtUser.name.downcase]
           as = agoStr(seenData[:time])

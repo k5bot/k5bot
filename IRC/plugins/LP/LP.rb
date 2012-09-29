@@ -37,7 +37,7 @@ class LP < IRCPlugin
     case msg.botcommand
     when :lp
       nick = msg.tail || msg.nick
-      user = @bot.userPool.findUserByNick(nick)
+      user = msg.bot.userPool.findUserByNick(nick)
       if user && user.name
         if lp = @lp[user.name.downcase]
           msg.reply("Language points for #{user.nick}: #{format(lp)}")

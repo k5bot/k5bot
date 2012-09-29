@@ -16,14 +16,14 @@ class Statistics < IRCPlugin
   def on_privmsg(msg)
     case msg.botcommand
     when :uptime
-      msg.reply(uptimeString)
+      msg.reply(uptimeString(msg.bot.start_time))
     when :version
       msg.reply(versionString)
     end
   end
 
-  def uptimeString
-    uptime = (Time.now - @bot.start_time)
+  def uptimeString(start_time)
+    uptime = (Time.now - start_time)
     u = {}
     u[:minute], u[:second] = uptime.divmod(60)
     u[:hour], u[:minute] = u[:minute].divmod(60)
