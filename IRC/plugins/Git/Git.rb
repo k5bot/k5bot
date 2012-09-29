@@ -15,7 +15,7 @@ class Git < IRCPlugin
   Dependencies = [ :Statistics ]
 
   def afterLoad
-    @l = @bot.pluginManager.plugins[:Statistics]
+    @l = @plugin_manager.plugins[:Statistics]
   end
 
   def beforeUnload

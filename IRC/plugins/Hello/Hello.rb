@@ -22,7 +22,7 @@ class Hello < IRCPlugin
   ]
 
   def afterLoad
-    @l = @bot.pluginManager.plugins[:Language]
+    @l = @plugin_manager.plugins[:Language]
     @allowedToReply = true
   end
 
@@ -31,7 +31,7 @@ class Hello < IRCPlugin
   end
 
   def on_privmsg(msg)
-    tail = msg.message.gsub(/^\s*#{@bot.user.nick}\s*[:>,]?\s+/, '').gsub(/[\s!?！？〜\.。]/, '').strip
+    tail = msg.message.gsub(/^\s*#{msg.bot.user.nick}\s*[:>,]?\s+/, '').gsub(/[\s!?！？〜\.。]/, '').strip
     reply_index = self.class::Hello.find_index { |i| @l.hiragana(i) == @l.hiragana(@l.kana(tail)) }
     msg.reply(self.class::Hello[reply_index]) if @allowedToReply && reply_index
     @allowedToReply = reply_index.nil?

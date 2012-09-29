@@ -36,8 +36,8 @@ class EDICT < IRCPlugin
       puts "Cannot load EDICTMenuEntry: #{e}"
     end
 
-    @l = @bot.pluginManager.plugins[:Language]
-    @m = @bot.pluginManager.plugins[:Menu]
+    @l = @plugin_manager.plugins[:Language]
+    @m = @plugin_manager.plugins[:Menu]
     load_edict
   end
 

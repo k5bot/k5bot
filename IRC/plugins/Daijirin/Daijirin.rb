@@ -34,8 +34,8 @@ class Daijirin < IRCPlugin
       puts "Cannot load DaijirinMenuEntry: #{e}"
     end
 
-    @l = @bot.pluginManager.plugins[:Language]
-    @m = @bot.pluginManager.plugins[:Menu]
+    @l = @plugin_manager.plugins[:Language]
+    @m = @plugin_manager.plugins[:Menu]
     load_daijirin
   end
 

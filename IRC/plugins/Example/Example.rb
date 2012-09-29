@@ -18,7 +18,7 @@ class Example < IRCPlugin
 
   def afterLoad
     @locked = false
-    @clock = @bot.pluginManager.plugins[:Clock]
+    @clock = @plugin_manager.plugins[:Clock]
   end
 
   def beforeUnload

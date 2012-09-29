@@ -53,7 +53,7 @@ class KANJIDIC < IRCPlugin
   attr_reader :kanji, :skip
 
   def afterLoad
-    @l = @bot.pluginManager.plugins[:Language]
+    @l = @plugin_manager.plugins[:Language]
     @kanji = {}
     @skip = {}
     loadKanjidic

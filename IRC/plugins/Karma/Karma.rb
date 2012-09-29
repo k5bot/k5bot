@@ -15,7 +15,7 @@ class Karma < IRCPlugin
 
   def afterLoad
     @karma = @bot.storage.read('karma') || {}
-    @ns = @bot.pluginManager.plugins[:NumberSpell]
+    @ns = @plugin_manager.plugins[:NumberSpell]
   end
 
   def beforeUnload

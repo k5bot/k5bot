@@ -100,7 +100,7 @@ class IRCPluginManager < IRCListener
       end
 
       print "Loading #{name}..."
-      p = @plugins[name.to_sym] = pluginClass.new(@bot)
+      p = @plugins[name.to_sym] = pluginClass.new(self, @bot)
       p.config = (config || {}).freeze
       p.commands.keys.each{|c| @commands[c] = p} if p.commands
       p.afterLoad if callAfterLoad

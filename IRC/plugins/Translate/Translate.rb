@@ -37,7 +37,7 @@ class Translate < IRCPlugin
   }
 
   def afterLoad
-    @l = @bot.pluginManager.plugins[:Language]
+    @l = @plugin_manager.plugins[:Language]
   end
 
   def on_privmsg(msg)

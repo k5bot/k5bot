@@ -15,7 +15,7 @@ class Help < IRCPlugin
   }
 
   def afterLoad
-    @pm = @bot.pluginManager
+    @pm = @plugin_manager
   end
 
   def on_privmsg(msg)

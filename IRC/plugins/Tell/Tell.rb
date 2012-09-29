@@ -44,7 +44,7 @@ class Tell < IRCPlugin
     recipientNick, tellMessage = msg.tail.scan(/^\s*(\S+)\s+(.+)\s*$/).flatten
     return unless recipientNick and tellMessage
     return if recipientNick.casecmp(msg.nick) == 0
-    return if recipientNick.casecmp(@bot.user.nick) == 0
+    return if recipientNick.casecmp(msg.bot.user.nick) == 0
     user = @bot.userPool.findUserByNick(recipientNick)
     if user && user.name
       @tell[user.name.downcase] ||= {}

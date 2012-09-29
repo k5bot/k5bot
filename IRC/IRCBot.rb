@@ -41,7 +41,7 @@ class IRCBot < IRCListener
     @router = IRCMessageRouter.new
     @router.register self
 
-    @firstListener = IRCFirstListener.new self  # Set first listener
+    @firstListener = IRCFirstListener.new # Set first listener
     @router.register @firstListener
 
     @userPool = IRCUserPool.new self  # Add user pool

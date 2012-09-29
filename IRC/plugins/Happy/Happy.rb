@@ -46,6 +46,6 @@ class Happy < IRCPlugin
   ]
 
   def on_privmsg(msg)
-    msg.reply(self.class::Happy.sample) if msg.message =~ /^\s*(#{@bot.user.nick}\s*[:>,]?\s*)?(#{self.class::Happy.map { |s| Regexp.quote(s) }.join('|')})+\s*$/
+    msg.reply(self.class::Happy.sample) if msg.message =~ /^\s*(#{msg.bot.user.nick}\s*[:>,]?\s*)?(#{self.class::Happy.map { |s| Regexp.quote(s) }.join('|')})+\s*$/
   end
 end

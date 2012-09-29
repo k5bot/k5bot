@@ -9,6 +9,9 @@ class IRCPlugin < IRCListener
   # This variable will always be a hash and never nil
   attr_accessor :config
 
+  # The plugin manager, that manages this plugin
+  attr_reader :plugin_manager
+
   # A short description of this plugin
   Description = nil
 
@@ -18,7 +21,8 @@ class IRCPlugin < IRCListener
   # A list containing the names of the plugins this plugin depends on
   Dependencies = nil
 
-  def initialize(bot)
+  def initialize(manager, bot)
+    @plugin_manager = manager
     @bot = bot
   end
 

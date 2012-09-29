@@ -19,12 +19,12 @@ class Loader < IRCPlugin
     when :load
       return unless msg.tail
       msg.tail.split.each do |name|
-        exists = !!(@bot.pluginManager.plugins[name.to_sym])
-        unloadSuccessful = !!(@bot.pluginManager.unload_plugin name)
+        exists = !!(@plugin_manager.plugins[name.to_sym])
+        unloadSuccessful = !!(@plugin_manager.unload_plugin name)
         if unloadSuccessful || !exists
           pconf = @bot.config[:plugins].find { |i| i.is_a?(Hash) ? (i.keys && name.to_sym == i.keys.first.to_sym) : name.to_sym == i.to_sym }
           config = pconf.is_a?(Hash) ? pconf.values.first : {}
-          if @bot.pluginManager.load_plugin(name, config)
+          if @plugin_manager.load_plugin(name, config)
             msg.reply "'#{name}' #{'re' if exists}loaded."
           else
             msg.reply "Cannot #{'re' if exists}load '#{name}'."
@@ -40,7 +40,7 @@ class Loader < IRCPlugin
           msg.reply "Refusing to unload the loader plugin."
           next
         end
-        if @bot.pluginManager.unload_plugin name
+        if @plugin_manager.unload_plugin name
           msg.reply "'#{name}' unloaded."
         else
           msg.reply "Cannot unload '#{name}'."

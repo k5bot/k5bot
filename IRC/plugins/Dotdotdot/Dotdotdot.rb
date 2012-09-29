@@ -10,6 +10,6 @@ class Dotdotdot < IRCPlugin
   Description = "..."
 
   def on_privmsg(msg)
-    (c = msg.message.count('.')) < 20 && msg.reply('.' * (c + 1)) || msg.reply('...') if msg.message =~ /^\s*(#{@bot.user.nick}\s*[:>,]?\s*)?(\.\s*)+\s*$/
+    (c = msg.message.count('.')) < 20 && msg.reply('.' * (c + 1)) || msg.reply('...') if msg.message =~ /^\s*(#{msg.bot.user.nick}\s*[:>,]?\s*)?(\.\s*)+\s*$/
   end
 end

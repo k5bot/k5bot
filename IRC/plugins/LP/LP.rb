@@ -14,8 +14,8 @@ class LP < IRCPlugin
   Dependencies = [ :Language, :NumberSpell ]
 
   def afterLoad
-    @l = @bot.pluginManager.plugins[:Language]
-    @ns = @bot.pluginManager.plugins[:NumberSpell]
+    @l = @plugin_manager.plugins[:Language]
+    @ns = @plugin_manager.plugins[:NumberSpell]
     @lp = @bot.storage.read('lp') || {}
   end
 
