@@ -77,26 +77,37 @@ class IRCPluginManager < IRCListener
   end
 
   def do_load_plugins(to_load)
-    return unless to_load
+    return false unless to_load
     @loading = []
     to_load.each do |p|
       name, config = parse_config_entry(p)
-      unless plugins[name]
+      unless plugins[name] # filter out already loaded plugins
         @loading << [name, config]
       end
     end
+
+    overall = nil
     @loading.each do |name, config|
-      do_load_plugin(name, config, false)
+      overall = false if !do_load_plugin(name, config, loading)
     end
+
     @loading.each do |name, _|
       if (plugin = @plugins[name])
-        print "Initializing #{name}..."
-        plugin.afterLoad
-        @router.register plugin
-        puts "done."
+        begin
+          print "Initializing plugin #{name}..."
+          plugin.afterLoad
+          @router.register plugin
+          puts "done."
+        rescue ScriptError, StandardError => e
+          puts "Cannot initialize plugin '#{name}': #{e}"
+          overall = false
+        end
       end
     end
     @loading = nil
+
+    overall = true if overall == nil
+    overall
   end
 
   def do_load_plugin(name, config, callAfterLoad = true)
