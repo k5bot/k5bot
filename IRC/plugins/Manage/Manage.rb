@@ -18,7 +18,7 @@ class Manage < IRCPlugin
     when :join
       @bot.join_channels(msg.tail.split(/[;,\s]+/))
     when :part
-      @bot.send "PART #{msg.tail.split(/[;,\s]+/).join(',')}"
+      @bot.part_channels(msg.tail.split(/[;,\s]+/))
     end
   end
 end
