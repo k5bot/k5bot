@@ -39,11 +39,23 @@ class Help < IRCPlugin
   end
 
   def describeWord(msg, word)
-    if plugin = @pm.plugins[word.to_sym]
+    plugin = @pm.plugins[word.to_sym]
+    if plugin
       msg.reply(plugin.description || "#{plugin.name} has no description.")
       msg.reply("#{plugin.name} provides: #{plugin.commands.keys.sort.collect{|c| "#{IRCMessage::BotCommandPrefix}#{c.to_s}"}*', '}") if plugin.commands
-    elsif plugin = @pm.commands[c = word[/^\s*#{Regexp.quote(IRCMessage::BotCommandPrefix)}?(\S*)\s*/, 1].downcase.to_sym]
-      msg.reply((plugin.commands && plugin.commands[c]) ? "#{IRCMessage::BotCommandPrefix}#{c.to_s} #{plugin.commands[c]}." : "There is no description for #{IRCMessage::BotCommandPrefix}#{c.to_s}.")
+      return
+    end
+
+    c = word[/^\s*#{Regexp.quote(IRCMessage::BotCommandPrefix)}?(\S*)\s*/, 1].downcase.to_sym
+
+    found = @pm.plugins.values.reject { |p| !(p.commands && p.commands[c]) }
+    if found.empty?
+      msg.reply("There is no description for #{IRCMessage::BotCommandPrefix}#{c.to_s}.")
+      return
+    end
+
+    for plugin in found
+      msg.reply("#{plugin.name} plugin: #{IRCMessage::BotCommandPrefix}#{c.to_s} #{plugin.commands[c]}.")
     end
   end
 end

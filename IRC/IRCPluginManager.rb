@@ -5,11 +5,10 @@
 # IRCPluginManager manages all plugins
 
 class IRCPluginManager < IRCListener
-  attr_reader :plugins, :commands, :config
+  attr_reader :plugins, :config
 
   def initialize(router, config)
     @plugins = {}
-    @commands = {}
     @router = router
     @config = config
 
@@ -73,7 +72,6 @@ class IRCPluginManager < IRCListener
 
       @plugins.delete name.to_sym
 
-      p.commands.keys.each{|c| @commands.delete c} if p.commands
       @router.unregister p
 
       unload_plugin_class(name)
@@ -181,7 +179,6 @@ class IRCPluginManager < IRCListener
       print "Loading #{name}..."
       p = @plugins[name.to_sym] = pluginClass.new(self)
       p.config = (config || {}).freeze
-      p.commands.keys.each{|c| @commands[c] = p} if p.commands
       puts "done."
     rescue ScriptError, StandardError => e
       unload_plugin_class(name)
