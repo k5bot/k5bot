@@ -111,11 +111,11 @@ class IRCPluginManager < IRCListener
   def do_load_plugins(to_load)
     return false unless to_load
 
-    loading = []
+    loading = {}
     to_load.each do |p|
       name, config = parse_config_entry(p)
       unless plugins[name] # filter out already loaded plugins
-        loading << [name, config]
+        loading[name] = config
       end
     end
 
