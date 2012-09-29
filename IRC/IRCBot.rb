@@ -45,7 +45,7 @@ class IRCBot
     @userPool = IRCUserPool.new self  # Add user pool
     @channelPool = IRCChannelPool.new self  # Add channel pool
     @pluginManager = IRCPluginManager.new self  # Add plugin manager
-    @pluginManager.loadPlugins @config[:plugins]  # Load plugins
+    @pluginManager.load_plugins @config[:plugins]  # Load plugins
 
     $stdout.sync = true
   end
