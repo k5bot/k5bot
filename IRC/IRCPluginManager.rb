@@ -12,7 +12,6 @@ class IRCPluginManager < IRCListener
     @commands = {}
     @router = router
     @config = config
-    @loading = nil
 
   end
 
@@ -84,20 +83,21 @@ class IRCPluginManager < IRCListener
 
   def do_load_plugins(to_load)
     return false unless to_load
-    @loading = []
+
+    loading = []
     to_load.each do |p|
       name, config = parse_config_entry(p)
       unless plugins[name] # filter out already loaded plugins
-        @loading << [name, config]
+        loading << [name, config]
       end
     end
 
     overall = nil
-    @loading.each do |name, config|
+    loading.each do |name, config|
       overall = false if !do_load_plugin(name, config, loading)
     end
 
-    @loading.each do |name, _|
+    loading.each do |name, _|
       if (plugin = @plugins[name])
         begin
           print "Initializing plugin #{name}..."
@@ -110,13 +110,12 @@ class IRCPluginManager < IRCListener
         end
       end
     end
-    @loading = nil
 
     overall = true if overall == nil
     overall
   end
 
-  def do_load_plugin(name, config, callAfterLoad = true)
+  def do_load_plugin(name, config, loading)
     return true if plugins[name.to_sym] # success, if already loaded
     return false if name !~ /\A[a-zA-Z0-9]+\Z/m
     begin
@@ -132,7 +131,7 @@ class IRCPluginManager < IRCListener
       if pluginClass::Dependencies
         lacking = []
         pluginClass::Dependencies.each do |d|
-          lacking << d unless (@plugins[d]) || (@loading && @loading.include?(d))
+          lacking << d unless (@plugins[d]) || (loading && loading.include?(d))
         end
         unless lacking.empty?
           Object.send(:remove_const, name.to_sym)
@@ -144,7 +143,6 @@ class IRCPluginManager < IRCListener
       p = @plugins[name.to_sym] = pluginClass.new(self)
       p.config = (config || {}).freeze
       p.commands.keys.each{|c| @commands[c] = p} if p.commands
-      p.afterLoad if callAfterLoad
       puts "done."
     rescue ScriptError, StandardError => e
       puts "Cannot load plugin '#{name}': #{e}"
