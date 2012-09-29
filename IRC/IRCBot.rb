@@ -127,7 +127,7 @@ class IRCBot
     raw = encode raw
     @last_received = raw
     puts "#{timestamp} #{raw}"
-    @router.route IRCMessage.new(self, raw.chomp)
+    @router.receive_message IRCMessage.new(self, raw.chomp)
   end
 
   def timestamp
@@ -175,6 +175,12 @@ class IRCBot
       puts "Forcibly closing socket"
       @sock.close
     end
+  end
+
+  # Temporarily copied over from IRCListener
+  def receive_message(msg)
+    meth = "on_#{msg.command.to_s}"
+    self.__send__ meth, msg if self.respond_to? meth
   end
 
   def on_notice(msg)

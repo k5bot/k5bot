@@ -10,4 +10,12 @@ class IRCListener
   def initialize(bot)
     (@bot = bot).router.register self
   end
+
+  # Default listener behavior is to dispatch the message
+  # to command-specific methods. This allows listeners to
+  # override the behavior, if they need generic message handling.
+  def receive_message(msg)
+    meth = "on_#{msg.command.to_s}"
+    self.__send__ meth, msg if self.respond_to? meth
+  end
 end

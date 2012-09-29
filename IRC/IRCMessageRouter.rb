@@ -11,12 +11,11 @@ class IRCMessageRouter
     @listeners = []
   end
 
-  def route(msg)
-    meth = "on_#{msg.command.to_s}"
+  def receive_message(msg)
     @listeners.each do |listener|
       next unless listener
       begin
-        listener.__send__ meth, msg if listener.respond_to? meth
+        listener.receive_message(msg)
       rescue => e
         puts "Listener error: #{e}\n\t#{e.backtrace.join("\n\t")}"
       end
