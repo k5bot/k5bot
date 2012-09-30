@@ -34,6 +34,9 @@ class Daijirin < IRCPlugin
     @l = nil
     @m = nil
     @hash = nil
+
+    unload_helper_class(:DaijirinMenuEntry)
+    unload_helper_class(:DaijirinEntry)
   end
 
   def on_privmsg(msg)

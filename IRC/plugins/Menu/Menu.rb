@@ -18,15 +18,19 @@ class Menu < IRCPlugin
   }
 
   def afterLoad
-    @menu_states = {}
-
     load_helper_class(:MenuState)
     load_helper_class(:MenuNode)
     load_helper_class(:MenuNodeSimple)
+
+    @menu_states = {}
   end
 
   def beforeUnload
     @menu_states = nil
+
+    unload_helper_class(:MenuNodeSimple)
+    unload_helper_class(:MenuNode)
+    unload_helper_class(:MenuState)
   end
 
   def on_privmsg(msg)

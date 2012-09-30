@@ -55,4 +55,13 @@ class IRCPlugin < IRCListener
       puts "Cannot load #{class_name}: #{e}"
     end
   end
+
+  def unload_helper_class(class_name)
+    class_name = class_name.to_sym
+    begin
+      Object.send :remove_const, class_name
+    rescue ScriptError, StandardError => e
+      puts "Cannot unload #{class_name}: #{e}"
+    end
+  end
 end
