@@ -62,6 +62,8 @@ class Seen < IRCPlugin
             thisChannel = seenData[:channel] == msg.channelname
             cs = thisChannel ? 'in this channel' : 'in another channel'
             m = thisChannel && seenData[:message] ? ' saying: ' + truncate(seenData[:message], 80) : '.'
+          else
+            m = '.'
           end
           msg.reply("#{soughtUser.nick} was last seen #{as + ' ' if as}#{cs + ' ' if cs}".rstrip + m)
         else
