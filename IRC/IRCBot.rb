@@ -47,7 +47,7 @@ class IRCBot < IRCMessageRouter
     @pluginManager.load_plugin(:StorageYAML)
     @storage = @pluginManager.plugins[:StorageYAML] # Add storage
 
-    @userPool = IRCUserPool.new self  # Add user pool
+    @userPool = IRCUserPool.new @storage  # Add user pool
     self.register @userPool
 
     @channelPool = IRCChannelPool.new self  # Add channel pool
@@ -261,7 +261,7 @@ class IRCBot < IRCMessageRouter
     #refresh our user info once,
     #so that truncate_for_irc_client()
     #will truncate messages properly
-    @userPool.request_whois(@user.nick)
+    @userPool.request_whois(self, @user.nick)
     join_channels(@config[:channels])
   end
 

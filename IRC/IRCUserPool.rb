@@ -9,9 +9,9 @@
 require_relative 'IRCUser'
 
 class IRCUserPool < IRCListener
-  def initialize(bot)
-    @bot = bot
-    @users = @bot.storage.read('users') || {}
+  def initialize(storage)
+    @storage = storage
+    @users = @storage.read('users') || {}
     @nicks = {}
     @users.values.each { |u| @nicks[normalize(u.nick)] = u }
   end
@@ -30,18 +30,18 @@ class IRCUserPool < IRCListener
   # If the message is not sent by a user, nil will be returned.
   def findUser(msg)
     return unless msg.ident && msg.nick
-    return if msg.nick.eql?(@bot.user.nick)
+    return if msg.nick.eql?(msg.bot.user.nick)
     user = @users[normalize(IRCUser.ident_to_name(msg.ident))] ||
         @nicks[normalize(msg.nick)] ||
         IRCUser.new(msg.ident, msg.host, nil, msg.nick)
 
-    update_user(user, msg.nick, msg.ident, msg.host)
+    update_user(msg.bot.user, user, msg.nick, msg.ident, msg.host)
     user
   end
 
-  def maybe_update_user_map(user, user_map, old_val, new_val)
+  def maybe_update_user_map(bot_user, user, user_map, old_val, new_val)
     return false unless new_val
-    return true if user == @bot.user #bot mustn't end up in user maps.
+    return true if user == bot_user #bot mustn't end up in user maps.
     old_val = normalize(old_val)
     new_val = normalize(new_val)
 
@@ -51,9 +51,9 @@ class IRCUserPool < IRCListener
     !old_val.eql?(new_val)
   end
 
-  def update_user(user, nick, ident=nil, host=nil, realname=nil)
-    user.nick = nick if maybe_update_user_map(user, @nicks, user.nick, nick)
-    user.ident = ident if maybe_update_user_map(user, @users, user.name, IRCUser.ident_to_name(ident))
+  def update_user(bot_user, user, nick, ident=nil, host=nil, realname=nil)
+    user.nick = nick if maybe_update_user_map(bot_user, user, @nicks, user.nick, nick)
+    user.ident = ident if maybe_update_user_map(bot_user, user, @users, user.name, IRCUser.ident_to_name(ident))
     user.host = host if host
     user.realname = realname if realname
     store
@@ -82,7 +82,7 @@ class IRCUserPool < IRCListener
     new_nick = msg.message
     return if new_nick.eql?(user.nick)
 
-    update_user(user, new_nick)
+    update_user(msg.bot.user, user, new_nick)
   end
 
   def on_privmsg(msg)
@@ -94,13 +94,13 @@ class IRCUserPool < IRCListener
   #albel727 ~kvirc unaffiliated/albel727 * :4KVIrc 4.1.0 'Equilibrium' http://kvirc.net/
   def on_311(msg)
     nick = msg.params[1]
-    user = findUserByNick(nick) || (nick.eql?(@bot.user.nick) ? @bot.user : nil)
+    user = findUserByNick(nick) || (nick.eql?(msg.bot.user.nick) ? msg.bot.user : nil)
     return unless user
     ident = msg.params[2]
     host = msg.params[3]
     realname = msg.params.last
 
-    update_user(user, nick, ident, host, realname)
+    update_user(msg.bot.user, user, nick, ident, host, realname)
   end
 
   #RPL_HOSTHIDDEN:
@@ -108,14 +108,14 @@ class IRCUserPool < IRCListener
   def on_396(msg)
     host = msg.params[1]
 
-    update_user(@bot.user, nil, nil, host)
+    update_user(msg.bot.user, msg.bot.user, nil, nil, host)
   end
 
-  def request_whois(nick)
-    @bot.send_raw "WHOIS #{nick}"
+  def request_whois(bot, nick)
+    bot.send_raw "WHOIS #{nick}"
   end
 
   def store
-    @bot.storage.write('users', @users)
+    @storage.write('users', @users)
   end
 end
