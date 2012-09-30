@@ -22,19 +22,8 @@ class EDICT < IRCPlugin
   Dependencies = [ :Language, :Menu ]
 
   def afterLoad
-    begin
-      Object.send :remove_const, :EDICTEntry
-      load "#{plugin_root}/EDICTEntry.rb"
-    rescue ScriptError, StandardError => e
-      puts "Cannot load EDICTEntry: #{e}"
-    end
-
-    begin
-      Object.send :remove_const, :EDICTMenuEntry
-      load "#{plugin_root}/EDICTMenuEntry.rb"
-    rescue ScriptError, StandardError => e
-      puts "Cannot load EDICTMenuEntry: #{e}"
-    end
+    load_helper_class(:EDICTEntry)
+    load_helper_class(:EDICTMenuEntry)
 
     @l = @plugin_manager.plugins[:Language]
     @m = @plugin_manager.plugins[:Menu]

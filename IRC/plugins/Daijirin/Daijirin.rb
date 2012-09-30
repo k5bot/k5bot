@@ -20,19 +20,8 @@ class Daijirin < IRCPlugin
   Dependencies = [:Language, :Menu]
 
   def afterLoad
-    begin
-      Object.send :remove_const, :DaijirinEntry
-      load "#{plugin_root}/DaijirinEntry.rb"
-    rescue ScriptError, StandardError => e
-      puts "Cannot load DaijirinEntry: #{e}"
-    end
-
-    begin
-      Object.send :remove_const, :DaijirinMenuEntry
-      load "#{plugin_root}/DaijirinMenuEntry.rb"
-    rescue ScriptError, StandardError => e
-      puts "Cannot load DaijirinMenuEntry: #{e}"
-    end
+    load_helper_class(:DaijirinEntry)
+    load_helper_class(:DaijirinMenuEntry)
 
     @l = @plugin_manager.plugins[:Language]
     @m = @plugin_manager.plugins[:Menu]

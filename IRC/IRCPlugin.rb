@@ -45,4 +45,14 @@ class IRCPlugin < IRCListener
   def description;  self.class::Description;  end
   def commands;     self.class::Commands;     end
   def dependencies; self.class::Dependencies; end
+
+  def load_helper_class(class_name)
+    class_name = class_name.to_sym
+    begin
+      Object.send :remove_const, class_name
+      load "#{plugin_root}/#{class_name}.rb"
+    rescue ScriptError, StandardError => e
+      puts "Cannot load #{class_name}: #{e}"
+    end
+  end
 end

@@ -20,26 +20,9 @@ class Menu < IRCPlugin
   def afterLoad
     @menu_states = {}
 
-    begin
-      Object.send :remove_const, :MenuState
-      load "#{plugin_root}/MenuState.rb"
-    rescue ScriptError, StandardError => e
-      puts "Cannot load MenuState: #{e}"
-    end
-
-    begin
-      Object.send :remove_const, :MenuNode
-      load "#{plugin_root}/MenuNode.rb"
-    rescue ScriptError, StandardError => e
-      puts "Cannot load MenuNode: #{e}"
-    end
-
-    begin
-      Object.send :remove_const, :MenuNodeSimple
-      load "#{plugin_root}/MenuNodeSimple.rb"
-    rescue ScriptError, StandardError => e
-      puts "Cannot load MenuNodeSimple: #{e}"
-    end
+    load_helper_class(:MenuState)
+    load_helper_class(:MenuNode)
+    load_helper_class(:MenuNodeSimple)
   end
 
   def beforeUnload
