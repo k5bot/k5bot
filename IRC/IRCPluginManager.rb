@@ -7,9 +7,8 @@
 class IRCPluginManager < IRCListener
   attr_reader :plugins, :config
 
-  def initialize(router, config)
+  def initialize(config)
     @plugins = {}
-    @router = router
     @config = config
 
     @listeners = [] # IRCPluginListener-s of plugin attach/detach events
@@ -72,8 +71,6 @@ class IRCPluginManager < IRCListener
       end
 
       @plugins.delete name.to_sym
-
-      @router.unregister p
 
       unload_plugin_class(name)
     rescue => e
@@ -150,7 +147,6 @@ class IRCPluginManager < IRCListener
           begin
             print "Initializing plugin #{name}..."
             plugin.afterLoad
-            @router.register plugin
             puts "done."
           rescue ScriptError, StandardError => e
             puts "Cannot initialize plugin '#{name}': #{e}"

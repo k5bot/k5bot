@@ -16,7 +16,13 @@ if config == nil
   exit 1
 end
 
-bot = IRCBot.new(YAML.load_file(config))
+config_map = YAML.load_file(config)
+
+pluginManager = IRCPluginManager.new(config_map[:plugins]) # Add plugin manager
+
+bot = IRCBot.new(pluginManager, config_map)
+@pluginManager.register bot
+
 loop do
   bot.start
   sleep 15  # wait a bit before reconnecting

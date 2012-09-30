@@ -11,13 +11,16 @@ require_relative 'IRCMessageRouter'
 require_relative 'IRCFirstListener'
 require_relative 'IRCUserPool'
 require_relative 'IRCChannelPool'
+require_relative 'IRCPluginListener'
 require_relative 'IRCPluginManager'
 require_relative 'Timer'
 
 class IRCBot < IRCMessageRouter
+  include IRCPluginListener # methods for making plugins to listen to this bot
+
   attr_reader :userPool, :channelPool, :pluginManager, :storage, :config, :last_sent, :last_received, :start_time, :user
 
-  def initialize(config = nil)
+  def initialize(pluginManager, config = nil)
     super()
 
     @config = config || {
@@ -39,7 +42,7 @@ class IRCBot < IRCMessageRouter
     @firstListener = IRCFirstListener.new # Set first listener
     self.register @firstListener
 
-    @pluginManager = IRCPluginManager.new(self, @config[:plugins]) # Add plugin manager
+    @pluginManager = pluginManager
 
     @pluginManager.load_plugin(:StorageYAML)
     @storage = @pluginManager.plugins[:StorageYAML] # Add storage
@@ -201,6 +204,46 @@ class IRCBot < IRCMessageRouter
   def part_channels(channels)
     send "PART #{channels*','}" if channels
   end
+
+  # route to all already present plugins
+  def attached_to_manager(plugin_manager)
+    plugin_manager.plugins.each do |_, p|
+      self.register(p)
+    end
+  end
+
+  # cease routing to all plugins
+  def detached_from_manager(plugin_manager)
+    plugin_manager.plugins.each do |_, p|
+      self.unregister(p)
+    end
+  end
+
+  # route to newly loaded plugins
+  def after_plugin_load(plugin_manager, to_load)
+    to_load.each do |n, _|
+      p = plugin_manager.plugins[n]
+      if p
+        self.register(p)
+      end
+    end
+    nil # do not object to the action
+  end
+  # add back plugins that have failed to be unloaded
+  alias :after_plugin_unload :after_plugin_load
+
+  # cease routing to unloaded plugins
+  def before_plugin_unload(plugin_manager, to_unload)
+    to_unload.each do |n, _|
+      p = plugin_manager.plugins[n]
+      if p
+        self.unregister(p)
+      end
+    end
+    nil # do not object to the action
+  end
+  # temporarily remove plugins to avoid registering them twice
+  alias :before_plugin_load :before_plugin_unload
 
   private
   def login
