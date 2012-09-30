@@ -5,11 +5,11 @@
 # IRCBot
 
 require 'socket'
-require_relative 'IRCUser'
+require_relative 'plugins/UserPool/IRCUser'
 require_relative 'IRCMessage'
 require_relative 'IRCMessageRouter'
 require_relative 'IRCFirstListener'
-require_relative 'IRCUserPool'
+require_relative 'plugins/UserPool/UserPool'
 require_relative 'IRCChannelPool'
 require_relative 'IRCPluginListener'
 require_relative 'Timer'
