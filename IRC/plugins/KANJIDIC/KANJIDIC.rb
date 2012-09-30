@@ -63,7 +63,8 @@ class KANJIDIC < IRCPlugin
     @l = nil
     @kanji = nil
     @skip = nil
-    false
+
+    nil
   end
 
   def on_privmsg(msg)

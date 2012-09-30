@@ -27,6 +27,8 @@ class Karma < IRCPlugin
     @user_pool = nil
     @storage = nil
     @ns = nil
+
+    nil
   end
 
   def store

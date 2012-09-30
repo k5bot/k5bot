@@ -21,6 +21,8 @@ class StorageYAML < IRCPlugin
 
   def beforeUnload
     @data_directory = nil
+
+    nil
   end
 
   # Writes data to store

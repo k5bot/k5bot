@@ -38,6 +38,8 @@ class EDICT < IRCPlugin
 
     unload_helper_class(:EDICTMenuEntry)
     unload_helper_class(:EDICTEntry)
+
+    nil
   end
 
   def on_privmsg(msg)

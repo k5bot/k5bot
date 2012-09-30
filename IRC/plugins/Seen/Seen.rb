@@ -26,6 +26,8 @@ class Seen < IRCPlugin
 
     @user_pool = nil
     @storage = nil
+
+    nil
   end
 
   def store

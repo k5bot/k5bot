@@ -29,6 +29,8 @@ class LP < IRCPlugin
     @storage = nil
     @ns = nil
     @l = nil
+
+    nil
   end
 
   def store

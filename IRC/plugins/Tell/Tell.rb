@@ -32,6 +32,8 @@ class Tell < IRCPlugin
 
     @user_pool = nil
     @storage = nil
+
+    nil
   end
 
   def store

@@ -18,9 +18,11 @@ class ChannelPool < IRCPlugin
   end
 
   def beforeUnload
-    @channels = nil
+    #@channels = nil
 
-    unload_helper_class(:IRCChannel)
+    #unload_helper_class(:IRCChannel)
+
+    "This plugin is not unloadable"
   end
 
   def findChannel(msg)

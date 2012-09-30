@@ -27,13 +27,15 @@ class UserPool < IRCPlugin
   end
 
   def beforeUnload
-    @nicks = nil
+    #@nicks = nil
 
-    @users = nil
+    #@users = nil
 
-    @storage = nil
+    #@storage = nil
 
-    unload_helper_class(:IRCUser)
+    #unload_helper_class(:IRCUser)
+
+    "This plugin is not unloadable"
   end
 
   def normalize(s)

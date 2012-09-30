@@ -31,6 +31,8 @@ class Menu < IRCPlugin
     unload_helper_class(:MenuNodeSimple)
     unload_helper_class(:MenuNode)
     unload_helper_class(:MenuState)
+
+    nil
   end
 
   def on_privmsg(msg)

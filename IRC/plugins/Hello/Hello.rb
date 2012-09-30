@@ -28,6 +28,8 @@ class Hello < IRCPlugin
 
   def beforeUnload
     @l = nil
+
+    nil
   end
 
   def on_privmsg(msg)
