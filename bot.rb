@@ -23,9 +23,11 @@ config_map = YAML.load_file(config)
 plugin_manager = IRCPluginManager.new(config_map[:plugins]) # Add plugin manager
 
 plugin_manager.load_plugin(:StorageYAML)
-storage = plugin_manager.plugins[:StorageYAML] # Add storage
 
-bot = IRCBot.new(storage, config_map)
+plugin_manager.load_plugin(:UserPool)
+user_pool = plugin_manager.plugins[:UserPool] # Add user pool
+
+bot = IRCBot.new(user_pool, config_map)
 
 plugin_manager.load_all_plugins  # Load plugins
 

@@ -6,18 +6,38 @@
 # updated by listening to user-related messages.
 # To find the user who sent a message, use IRCMessage#user.
 
+require_relative '../../IRCPlugin'
+
 require_relative 'IRCUser'
 
-class IRCUserPool < IRCListener
-  def initialize(storage)
-    @storage = storage
+class UserPool < IRCPlugin
+  Description = "Provides user resolution service and persistently maintains various related information."
+
+  Dependencies = [ :StorageYAML ]
+
+  def afterLoad
+    load_helper_class(:IRCUser)
+
+    @storage = @plugin_manager.plugins[:StorageYAML]
+
     @users = @storage.read('users') || {}
+
     @nicks = {}
     @users.values.each { |u| @nicks[normalize(u.nick)] = u }
   end
 
+  def beforeUnload
+    @nicks = nil
+
+    @users = nil
+
+    @storage = nil
+
+    unload_helper_class(:IRCUser)
+  end
+
   def normalize(s)
-    IRCUserPool.normalize(s)
+    UserPool.normalize(s)
   end
 
   def self.normalize(s)

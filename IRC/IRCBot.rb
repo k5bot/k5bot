@@ -17,9 +17,9 @@ require_relative 'Timer'
 class IRCBot < IRCMessageRouter
   include IRCPluginListener # methods for making plugins to listen to this bot
 
-  attr_reader :userPool, :channelPool, :storage, :config, :last_sent, :last_received, :start_time, :user
+  attr_reader :userPool, :channelPool, :config, :last_sent, :last_received, :start_time, :user
 
-  def initialize(storage, config = nil)
+  def initialize(userPool, config = nil)
     super()
 
     @config = config || {
@@ -41,8 +41,7 @@ class IRCBot < IRCMessageRouter
     @firstListener = IRCFirstListener.new # Set first listener
     self.register @firstListener
 
-    @userPool = IRCUserPool.new storage  # Add user pool
-    self.register @userPool
+    @userPool = userPool
 
     @channelPool = IRCChannelPool.new self  # Add channel pool
     self.register @channelPool
