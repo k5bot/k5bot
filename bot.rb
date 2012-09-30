@@ -6,6 +6,8 @@
 $VERBOSE = true
 
 require 'yaml'
+
+require_relative 'IRC/IRCPluginManager'
 require_relative 'IRC/IRCBot'
 
 config = File.exists?(ARGV.first || "") ? ARGV.shift
@@ -18,10 +20,16 @@ end
 
 config_map = YAML.load_file(config)
 
-pluginManager = IRCPluginManager.new(config_map[:plugins]) # Add plugin manager
+plugin_manager = IRCPluginManager.new(config_map[:plugins]) # Add plugin manager
 
-bot = IRCBot.new(pluginManager, config_map)
-@pluginManager.register bot
+plugin_manager.load_plugin(:StorageYAML)
+storage = plugin_manager.plugins[:StorageYAML] # Add storage
+
+bot = IRCBot.new(storage, config_map)
+
+plugin_manager.load_all_plugins  # Load plugins
+
+plugin_manager.register bot
 
 loop do
   bot.start

@@ -12,15 +12,14 @@ require_relative 'IRCFirstListener'
 require_relative 'IRCUserPool'
 require_relative 'IRCChannelPool'
 require_relative 'IRCPluginListener'
-require_relative 'IRCPluginManager'
 require_relative 'Timer'
 
 class IRCBot < IRCMessageRouter
   include IRCPluginListener # methods for making plugins to listen to this bot
 
-  attr_reader :userPool, :channelPool, :pluginManager, :storage, :config, :last_sent, :last_received, :start_time, :user
+  attr_reader :userPool, :channelPool, :storage, :config, :last_sent, :last_received, :start_time, :user
 
-  def initialize(pluginManager, config = nil)
+  def initialize(storage, config = nil)
     super()
 
     @config = config || {
@@ -42,18 +41,11 @@ class IRCBot < IRCMessageRouter
     @firstListener = IRCFirstListener.new # Set first listener
     self.register @firstListener
 
-    @pluginManager = pluginManager
-
-    @pluginManager.load_plugin(:StorageYAML)
-    @storage = @pluginManager.plugins[:StorageYAML] # Add storage
-
-    @userPool = IRCUserPool.new @storage  # Add user pool
+    @userPool = IRCUserPool.new storage  # Add user pool
     self.register @userPool
 
     @channelPool = IRCChannelPool.new self  # Add channel pool
     self.register @channelPool
-
-    @pluginManager.load_all_plugins  # Load plugins
 
     $stdout.sync = true
   end

@@ -4,6 +4,8 @@
 
 # IRCPluginManager manages all plugins
 
+require_relative 'IRCListener'
+
 class IRCPluginManager < IRCListener
   attr_reader :plugins, :config
 
