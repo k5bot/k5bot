@@ -9,7 +9,7 @@ require_relative 'plugins/UserPool/IRCUser'
 require_relative 'IRCMessage'
 require_relative 'IRCMessageRouter'
 require_relative 'IRCFirstListener'
-require_relative 'IRCChannelPool'
+require_relative 'plugins/ChannelPool/ChannelPool'
 require_relative 'IRCPluginListener'
 require_relative 'Timer'
 
