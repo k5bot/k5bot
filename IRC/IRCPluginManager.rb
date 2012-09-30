@@ -31,17 +31,18 @@ class IRCPluginManager < IRCListener
   end
 
   def load_all_plugins()
-    do_load_plugins(@config)
+    do_load_plugins(normalize_config(@config))
   end
 
   def load_plugin(name)
-    config_entry = find_config_entry(name)
+    name, config = parse_config_entry(find_config_entry(name))
 
-    do_load_plugins([config_entry])
+    do_load_plugins({ name => config })
   end
 
   def unload_plugin(name)
-    unloading = [find_config_entry(name)]
+    name, config = parse_config_entry(find_config_entry(name))
+    unloading = { name => config }
 
     error = notify_listeners(:before_unload, unloading)
     if error
@@ -87,6 +88,20 @@ class IRCPluginManager < IRCListener
 
   private
 
+  # The config read from yaml is an array, containing either
+  # string plugin_name, or
+  # hash { plugin_name => sub_config }.
+  # This function converts it into hash containing
+  # plugin_name => sub_config, for all plugins.
+  def normalize_config(config)
+    to_load = {}
+    config.each do |p|
+      name, config = parse_config_entry(p)
+      to_load[name] = config
+    end
+    to_load
+  end
+
   def find_config_entry(name)
     name = name.to_sym
 
@@ -112,8 +127,7 @@ class IRCPluginManager < IRCListener
     return false unless to_load
 
     loading = {}
-    to_load.each do |p|
-      name, config = parse_config_entry(p)
+    to_load.each do |name, config|
       unless plugins[name] # filter out already loaded plugins
         loading[name] = config
       end
