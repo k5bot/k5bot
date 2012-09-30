@@ -12,10 +12,11 @@ class Seen < IRCPlugin
     :seen => "[nick] (ex.: !seen K5) gives information on when [nick] was last seen"
   }
 
-  Dependencies = [ :StorageYAML ]
+  Dependencies = [ :StorageYAML, :UserPool ]
 
   def afterLoad
     @storage = @plugin_manager.plugins[:StorageYAML]
+    @user_pool = @plugin_manager.plugins[:UserPool]
 
     @seen = @storage.read('seen') || {}
   end
@@ -23,6 +24,7 @@ class Seen < IRCPlugin
   def beforeUnload
     @seen = nil
 
+    @user_pool = nil
     @storage = nil
   end
 
@@ -50,7 +52,7 @@ class Seen < IRCPlugin
         msg.reply("#{msg.nick}: o/")
         return
       end
-      soughtUser = msg.bot.userPool.findUserByNick(soughtNick)
+      soughtUser = @user_pool.findUserByNick(msg.bot, soughtNick)
       if soughtUser && soughtUser.name
         if seenData = @seen[soughtUser.name.downcase]
           as = agoStr(seenData[:time])

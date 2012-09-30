@@ -9,7 +9,6 @@ require_relative 'plugins/UserPool/IRCUser'
 require_relative 'IRCMessage'
 require_relative 'IRCMessageRouter'
 require_relative 'IRCFirstListener'
-require_relative 'plugins/UserPool/UserPool'
 require_relative 'IRCChannelPool'
 require_relative 'IRCPluginListener'
 require_relative 'Timer'
@@ -17,9 +16,9 @@ require_relative 'Timer'
 class IRCBot < IRCMessageRouter
   include IRCPluginListener # methods for making plugins to listen to this bot
 
-  attr_reader :userPool, :channelPool, :config, :last_sent, :last_received, :start_time, :user
+  attr_reader :channelPool, :config, :last_sent, :last_received, :start_time, :user
 
-  def initialize(userPool, config = nil)
+  def initialize(user_pool, config = nil)
     super()
 
     @config = config || {
@@ -41,7 +40,7 @@ class IRCBot < IRCMessageRouter
     @firstListener = IRCFirstListener.new # Set first listener
     self.register @firstListener
 
-    @userPool = userPool
+    @user_pool = user_pool
 
     @channelPool = IRCChannelPool.new self  # Add channel pool
     self.register @channelPool
@@ -196,6 +195,10 @@ class IRCBot < IRCMessageRouter
     send "PART #{channels*','}" if channels
   end
 
+  def find_user_by_msg(msg)
+    @user_pool.findUser(msg)
+  end
+
   # route to all already present plugins
   def attached_to_manager(plugin_manager)
     plugin_manager.plugins.each do |_, p|
@@ -252,7 +255,7 @@ class IRCBot < IRCMessageRouter
     #refresh our user info once,
     #so that truncate_for_irc_client()
     #will truncate messages properly
-    @userPool.request_whois(self, @user.nick)
+    @user_pool.request_whois(self, @user.nick)
     join_channels(@config[:channels])
   end
 

@@ -11,11 +11,12 @@ class Karma < IRCPlugin
   Commands = {
     :karma => "shows how many karma points the specified user has"
   }
-  Dependencies = [ :NumberSpell, :StorageYAML ]
+  Dependencies = [ :NumberSpell, :StorageYAML, :UserPool ]
 
   def afterLoad
     @ns = @plugin_manager.plugins[:NumberSpell]
     @storage = @plugin_manager.plugins[:StorageYAML]
+    @user_pool = @plugin_manager.plugins[:UserPool]
 
     @karma = @storage.read('karma') || {}
   end
@@ -23,6 +24,7 @@ class Karma < IRCPlugin
   def beforeUnload
     @karma = nil
 
+    @user_pool = nil
     @storage = nil
     @ns = nil
   end
@@ -35,7 +37,7 @@ class Karma < IRCPlugin
     case msg.botcommand
     when :karma
       nick = msg.tail || msg.nick
-      user = msg.bot.userPool.findUserByNick(nick)
+      user = @user_pool.findUserByNick(msg.bot, nick)
       if user && user.name
         if k = @karma[user.name.downcase]
           msg.reply("Karma for #{user.nick}: #{format(k)}")
@@ -47,7 +49,7 @@ class Karma < IRCPlugin
       end
     end
     if !msg.private? && (nick = msg.message[/(\S+)\s*\+[\+1]/, 1])
-      user = msg.bot.userPool.findUserByNick(nick)
+      user = @user_pool.findUserByNick(msg.bot, nick)
       if user && user.name
         if user != msg.user
           @karma[user.name.downcase] = 0 unless @karma[user.name.downcase]

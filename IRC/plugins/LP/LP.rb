@@ -11,12 +11,13 @@ class LP < IRCPlugin
   Commands = {
     :lp => "shows how many language points the specified user has"
   }
-  Dependencies = [ :Language, :NumberSpell, :StorageYAML ]
+  Dependencies = [ :Language, :NumberSpell, :StorageYAML, :UserPool ]
 
   def afterLoad
     @l = @plugin_manager.plugins[:Language]
     @ns = @plugin_manager.plugins[:NumberSpell]
     @storage = @plugin_manager.plugins[:StorageYAML]
+    @user_pool = @plugin_manager.plugins[:UserPool]
 
     @lp = @storage.read('lp') || {}
   end
@@ -24,6 +25,7 @@ class LP < IRCPlugin
   def beforeUnload
     @lp = nil
 
+    @user_pool = nil
     @storage = nil
     @ns = nil
     @l = nil
@@ -37,7 +39,7 @@ class LP < IRCPlugin
     case msg.botcommand
     when :lp
       nick = msg.tail || msg.nick
-      user = msg.bot.userPool.findUserByNick(nick)
+      user = @user_pool.findUserByNick(msg.bot, nick)
       if user && user.name
         if lp = @lp[user.name.downcase]
           msg.reply("Language points for #{user.nick}: #{format(lp)}")

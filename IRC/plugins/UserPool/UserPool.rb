@@ -82,7 +82,7 @@ class UserPool < IRCPlugin
   # Finds a user from nick.
   # Does not modify the user database.
   # If the user is not found, nil will be returned.
-  def findUserByNick(nick)
+  def findUserByNick(bot, nick)
     return if !nick || nick.empty?
     @nicks[normalize(nick)]
   end
@@ -90,7 +90,7 @@ class UserPool < IRCPlugin
   # Finds a user from user name.
   # Does not modify the user database.
   # If the user is not found, nil will be returned.
-  def findUserByUsername(username)
+  def findUserByUsername(bot, username)
     return if !username || username.empty?
     @users[normalize(username)]
   end
@@ -114,7 +114,7 @@ class UserPool < IRCPlugin
   #albel727 ~kvirc unaffiliated/albel727 * :4KVIrc 4.1.0 'Equilibrium' http://kvirc.net/
   def on_311(msg)
     nick = msg.params[1]
-    user = findUserByNick(nick) || (nick.eql?(msg.bot.user.nick) ? msg.bot.user : nil)
+    user = findUserByNick(msg.bot, nick) || (nick.eql?(msg.bot.user.nick) ? msg.bot.user : nil)
     return unless user
     ident = msg.params[2]
     host = msg.params[3]

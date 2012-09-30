@@ -43,7 +43,7 @@ class IRCMessage
   end
 
   def user
-    @user ||= @bot.userPool.findUser(self)
+    @user ||= @bot.find_user_by_msg(self)
   end
 
   def ident
