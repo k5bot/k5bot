@@ -14,7 +14,8 @@ class StorageYAML < IRCPlugin
   Description = "Provides persistent storage in YAML format for other plugins."
 
   def afterLoad()
-    dir = @config[:data_directory] || '~/.ircbot'
+    dir = @config[:data_directory]
+    dir = dir || '~/.ircbot'
     @data_directory = File.expand_path(dir).chomp('/')
     FileUtils.mkdir_p(@data_directory)
   end
