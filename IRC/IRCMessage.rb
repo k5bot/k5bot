@@ -79,7 +79,7 @@ class IRCMessage
   end
 
   def channel
-    @bot.channelPool.findChannel(self)
+    @bot.find_channel_by_msg(self)
   end
 
   # The last parameter

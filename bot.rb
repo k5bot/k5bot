@@ -24,10 +24,13 @@ plugin_manager = IRCPluginManager.new(config_map[:plugins]) # Add plugin manager
 
 plugin_manager.load_plugin(:StorageYAML)
 
+user_pool = plugin_manager.plugins[:UserPool] # Get user pool
 plugin_manager.load_plugin(:UserPool)
-user_pool = plugin_manager.plugins[:UserPool] # Add user pool
 
-bot = IRCBot.new(user_pool, config_map)
+channel_pool = plugin_manager.plugins[:ChannelPool] # Get channel pool
+plugin_manager.load_plugin(:ChannelPool)
+
+bot = IRCBot.new(user_pool, channel_pool, config_map)
 
 plugin_manager.load_all_plugins  # Load plugins
 

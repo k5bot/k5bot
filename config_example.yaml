@@ -15,6 +15,7 @@
 - :StorageYaml:
     :datadirectory: "~/.ircbot"
 - :UserPool
+- :ChannelPool
 - :Clock
 - :Example:
     :foo: baz

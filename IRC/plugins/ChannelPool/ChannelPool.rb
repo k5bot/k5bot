@@ -4,14 +4,23 @@
 
 # IRCChannelPool keeps track of all joined channels.
 
+require_relative '../../IRCPlugin'
+
 require_relative 'IRCChannel'
 
-class IRCChannelPool < IRCListener
-  def initialize(bot)
+class ChannelPool < IRCPlugin
+  Description = "Provides channel resolution service and maintains various related information."
+
+  def afterLoad
+    load_helper_class(:IRCChannel)
+
     @channels = {}
-    # the bot field is not really needed at the moment,
-    # but we must not forget, that channels are a per-bot information.
-    @bot = bot
+  end
+
+  def beforeUnload
+    @channels = nil
+
+    unload_helper_class(:IRCChannel)
   end
 
   def findChannel(msg)
