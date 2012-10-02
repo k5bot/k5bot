@@ -15,7 +15,8 @@ class Daijirin < IRCPlugin
   Description = "A Daijirin plugin."
   Commands = {
     :dj => "looks up a Japanese word in Daijirin",
-    :de => "looks up an English word in Daijirin"
+    :de => "looks up an English word in Daijirin",
+    :du => "Generates an url for lookup in dic.yahoo.jp"
   }
   Dependencies = [:Language, :Menu]
 
@@ -51,6 +52,10 @@ class Daijirin < IRCPlugin
       word = msg.tail
       return unless word
       reply_to_enquirer(lookup([word], [:english]), word, msg)
+    when :du
+      word = msg.tail
+      return unless word
+      msg.reply("http://dic.yahoo.co.jp/dsearch?enc=UTF-8&p=#{word}&dtype=0&dname=0ss&stype=0")
     end
   end
 
