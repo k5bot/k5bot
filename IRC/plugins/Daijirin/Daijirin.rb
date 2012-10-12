@@ -72,11 +72,13 @@ class Daijirin < IRCPlugin
 
     menu = menu_items.map { |e|
       kanji_list = e.kanji.join(',')
-      render_kana = amb_chk_kanji[kanji_list] > 1 || kanji_list.empty? # || !render_kanji
+      render_kana = e.kana && (amb_chk_kanji[kanji_list] > 1 || kanji_list.empty?) # || !render_kanji
       description = if render_kanji && !kanji_list.empty? then
                       render_kana ? "#{kanji_list} (#{e.kana})" : kanji_list
-                    else
+                    elsif e.kana
                       e.kana
+                    else
+                      "<invalid entry>"
                     end
       DaijirinMenuEntry.new(description, e)
     }
