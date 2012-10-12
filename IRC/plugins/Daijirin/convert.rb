@@ -34,6 +34,9 @@ class DaijirinConverter
     def read
       puts @source_file
       i = 0
+
+      parent_entry = nil
+
       File.open(@source_file, 'r') do |io|
         lines = []
         io.each_line do |l|
@@ -41,22 +44,36 @@ class DaijirinConverter
             lines << l
             next
           end
+          lns = lines
+          lines = []
 
           puts "------ #{i}"
           i+=1
 
-          entry = DaijirinEntry.new(lines)
-          lines = []
+          if lns[0][0..1] == '――'
+            next unless parent_entry
+            entry = DaijirinEntry.new(lns, parent_entry)
 
-          next if entry.parse == "skip"
+            next if entry.parse == :skip
+          else
+            entry = DaijirinEntry.new(lns)
+            parent_entry = entry
+
+            if entry.parse == :skip
+              parent_entry = nil
+              next
+            end
+          end
 
           @all_entries << entry
           entry.kanji.each do |x|
             (@hash[:kanji][x] ||= []) << entry
           end
 
-          hiragana = hiragana(entry.kana)
-          (@hash[:kana][hiragana] ||= []) << entry
+          if(entry.kana)
+            hiragana = hiragana(entry.kana)
+            (@hash[:kana][hiragana] ||= []) << entry
+          end
 
           if entry.english
             entry.english.each do |x|
@@ -69,7 +86,9 @@ class DaijirinConverter
 
   def sort
     count = 0
-    @all_entries .sort_by!{|e| e.kana}
+    # Sort by reading or by first variant of a phrase,
+    # which should start from reading of the parent.
+    @all_entries .sort_by!{|e| e.kana || e.kanji[0] }
     @all_entries .each do |e|
       e.sort_key = count
       count += 1

@@ -8,7 +8,7 @@ require 'yaml'
 
 class DaijirinEntry
   attr_reader :raw
-  attr_accessor :sort_key
+  attr_accessor :sort_key, :parent
 
   OLD_KANA_MATCHER="(―?[^\\[【（]+―?)?"
   ACCENT_MATCHER=/\[(\d+)\]-?/
@@ -18,7 +18,8 @@ class DaijirinEntry
   BUNKA_MATCHER=/(\[文\] ?(?:ナ四・ナ変|形動タリ|シク|ナリ|.変|ハ下二|ク|マ下二|タ下二|マ上一|カ下二|サ下二|ラ下二|ガ下二|.上二|.下二|.上一|マ 下二|))/
   KANJI_OPTIONAL_MATCHER=/\(([^\(\)]+)\)/
 
-  def initialize(raw)
+  def initialize(raw, parent = nil)
+    @parent = parent
     @raw = raw
     @kanji = nil
     @kana = nil
@@ -78,7 +79,7 @@ class DaijirinEntry
   end
 
   def marshal_dump
-    [@sort_key, @raw]
+    [@sort_key, @raw, @parent]
   end
 
   def marshal_load(data)
@@ -92,13 +93,13 @@ class DaijirinEntry
     @info = nil
     @sort_key = nil
     @parsed = nil
-    @sort_key, @raw = data
+    @sort_key, @raw, @parent = data
   end
 
   def parse
     return @parsed if @parsed
     unless parse_first_line(raw[0])
-      @parsed = "skip"
+      @parsed = :skip
       return @parsed
     end
 
@@ -114,6 +115,9 @@ class DaijirinEntry
   def parse_first_line(s)
     s = s.dup.chop!
     s = (s or "").strip
+
+    return parse_first_line_parented(s) if @parent
+
     @kana, s = s.split(' ', 2)
     if @kana.match(/[A-Za-z]+/)
       return false # We ain't reading Japanese dictionary for English words
@@ -150,6 +154,55 @@ class DaijirinEntry
     @old_kana = (s.match(/^[^%]+/) or [nil])[0]
 
     return true
+  end
+
+  def parse_first_line_parented(s)
+    @kana = nil
+
+    s = s[2..-1] # Cut out "――" part.
+
+    # Process entries like "――の過(アヤマ)ち"
+    # and worse, "――の＝髄(ズイ)（＝管(クダ)）から天井(テンジヨウ)を覗(ノゾ)く"
+    tmp = nil
+    until s.eql? tmp
+      tmp = s
+      s = remove_parentheses(tmp)
+    end
+
+    s = cleanup_markup(s)
+
+    @kanji = []
+
+    # The variant with reading comes first. see sort() in convert.rb
+    if @parent.kana
+      @kanji << "#{cleanup_markup(@parent.kana)}#{s}"
+    end
+
+    (@parent.kanji || []).each do |k|
+      @kanji << "#{k}#{s}"
+    end
+
+    @accent = nil
+    @english = nil
+    @type = nil
+    @bunka = nil
+
+    @alternative_kana = nil
+    @old_kana = nil
+
+    return true
+  end
+
+  def remove_parentheses(s)
+    f = s.split(KANJI_OPTIONAL_MATCHER)
+    if f.length > 1
+      # sentence contains readings in parentheses
+      # there's no reliable way to replace corresponding kanji-s with it
+      _, omit = separate(f)
+      omit.join('')
+    else
+      s
+    end
   end
 
   def parse_rest_of_lines(s)
@@ -193,5 +246,14 @@ class DaijirinEntry
       end
     }
     [odd, even]
+  end
+
+  def cleanup_markup(s)
+    s = s.dup
+    s.gsub!('<?>','')
+    s.gsub!('＝','')
+    s.gsub!('・','')
+    s.gsub!('-', '')
+    s
   end
 end
