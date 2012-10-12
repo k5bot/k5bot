@@ -69,7 +69,7 @@ class DaijirinConverter
           end
 
           @all_entries << entry
-          entry.kanji.each do |x|
+          entry.kanji_for_search.each do |x|
             (@hash[:kanji][x] ||= []) << entry
           end
 

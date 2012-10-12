@@ -35,6 +35,14 @@ class DaijirinEntry
   end
 
   def kanji
+    k = kanji_for_search
+    # Only output one meaningful kanji for child entries:
+    # either the first kanji form or the kana form..
+    return [k[1] || k[0]] if @parent
+    k
+  end
+
+  def kanji_for_search
     @kanji unless !@parsed
     parse
     @kanji
@@ -194,12 +202,12 @@ class DaijirinEntry
 
     @kanji = []
 
-    # The variant with reading comes first. see sort() in convert.rb
+    # The variant with reading comes first. see sort() in convert.rb and the kanji() method
     if @parent.kana
       @kanji << "#{@parent.kana}#{s}"
     end
 
-    (@parent.kanji || []).each do |k|
+    (@parent.kanji_for_search || []).each do |k|
       @kanji << "#{k}#{s}"
     end
 
