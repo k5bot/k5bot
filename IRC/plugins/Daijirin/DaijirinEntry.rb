@@ -83,7 +83,7 @@ class DaijirinEntry
   end
 
   def marshal_load(data)
-    @raw = raw
+    @raw = nil
     @kanji = nil
     @kana = nil
     @old_kana = nil
