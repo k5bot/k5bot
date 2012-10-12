@@ -55,6 +55,9 @@ class DaijirinConverter
             entry = DaijirinEntry.new(lns, parent_entry)
 
             next if entry.parse == :skip
+
+            # Add current entry as a child, since it was parsed successfully
+            parent_entry.add_child!(entry)
           else
             entry = DaijirinEntry.new(lns)
             parent_entry = entry
@@ -70,7 +73,7 @@ class DaijirinConverter
             (@hash[:kanji][x] ||= []) << entry
           end
 
-          if(entry.kana)
+          if entry.kana
             hiragana = hiragana(entry.kana)
             (@hash[:kana][hiragana] ||= []) << entry
           end
@@ -86,11 +89,15 @@ class DaijirinConverter
 
   def sort
     count = 0
-    # Sort by reading or by first variant of a phrase,
-    # which should start from reading of the parent.
+    # Sort parent entries by kana, and
+    # child entries by the first variant of its phrase,
+    # which starts with kana of the parent.
     @all_entries .sort_by!{|e| e.kana || e.kanji[0] }
     @all_entries .each do |e|
       e.sort_key = count
+      # Take this opportunity to reorder all children,
+      # so that they'll be output nicely in reference lists.
+      e.children.sort_by!{|e| e.reference } if e.children
       count += 1
     end
   end
@@ -100,9 +107,6 @@ class DaijirinConverter
     hiragana = katakana.dup
     @katakana.each{|k| hiragana.gsub!(k, @kata2hira[k])}
 
-    # Daijirin-specific markers
-    hiragana.gsub!('-', '')
-    hiragana.gsub!('・', '')
     hiragana
   end
 end

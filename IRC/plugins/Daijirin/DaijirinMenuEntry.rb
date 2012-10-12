@@ -26,6 +26,9 @@ class DaijirinMenuEntry < MenuNode
       entry.info.flatten.each do |line|
           msg.reply(line)
       end
+
+      # Print references line after everything
+      format_references(entry) { |ref| msg.reply(ref) }
       return
     end
 
@@ -51,6 +54,22 @@ class DaijirinMenuEntry < MenuNode
     end
 
     @to_show += 1
-    @to_show = nil if @to_show >= entry.info.length
+    if @to_show >= entry.info.length
+      @to_show = nil
+
+      # Print references line together with the last entry
+      format_references(entry) { |ref| msg.reply(ref) }
+    else
+      # Same as above, but for calling user only
+      format_references(entry) { |ref| msg.notice_user(ref) }
+    end
+  end
+
+  def format_references(entry)
+    if entry.children
+      yield entry.children.map { |c| "→ #{c.reference}" }.join(', ')
+    elsif entry.parent
+      yield "→#{entry.parent.reference}"
+    end
   end
 end

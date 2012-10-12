@@ -7,8 +7,8 @@
 require 'yaml'
 
 class DaijirinEntry
-  attr_reader :raw
-  attr_accessor :sort_key, :parent
+  attr_reader :raw, :parent, :children
+  attr_accessor :sort_key
 
   OLD_KANA_MATCHER="(―?[^\\[【（]+―?)?"
   ACCENT_MATCHER=/\[(\d+)\]-?/
@@ -20,6 +20,7 @@ class DaijirinEntry
 
   def initialize(raw, parent = nil)
     @parent = parent
+    @children = nil
     @raw = raw
     @kanji = nil
     @kana = nil
@@ -27,6 +28,7 @@ class DaijirinEntry
     @alternative_kana = nil
     @accent = nil
     @english = nil
+    @reference = nil
     @info = nil
     @sort_key = nil
     @parsed = nil
@@ -69,6 +71,12 @@ class DaijirinEntry
     @info
   end
 
+  def reference
+    @reference unless !@parsed
+    parse
+    @reference
+  end
+
   def to_lines
     info.flatten
   end
@@ -78,8 +86,12 @@ class DaijirinEntry
    tmp.join("\n")
   end
 
+  def add_child!(child)
+    @children = (@children || []) << child
+  end
+
   def marshal_dump
-    [@sort_key, @raw, @parent]
+    [@sort_key, @raw, @parent, @children]
   end
 
   def marshal_load(data)
@@ -90,10 +102,11 @@ class DaijirinEntry
     @alternative_kana = nil
     @accent = nil
     @english = nil
+    @reference = nil
     @info = nil
     @sort_key = nil
     @parsed = nil
-    @sort_key, @raw, @parent = data
+    @sort_key, @raw, @parent, @children = data
   end
 
   def parse
@@ -124,6 +137,8 @@ class DaijirinEntry
     end
     s = (s or "").strip
 
+    @kana = cleanup_markup(@kana)
+
     @kanji, s = split(s,KANJI_MATCHER,'%k%')
 
     # Process entries like 【掛(か)る・懸(か)る】
@@ -153,6 +168,8 @@ class DaijirinEntry
     @alternative_kana = (s.match(/[^%]+$/) or [nil])[0]
     @old_kana = (s.match(/^[^%]+/) or [nil])[0]
 
+    @reference = @kanji[0] ? @kanji[0] : @kana
+
     return true
   end
 
@@ -171,16 +188,23 @@ class DaijirinEntry
 
     s = cleanup_markup(s)
 
+    template_form = "――#{s}"
+
+    @reference = template_form
+
     @kanji = []
 
     # The variant with reading comes first. see sort() in convert.rb
     if @parent.kana
-      @kanji << "#{cleanup_markup(@parent.kana)}#{s}"
+      @kanji << "#{@parent.kana}#{s}"
     end
 
     (@parent.kanji || []).each do |k|
       @kanji << "#{k}#{s}"
     end
+
+    # For search purposes, let's add the template form too
+    @kanji << template_form
 
     @accent = nil
     @english = nil
@@ -250,7 +274,7 @@ class DaijirinEntry
 
   def cleanup_markup(s)
     s = s.dup
-    s.gsub!('<?>','')
+    # s.gsub!('<?>','') # let's not cleanup gaiji for the time being
     s.gsub!('＝','')
     s.gsub!('・','')
     s.gsub!('-', '')
