@@ -14,22 +14,31 @@ class Translate < IRCPlugin
   Description = "Uses translation engines to translate between languages."
   Dependencies = [ :Language ]
 
-  GOOGLE_SUPPORTED = {
-      'auto'=>'auto',
-      'en' => 'en',
-      'ja'=>'ja',
-      'zh'=>'zh-CN',
-      'tw'=>'zh-TW',
-      'ko'=>'ko',
-      'fr'=>'fr',
-      'pt'=>'pt',
-      'de'=>'de',
-      'it'=>'it',
-      'es'=>'es',
-      'no'=>'no',
-      'ru'=>'ru'
-  }
-  HONYAKU_SUPPORTED = %w(en ja ko fr pt zh de it es)
+  def self.make_lang_service_format_map(verbatim_array, modifications_hash = nil)
+    return verbatim_array unless modifications_hash
+
+    result = {}
+    verbatim_array.each do |x|
+      result[x] = x
+    end
+    modifications_hash.each do |k, v|
+      result[k] = v
+    end
+    result
+  end
+
+  def self.lang_to_service_format(l_from, l_to, possibles)
+    return nil unless possibles.include? l_from # "Can't translate from #{l_from} with #{service}"
+    return nil unless ((possibles.include? l_to) && !('auto'.eql? l_to)) # "Can't translate to #{l_to} with #{service}"
+    if possibles.instance_of? Hash
+      [possibles[l_from], possibles[l_to]]
+    else
+      [l_from, l_to]
+    end
+  end
+
+  GOOGLE_SUPPORTED = make_lang_service_format_map(%w(auto en ja ko fr pt de it es no ru fi), {'zh' => 'zh-CN', 'tw' => 'zh-TW'})
+  HONYAKU_SUPPORTED = make_lang_service_format_map(%w(en ja ko fr pt zh de it es))
   KNOWN_SERVICES = {
       :Google => {:prefix=>'g', :languages=>GOOGLE_SUPPORTED, :translator=>:google_translate},
       :Honyaku => {:prefix=>'h', :languages=>HONYAKU_SUPPORTED, :translator=>:honyaku_translate}
@@ -51,18 +60,9 @@ class Translate < IRCPlugin
       'it' => ['it', 'Italian'],
       'es' => ['es', 'Spanish'],
       'no' => ['no', 'Norwegian'],
-      'ru' => ['ru', 'Russian']
+      'ru' => ['ru', 'Russian'],
+      'fi' => ['fi', 'Finnish'],
   }
-
-  def self.lang_to_service_format(l_from, l_to, possibles)
-    return nil unless possibles.include? l_from # "Can't translate from #{l_from} with #{service}"
-    return nil unless ((possibles.include? l_to) && !('auto'.eql? l_to)) # "Can't translate to #{l_to} with #{service}"
-    if possibles.instance_of? Hash
-      [possibles[l_from], possibles[l_to]]
-    else
-      [l_from, l_to]
-    end
-  end
 
   def self.generate_commands()
     translation_map = {}
