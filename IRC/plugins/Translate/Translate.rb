@@ -26,7 +26,8 @@ class Translate < IRCPlugin
       'de'=>'de',
       'it'=>'it',
       'es'=>'es',
-      'no'=>'no'
+      'no'=>'no',
+      'ru'=>'ru'
   }
   HONYAKU_SUPPORTED = %w(en ja ko fr pt zh de it es)
   KNOWN_SERVICES = {
@@ -49,7 +50,8 @@ class Translate < IRCPlugin
       'de' => ['de', 'German'],
       'it' => ['it', 'Italian'],
       'es' => ['es', 'Spanish'],
-      'no' => ['no', 'Norwegian']
+      'no' => ['no', 'Norwegian'],
+      'ru' => ['ru', 'Russian']
   }
 
   def self.lang_to_service_format(l_from, l_to, possibles)
