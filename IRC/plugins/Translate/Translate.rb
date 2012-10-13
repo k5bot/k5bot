@@ -108,6 +108,9 @@ class Translate < IRCPlugin
       commands["#{prefix}_".to_sym] = dsc
     end
 
+    commands[:t] = "determines if specified text is Japanese or not, then translates appropriately J>E or E>J"
+    commands[:gt] = "same as #{IRCMessage::BotCommandPrefix}t, but uses Google Translate"
+
     return [translation_map, commands]
   end
 
