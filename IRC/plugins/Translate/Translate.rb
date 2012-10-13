@@ -12,57 +12,121 @@ require 'json'
 
 class Translate < IRCPlugin
   Description = "Uses translation engines to translate between languages."
-  Commands = {
-    :t  => "determines if specified text is Japanese or not, then translates appropriately J>E or E>J",
-    :gt => "same as .t, but uses Google Translate",
-    :je => "translates specified text from Japanese to English",
-    :ej => "translates specified text from English to Japanese",
-    :cj => "translates specified text from Simplified Chinese to Japanese",
-    :jc => "translates specified text from Japanese to Simplified Chinese",
-    :twj  => "translates specified text from Traditional Chinese to Japanese",
-    :jtw  => "translates specified text from Japanese to Traditional Chinese",
-    :kj => "translates specified text from Korean to Japanese",
-    :jk => "translates specified text from Japanese to Korean"
-  }
   Dependencies = [ :Language ]
 
-  TranslationPairs = {
-    :je => 'jaen',
-    :ej => 'enja',
-    :cj => 'zhja',
-    :jc => 'jazh',
-    :twj  => 'twja',
-    :jtw  => 'jatw',
-    :kj => 'koja',
-    :jk => 'jako'
+  GOOGLE_SUPPORTED = {
+      'auto'=>'auto',
+      'en' => 'en',
+      'ja'=>'ja',
+      'zh'=>'zh-CN',
+      'tw'=>'zh-TW',
+      'ko'=>'ko',
+      'fr'=>'fr',
+      'pt'=>'pt',
+      'de'=>'de',
+      'it'=>'it',
+      'es'=>'es',
+      'no'=>'no'
   }
+  HONYAKU_SUPPORTED = %w(en ja ko fr pt zh de it es)
+  KNOWN_SERVICES = {
+      :Google => {:prefix=>'g', :languages=>GOOGLE_SUPPORTED, :translator=>:google_translate},
+      :Honyaku => {:prefix=>'', :languages=>HONYAKU_SUPPORTED, :translator=>:honyaku_translate}
+  }
+
+  # Internal unified language id =>
+  # [Shortcut form for commands, Language description for help]
+  COMMAND_GENERATOR = {
+      'en' => ['e', 'English'],
+      'ja' => ['j', 'Japanese'],
+      'zh' => ['c', 'Simplified Chinese'],
+      'tw' => ['tw', 'Traditional Chinese'],
+      'ko' => ['k', 'Korean'],
+      'fr' => ['fr', 'French'],
+      'pt' => ['pt', 'Portuguese'],
+      'de' => ['de', 'German'],
+      'it' => ['it', 'Italian'],
+      'es' => ['es', 'Spanish'],
+      'no' => ['no', 'Norwegian']
+  }
+
+  def self.lang_to_service_format(l_from, l_to, possibles)
+    return nil unless possibles.include? l_from # "Can't translate from #{l_from} with #{service}"
+    return nil unless ((possibles.include? l_to) && !('auto'.eql? l_to)) # "Can't translate to #{l_to} with #{service}"
+    if possibles.instance_of? Hash
+      [possibles[l_from], possibles[l_to]]
+    else
+      [l_from, l_to]
+    end
+  end
+
+  def self.generate_commands()
+    translation_map = {}
+    commands = {}
+
+    combinations_all_of = %w(ja ko tw zh)
+    combinations_any_of = %w(ja)
+
+    KNOWN_SERVICES.each do |service, service_record|
+      prefix = service_record[:prefix]
+      possibles = service_record[:languages]
+      translator = service_record[:translator]
+
+      COMMAND_GENERATOR.each do |l_from, info_from|
+        abbreviation_from, description_from = info_from
+        COMMAND_GENERATOR.each do |l_to, info_to|
+          next if l_from.eql? l_to
+          # Restrict combinations only to those of interest
+          is_any_combination = (combinations_any_of.include? l_from) || (combinations_any_of.include? l_to)
+          is_all_combination = (combinations_all_of.include? l_from) && (combinations_all_of.include? l_to)
+          next unless (is_any_combination || is_all_combination)
+
+          lp = lang_to_service_format(l_from, l_to, possibles)
+          next unless lp
+
+          abbreviation_to, description_to= info_to
+          cmd = "#{prefix}#{abbreviation_from}#{abbreviation_to}".to_sym
+          dsc = "translates specified text from #{description_from} to #{description_to} using #{service}"
+
+          translation_map[cmd] = [translator, lp]
+          commands[cmd] = dsc
+        end
+      end
+    end
+
+    return [translation_map, commands]
+  end
+
+  TRANSLATION_MAP, Commands = generate_commands()
 
   def afterLoad
     @l = @plugin_manager.plugins[:Language]
   end
 
   def on_privmsg(msg)
-    return unless msg.tail
+    text = msg.tail
+    return unless text
+
+    result = nil
     if msg.botcommand == :t
-      text = msg.tail
-      t = @l.containsJapanese?(text) ? (translate text, 'jaen') : (translate text, 'enja')
-      msg.reply t if t
+      result = @l.containsJapanese?(text) ? (h_translate text, %w(ja en)) : (h_translate text, %w(en ja))
     elsif msg.botcommand == :gt
-      text = msg.tail
-      t = @l.containsJapanese?(text) ? (gtranslate text, 'jaen') : (gtranslate text, 'enja')
-      msg.reply t if t
+      result = @l.containsJapanese?(text) ? (g_translate text, %w(ja en)) : (g_translate text, %w(auto ja))
     else
-      if lp = TranslationPairs[msg.botcommand]
-        t = translate msg.tail, lp
-        msg.reply t if t
-      end
+      translator, lp = TRANSLATION_MAP[msg.botcommand]
+      result = self.__send__ translator, text, lp if lp
     end
+
+    msg.reply result if result
   end
 
-  def googleTranslate(text, lp)
+  GOOGLE_BASE_URL = 'http://translate.google.com'
+
+  def google_translate(text, lp)
+    l_from, l_to = lp
     result = Net::HTTP.post_form(
-      URI.parse('http://translate.google.com'),
-      {'sl' => lp[0..1], 'tl' => lp[2..3], 'text' => text})
+        URI.parse(GOOGLE_BASE_URL),
+        {'sl' => l_from, 'tl' => l_to, 'text' => text})
     return if [Net::HTTPSuccess, Net::HTTPRedirection].include? result
     doc = Nokogiri::HTML result.body
     doc.css('span[id="result_box"] span').text.chomp
@@ -72,12 +136,37 @@ class Translate < IRCPlugin
   HONYAKU_BASE_URL="http://honyaku.yahoo.co.jp/TranslationText"
   HONYAKU_USER_AGENT="Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET"
 
-  def honyaku_get_json(str, type)
-    http_obj = Net::HTTP
-    ieid = type[0..1]
-    oeid = type[2..3]
+  def honyaku_translate(str, type)
+    ret = honyaku_get_json(str, type)
 
-    # Obtain crumb # TODO: rewrite with nokogiri
+    json = JSON.parse(ret.body)
+
+    if  json != nil and
+        json.include?("ResultSet") and
+        json["ResultSet"].include?("ResultText") and
+        json["ResultSet"]["ResultText"].include?("Results")
+
+      results = json["ResultSet"]["ResultText"]["Results"]
+
+#      results.each do |result|
+#        trans_text << "#{result["key"]}: #{result["TranslateText"]}\n"
+#        trans_text << "#{result["key"]}: -> #{result["TranslatedText"]}\n"
+#      end
+
+      results.map { |result| result["TranslatedText"] }.join(' ')
+    else
+      puts "failed... received data: #{ret.body}"
+      nil
+    end
+  end
+
+  # TODO: rewrite with nokogiri
+  def honyaku_get_json(str, lp)
+    l_from, l_to = lp
+
+    http_obj = Net::HTTP
+
+    # Obtain crumb
     crumb = nil
     uri = URI.parse(HONYAKU_INIT_URL)
     http_obj.start(uri.host, uri.port) do |http|
@@ -106,8 +195,8 @@ class Translate < IRCPlugin
       request["Accept-Language"]  = "ja"
       request["Accept"]           = "application/json, text/javascript, */*"
       body = {
-          :ieid      => ieid,
-          :oeid      => oeid,
+          :ieid      => l_from,
+          :oeid      => l_to,
           :results   => 1000,
           :formality => 0,
           :output    => "json",
@@ -121,25 +210,6 @@ class Translate < IRCPlugin
     end
   end
 
-  def honyakuTranslate(str, type)
-    ret = honyaku_get_json(str, type)
-
-    json = JSON.parse(ret.body)
-
-    if  json != nil and
-        json.include?("ResultSet") and
-        json["ResultSet"].include?("ResultText") and
-        json["ResultSet"]["ResultText"].include?("Results")
-
-      results = json["ResultSet"]["ResultText"]["Results"]
-
-      results.map { |result| result["TranslatedText"] }.join(' ')
-    else
-      puts "failed... received data: #{ret.body}"
-      nil
-    end
-  end
-
-  alias translate honyakuTranslate
-  alias gtranslate googleTranslate
+  alias h_translate honyaku_translate
+  alias g_translate google_translate
 end
