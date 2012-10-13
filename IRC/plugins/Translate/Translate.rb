@@ -14,9 +14,7 @@ class Translate < IRCPlugin
   Description = "Uses translation engines to translate between languages."
   Dependencies = [ :Language ]
 
-  def self.make_lang_service_format_map(verbatim_array, modifications_hash = nil)
-    return verbatim_array unless modifications_hash
-
+  def self.make_lang_service_format_map(verbatim_array, modifications_hash = {})
     result = {}
     verbatim_array.each do |x|
       result[x] = x
@@ -30,11 +28,7 @@ class Translate < IRCPlugin
   def self.lang_to_service_format(l_from, l_to, possibles)
     return nil unless possibles.include? l_from # "Can't translate from #{l_from} with #{service}"
     return nil unless ((possibles.include? l_to) && !('auto'.eql? l_to)) # "Can't translate to #{l_to} with #{service}"
-    if possibles.instance_of? Hash
-      [possibles[l_from], possibles[l_to]]
-    else
-      [l_from, l_to]
-    end
+    [possibles[l_from], possibles[l_to]]
   end
 
   GOOGLE_SUPPORTED = make_lang_service_format_map(%w(auto en ja ko fr pt de it es no ru fi), {'zh' => 'zh-CN', 'tw' => 'zh-TW'})
@@ -48,7 +42,8 @@ class Translate < IRCPlugin
 
   # Internal unified language id =>
   # [Shortcut form for commands, Language description for help]
-  COMMAND_GENERATOR = {
+  LANGUAGE_INFO = {
+      'auto' => ['_', 'Auto-detected language'],
       'en' => ['e', 'English'],
       'ja' => ['j', 'Japanese'],
       'zh' => ['c', 'Simplified Chinese'],
@@ -64,6 +59,12 @@ class Translate < IRCPlugin
       'fi' => ['fi', 'Finnish'],
   }
 
+  def self.get_language_info(lang)
+    result = LANGUAGE_INFO[lang]
+    raise "Cannot find language info for #{lang}" unless (result && (result.instance_of? Array) && (2 == result.size))
+    result
+  end
+
   def self.generate_commands()
     translation_map = {}
     commands = {}
@@ -75,15 +76,15 @@ class Translate < IRCPlugin
 
       used_abbreviations = {}
 
-      COMMAND_GENERATOR.each do |l_from, info_from|
-        abbreviation_from, description_from = info_from
-        COMMAND_GENERATOR.each do |l_to, info_to|
+      possibles.keys.each do |l_from|
+        abbreviation_from, description_from = get_language_info(l_from)
+        possibles.keys.each do |l_to|
           next if l_from.eql? l_to
 
           lp = lang_to_service_format(l_from, l_to, possibles)
           next unless lp
 
-          abbreviation_to, description_to= info_to
+          abbreviation_to, description_to = get_language_info(l_to)
           cmd = "#{prefix}#{abbreviation_from}#{abbreviation_to}".to_sym
 
           translation_map[cmd] = [translator, lp]
