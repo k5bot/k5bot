@@ -31,8 +31,10 @@ class Translate < IRCPlugin
   HONYAKU_SUPPORTED = %w(en ja ko fr pt zh de it es)
   KNOWN_SERVICES = {
       :Google => {:prefix=>'g', :languages=>GOOGLE_SUPPORTED, :translator=>:google_translate},
-      :Honyaku => {:prefix=>'', :languages=>HONYAKU_SUPPORTED, :translator=>:honyaku_translate}
+      :Honyaku => {:prefix=>'h', :languages=>HONYAKU_SUPPORTED, :translator=>:honyaku_translate}
   }
+  DEFAULT_SERVICE = :Honyaku
+  DEFAULT_SERVICE_LANGUAGES = %w(en ja ko tw zh)
 
   # Internal unified language id =>
   # [Shortcut form for commands, Language description for help]
@@ -64,34 +66,43 @@ class Translate < IRCPlugin
     translation_map = {}
     commands = {}
 
-    combinations_all_of = %w(ja ko tw zh)
-    combinations_any_of = %w(ja)
-
     KNOWN_SERVICES.each do |service, service_record|
       prefix = service_record[:prefix]
       possibles = service_record[:languages]
       translator = service_record[:translator]
 
+      used_abbreviations = {}
+
       COMMAND_GENERATOR.each do |l_from, info_from|
         abbreviation_from, description_from = info_from
         COMMAND_GENERATOR.each do |l_to, info_to|
           next if l_from.eql? l_to
-          # Restrict combinations only to those of interest
-          is_any_combination = (combinations_any_of.include? l_from) || (combinations_any_of.include? l_to)
-          is_all_combination = (combinations_all_of.include? l_from) && (combinations_all_of.include? l_to)
-          next unless (is_any_combination || is_all_combination)
 
           lp = lang_to_service_format(l_from, l_to, possibles)
           next unless lp
 
           abbreviation_to, description_to= info_to
           cmd = "#{prefix}#{abbreviation_from}#{abbreviation_to}".to_sym
-          dsc = "translates specified text from #{description_from} to #{description_to} using #{service}"
 
           translation_map[cmd] = [translator, lp]
-          commands[cmd] = dsc
+
+          # Add limited subset of commands in short form + separate help for them
+          if (service == DEFAULT_SERVICE) && (DEFAULT_SERVICE_LANGUAGES.include? l_from) && (DEFAULT_SERVICE_LANGUAGES.include? l_to)
+            dsc = "translates specified text from #{description_from} to #{description_to} using #{service}"
+            cmd_short = "#{abbreviation_from}#{abbreviation_to}".to_sym
+            translation_map[cmd_short] = [translator, lp]
+            commands[cmd_short] = dsc
+          end
+
+          # Gather all accepted abbreviations, to list them in help
+          used_abbreviations[abbreviation_from] = l_from
+          used_abbreviations[abbreviation_to] = l_to
         end
       end
+
+      # Generate generic help for prefixed template form
+      dsc = "\"#{prefix}<from><to>\" translates specified text using #{service}. Possible values for <from> and <to> are: #{used_abbreviations.keys.join(', ')}"
+      commands["#{prefix}_".to_sym] = dsc
     end
 
     return [translation_map, commands]
