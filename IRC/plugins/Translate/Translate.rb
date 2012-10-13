@@ -67,6 +67,10 @@ class Translate < IRCPlugin
     result
   end
 
+  def self.get_language_list_string()
+    LANGUAGE_INFO.map { |_, info| "#{info[1]} (#{info[0]})" }.join(", ")
+  end
+
   def self.generate_commands()
     translation_map = {}
     commands = {}
@@ -112,6 +116,7 @@ class Translate < IRCPlugin
 
     commands[:t] = "determines if specified text is Japanese or not, then translates appropriately J>E or E>J"
     commands[:gt] = "same as #{IRCMessage::BotCommandPrefix}t, but uses Google Translate"
+    commands[:langs] = "shows languages supported by this plugin (note that not all of them are available for all translation engines)"
 
     return [translation_map, commands]
   end
@@ -123,16 +128,22 @@ class Translate < IRCPlugin
   end
 
   def on_privmsg(msg)
+    bot_command = msg.botcommand
+    if :langs == bot_command
+      return msg.reply Translate.get_language_list_string()
+    end
+
     text = msg.tail
     return unless text
 
     result = nil
-    if msg.botcommand == :t
+    case bot_command
+    when :t
       result = @l.containsJapanese?(text) ? (h_translate text, %w(ja en)) : (h_translate text, %w(en ja))
-    elsif msg.botcommand == :gt
+    when :gt
       result = @l.containsJapanese?(text) ? (g_translate text, %w(ja en)) : (g_translate text, %w(auto ja))
     else
-      translator, lp = TRANSLATION_MAP[msg.botcommand]
+      translator, lp = TRANSLATION_MAP[bot_command]
       result = self.__send__ translator, text, lp if lp
     end
 
