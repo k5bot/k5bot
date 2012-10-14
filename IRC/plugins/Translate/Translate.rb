@@ -158,8 +158,19 @@ class Translate < IRCPlugin
         URI.parse(GOOGLE_BASE_URL),
         {'sl' => l_from, 'tl' => l_to, 'text' => text})
     return if [Net::HTTPSuccess, Net::HTTPRedirection].include? result
+    # Fix encoding error, which can be seen e.g. with .g_c 戦
+    # Parse once to detect encoding from html
     doc = Nokogiri::HTML result.body
+    filtered = fix_encoding(result.body, doc.encoding)
+    doc = Nokogiri::HTML filtered
     doc.css('span[id="result_box"] span').text.chomp
+  end
+
+  def fix_encoding(str, encoding)
+    str.force_encoding encoding
+    str.chars.collect do |c|
+      (c.valid_encoding?) ? c:'?'
+    end.join
   end
 
   HONYAKU_INIT_URL="http://honyaku.yahoo.co.jp/transtext/"
