@@ -69,7 +69,7 @@ class Translate < IRCPlugin
   end
 
   def self.get_language_list_string()
-    LANGUAGE_INFO.map { |_, info| "#{info[1]} (#{info[0]})" }.join(", ")
+    LANGUAGE_INFO.map { |_, info| "#{info[1]} (#{info[0]})" }.sort.join(", ")
   end
 
   def self.generate_commands()
