@@ -4,9 +4,13 @@
 
 # EDICT entry
 
+require 'set'
+
 class EDICTEntry
   attr_reader :raw
   attr_accessor :sortKey
+
+  PROPER_NAME_KEYWORDS = [:s, :p, :u, :g, :f, :m, :h, :pr, :co, :st].to_set
 
   def initialize(raw)
     @raw = raw
@@ -51,6 +55,10 @@ class EDICTEntry
 
   def vulgar?
     keywords.include? :vulg
+  end
+
+  def proper_name?
+    keywords.any? { |k| PROPER_NAME_KEYWORDS.include? k }
   end
 
   def info
