@@ -154,7 +154,12 @@ class IRCBot < IRCMessageRouter
         @watchdog = nil
       end
 
-      @sock = TCPSocket.open @config[:server], @config[:port]
+      server = @config[:server]
+      if server.instance_of? Array
+        server = server[rand(1..server.length)-1]
+      end
+
+      @sock = TCPSocket.open server, @config[:port]
       login
       until @sock.eof? do # Throws Errno::ECONNRESET
         receive @sock.gets
