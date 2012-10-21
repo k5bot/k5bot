@@ -32,13 +32,8 @@ class EDICTConverter
   end
 
   def read
-    firstline = true
     File.open(@edictfile, 'r') do |io|
       io.each_line do |l|
-        if firstline
-          firstline = false
-          next
-        end
         entry = EDICTEntry.new(Iconv.conv('UTF-8', 'EUC-JP', l).strip)
         @allEntries << entry
         (@hash[:japanese][entry.japanese] ||= []) << entry
