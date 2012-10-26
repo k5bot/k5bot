@@ -27,14 +27,15 @@ class EDICT < IRCPlugin
 
     @l = @plugin_manager.plugins[:Language]
     @m = @plugin_manager.plugins[:Menu]
-    load_edict
+
+    @hash_edict = load_dict("edict")
   end
 
   def beforeUnload
     @m.evict_plugin_menus!(self.name)
     @l = nil
     @m = nil
-    @hash = nil
+    @hash_edict = nil
 
     unload_helper_class(:EDICTMenuEntry)
     unload_helper_class(:EDICTEntry)
@@ -47,11 +48,11 @@ class EDICT < IRCPlugin
     when :j
       word = msg.tail
       return unless word
-      reply_to_enquirer(lookup(@l.kana(word), [:japanese, :readings]), word, msg)
+      reply_to_enquirer(lookup(@l.kana(word), [@hash_edict[:japanese], @hash_edict[:readings]]), word, msg)
     when :e
       word = msg.tail
       return unless word
-      reply_to_enquirer(keyword_lookup(word), word, msg)
+      reply_to_enquirer(keyword_lookup(split_into_keywords(word), @hash_edict[:keywords]), word, msg)
     end
   end
 
@@ -74,7 +75,7 @@ class EDICT < IRCPlugin
   def lookup(word, hashes)
     lookup_result = []
     hashes.each do |h|
-      entry_array = @hash[h][word]
+      entry_array = h[word]
       lookup_result |= entry_array if entry_array
     end
     return if lookup_result.empty?
@@ -85,11 +86,11 @@ class EDICT < IRCPlugin
   # Looks up keywords in the keyword hash.
   # Specified argument is a string of one or more keywords.
   # Returns the intersection of the results for each keyword.
-  def keyword_lookup(word)
+  def keyword_lookup(words, hash)
     lookup_result = nil
-    keywords = word.downcase.gsub(/[^a-z0-9 ]/, '').split(' ').uniq
-    keywords.each do |k|
-      return unless (entry_array = @hash[:keywords][k.to_sym])
+
+    words.each do |k|
+      return unless (entry_array = hash[k])
       if lookup_result
         lookup_result &= entry_array
       else
@@ -101,13 +102,17 @@ class EDICT < IRCPlugin
     lookup_result
   end
 
+  def split_into_keywords(word)
+    word.downcase.gsub(/[^a-z0-9 ]/, '').split(' ').map {|k| k.to_sym}.uniq
+  end
+
   def sort_result(lr)
     lr.sort_by!{|e| e.sortKey} if lr
   end
 
-  def load_edict
-    File.open("#{(File.dirname __FILE__)}/edict.marshal", 'r') do |io|
-      @hash = Marshal.load(io)
+  def load_dict(dict)
+    File.open("#{(File.dirname __FILE__)}/#{dict}.marshal", 'r') do |io|
+      Marshal.load(io)
     end
   end
 end
