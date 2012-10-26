@@ -63,18 +63,23 @@ class EDICTConverter
   end
 end
 
-ec = EDICTConverter.new("#{(File.dirname __FILE__)}/edict")
+def marshal_dict(dict)
+  ec = EDICTConverter.new("#{(File.dirname __FILE__)}/#{dict}")
 
-print "Indexing EDICT..."
-ec.read
-puts "done."
+  print "Indexing #{dict.upcase}..."
+  ec.read
+  puts "done."
 
-print "Sorting EDICT..."
-ec.sort
-puts "done."
+  print "Sorting #{dict.upcase}..."
+  ec.sort
+  puts "done."
 
-print "Marshalling hash..."
-File.open("#{(File.dirname __FILE__)}/edict.marshal", 'w') do |io|
-  Marshal.dump(ec.hash, io)
+  print "Marshalling #{dict.upcase}..."
+  File.open("#{(File.dirname __FILE__)}/#{dict}.marshal", 'w') do |io|
+    Marshal.dump(ec.hash, io)
+  end
+  puts "done."
 end
-puts "done."
+
+marshal_dict('edict')
+marshal_dict('enamdict')
