@@ -130,7 +130,10 @@ class MenuState
     self.do_access!
 
     # don't allow to pop higher than topmost node
-    return false unless @location.size > 1
+    unless @location.size > 1
+      msg.reply("Can't move further up.")
+      return false
+    end
 
     child = @location.pop
     parent = @location[-1]
@@ -138,7 +141,7 @@ class MenuState
     # in case, if node is somehow no longer enterable
     @items = parent.enter(child, msg) || []
 
-    @mark = nil
+    @mark = 0
 
     self.show_descriptions!(msg)
 
