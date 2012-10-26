@@ -7,6 +7,8 @@
 require_relative 'MenuNode'
 
 class MenuNodeSimple < MenuNode
+  attr_accessor :entries
+
   def initialize(description, entries)
     @description = description
     @entries = entries
