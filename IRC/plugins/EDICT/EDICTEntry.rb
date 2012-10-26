@@ -10,6 +10,7 @@ class EDICTEntry
   attr_reader :raw
   attr_accessor :sortKey
 
+  # TODO: the p here conflicts with P that denotes common words. should fix that somehow.
   PROPER_NAME_KEYWORDS = [:s, :p, :u, :g, :f, :m, :h, :pr, :co, :st].to_set
 
   def initialize(raw)
