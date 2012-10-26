@@ -123,6 +123,10 @@ class MenuState
       @mark = nil
     end
 
+    if @location.size > 1
+      menu_text += " [#{IRCMessage::BotCommandPrefix}u to go up]"
+    end
+
     msg.reply(menu_text)
   end
 
