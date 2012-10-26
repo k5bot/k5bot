@@ -16,8 +16,9 @@ require_relative 'EDICTMenuEntry'
 class EDICT < IRCPlugin
   Description = "An EDICT plugin."
   Commands = {
-    :j => "looks up a Japanese word in EDICT",
-    :e => "looks up an English word in EDICT"
+    :j => "looks up a Japanese word in EDICT/ENAMDICT",
+    :e => "looks up an English word in EDICT",
+    :jn => "looks up a Japanese word in ENAMDICT",
   }
   Dependencies = [ :Language, :Menu ]
 
@@ -29,13 +30,17 @@ class EDICT < IRCPlugin
     @m = @plugin_manager.plugins[:Menu]
 
     @hash_edict = load_dict("edict")
+    @hash_enamdict = load_dict("enamdict")
   end
 
   def beforeUnload
     @m.evict_plugin_menus!(self.name)
-    @l = nil
-    @m = nil
+
+    @hash_enamdict = nil
     @hash_edict = nil
+
+    @m = nil
+    @l = nil
 
     unload_helper_class(:EDICTMenuEntry)
     unload_helper_class(:EDICTEntry)
@@ -48,15 +53,35 @@ class EDICT < IRCPlugin
     when :j
       word = msg.tail
       return unless word
-      reply_to_enquirer(lookup(@l.kana(word), [@hash_edict[:japanese], @hash_edict[:readings]]), word, msg)
+      l_kana = @l.kana(word)
+      edict_lookup = lookup(l_kana, [@hash_edict[:japanese], @hash_edict[:readings]])
+      reply_menu = generate_menu(edict_lookup, "\"#{word}\" in EDICT")
+
+      enamdict_lookup = lookup(l_kana, [@hash_enamdict[:japanese], @hash_enamdict[:readings]])
+      if enamdict_lookup
+        reply_menu.entries << generate_menu(enamdict_lookup, "Search \"#{word}\" in ENAMDICT")
+      end
+
+      reply_with_menu(msg, reply_menu)
     when :e
       word = msg.tail
       return unless word
-      reply_to_enquirer(keyword_lookup(split_into_keywords(word), @hash_edict[:keywords]), word, msg)
+      edict_lookup = keyword_lookup(split_into_keywords(word), @hash_edict[:keywords])
+      reply_menu = generate_menu(edict_lookup, "\"#{word}\" in EDICT")
+
+      reply_with_menu(msg, reply_menu)
+    when :jn
+      word = msg.tail
+      return unless word
+      l_kana = @l.kana(word)
+      enamdict_lookup = lookup(l_kana, [@hash_enamdict[:japanese], @hash_enamdict[:readings]])
+      reply_menu = generate_menu(enamdict_lookup, "\"#{word}\" in ENAMDICT")
+
+      reply_with_menu(msg, reply_menu)
     end
   end
 
-  def reply_to_enquirer(lookup_result, word, msg)
+  def generate_menu(lookup_result, name)
     menu_items = lookup_result || []
 
     readings_display = (menu_items.length > 1) && (menu_items.collect { |e| e.japanese }.uniq.length == 1)
@@ -64,10 +89,14 @@ class EDICT < IRCPlugin
       EDICTMenuEntry.new(readings_display ? e.reading : e.japanese, e)
     end
 
+    MenuNodeSimple.new(name, menu)
+  end
+
+  def reply_with_menu(msg, result)
     @m.put_new_menu(
-      self.name,
-      MenuNodeSimple.new("\"#{word}\" in EDICT", menu),
-      msg
+        self.name,
+        result,
+        msg
     )
   end
 
