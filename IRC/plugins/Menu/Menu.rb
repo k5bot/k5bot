@@ -45,9 +45,10 @@ class Menu < IRCPlugin
       when :u
         menu_state.move_up!(msg)
       else
-        index_str = msg.message[/^\s*[0-9]+\s*$/]
-        index = 0
-        index = index_str.to_i if index_str
+        index_str = msg.message[/^\s*[0-9０１２３４５６７８９]+\s*$/]
+        return unless index_str
+        index_str.tr!('０１２３４５６７８９','0123456789')
+        index = index_str.to_i
         menu_state.move_down_to!(menu_state.get_child(index), msg)
     end
   end
