@@ -78,10 +78,31 @@ class Translate < IRCPlugin
     LANGUAGE_INFO.map { |_, info| "#{info[1]} (#{info[0]})" }.sort.join(", ")
   end
 
-  def self.generate_commands()
-    translation_map = {}
-    commands = {}
+  def self.fill_default_guess_command(commands, translation_map)
+    # Generate .t command to guess-translate with the default service.
+    service = DEFAULT_SERVICE
+    service_record = KNOWN_SERVICES[service]
+    prefix = service_record[:prefix]
 
+    cmd = "#{prefix}t".to_sym
+
+    translation_map[:t] = [service, nil] # nil language pair indicates the need for lp guessing.
+    commands[:t] = "is a shortcut for #{IRCMessage::BotCommandPrefix}#{cmd}"
+  end
+
+  def self.fill_guess_commands(commands, translation_map)
+    KNOWN_SERVICES.each do |service, service_record|
+      prefix = service_record[:prefix]
+
+      dsc = "attempts to guess desired translation direction for specified text and translates it using #{service}"
+      cmd = "#{prefix}t".to_sym
+      translation_map[cmd] = [service, nil] # nil language pair indicates the need for lp guessing.
+      commands[cmd] = dsc
+
+    end
+  end
+
+  def self.fill_explicit_commands(commands, translation_map)
     KNOWN_SERVICES.each do |service, service_record|
       prefix = service_record[:prefix]
       possibles = service_record[:languages]
@@ -119,9 +140,18 @@ class Translate < IRCPlugin
       dsc = "\"#{prefix}<from><to>\" translates specified text using #{service}. Possible values for <from> and <to> are: #{used_abbreviations.keys.join(', ')}"
       commands["#{prefix}_".to_sym] = dsc
     end
+  end
 
-    commands[:t] = "determines if specified text is Japanese or not, then translates appropriately J>E or E>J"
-    commands[:gt] = "same as #{IRCMessage::BotCommandPrefix}t, but uses Google Translate"
+  def self.generate_commands()
+    translation_map = {}
+    commands = {}
+
+    fill_default_guess_command(commands, translation_map)
+
+    fill_guess_commands(commands, translation_map)
+
+    fill_explicit_commands(commands, translation_map)
+
     commands[:langs] = "shows languages supported by this plugin (note that not all of them are available for all translation engines)"
 
     return [translation_map, commands]
@@ -142,26 +172,24 @@ class Translate < IRCPlugin
     text = msg.tail
     return unless text
 
-    result = nil
-    case bot_command
-    when :t
-      result = @l.containsJapanese?(text) ? (h_translate text, %w(ja en)) : (h_translate text, %w(en ja))
-    when :gt
-      result = @l.containsJapanese?(text) ? (g_translate text, %w(ja en)) : (g_translate text, %w(auto ja))
-    else
-      service_id, lp = TRANSLATION_MAP[bot_command]
-      service = KNOWN_SERVICES[service_id]
-      return unless service
-      translator = service[:translator]
-      result = self.__send__ translator, text, lp
-    end
+    service_id, lp = TRANSLATION_MAP[bot_command]
+    service = KNOWN_SERVICES[service_id]
+    return unless service
+    translator = service[:translator]
+    result = self.__send__ translator, text, lp
 
     msg.reply result if result
+  end
+
+  def auto_detect_ja_lp(text, to_ja, from_ja)
+    @l.containsJapanese?(text) ? from_ja : to_ja
   end
 
   GOOGLE_BASE_URL = 'http://translate.google.com'
 
   def google_translate(text, lp)
+    lp = auto_detect_ja_lp(text, %w(auto ja), %w(ja en)) unless lp
+
     l_from, l_to = lp
     result = Net::HTTP.post_form(
         URI.parse(GOOGLE_BASE_URL),
@@ -186,8 +214,10 @@ class Translate < IRCPlugin
   HONYAKU_BASE_URL="http://honyaku.yahoo.co.jp/TranslationText"
   HONYAKU_USER_AGENT="Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET"
 
-  def honyaku_translate(str, type)
-    ret = honyaku_get_json(str, type)
+  def honyaku_translate(text, lp)
+    lp = auto_detect_ja_lp(text, %w(en ja), %w(ja en)) unless lp
+
+    ret = honyaku_get_json(text, lp)
 
     json = JSON.parse(ret.body)
 
@@ -263,6 +293,8 @@ class Translate < IRCPlugin
   EXCITE_BASE_URL = 'http://www.excite.co.jp/world/english/'
 
   def excite_translate(text, lp)
+    lp = auto_detect_ja_lp(text, %w(EN JA), %w(JA EN)) unless lp
+
     l_from, l_to = lp
     result = Net::HTTP.post_form(
         URI.parse(EXCITE_BASE_URL),
@@ -285,8 +317,4 @@ class Translate < IRCPlugin
     doc = Nokogiri::HTML filtered
     doc.css('textarea[id="after"]').text.chomp
   end
-
-  alias h_translate honyaku_translate
-  alias g_translate google_translate
-  alias x_translate excite_translate
 end
