@@ -33,9 +33,11 @@ class Translate < IRCPlugin
 
   GOOGLE_SUPPORTED = make_lang_service_format_map(%w(auto en ja ko fr pt de it es no ru fi hu sv da), {'zh' => 'zh-CN', 'tw' => 'zh-TW'})
   HONYAKU_SUPPORTED = make_lang_service_format_map(%w(en ja ko fr pt zh de it es))
+  EXCITE_SUPPORTED = make_lang_service_format_map([], {'en' => 'EN', 'ja' => 'JA'})
   KNOWN_SERVICES = {
       :Google => {:prefix=>'g', :languages=>GOOGLE_SUPPORTED, :translator=>:google_translate},
-      :Honyaku => {:prefix=>'h', :languages=>HONYAKU_SUPPORTED, :translator=>:honyaku_translate}
+      :Honyaku => {:prefix=>'h', :languages=>HONYAKU_SUPPORTED, :translator=>:honyaku_translate},
+      :Excite => {:prefix=>'x', :languages=>EXCITE_SUPPORTED, :translator=>:excite_translate},
   }
   DEFAULT_SERVICE = :Honyaku
   DEFAULT_SERVICE_LANGUAGES = %w(en ja ko tw zh)
@@ -252,6 +254,33 @@ class Translate < IRCPlugin
     end
   end
 
+  EXCITE_BASE_URL = 'http://www.excite.co.jp/world/english/'
+
+  def excite_translate(text, lp)
+    l_from, l_to = lp
+    result = Net::HTTP.post_form(
+        URI.parse(EXCITE_BASE_URL),
+        {
+#            '_token' => '0914d975ef86e',
+            'before_lang' => l_from,
+            'after_lang' => l_to,
+            'wb_lp' => "#{l_from}#{l_to}",
+            'before' => text,
+            'after' => '',
+            'auto_detect' => 'off',
+        }
+    )
+    return if [Net::HTTPSuccess, Net::HTTPRedirection].include? result
+    # Prevent encoding errors, like the ones in google_translate.
+    # Not sure if they even happen with Excite, but do it anyway. just in case.
+    # Parse once to detect encoding from html
+    doc = Nokogiri::HTML result.body
+    filtered = fix_encoding(result.body, doc.encoding)
+    doc = Nokogiri::HTML filtered
+    doc.css('textarea[id="after"]').text.chomp
+  end
+
   alias h_translate honyaku_translate
   alias g_translate google_translate
+  alias x_translate excite_translate
 end
