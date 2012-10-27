@@ -85,7 +85,6 @@ class Translate < IRCPlugin
     KNOWN_SERVICES.each do |service, service_record|
       prefix = service_record[:prefix]
       possibles = service_record[:languages]
-      translator = service_record[:translator]
 
       used_abbreviations = {}
 
@@ -100,13 +99,13 @@ class Translate < IRCPlugin
           abbreviation_to, description_to = get_language_info(l_to)
           cmd = "#{prefix}#{abbreviation_from}#{abbreviation_to}".to_sym
 
-          translation_map[cmd] = [translator, lp]
+          translation_map[cmd] = [service, lp]
 
           # Add limited subset of commands in short form + separate help for them
           if (service == DEFAULT_SERVICE) && (DEFAULT_SERVICE_LANGUAGES.include? l_from) && (DEFAULT_SERVICE_LANGUAGES.include? l_to)
             dsc = "translates specified text from #{description_from} to #{description_to} using #{service}"
             cmd_short = "#{abbreviation_from}#{abbreviation_to}".to_sym
-            translation_map[cmd_short] = [translator, lp]
+            translation_map[cmd_short] = [service, lp]
             commands[cmd_short] = dsc
           end
 
@@ -150,8 +149,11 @@ class Translate < IRCPlugin
     when :gt
       result = @l.containsJapanese?(text) ? (g_translate text, %w(ja en)) : (g_translate text, %w(auto ja))
     else
-      translator, lp = TRANSLATION_MAP[bot_command]
-      result = self.__send__ translator, text, lp if lp
+      service_id, lp = TRANSLATION_MAP[bot_command]
+      service = KNOWN_SERVICES[service_id]
+      return unless service
+      translator = service[:translator]
+      result = self.__send__ translator, text, lp
     end
 
     msg.reply result if result
