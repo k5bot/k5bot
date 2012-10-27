@@ -14,54 +14,58 @@ class Translate < IRCPlugin
   Description = "Uses translation engines to translate between languages."
   Dependencies = [ :Language ]
 
+  def self.to_lang_key(x)
+    x.to_sym
+  end
+
   def self.make_lang_service_format_map(verbatim_array, modifications_hash = {})
     result = {}
     verbatim_array.each do |x|
-      result[x] = x
+      result[to_lang_key(x)] = x
     end
     modifications_hash.each do |k, v|
-      result[k] = v
+      result[to_lang_key(k)] = v
     end
     result
   end
 
   def self.lang_to_service_format(l_from, l_to, possibles)
     return nil unless possibles.include? l_from # "Can't translate from #{l_from} with #{service}"
-    return nil unless ((possibles.include? l_to) && !('auto'.eql? l_to)) # "Can't translate to #{l_to} with #{service}"
+    return nil unless ((possibles.include? l_to) && !(:auto.eql? l_to)) # "Can't translate to #{l_to} with #{service}"
     [possibles[l_from], possibles[l_to]]
   end
 
-  GOOGLE_SUPPORTED = make_lang_service_format_map(%w(auto en ja ko fr pt de it es no ru fi hu sv da), {'zh' => 'zh-CN', 'tw' => 'zh-TW'})
+  GOOGLE_SUPPORTED = make_lang_service_format_map(%w(auto en ja ko fr pt de it es no ru fi hu sv da), {:zh => 'zh-CN', :tw => 'zh-TW'})
   HONYAKU_SUPPORTED = make_lang_service_format_map(%w(en ja ko fr pt zh de it es))
-  EXCITE_SUPPORTED = make_lang_service_format_map([], {'en' => 'EN', 'ja' => 'JA'})
+  EXCITE_SUPPORTED = make_lang_service_format_map([], {:en => 'EN', :ja => 'JA'})
   KNOWN_SERVICES = {
       :Google => {:prefix=>'g', :languages=>GOOGLE_SUPPORTED, :translator=>:google_translate},
       :Honyaku => {:prefix=>'h', :languages=>HONYAKU_SUPPORTED, :translator=>:honyaku_translate},
       :Excite => {:prefix=>'x', :languages=>EXCITE_SUPPORTED, :translator=>:excite_translate},
   }
   DEFAULT_SERVICE = :Honyaku
-  DEFAULT_SERVICE_LANGUAGES = %w(en ja ko tw zh)
+  DEFAULT_SERVICE_LANGUAGES = %w(en ja ko tw zh).map{|x| to_lang_key(x)}
 
   # Internal unified language id =>
   # [Shortcut form for commands, Language description for help]
   LANGUAGE_INFO = {
-      'auto' => ['_', 'Auto-detected language'],
-      'en' => ['e', 'English'],
-      'ja' => ['j', 'Japanese'],
-      'zh' => ['c', 'Simplified Chinese'],
-      'tw' => ['tw', 'Traditional Chinese'],
-      'ko' => ['k', 'Korean'],
-      'fr' => ['fr', 'French'],
-      'pt' => ['pt', 'Portuguese'],
-      'de' => ['de', 'German'],
-      'it' => ['it', 'Italian'],
-      'es' => ['es', 'Spanish'],
-      'no' => ['no', 'Norwegian'],
-      'ru' => ['ru', 'Russian'],
-      'fi' => ['fi', 'Finnish'],
-      'hu' => ['hu', 'Hungarian'],
-      'sv' => ['sv', 'Swedish'],
-      'da' => ['da', 'Danish'],
+      :auto => ['_', 'Auto-detected language'],
+      :en => ['e', 'English'],
+      :ja => ['j', 'Japanese'],
+      :zh => ['c', 'Simplified Chinese'],
+      :tw => ['tw', 'Traditional Chinese'],
+      :ko => ['k', 'Korean'],
+      :fr => ['fr', 'French'],
+      :pt => ['pt', 'Portuguese'],
+      :de => ['de', 'German'],
+      :it => ['it', 'Italian'],
+      :es => ['es', 'Spanish'],
+      :no => ['no', 'Norwegian'],
+      :ru => ['ru', 'Russian'],
+      :fi => ['fi', 'Finnish'],
+      :hu => ['hu', 'Hungarian'],
+      :sv => ['sv', 'Swedish'],
+      :da => ['da', 'Danish'],
   }
 
   def self.get_language_info(lang)
