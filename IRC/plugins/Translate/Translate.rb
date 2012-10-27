@@ -102,7 +102,7 @@ class Translate < IRCPlugin
     end
   end
 
-  def self.fill_explicit_commands(commands, translation_map)
+  def self.fill_explicit_commands(commands, short_commands, translation_map)
     KNOWN_SERVICES.each do |service, service_record|
       prefix = service_record[:prefix]
       possibles = service_record[:languages]
@@ -127,7 +127,7 @@ class Translate < IRCPlugin
             dsc = "translates specified text from #{description_from} to #{description_to} using #{service}"
             cmd_short = "#{abbreviation_from}#{abbreviation_to}".to_sym
             translation_map[cmd_short] = [service, lp]
-            commands[cmd_short] = dsc
+            short_commands[cmd_short] = dsc
           end
 
           # Gather all accepted abbreviations, to list them in help
@@ -144,15 +144,18 @@ class Translate < IRCPlugin
 
   def self.generate_commands()
     translation_map = {}
-    commands = {}
+    commands = {:langs => "shows languages supported by this plugin (note that not all of them are available for all translation engines)"}
 
     fill_default_guess_command(commands, translation_map)
 
     fill_guess_commands(commands, translation_map)
 
-    fill_explicit_commands(commands, translation_map)
+    long_commands = {}
+    short_commands = {}
+    fill_explicit_commands(long_commands, short_commands, translation_map)
 
-    commands[:langs] = "shows languages supported by this plugin (note that not all of them are available for all translation engines)"
+    commands.merge! long_commands
+    commands.merge! short_commands
 
     return [translation_map, commands]
   end
