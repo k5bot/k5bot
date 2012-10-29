@@ -16,7 +16,7 @@ require_relative 'EDICTMenuEntry'
 class EDICT < IRCPlugin
   Description = "An EDICT plugin."
   Commands = {
-    :j => "looks up a Japanese word in EDICT/ENAMDICT",
+    :j => "looks up a Japanese word in EDICT",
     :e => "looks up an English word in EDICT",
     :jn => "looks up a Japanese word in ENAMDICT",
   }
@@ -56,11 +56,6 @@ class EDICT < IRCPlugin
       l_kana = @l.kana(word)
       edict_lookup = lookup(l_kana, [@hash_edict[:japanese], @hash_edict[:readings]])
       reply_menu = generate_menu(edict_lookup, "\"#{word}\" in EDICT")
-
-      enamdict_lookup = lookup(l_kana, [@hash_enamdict[:japanese], @hash_enamdict[:readings]])
-      if enamdict_lookup
-        reply_menu.entries << generate_menu(enamdict_lookup, "Search \"#{word}\" in ENAMDICT")
-      end
 
       reply_with_menu(msg, reply_menu)
     when :e
