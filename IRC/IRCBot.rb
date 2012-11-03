@@ -17,6 +17,9 @@ class IRCBot < IRCMessageRouter
 
   attr_reader :config, :last_sent, :last_received, :start_time, :user
 
+  FIRST_LISTENER_PRIORITY = -16
+  PLUGIN_BASE_PRIORITY = 16
+
   def initialize(user_pool, channel_pool, config = nil)
     super()
 
@@ -37,7 +40,7 @@ class IRCBot < IRCMessageRouter
     @user = IRCUser.new(@config[:username], nil, @config[:realname], @config[:nickname])
 
     @first_listener = IRCFirstListener.new # Set first listener
-    self.register @first_listener
+    self.register(@first_listener, FIRST_LISTENER_PRIORITY)
 
     @user_pool = user_pool
 
@@ -209,7 +212,7 @@ class IRCBot < IRCMessageRouter
   # route to all already present plugins
   def attached_to_manager(plugin_manager)
     plugin_manager.plugins.each do |_, p|
-      self.register(p)
+      self.register(p, PLUGIN_BASE_PRIORITY)
     end
   end
 
@@ -225,7 +228,7 @@ class IRCBot < IRCMessageRouter
     to_load.each do |n, _|
       p = plugin_manager.plugins[n]
       if p
-        self.register(p)
+        self.register(p, PLUGIN_BASE_PRIORITY)
       end
     end
     nil # do not object to the action
