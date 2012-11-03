@@ -15,4 +15,14 @@ class IRCFirstListener < IRCListener
   def on_263
     msg.bot.send_raw(msg.bot.last_sent)
   end
+
+  def on_privmsg(msg)
+    queries = msg.ctcp
+    queries.each do |ctcp|
+      case ctcp[:command]
+        when :PING
+          msg.notice_user(IRCMessage.make_ctcp_message(:PING, ctcp[:arguments]))
+      end
+    end
+  end
 end
