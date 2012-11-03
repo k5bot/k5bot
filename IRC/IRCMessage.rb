@@ -28,14 +28,14 @@ class IRCMessage
   def parse(raw)
     return unless raw
     raw.strip!
-    msgParts = raw.to_s.split(/[ 　]/)
-    @prefix = msgParts.shift[1..-1] if msgParts.first.start_with? ':'
-    @command = msgParts.shift.downcase.to_sym
+    msg_parts = raw.to_s.split(/[ 　]/)
+    @prefix = msg_parts.shift[1..-1] if msg_parts.first.start_with? ':'
+    @command = msg_parts.shift.downcase.to_sym
     @params = []
-    @params << msgParts.shift while msgParts.first and !msgParts.first.start_with? ':'
-    msgParts.first.slice!(0) if msgParts.first
+    @params << msg_parts.shift while msg_parts.first and !msg_parts.first.start_with? ':'
+    msg_parts.first.slice!(0) if msg_parts.first
     @params.delete_if{|param| param.empty?}
-    @params << msgParts.join(' ') if !msgParts.empty?
+    @params << msg_parts.join(' ') if !msg_parts.empty?
   end
 
   def to_s

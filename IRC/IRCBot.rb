@@ -36,8 +36,8 @@ class IRCBot < IRCMessageRouter
 
     @user = IRCUser.new(@config[:username], nil, @config[:realname], @config[:nickname])
 
-    @firstListener = IRCFirstListener.new # Set first listener
-    self.register @firstListener
+    @first_listener = IRCFirstListener.new # Set first listener
+    self.register @first_listener
 
     @user_pool = user_pool
 
