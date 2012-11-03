@@ -29,13 +29,19 @@ class IRCMessageRouter < IRCListener
   end
   alias :dispatch_message_to_children :receive_message
 
-  def register(listener, priority=255)
+  def register(listener, priority_base=0)
     return unless listener
-    @listeners << {:priority => priority, :listener => listener}
+    @listeners << {:priority => listener.priority + priority_base, :listener => listener}
     @listeners.sort! { |a, b| a[:priority] <=> b[:priority] }
   end
 
   def unregister(listener)
     @listeners.delete_if{|l| l[:listener] == listener}
+  end
+end
+
+class IRCListener
+  def priority
+    0
   end
 end
