@@ -18,11 +18,14 @@ class IRCMessageRouter < IRCListener
     @listeners.each do |listener_info|
       listener = listener_info[:listener]
       begin
-        listener.receive_message(msg)
+        result = listener.receive_message(msg)
+        break if result # treat all non-nil results as request for stopping message propagation
       rescue => e
         puts "Listener error: #{e}\n\t#{e.backtrace.join("\n\t")}"
       end
     end
+
+    nil # explicitly returning nil by contract of IRCListener
   end
   alias :dispatch_message_to_children :receive_message
 
