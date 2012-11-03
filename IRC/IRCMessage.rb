@@ -19,7 +19,7 @@ class IRCMessage
   BotCommandPrefix = '.'
 
   def initialize(bot, raw)
-    @prefix, @command, @params, @user = nil
+    @prefix, @command, @params, @user, @ctcp = nil
     @timestamp = Time.now
     @bot = bot
     parse @raw = raw
@@ -115,5 +115,43 @@ class IRCMessage
     return if s.empty?
     return unless @command == :privmsg
     @bot.send "NOTICE #{nick} :#{s}"
+  end
+
+  def ctcp()
+    return @ctcp if @ctcp
+    msg = self.message
+    return @ctcp = [] unless (@command == :privmsg || @command == :notice) && msg
+    @ctcp = msg.scan(CTCP_REQUEST).flatten.map do |ctcp|
+      ctcp_args = ctcp.split(' ')
+      request = IRCMessage.normalize_ctcp_command(ctcp_args.shift)
+      ctcp_args = ctcp_args.map { |arg| IRCMessage.ctcp_unquote(arg) } if ENCODED_COMMANDS.include? request
+      {:command => request, :arguments => ctcp_args}
+    end
+  end
+
+  def self.make_ctcp_message(command, arguments)
+    command = normalize_ctcp_command(command)
+    arguments = arguments.map { |arg| ctcp_quote(arg) } if ENCODED_COMMANDS.include? command
+    "\01#{arguments.unshift(command).join(' ')}\01"
+  end
+
+  private
+
+  # Format of an embedded CTCP request.
+  CTCP_REQUEST = /\x01(.+?)\x01/
+  # CTCP commands whose arguments are encoded according to the CTCP spec (as
+  # opposed to other commands, whose arguments are plaintext).
+  ENCODED_COMMANDS = [] # :VERSION and :PING don't seem to require that.
+
+  def self.normalize_ctcp_command(cmd)
+    cmd.upcase.to_sym
+  end
+
+  def self.ctcp_quote(str)
+    str.gsub("\0", '\0').gsub("\1", '\1').gsub("\n", '\n').gsub("\r", '\r').gsub(" ", '\@').gsub("\\", '\\\\')
+  end
+
+  def self.ctcp_unquote(str)
+    str.gsub('\0', "\0").gsub('\1', "\1").gsub('\n', "\n").gsub('\r', "\r").gsub('\@', " ").gsub('\\\\', "\\")
   end
 end
