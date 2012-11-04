@@ -7,7 +7,7 @@
 class IRCPlugin < IRCListener
   # Configuration options set for this plugin
   # This variable will always be a hash and never nil
-  attr_accessor :config
+  attr_reader :config
 
   # The plugin manager, that manages this plugin
   attr_reader :plugin_manager
@@ -21,8 +21,9 @@ class IRCPlugin < IRCListener
   # A list containing the names of the plugins this plugin depends on
   Dependencies = nil
 
-  def initialize(manager)
+  def initialize(manager, config)
     @plugin_manager = manager
+    @config = config
   end
 
   # Called by the plugin manager after all plugins have been loaded.

@@ -189,8 +189,7 @@ class IRCPluginManager < IRCListener
       end
 
       print "Loading #{name}..."
-      p = @plugins[name.to_sym] = pluginClass.new(self)
-      p.config = (config || {}).freeze
+      p = @plugins[name.to_sym] = pluginClass.new(self, (config || {}).freeze)
       puts "done."
     rescue ScriptError, StandardError => e
       unload_plugin_class(name)
