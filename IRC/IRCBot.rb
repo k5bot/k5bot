@@ -149,7 +149,6 @@ class IRCBot < IRCMessageRouter
           elapsed = Time.now - @watch_time
           if elapsed > interval
             puts "#{timestamp} Watchdog interval (#{interval}) elapsed, restarting bot"
-            self.stop
             stop
           end
         end
