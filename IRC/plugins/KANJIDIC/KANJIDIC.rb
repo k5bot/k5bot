@@ -45,7 +45,7 @@ end
 class KANJIDIC < IRCPlugin
   Description = "A KANJIDIC plugin."
   Commands = {
-    :k => "looks up a kanji in KANJIDIC",
+    :k => "looks up a kanji or SKIP code in KANJIDIC",
     :kl => "gives a link to the kanji entry of the specified kanji at jisho.org"
   }
   Dependencies = [ :Language ]
