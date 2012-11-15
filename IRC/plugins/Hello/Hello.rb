@@ -18,7 +18,9 @@ class Hello < IRCPlugin
     'おやすみなさい',
     'もしもし',
     'やっほー',
-    'ハロー'
+    'ハロー',
+    'ごきげんよう',
+    'どうも',
   ]
 
   def afterLoad
