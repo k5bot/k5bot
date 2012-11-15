@@ -53,13 +53,9 @@ class LP < IRCPlugin
       end
     else
       unless msg.private?
-        allowed_channels = @config[:channels]
-        if nil == allowed_channels || (allowed_channels.include?(msg.channelname))
-          username = msg.user.name.downcase
-          @lp[username] = 0 unless @lp[username]
-          @lp[username] += @l.containsJapanese?(msg.message) ? 1 : -1
-          store
-        end
+        @lp[msg.user.name.downcase] = 0 unless @lp[msg.user.name.downcase]
+        @lp[msg.user.name.downcase] += @l.containsJapanese?(msg.message) ? 1 : -1
+        store
       end
     end
   end
