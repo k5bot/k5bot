@@ -10,6 +10,11 @@
 :channels:
 - "#channel_one"
 - "#channel_two"
+:filter:
+  :LP:
+    :private: false
+    :otherwise: false
+    "##japanese": true
 :plugins:
 - :Help
 - :StorageYaml:

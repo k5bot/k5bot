@@ -18,6 +18,7 @@ class IRCMessageRouter < IRCListener
     @listeners.each do |listener_info|
       listener = listener_info[:listener]
       begin
+        next if filter_message(listener, msg)
         result = listener.receive_message(msg)
         break if result # treat all non-nil results as request for stopping message propagation
       rescue => e
@@ -37,6 +38,10 @@ class IRCMessageRouter < IRCListener
 
   def unregister(listener)
     @listeners.delete_if{|l| l[:listener] == listener}
+  end
+
+  def filter_message(listener, message)
+    nil
   end
 end
 
