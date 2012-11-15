@@ -22,8 +22,9 @@ class Hello < IRCPlugin
   ]
 
   def afterLoad
-    @l = @plugin_manager.plugins[:Language]
-    @allowedToReply = true
+    @l = plugin_manager.plugins[:Language]
+
+    @allowed_to_reply = true
   end
 
   def beforeUnload
@@ -33,9 +34,24 @@ class Hello < IRCPlugin
   end
 
   def on_privmsg(msg)
-    tail = msg.message.gsub(/^\s*#{msg.bot.user.nick}\s*[:>,]?\s+/, '').gsub(/[\s!?！？〜\.。]/, '').strip
-    reply_index = self.class::Hello.find_index { |i| @l.hiragana(i) == @l.hiragana(@l.kana(tail)) }
-    msg.reply(self.class::Hello[reply_index]) if @allowedToReply && reply_index
-    @allowedToReply = reply_index.nil?
+    raw_message = msg.message
+    nick_stripped = raw_message.gsub(/^\s*#{msg.bot.user.nick}\s*[:>,]?\s+/, '')
+
+    # Respond only to "bot_nick: greeting", if 'channel_name: true' is specified in config.
+    if config[msg.channelname] && raw_message.eql?(nick_stripped)
+      @allowed_to_reply = true
+      return
+    end
+
+    tail = nick_stripped.gsub(/[\s!?！？〜\.。]/, '').strip
+    tail_kana = @l.hiragana(@l.kana(tail))
+
+    reply_index = Hello.find_index do |i|
+      @l.hiragana(i) == tail_kana
+    end
+
+    msg.reply(self.class::Hello[reply_index]) if @allowed_to_reply && reply_index
+
+    @allowed_to_reply = reply_index.nil?
   end
 end

@@ -44,7 +44,8 @@
 - :Git
 - :Dotdotdot
 - :Happy
-- :Hello
+- :Hello:
+    "##japanese": true
 - :Manage
 - :Algorithms
 - :URL
