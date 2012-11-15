@@ -142,19 +142,7 @@ class IRCBot < IRCMessageRouter
   def start
     @start_time = Time.now
     begin
-      if @config[:watchdog]
-        @watch_time = @start_time
-        @watchdog = Timer.new(30) do
-          interval = @config[:watchdog]
-          elapsed = Time.now - @watch_time
-          if elapsed > interval
-            puts "#{timestamp} Watchdog interval (#{interval}) elapsed, restarting bot"
-            stop
-          end
-        end
-      else
-        @watchdog = nil
-      end
+      start_watchdog()
 
       server = @config[:server]
       if server.instance_of? Array
@@ -171,12 +159,32 @@ class IRCBot < IRCMessageRouter
     rescue IOError => e
       puts "IOError: #{e}"
     ensure
-        if @watchdog
-          @watchdog.stop
-          @watchdog = nil
-        end
+      stop_watchdog()
       @sock = nil
     end
+  end
+
+  def start_watchdog
+    return if @watchdog
+    if @config[:watchdog]
+      @watch_time = Time.now
+      @watchdog = Timer.new(30) do
+        interval = @config[:watchdog]
+        elapsed = Time.now - @watch_time
+        if elapsed > interval
+          puts "#{timestamp} Watchdog interval (#{interval}) elapsed, restarting bot"
+          stop
+        end
+      end
+    else
+      @watchdog = nil
+    end
+  end
+
+  def stop_watchdog
+    return unless @watchdog
+    @watchdog.stop
+    @watchdog = nil
   end
 
   def stop
