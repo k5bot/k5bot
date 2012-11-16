@@ -14,3 +14,8 @@ pushd "${root}/IRC/plugins/EDICT" && \
 ./download.sh && \
 ./convert.rb
 popd
+
+# Language
+pushd "${root}/IRC/plugins/Language" && \
+./download.sh
+popd
