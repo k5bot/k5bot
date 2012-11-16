@@ -26,7 +26,7 @@ class Hello < IRCPlugin
   def afterLoad
     @l = plugin_manager.plugins[:Language]
 
-    @allowed_to_reply = true
+    @forbidden_to_reply = {}
   end
 
   def beforeUnload
@@ -39,9 +39,11 @@ class Hello < IRCPlugin
     raw_message = msg.message
     nick_stripped = raw_message.gsub(/^\s*#{msg.bot.user.nick}\s*[:>,]?\s+/, '')
 
+    channel_name = msg.channelname
+
     # Respond only to "bot_nick: greeting", if 'channel_name: true' is specified in config.
-    if config[msg.channelname] && raw_message.eql?(nick_stripped)
-      @allowed_to_reply = true
+    if config[channel_name] && raw_message.eql?(nick_stripped)
+      @forbidden_to_reply.delete(channel_name)
       return
     end
 
@@ -52,8 +54,13 @@ class Hello < IRCPlugin
       @l.hiragana(i) == tail_kana
     end
 
-    msg.reply(self.class::Hello[reply_index]) if @allowed_to_reply && reply_index
-
-    @allowed_to_reply = reply_index.nil?
+    if reply_index
+      unless @forbidden_to_reply[channel_name]
+        msg.reply(self.class::Hello[reply_index])
+        @forbidden_to_reply[channel_name] = true
+      end
+    else
+      @forbidden_to_reply.delete(channel_name)
+    end
   end
 end
