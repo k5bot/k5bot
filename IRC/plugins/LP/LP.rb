@@ -51,7 +51,7 @@ class LP < IRCPlugin
       else
         msg.reply('Cannot map this nick to a user at the moment, sorry.')
       end
-    else
+    when nil
       unless msg.private?
         @lp[msg.user.name.downcase] = 0 unless @lp[msg.user.name.downcase]
         @lp[msg.user.name.downcase] += @l.containsJapanese?(msg.message) ? 1 : -1
