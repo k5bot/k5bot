@@ -46,6 +46,8 @@ class IRCBot < IRCMessageRouter
 
     @channel_pool = channel_pool
 
+    @watchdog = nil
+
     $stdout.sync = true
   end
 
