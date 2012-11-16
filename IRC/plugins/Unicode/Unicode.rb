@@ -90,6 +90,7 @@ class Unicode < IRCPlugin
       result[desc] = (result[desc] || 0) + count
     end
 
-    result.map { |desc, count| "#{desc}: #{count}" }.sort.join("; ")
+    # Sort by count descending, description ascending
+    result.sort { |a, b| [-a[1], a[0]] <=> [-b[1], b[0]] }.map { |desc, count| "#{desc}: #{count}" }.join("; ")
   end
 end
