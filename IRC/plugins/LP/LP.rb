@@ -43,7 +43,8 @@ class LP < IRCPlugin
       nick = msg.tail || msg.nick
       user = @user_pool.findUserByNick(msg.bot, nick)
       if user && user.name
-        if lp = @lp[user.name.downcase]
+        lp = @lp[user.name.downcase]
+        if lp
           msg.reply("Language points for #{user.nick}: #{format(lp)}")
         else
           msg.reply("#{user.nick} has no language points.")
@@ -51,10 +52,18 @@ class LP < IRCPlugin
       else
         msg.reply('Cannot map this nick to a user at the moment, sorry.')
       end
-    when nil
+    when nil # Count message only if it's not a bot command
       unless msg.private?
-        @lp[msg.user.name.downcase] = 0 unless @lp[msg.user.name.downcase]
-        @lp[msg.user.name.downcase] += @l.containsJapanese?(msg.message) ? 1 : -1
+        # Update language points
+
+        user_name = msg.user.name.downcase
+        message = msg.message
+
+        record = @lp[user_name]
+        record = 0 unless record
+        record += @l.containsJapanese?(message) ? 1 : -1
+        @lp[user_name] = record
+
         store
       end
     end
@@ -62,9 +71,5 @@ class LP < IRCPlugin
 
   def format(num)
     @ns.spell(num)
-  end
-
-  def thousandSeparate(num)
-    num.to_s.reverse.scan(/..?.?/).join(' ').reverse.sub('- ', '-') if num.is_a? Integer
   end
 end
