@@ -58,11 +58,16 @@ class URL < IRCPlugin
       if content_type.eql?('text/html')
         return if result.body == nil || result.body.empty?
 
-        # Fix encoding errors
-        # Parse once to detect encoding from html
-        doc = Nokogiri::HTML result.body
+        doc = nil
+        detected_encoding = opts['charset']
 
-        detected_encoding = doc.encoding || opts['charset']
+        unless detected_encoding
+          # Fix encoding errors
+          # Parse once to detect encoding from html
+          doc = Nokogiri::HTML result.body
+          detected_encoding = doc.encoding
+        end
+
         if detected_encoding
           filtered = fix_encoding(result.body, detected_encoding)
           doc = Nokogiri::HTML filtered
