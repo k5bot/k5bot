@@ -53,7 +53,10 @@ class URL < IRCPlugin
       end
 
       content_type = result.content_type
-      opts = result.type_params
+      # rescuing from stupid servers, which serve
+      # parameters without names, e.g. "text/html;UTF-8"
+      # which must be "text/html;charset=UTF-8" instead.
+      opts = result.type_params rescue {}
 
       if content_type.eql?('text/html')
         return if result.body == nil || result.body.empty?
