@@ -136,6 +136,7 @@ class Unicode < IRCPlugin
 
     # our_ranks must be filled like that, to have all keys from our_stats.
     our_ranks = our_stats.keys.each_with_object({}) {|desc, h| h[desc] = 1}
+    our_worst_ranks = Hash.new(1)
     total_ranks = Hash.new(1)
 
     @unicode_stats.each do |_, user_stats|
@@ -151,12 +152,17 @@ class Unicode < IRCPlugin
         next unless user_count
 
         our_ranks[desc] += 1 if user_count > count
+        our_worst_ranks[desc] += 1 if user_count >= count
         total_ranks[desc] += 1
       end
     end
 
     # Sort by place ascending, total descending, description ascending
-    our_ranks.delete_if { |desc, _| total_ranks[desc] <= 1 } .sort { |a, b| [a[1], -total_ranks[a[0]], a[0]] <=> [b[1], -total_ranks[b[0]], b[0]] }.map { |desc, place| "#{desc}: #{place}/#{total_ranks[desc]}" }.join("; ")
+    our_ranks.delete_if { |desc, _| total_ranks[desc] <= 1 } .sort { |a, b| [a[1], -total_ranks[a[0]], a[0]] <=> [b[1], -total_ranks[b[0]], b[0]] }.map do |desc, place|
+      worst_place = our_worst_ranks[desc]
+      place = "#{place}-#{worst_place}" unless worst_place == place
+      "#{desc}: #{place}/#{total_ranks[desc]}"
+    end.join("; ")
   end
 
   def abs_stats_to_percentage_stats(stats)
