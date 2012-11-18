@@ -155,8 +155,8 @@ class Unicode < IRCPlugin
       end
     end
 
-    # Sort by place ascending, description ascending
-    our_ranks.sort { |a, b| [a[1], a[0]] <=> [b[1], b[0]] }.map { |desc, place| "#{desc}: #{place}/#{total_ranks[desc]}" }.join("; ")
+    # Sort by place ascending, total descending, description ascending
+    our_ranks.delete_if { |desc, _| total_ranks[desc] <= 1 } .sort { |a, b| [a[1], -total_ranks[a[0]], a[0]] <=> [b[1], -total_ranks[b[0]], b[0]] }.map { |desc, place| "#{desc}: #{place}/#{total_ranks[desc]}" }.join("; ")
   end
 
   def abs_stats_to_percentage_stats(stats)
