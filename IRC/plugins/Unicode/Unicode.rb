@@ -13,6 +13,8 @@ class Unicode < IRCPlugin
     :'us%' => "same as .us, but shows percentage ratio to the total number of characters written by the user",
     :urank => "shows user's ranks with respect to other users, as determined by the number of characters written per Unicode range",
     :'urank%' => "same as .urank, but the percentages as returned by .us% are compared instead",
+    :utop => "shows top 10 users, as determined by the number of characters written per specified Unicode range",
+    :'utop%' => "same as .utop, but the percentages as returned by .us% are compared instead",
   }
   Dependencies = [ :Language, :NumberSpell, :StorageYAML, :UserPool ]
 
@@ -52,6 +54,18 @@ class Unicode < IRCPlugin
     when :'urank%'
       user, us = stats_by_msg(msg)
       msg.reply("Ranks% for #{user.nick}. #{format_unicode_places(us) {|stats| abs_stats_to_percentage_stats(stats)} }") if us
+    when :utop
+      prefix = msg.tail
+      if prefix
+        reply = format_unicode_top(msg.bot, prefix) {|stats| stats}
+        msg.reply(reply.instance_of?(String) ? reply : "Top10 in #{reply[:description]}. #{reply[:places].map { |count, user_nick| "#{user_nick}: #{count}" }.join("; ")}")
+      end
+    when :'utop%'
+      prefix = msg.tail
+      if prefix
+        reply = format_unicode_top(msg.bot, prefix) {|stats| abs_stats_to_percentage_stats(stats)}
+        msg.reply(reply.instance_of?(String) ? reply : "Top10 in %#{reply[:description]}. #{reply[:places].map { |count, user_nick| "#{user_nick}: #{count}%" }.join("; ")}")
+      end
     when nil # Count message only if it's not a bot command
       unless msg.private?
         # Update Unicode statistics
@@ -186,5 +200,39 @@ class Unicode < IRCPlugin
 
   def count_total(stats)
     stats.values.inject(0, :+)
+  end
+
+  def format_unicode_top(bot, prefix)
+    descriptions = @l.find_descriptions(prefix)
+
+    if descriptions.instance_of? Array
+      # prefix match
+      return "No known Unicode range starts with '#{prefix}'" if descriptions.empty?
+      return "Choose one of #{descriptions.join(', ')}" if descriptions.size > 1
+      description = descriptions[0]
+    else
+      # exact match
+      description = descriptions
+    end
+
+    result = []
+
+    @unicode_stats.each do |user_name, stats|
+      stats = codepoint_stats_to_desc_stats(stats)
+
+      next unless stats.include?(description)
+
+      user = @user_pool.findUserByUsername(bot, user_name)
+
+      next unless user && user.nick
+
+      # Convert counts to comparable format
+      stats = yield(stats)
+
+      result << [stats[description], user.nick]
+    end
+
+    # Sort by count descending, nick ascending
+    {:description=>description, :places=>result.sort {|a,b| [-a[0], a[1]] <=> [-b[0], b[1]] }.take(10)}
   end
 end
