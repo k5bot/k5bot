@@ -127,7 +127,7 @@ class EDICT < IRCPlugin
   end
 
   def split_into_keywords(word)
-    word.downcase.gsub(/[^a-z0-9 ]/, '').split(' ').map {|k| k.to_sym}.uniq
+    EDICTEntry.split_into_keywords(word).uniq
   end
 
   def sort_result(lr)
