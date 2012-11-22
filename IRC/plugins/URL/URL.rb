@@ -23,6 +23,14 @@ class URL < IRCPlugin
   def on_privmsg(msg)
     return if msg.botcommand # Don't react to url-s in commands
 
+    scan_for_uri(msg)
+  end
+
+  def on_action(msg)
+    scan_for_uri(msg)
+  end
+
+  def scan_for_uri(msg)
     text = msg.tail
     return unless text
 
