@@ -56,16 +56,18 @@ class Unicode < IRCPlugin
       msg.reply("Ranks% for #{user.nick}. #{format_unicode_places(us) {|stats| abs_stats_to_percentage_stats(stats)} }") if us
     when :utop
       prefix = msg.tail
-      if prefix
-        reply = format_unicode_top(msg.bot, prefix) {|stats| stats}
-        msg.reply(reply.instance_of?(String) ? reply : "Top10 in #{reply[:description]}. #{reply[:places].map { |count, user_nick| "#{user_nick}: #{count}" }.join("; ")}")
-      end
+      return unless prefix
+      description = find_description(msg, prefix)
+      return unless description
+      reply = format_unicode_top(msg.bot, description) {|stats| stats}
+      msg.reply("Top10 in #{reply[:description]}. #{reply[:places].map { |count, user_nick| "#{user_nick}: #{count}" }.join("; ")}")
     when :'utop%'
       prefix = msg.tail
-      if prefix
-        reply = format_unicode_top(msg.bot, prefix) {|stats| abs_stats_to_percentage_stats(stats)}
-        msg.reply(reply.instance_of?(String) ? reply : "Top10 in %#{reply[:description]}. #{reply[:places].map { |count, user_nick| "#{user_nick}: #{count}%" }.join("; ")}")
-      end
+      return unless prefix
+      description = find_description(msg, prefix)
+      return unless description
+      reply = format_unicode_top(msg.bot, description) {|stats| abs_stats_to_percentage_stats(stats)}
+      msg.reply("Top10 in %#{reply[:description]}. #{reply[:places].map { |count, user_nick| "#{user_nick}: #{count}%" }.join("; ")}")
     when nil # Count message only if it's not a bot command
       unless msg.private?
         # Update Unicode statistics
@@ -202,19 +204,7 @@ class Unicode < IRCPlugin
     stats.values.inject(0, :+)
   end
 
-  def format_unicode_top(bot, prefix)
-    descriptions = @l.find_descriptions(prefix)
-
-    if descriptions.instance_of? Array
-      # prefix match
-      return "No known Unicode range starts with '#{prefix}'" if descriptions.empty?
-      return "Choose one of #{descriptions.join(', ')}" if descriptions.size > 1
-      description = descriptions[0]
-    else
-      # exact match
-      description = descriptions
-    end
-
+  def format_unicode_top(bot, description)
     result = []
 
     @unicode_stats.each do |user_name, stats|
@@ -234,5 +224,25 @@ class Unicode < IRCPlugin
 
     # Sort by count descending, nick ascending
     {:description=>description, :places=>result.sort {|a,b| [-a[0], a[1]] <=> [-b[0], b[1]] }.take(10)}
+  end
+
+  def find_description(msg, prefix)
+    descriptions = @l.find_descriptions(prefix)
+
+    unless descriptions.instance_of? Array
+      # exact match
+      return descriptions
+    end
+
+    # prefix match
+    if descriptions.empty?
+      msg.reply("No known Unicode range starts with '#{prefix}'")
+      nil
+    elsif descriptions.size > 1
+      msg.reply("Choose one of #{descriptions.join(', ')}")
+      nil
+    else
+      descriptions[0]
+    end
   end
 end
