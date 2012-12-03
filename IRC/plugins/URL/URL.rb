@@ -9,6 +9,7 @@ require 'rubygems'
 require 'nokogiri'
 require 'net/http'
 require 'time'
+require 'json'
 
 class URL < IRCPlugin
   Description = "Implements URL preview"
@@ -21,9 +22,15 @@ class URL < IRCPlugin
   end
 
   def on_privmsg(msg)
-    return if msg.botcommand # Don't react to url-s in commands
-
-    scan_for_uri(msg)
+    case msg.botcommand
+      when :short
+        text = msg.tail
+        return unless text
+        short_url = shorten_url(text)
+        msg.reply("short url: #{short_url}") if short_url
+      when nil # Don't react to url-s in commands
+        scan_for_uri(msg)
+    end
   end
 
   def on_action(msg)
@@ -155,26 +162,13 @@ class URL < IRCPlugin
 
     uri = URI.parse(uri) unless uri.is_a? URI
 
-    case uri.scheme
-      when 'http'
-        opts = {}
-      when 'https'
-        opts = {:use_ssl => true, :verify_mode => OpenSSL::SSL::VERIFY_NONE}
-      else
-        raise ArgumentError, "Unsupported URI scheme #{uri.scheme}"
-    end
-
     request = Net::HTTP::Get.new(uri.request_uri,
                                  {
                                      'User-Agent' => USER_AGENT,
                                      'Accept-Language' => ACCEPT_LANGUAGE
                                  })
 
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.open_timeout = 5
-    http.read_timeout = 3
-    http.use_ssl = opts[:use_ssl]
-    http.verify_mode = opts[:verify_mode]
+    http = get_http_by_uri(uri)
 
     response = http.start do
       http.request(request) do |res|
@@ -209,10 +203,56 @@ class URL < IRCPlugin
     end
   end
 
+  def get_opts_by_uri(uri)
+    case uri.scheme
+      when 'http'
+        opts = {}
+      when 'https'
+        opts = {:use_ssl => true, :verify_mode => OpenSSL::SSL::VERIFY_NONE}
+      else
+        raise ArgumentError, "Unsupported URI scheme #{uri.scheme}"
+    end
+    opts
+  end
+
+  def get_http_by_uri(uri)
+    opts = get_opts_by_uri(uri)
+
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.open_timeout = 5
+    http.read_timeout = 3
+    http.use_ssl = opts[:use_ssl]
+    http.verify_mode = opts[:verify_mode]
+    http
+  end
+
   def fix_encoding(str, encoding)
     str.force_encoding encoding
     str.chars.collect do |c|
       (c.valid_encoding?) ? c:'?'
     end.join
+  end
+
+  SHORTENER_SERVICE_URL="https://www.googleapis.com/urlshortener/v1/url"
+
+  def shorten_url(url)
+    # Call shortener API
+    uri = URI.parse(SHORTENER_SERVICE_URL)
+
+    http = get_http_by_uri(uri)
+
+    res = http.start do
+      request = Net::HTTP::Post.new(uri.path)
+      request["user-agent"] = USER_AGENT
+      request["Accept"] = "application/json"
+      request.body={:longUrl => url}.to_json
+      request.content_type="application/json"
+
+      http.request(request)
+    end
+
+    json = JSON.parse(res.body)
+
+    json["id"] if json
   end
 end
