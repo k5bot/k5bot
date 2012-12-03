@@ -153,7 +153,7 @@ class URL < IRCPlugin
   def fetch_by_uri(uri, limit = 10, redirects = [], &block)
     throw ArgumentError, "Must be given receiving block" unless block_given?
 
-    uri = URI.parse(uri)
+    uri = URI.parse(uri) unless uri.is_a? URI
 
     case uri.scheme
       when 'http'
@@ -195,7 +195,15 @@ class URL < IRCPlugin
           raise ArgumentError, 'HTTP redirect too deep'
         end
         redirects << uri.to_s
-        fetch_by_uri(response['location'], limit, redirects, &block)
+
+        new_uri = URI.parse(response['location'])
+        if new_uri.relative?
+          # Although it violates RFC2616, Location: field may have relative
+          # URI.  It is converted to absolute URI using uri as a base URI.
+          new_uri = uri.merge(new_uri)
+        end
+
+        fetch_by_uri(new_uri, limit, redirects, &block)
       else
         response
     end
