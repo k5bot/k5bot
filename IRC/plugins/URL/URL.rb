@@ -13,6 +13,9 @@ require 'json'
 
 class URL < IRCPlugin
   Description = "Implements URL preview"
+  Commands = {
+      :short => "shortens a previously seen URL with goo.gl. This command can accept either index (1 is the most recent one) or substring of the desired URL",
+  }
 
   def initialize(manager, config)
     super
@@ -21,13 +24,28 @@ class URL < IRCPlugin
     @body_exist = nil
   end
 
+
+  def afterLoad
+    @channel_queues = {}
+    @url_cache = {}
+    @url_counter = Counter.new()
+  end
+
+  def beforeUnload
+    @url_counter = nil
+    @url_cache = nil
+    @channel_queues = nil
+  end
+
   def on_privmsg(msg)
     case msg.botcommand
       when :short
         text = msg.tail
-        return unless text
-        short_url = shorten_url(text)
-        msg.reply("short url: #{short_url}") if short_url
+        url = get_uri_from_queue(msg.replyTo, text)
+        if url
+          short_url = shorten_url(url)
+          msg.reply("Short URL: #{short_url} for URL: #{url.abbreviate(100)}") if short_url
+        end
       when nil # Don't react to url-s in commands
         scan_for_uri(msg)
     end
@@ -43,12 +61,16 @@ class URL < IRCPlugin
 
     uris = URI.extract(text)
 
-    uris.each do |uri|
+    uris.delete_if do |uri|
       # Silently skip anything not starting with that,
       # b/c URI.extract() tends to accept anything with colon in it
       # (e.g. "nick:"), which then causes URI.parse() to fail with InvalidURIError
-      next unless uri.start_with?("http://", "https://")
+      !uri.start_with?("http://", "https://")
+    end
 
+    put_uris_to_queue(msg.replyTo, uris)
+
+    uris.each do |uri|
       handle_uri(uri, msg)
     end
   end
@@ -234,8 +256,43 @@ class URL < IRCPlugin
   end
 
   SHORTENER_SERVICE_URL="https://www.googleapis.com/urlshortener/v1/url"
+  SHORTENER_QUEUE_SIZE=10
+
+  def put_uris_to_queue(queue_id, uris)
+    queue = (@channel_queues[queue_id] ||= [])
+
+    uris.each do |uri|
+      queue << uri
+      @url_counter.add(uri)
+    end
+
+    while queue.size > SHORTENER_QUEUE_SIZE
+      uri = queue.shift
+      @url_counter.remove(uri) { @url_cache.delete(uri) }
+    end
+  end
+
+  def get_uri_from_queue(queue_id, text)
+    queue = @channel_queues[queue_id]
+    return unless queue
+
+    index = text ? text.to_i : 1
+    return queue[-index] if index > 0
+
+    index = queue.rindex do |uri|
+      uri.include?(text)
+    end
+
+    queue[index] if index
+  end
 
   def shorten_url(url)
+    short_url = @url_cache[url]
+    short_url = @url_cache[url] = do_shorten_url(url) unless short_url
+    short_url
+  end
+
+  def do_shorten_url(url)
     # Call shortener API
     uri = URI.parse(SHORTENER_SERVICE_URL)
 
@@ -254,5 +311,35 @@ class URL < IRCPlugin
     json = JSON.parse(res.body)
 
     json["id"] if json
+  end
+end
+
+class Counter
+  def initialize
+    @counter = Hash.new(0)
+  end
+
+  def add(obj)
+    val = @counter[obj]
+    @counter[obj] = val + 1
+    yield obj if block_given? && val == 0
+  end
+
+  def remove(obj)
+    val = @counter[obj]
+    return if 0 >= val
+    if val > 1
+      @counter[obj] = val - 1
+    else
+      @counter.delete(obj)
+      yield obj if block_given?
+    end
+  end
+end
+
+class String
+  def abbreviate(len)
+    return "#{self[0..len-4]}..." if self.size > len
+    self
   end
 end
