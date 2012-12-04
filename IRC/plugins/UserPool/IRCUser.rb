@@ -19,7 +19,7 @@ class IRCUser
   end
 
   def ident
-    name unless identified?
+    name if identified?
     "~#@name"
   end
 
