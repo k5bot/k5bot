@@ -5,10 +5,9 @@
 # EDICT plugin
 
 require_relative '../../IRCPlugin'
-require_relative 'EDICTEntry'
-require_relative '../Menu/MenuNode'
+require_relative 'MenuNode'
 
-class EDICTMenuEntry < MenuNode
+class MenuNodeText < MenuNode
   def initialize(description, entry)
     @description = description
     @entry = entry

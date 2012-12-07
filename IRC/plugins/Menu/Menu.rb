@@ -9,6 +9,7 @@ require_relative '../../IRCPlugin'
 require_relative 'MenuState'
 require_relative 'MenuNode'
 require_relative 'MenuNodeSimple'
+require_relative 'MenuNodeText'
 
 class Menu < IRCPlugin
   Description = "Provides Menu-related functionality."
@@ -21,6 +22,7 @@ class Menu < IRCPlugin
     load_helper_class(:MenuState)
     load_helper_class(:MenuNode)
     load_helper_class(:MenuNodeSimple)
+    load_helper_class(:MenuNodeText)
 
     @menu_states = {}
   end
@@ -28,6 +30,7 @@ class Menu < IRCPlugin
   def beforeUnload
     @menu_states = nil
 
+    unload_helper_class(:MenuNodeText)
     unload_helper_class(:MenuNodeSimple)
     unload_helper_class(:MenuNode)
     unload_helper_class(:MenuState)

@@ -11,7 +11,6 @@
 
 require_relative '../../IRCPlugin'
 require_relative 'EDICTEntry'
-require_relative 'EDICTMenuEntry'
 
 class EDICT < IRCPlugin
   Description = "An EDICT plugin."
@@ -25,7 +24,6 @@ class EDICT < IRCPlugin
 
   def afterLoad
     load_helper_class(:EDICTEntry)
-    load_helper_class(:EDICTMenuEntry)
 
     @l = @plugin_manager.plugins[:Language]
     @m = @plugin_manager.plugins[:Menu]
@@ -43,7 +41,6 @@ class EDICT < IRCPlugin
     @m = nil
     @l = nil
 
-    unload_helper_class(:EDICTMenuEntry)
     unload_helper_class(:EDICTEntry)
 
     nil
@@ -95,7 +92,7 @@ class EDICT < IRCPlugin
 
     readings_display = (menu_items.length > 1) && (menu_items.collect { |e| e.japanese }.uniq.length == 1)
     menu = menu_items.map do |e|
-      EDICTMenuEntry.new(readings_display ? e.reading : e.japanese, e)
+      MenuNodeText.new(readings_display ? e.reading : e.japanese, e)
     end
 
     MenuNodeSimple.new(name, menu)
