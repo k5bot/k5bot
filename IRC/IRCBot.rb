@@ -166,6 +166,13 @@ class IRCBot < IRCMessageRouter
     end
   end
 
+  def stop
+    if @sock
+      puts "Forcibly closing socket"
+      @sock.close
+    end
+  end
+
   def start_watchdog
     return if @watchdog
     if @config[:watchdog]
@@ -187,13 +194,6 @@ class IRCBot < IRCMessageRouter
     return unless @watchdog
     @watchdog.stop
     @watchdog = nil
-  end
-
-  def stop
-    if @sock
-      puts "Forcibly closing socket"
-      @sock.close
-    end
   end
 
   def on_notice(msg)
