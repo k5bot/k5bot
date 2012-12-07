@@ -5,9 +5,6 @@
 # Daijirin plugin
 
 require_relative '../../IRCPlugin'
-require_relative '../Menu/MenuNode'
-require_relative '../Menu/MenuNodeSimple'
-require_relative '../Menu/Menu'
 require_relative 'DaijirinEntry'
 require_relative 'DaijirinMenuEntry'
 
