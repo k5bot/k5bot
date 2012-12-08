@@ -57,7 +57,6 @@ class Menu < IRCPlugin
   end
 
   def put_new_menu(plugin, root_node, msg, menu_size = 12, expire_duration = 1920)
-    puts root_node.inspect
     menu_state = MenuState.new(plugin, menu_size, expire_duration)
     menu_state.move_down_to!(root_node, msg)
     @menu_states[msg.replyTo] = menu_state

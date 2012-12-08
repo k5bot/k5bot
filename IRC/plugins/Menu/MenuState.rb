@@ -59,8 +59,6 @@ class MenuState
     self.do_access!
 
     new_items = node.enter(nil, msg)
-    puts "new_items:"
-    puts new_items.inspect
     unless new_items
       # do nothing else if node is not enterable
       return false
