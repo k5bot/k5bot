@@ -59,16 +59,7 @@ class MenuState
     self.do_access!
 
     new_items = node.enter(nil, msg)
-    unless new_items
-      # if node is not enterable.
-      on_leaf_node(node, msg) # by default, does nothing
-      return false
-    end
-    if new_items.empty?
-      # if node is enterable but empty, don't enter.
-      on_empty_menu(node, msg) # by default, prints that there's nothing to look at
-      return false
-    end
+    return false if on_leaf_or_empty_menu(node, new_items, msg)
 
     @location << node
 
@@ -114,6 +105,8 @@ class MenuState
 
       on_menu_cycle(items, start, size, has_next, has_parent, msg)
     else
+      return if on_leaf_or_empty_menu(@location[-1], @items, msg)
+
       @mark = 0 # continue showing menu from the beginning
 
       on_menu_cycle_end(msg)
@@ -195,5 +188,20 @@ class MenuState
   # Overridable behavior for when user attempted to move higher than root node.
   def on_root_exit(msg)
     msg.reply("Can't move further up.")
+  end
+
+  def on_leaf_or_empty_menu(node, items, msg)
+    unless items
+      # if node is not enterable.
+      on_leaf_node(node, msg) # by default, does nothing
+      return true
+    end
+    if items.empty?
+      # if node is enterable but empty, don't enter.
+      on_empty_menu(node, msg) # by default, prints that there's nothing to look at
+      return true
+    end
+
+    false
   end
 end
