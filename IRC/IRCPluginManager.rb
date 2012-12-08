@@ -51,6 +51,7 @@ class IRCPluginManager < IRCListener
       return false
     end
 
+    unloaded = {}
     begin
       p = @plugins[name.to_sym]
       return false unless p
@@ -72,6 +73,8 @@ class IRCPluginManager < IRCListener
         return false
       end
 
+      unloaded[name] = config # Mark as unloaded
+
       @plugins.delete name.to_sym
 
       unload_plugin_class(name)
@@ -79,7 +82,7 @@ class IRCPluginManager < IRCListener
       puts "Cannot unload plugin '#{name}': #{e}\n\t#{e.backtrace.join("\n\t")}"
       return false
     ensure
-      notify_listeners(:after_unload, unloading)
+      notify_listeners(:after_unload, unloaded)
     end
 
     true
@@ -138,28 +141,36 @@ class IRCPluginManager < IRCListener
       return false
     end
 
+    loaded = {}
     overall = nil
     begin
       loading.each do |name, config|
         overall = false if !do_load_plugin(name, config, loading)
       end
 
-      loading.each do |name, _|
+      loading.each do |name, config|
         if (plugin = @plugins[name])
           begin
             print "Initializing plugin #{name}..."
             plugin.afterLoad
             puts "done."
+
+            loaded[name] = config # Mark as loaded
           rescue ScriptError, StandardError => e
             puts "Cannot initialize plugin '#{name}': #{e}"
             overall = false
+
+            # Remove the plugin, to avoid accidentally using it,
+            # or worse, attempting to un-initialize it.
+            @plugins.delete name.to_sym
+            unload_plugin_class(name)
           end
         end
       end
 
       overall = true if overall == nil
     ensure
-      notify_listeners(:after_load, loading)
+      notify_listeners(:after_load, loaded)
     end
 
     overall
