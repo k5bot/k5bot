@@ -155,6 +155,10 @@ class IRCBot < IRCMessageRouter
       login
       until @sock.eof? do # Throws Errno::ECONNRESET
         receive @sock.gets
+        # improve latency a bit, by flushing output stream,
+        # which was probably written into during the process
+        # of handling received data
+        @sock.flush
       end
     rescue SocketError, Errno::ECONNRESET => e
       puts "Cannot connect: #{e}"
