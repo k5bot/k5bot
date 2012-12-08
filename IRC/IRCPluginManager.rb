@@ -163,7 +163,7 @@ class IRCPluginManager < IRCListener
             # Remove the plugin, to avoid accidentally using it,
             # or worse, attempting to un-initialize it.
             @plugins.delete name.to_sym
-            unload_plugin_class(name)
+            unload_plugin_class(name, true)
           end
         end
       end
@@ -203,15 +203,23 @@ class IRCPluginManager < IRCListener
       @plugins[name.to_sym] = pluginClass.new(self, (config || {}).freeze)
       puts "done."
     rescue ScriptError, StandardError => e
-      unload_plugin_class(name)
       puts "Cannot load plugin '#{name}': #{e}"
+      unload_plugin_class(name, true)
       return false
     end
     true
   end
 
-  def unload_plugin_class(name)
-    Object.send(:remove_const, name.to_sym)
+  def unload_plugin_class(name, fail_silently = false)
+    begin
+      Object.send(:remove_const, name.to_sym)
+    rescue => e
+      if fail_silently
+        puts(e)
+      else
+        raise e
+      end
+    end
   end
 
   def notify_listeners(method, list)
