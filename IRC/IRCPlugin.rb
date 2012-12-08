@@ -50,7 +50,7 @@ class IRCPlugin < IRCListener
   def load_helper_class(class_name)
     class_name = class_name.to_sym
 
-    unload_helper_class(class_name)
+    unload_helper_class(class_name, true)
     begin
       load "#{plugin_root}/#{class_name}.rb"
     rescue ScriptError, StandardError => e
@@ -58,12 +58,12 @@ class IRCPlugin < IRCListener
     end
   end
 
-  def unload_helper_class(class_name)
+  def unload_helper_class(class_name, fail_silently = false)
     class_name = class_name.to_sym
     begin
       Object.send :remove_const, class_name
     rescue ScriptError, StandardError => e
-      puts "Cannot unload #{class_name}: #{e}"
+      puts "Cannot unload #{class_name}: #{e}" unless fail_silently
     end
   end
 end
