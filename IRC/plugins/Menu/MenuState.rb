@@ -2,14 +2,14 @@
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
 
-# MenuState contains per-user state of menu_text.
+# MenuState contains per-user state of menu.
 
 class MenuState
 
-  # The plugin, to which the menu_text hierarchy belongs.
+  # The plugin, to which the menu hierarchy belongs.
   attr_reader :plugin
 
-  # The size of the menu_text chunks, in number of items, to display per
+  # The size of the menu chunks, in number of items, to display per
   # message.
   attr_reader :menu_size
 
