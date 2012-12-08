@@ -4,7 +4,8 @@
 
 # Git plugin
 
-require 'open3'
+require 'rubygems'
+require 'posix-spawn'
 
 require_relative '../../IRCPlugin'
 
@@ -61,9 +62,9 @@ class Mecab < IRCPlugin
 
   def process_with_mecab(text)
     begin
-      stdout, stderr, status = Open3.capture3('mecab -Ochasen2 -', :stdin_data=>"#{text}\n")
+      child = POSIX::Spawn::Child.new('mecab -Ochasen2 -', :input =>"#{text}\n")
 
-      stdout.each_line do |line|
+      child.out.force_encoding('UTF-8').each_line do |line|
         break if line.start_with?('EOS')
 
         # "なっ\tナッ\tなる\t動詞-自立\t五段・ラ行\t連用タ接続"
@@ -78,11 +79,11 @@ class Mecab < IRCPlugin
         yield [part, reading, dictionary, types]
       end
 
-      stderr.each_line do |line|
+      child.err.force_encoding('UTF-8').each_line do |line|
         puts "MeCab Error: #{line}"
       end
 
-      status.success?
+      child.success?
     rescue => e
       puts "MeCab Error: #{e}"
 
