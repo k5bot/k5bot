@@ -60,13 +60,13 @@ class MenuState
 
     new_items = node.enter(nil, msg)
     unless new_items
-      # do nothing else if node is not enterable
+      # if node is not enterable.
+      on_leaf_node(node, msg) # by default, does nothing
       return false
     end
     if new_items.empty?
-      # if node is enterable but empty,
-      # print that there's nothing to look at, and don't enter
-      msg.reply(node.description ? "No hits for #{node.description}." : "No hits.")
+      # if node is enterable but empty, don't enter.
+      on_empty_menu(node, msg) # by default, prints that there's nothing to look at
       return false
     end
 
@@ -101,31 +101,23 @@ class MenuState
   def show_descriptions!(msg)
     self.do_access!
 
-    unless @mark
-      msg.reply("No more hits.")
-      @mark = 0 # continue showing menu from the beginning
-      return
-    end
+    if @mark
+      start = @mark
+      @mark += @menu_size
+      has_next = @mark < @items.length
+      unless has_next
+        @mark = nil
+      end
+      has_parent = @location.size > 1
+      items = @items
+      size = @menu_size
 
-    menu_text = @items[@mark, @menu_size].map.with_index do |e, i|
-      "#{i + @mark + 1} #{e.description}"
-    end.join(' | ')
-
-    menu_text = "#{@items.length} hits: " + menu_text if mark == 0
-
-    @mark += @menu_size
-
-    if @mark < @items.length
-      menu_text += " [#{IRCMessage::BotCommandPrefix}n for next]"
+      on_menu_cycle(items, start, size, has_next, has_parent, msg)
     else
-      @mark = nil
-    end
+      @mark = 0 # continue showing menu from the beginning
 
-    if @location.size > 1
-      menu_text += " [#{IRCMessage::BotCommandPrefix}u to go up]"
+      on_menu_cycle_end(msg)
     end
-
-    msg.reply(menu_text)
   end
 
   def move_up!(msg)
@@ -133,7 +125,7 @@ class MenuState
 
     # don't allow to pop higher than topmost node
     unless @location.size > 1
-      msg.reply("Can't move further up.")
+      on_root_exit(msg)
       return false
     end
 
@@ -148,5 +140,60 @@ class MenuState
     self.show_descriptions!(msg)
 
     true
+  end
+
+  def render_menu_header(menu_items, start)
+    start == 0 ? "#{menu_items.length} hits: " : ''
+  end
+
+  def render_menu_items(menu_items, start, size)
+    menu_items[start, size].map.with_index do |e, i|
+      "#{i + start + 1} #{e.description}"
+    end.join(' | ')
+  end
+
+  def render_menu_footer(has_next, has_parent)
+    footer = ''
+
+    if has_next
+      footer += " [#{IRCMessage::BotCommandPrefix}n for next]"
+    end
+
+    if has_parent
+      footer += " [#{IRCMessage::BotCommandPrefix}u to go up]"
+    end
+
+    footer
+  end
+
+  # Overridable behavior for when current menu contents is asked to be shown
+  def on_menu_cycle(items, start, size, has_next, has_parent, msg)
+    menu_text = render_menu_header(items, start)
+    menu_text += render_menu_items(items, start, size)
+    menu_text += render_menu_footer(has_next, has_parent)
+
+    msg.reply(menu_text)
+  end
+
+  # Overridable behavior for when current menu content is exhausted
+  def on_menu_cycle_end(msg)
+    msg.reply("No more hits.")
+  end
+
+  # Overridable behavior for when given node was attempted to be entered into,
+  # yet it is a leaf node.
+  #noinspection RubyUnusedLocalVariable
+  def on_leaf_node(node, msg)
+  end
+
+  # Overridable behavior for when given node was attempted to be entered into,
+  # yet it yielded empty children list.
+  def on_empty_menu(node, msg)
+    msg.reply(node.description ? "No hits for #{node.description}." : "No hits.")
+  end
+
+  # Overridable behavior for when user attempted to move higher than root node.
+  def on_root_exit(msg)
+    msg.reply("Can't move further up.")
   end
 end
