@@ -34,6 +34,7 @@
 #- :KANJIDIC  # with this project. See the plugin directories for more information.
 #- :Daijirin
 #- :Menu
+- :Mecab
 - :Converter
 - :Karma
 - :LP
