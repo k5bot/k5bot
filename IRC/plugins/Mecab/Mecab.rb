@@ -61,10 +61,7 @@ class Mecab < IRCPlugin
 
   def process_with_mecab(text)
     begin
-      stdin, stdout, stderr, waiter = Open3.popen3('mecab -Ochasen2 -')
-
-      stdin.puts(text)
-      stdin.close
+      stdout, stderr, status = Open3.capture3('mecab -Ochasen2 -', :stdin_data=>"#{text}\n")
 
       stdout.each_line do |line|
         break if line.start_with?('EOS')
@@ -80,14 +77,12 @@ class Mecab < IRCPlugin
 
         yield [part, reading, dictionary, types]
       end
-      stdout.close
 
       stderr.each_line do |line|
         puts "MeCab Error: #{line}"
       end
-      stderr.close
 
-      waiter.value.success?
+      status.success?
     rescue => e
       puts "MeCab Error: #{e}"
 
