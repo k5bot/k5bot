@@ -7,12 +7,10 @@
 require_relative 'IRCListener'
 
 class IRCPluginManager < IRCListener
-  attr_reader :plugins, :config
+  attr_reader :plugins
 
-  def initialize(config)
+  def initialize()
     @plugins = {}
-    @config = normalize_config(config)
-
     @listeners = [] # IRCPluginListener-s of plugin attach/detach events
   end
 
@@ -29,10 +27,6 @@ class IRCPluginManager < IRCListener
       listener.detached_from_manager(self)
       old_size -= 1
     end
-  end
-
-  def load_all_plugins()
-    do_load_plugins(@config)
   end
 
   def load_plugin(name)
@@ -88,36 +82,11 @@ class IRCPluginManager < IRCListener
     true
   end
 
-  private
+  protected
 
-  # The config read from yaml is an array, containing either
-  # string plugin_name, or
-  # hash { plugin_name => sub_config }.
-  # This function converts it into hash containing
-  # plugin_name => sub_config, for all plugins.
-  def normalize_config(config)
-    to_load = {}
-    config.each do |p|
-      name, config = parse_config_entry(p)
-      to_load[name] = config
-    end
-    to_load
-  end
-
+  # Must be overridden, in order to provide nonempty configuration
   def find_config_entry(name)
-    name = name.to_sym
-    [name, @config[name]]
-  end
-
-  def parse_config_entry(p)
-    if p.is_a?(Hash)
-      name = p.keys.first
-      config = p[name]
-    else
-      name = p
-      config = nil
-    end
-    return name.to_sym, config
+    [name, nil]
   end
 
   def do_load_plugins(to_load)
