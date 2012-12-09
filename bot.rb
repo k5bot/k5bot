@@ -3,6 +3,7 @@
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
 
+#noinspection RubyGlobalVariableNamingConvention
 $VERBOSE = true
 
 require 'yaml'
@@ -51,8 +52,11 @@ class IRCHashPluginManager < IRCPluginManager
   end
 end
 
-config = File.exists?(ARGV.first || "") ? ARGV.shift
-  : File.exists?("config.yaml") ? "config.yaml" : nil
+config = if File.exists?(ARGV.first || "") then
+           ARGV.shift
+         else
+           File.exists?("config.yaml") ? "config.yaml" : nil
+         end
 
 if config == nil
   puts "Configuration file not found."
