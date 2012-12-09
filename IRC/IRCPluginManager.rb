@@ -11,7 +11,7 @@ class IRCPluginManager < IRCListener
 
   def initialize(config)
     @plugins = {}
-    @config = config
+    @config = normalize_config(config)
 
     @listeners = [] # IRCPluginListener-s of plugin attach/detach events
   end
@@ -32,17 +32,17 @@ class IRCPluginManager < IRCListener
   end
 
   def load_all_plugins()
-    do_load_plugins(normalize_config(@config))
+    do_load_plugins(@config)
   end
 
   def load_plugin(name)
-    name, config = parse_config_entry(find_config_entry(name))
+    name, config = find_config_entry(name)
 
     do_load_plugins({ name => config })
   end
 
   def unload_plugin(name)
-    name, config = parse_config_entry(find_config_entry(name))
+    name, config = find_config_entry(name)
     unloading = { name => config }
 
     error = notify_listeners(:before_unload, unloading)
@@ -106,12 +106,7 @@ class IRCPluginManager < IRCListener
 
   def find_config_entry(name)
     name = name.to_sym
-
-    config_entry = @config.find do |p|
-      n, _ = parse_config_entry(p)
-      n == name
-    end
-    config_entry || name
+    [name, @config[name]]
   end
 
   def parse_config_entry(p)
