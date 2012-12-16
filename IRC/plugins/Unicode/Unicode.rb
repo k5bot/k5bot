@@ -227,7 +227,7 @@ class Unicode < IRCPlugin
   end
 
   def find_description(msg, prefix)
-    descriptions = @l.find_descriptions(prefix)
+    descriptions = find_descriptions(prefix, @l.unicode_desc)
 
     unless descriptions.instance_of? Array
       # exact match
@@ -245,4 +245,17 @@ class Unicode < IRCPlugin
       descriptions[0]
     end
   end
+
+  def find_descriptions(prefix, collection)
+    prefix = Unicode.normalize_desc(prefix)
+    exact_match = collection.find {|w| Unicode.normalize_desc(w.to_s) == prefix}
+    return exact_match if exact_match
+    # Match by prefix instead
+    collection.find_all {|w| Unicode.normalize_desc(w.to_s).start_with?(prefix)}
+  end
+
+  def self.normalize_desc(prefix)
+    prefix.downcase.gsub(/ /, '')
+  end
+
 end

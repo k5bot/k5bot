@@ -8,6 +8,8 @@ require 'yaml'
 require_relative '../../IRCPlugin'
 
 class Language < IRCPlugin
+  attr_reader :unicode_desc
+
   Description = "Provides language-related functionality."
   Commands = {
     :kana => 'converts specified romazi to kana'
@@ -100,14 +102,6 @@ class Language < IRCPlugin
     @unicode_desc[block_id]
   end
 
-  def find_descriptions(prefix)
-    prefix = Regexp.quote(Language.normalize_desc(prefix))
-    exact_match = @unicode_desc.find {|w| Language.normalize_desc(w.to_s) == prefix}
-    return exact_match if exact_match
-    # Match by prefix instead
-    @unicode_desc.find_all {|w| Language.normalize_desc(w.to_s).start_with?(prefix)}
-  end
-
   def classify_characters(text)
     text.unpack("U*").map do |codepoint|
       codepoint_to_block_id(codepoint)
@@ -115,10 +109,6 @@ class Language < IRCPlugin
   end
 
   private
-
-  def self.normalize_desc(prefix)
-    prefix.downcase.gsub(/ /, '')
-  end
 
   def load_unicode_blocks(file_name)
     unknown_desc = "Unknown Block".to_sym
