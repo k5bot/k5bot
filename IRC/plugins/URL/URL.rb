@@ -105,6 +105,12 @@ class URL < IRCPlugin
         unless detected_encoding
           # Fix encoding errors
           # Parse once to detect encoding from html
+
+          # HACK: ensure, that body.encoding returns "ASCII-8BIT".
+          # Sometimes it happens to be US-ASCII for some reason,
+          # and that throws off nokogiri encoding detection.
+          result.body.force_encoding('ASCII-8BIT')
+
           doc = Nokogiri::HTML result.body
           detected_encoding = doc.encoding
         end
