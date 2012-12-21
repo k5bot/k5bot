@@ -349,6 +349,7 @@ class DaijirinEntry
     s.gsub!('＝','')
     s.gsub!('・','')
     s.gsub!('-', '')
+    s.gsub!('∘', '')
     s
   end
 
