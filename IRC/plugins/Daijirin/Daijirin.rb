@@ -44,7 +44,7 @@ class Daijirin < IRCPlugin
     when :dj
       word = msg.tail
       return unless word
-      reply_to_enquirer(lookup([@l.kana(word), @l.hiragana(word)], [:kanji, :kana]), word, msg)
+      reply_to_enquirer(lookup([@l.kana(word)]|[@l.hiragana(word)]|[word], [:kanji, :kana]), word, msg)
     when :de
       word = msg.tail
       return unless word

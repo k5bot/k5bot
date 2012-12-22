@@ -140,9 +140,6 @@ class DaijirinEntry
     return parse_first_line_parented(s) if @parent
 
     @kana, s = s.split(' ', 2)
-    if @kana.match(/[A-Za-z]+/)
-      return false # We ain't reading Japanese dictionary for English words
-    end
     s = (s or "").strip
 
     @kana = cleanup_markup(@kana)

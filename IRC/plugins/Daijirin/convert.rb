@@ -68,21 +68,27 @@ class DaijirinConverter
             end
           end
 
-          @all_entries << entry
+          entry_added = false
+
           entry.kanji_for_search.each do |x|
             (@hash[:kanji][x] ||= []) << entry
+            entry_added = true
           end
 
           if entry.kana
             hiragana = hiragana(entry.kana)
             (@hash[:kana][hiragana] ||= []) << entry
+            entry_added = true
           end
 
           if entry.english
             entry.english.each do |x|
               (@hash[:english][x.downcase.strip] ||= []) << entry
+              entry_added = true
             end
           end
+
+          @all_entries << entry if entry_added
         end
       end
     end
