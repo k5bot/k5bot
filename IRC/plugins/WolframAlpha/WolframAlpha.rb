@@ -79,7 +79,7 @@ class WolframAlpha < IRCPlugin
 
   def assumptions_to_hash(result)
     result.assumptions.inject Hash.new do |hash, assumption|
-      hash.update [assumption.word, assumption.name] => assumption.values.map {|n| unescape_unicode(n.desc)}
+      hash.update [(assumption.word rescue '?'), assumption.name] => assumption.values.map {|n| unescape_unicode(n.desc)}
     end
   end
 
