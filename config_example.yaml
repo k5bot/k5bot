@@ -51,3 +51,5 @@
 - :Algorithms
 - :URL
 - :Unicode
+- :WolframAlpha:
+    :id: "<api-id-here>"
