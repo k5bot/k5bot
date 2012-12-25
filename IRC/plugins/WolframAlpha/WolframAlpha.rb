@@ -71,7 +71,7 @@ class WolframAlpha < IRCPlugin
     hash['Result'] = %w()
 
     result.pods.each do |pod|
-      hash.update pod.title => pod.subpods.map(&:plaintext)
+      hash.update pod.title => pod.subpods.map {|n| unescape_unicode(n.plaintext) }
     end
 
     hash
@@ -79,7 +79,15 @@ class WolframAlpha < IRCPlugin
 
   def assumptions_to_hash(result)
     result.assumptions.inject Hash.new do |hash, assumption|
-      hash.update [assumption.word, assumption.name] => assumption.values.map(&:desc)
+      hash.update [assumption.word, assumption.name] => assumption.values.map {|n| unescape_unicode(n.desc)}
+    end
+  end
+
+  def unescape_unicode(text)
+    # Replace unicode escapes like "\:062f"
+    text.gsub(/\\:\h{4}/) do |match|
+      codepoint = match[2..-1].hex
+      [codepoint].pack("U")
     end
   end
 
