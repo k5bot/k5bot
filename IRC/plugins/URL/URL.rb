@@ -102,6 +102,9 @@ class URL < IRCPlugin
         doc = nil
         detected_encoding = opts['charset']
 
+        # If content-type has an unknown/misspelled encoding, get rid of it.
+        detected_encoding = nil unless (Encoding.find(detected_encoding) rescue nil)
+
         unless detected_encoding
           # Fix encoding errors
           # Parse once to detect encoding from html
