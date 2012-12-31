@@ -85,7 +85,8 @@ class WolframAlpha < IRCPlugin
 
   def unescape_unicode(text)
     # Replace unicode escapes like "\:062f"
-    text.gsub(/\\:\h{4}/) do |match|
+    # Hack: additional to_s() b/c Wolfram::Assumption::Value.to_s() may return non-string.
+    text.to_s.gsub(/\\:\h{4}/) do |match|
       codepoint = match[2..-1].hex
       [codepoint].pack("U")
     end
