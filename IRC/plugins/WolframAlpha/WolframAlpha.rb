@@ -114,7 +114,8 @@ class WolframAlpha < IRCPlugin
 
       # First entry is the assumption taken by WA
       assumed = v.shift
-      text = "Assumed: #{assumed}; Alternatives: #{v.join(' | ')}"
+      text = "Assumed: #{assumed}"
+      text = "#{text}; Alternatives: #{v.join(' | ')}" unless v.empty?
 
       assumptions_menu << MenuNodeText.new(name, text)
     end
