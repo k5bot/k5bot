@@ -18,13 +18,13 @@ require_relative 'EDICTEntry'
 class EDICTConverter
   attr_reader :hash
 
-  def initialize(edictfile)
-    @edictfile = edictfile
+  def initialize(edict_file)
+    @edict_file = edict_file
     @hash = {}
     @hash[:japanese] = {}
     @hash[:readings] = {}
     @hash[:keywords] = {}
-    @allEntries = []
+    @all_entries = []
 
     # Duplicated two lines from ../Language/Language.rb
     @kata2hira = YAML.load_file("../Language/kata2hira.yaml") rescue nil
@@ -32,10 +32,10 @@ class EDICTConverter
   end
 
   def read
-    File.open(@edictfile, 'r') do |io|
+    File.open(@edict_file, 'r') do |io|
       io.each_line do |l|
         entry = EDICTEntry.new(Iconv.conv('UTF-8', 'EUC-JP', l).strip)
-        @allEntries << entry
+        @all_entries << entry
         (@hash[:japanese][entry.japanese] ||= []) << entry
         (@hash[:readings][hiragana(entry.reading)] ||= []) << entry
         entry.keywords.each do |k|
@@ -47,8 +47,8 @@ class EDICTConverter
 
   def sort
     count = 0
-    @allEntries.sort_by!{|e| [ (e.common? ? -1 : 1), (!e.xrated? ? -1 : 1), (!e.vulgar? ? -1 : 1), e.reading, e.keywords.size, e.japanese.length]}
-    @allEntries.each do |e|
+    @all_entries.sort_by!{|e| [ (e.common? ? -1 : 1), (!e.xrated? ? -1 : 1), (!e.vulgar? ? -1 : 1), e.reading, e.keywords.size, e.japanese.length]}
+    @all_entries.each do |e|
       e.sortKey = count
       count += 1
     end
