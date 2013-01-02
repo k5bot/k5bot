@@ -17,7 +17,7 @@
     "##japanese": true
 :plugins:
 - :Help
-- :StorageYaml:
+- :StorageYAML:
     :'data_directory': "~/.ircbot"
 - :UserPool
 - :ChannelPool
