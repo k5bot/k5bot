@@ -10,7 +10,8 @@ class Statistics < IRCPlugin
   Description = "A plugin that keeps track of various statistics."
   Commands = {
     :uptime => "shows how long the bot has been running",
-    :version => "shows the current bot version"
+    :version => "shows the current bot version",
+    :about => "shows short description of this bot",
   }
 
   def on_privmsg(msg)
@@ -19,6 +20,8 @@ class Statistics < IRCPlugin
       msg.reply(uptimeString(msg.bot.start_time))
     when :version
       msg.reply(versionString)
+    when :about
+      msg.reply("K5 bot - an open-source IRC bot written in Ruby. You can find its sources at https://github.com/k5bot/k5bot")
     end
   end
 
