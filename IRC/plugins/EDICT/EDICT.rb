@@ -54,24 +54,18 @@ class EDICT < IRCPlugin
       return unless word
       l_kana = @l.kana(word)
       edict_lookup = lookup(l_kana, [@hash_edict[:japanese], @hash_edict[:readings]])
-      reply_menu = generate_menu(edict_lookup, "\"#{word}\" in EDICT")
-
-      reply_with_menu(msg, reply_menu)
+      reply_with_menu(msg, generate_menu_unambiguous(edict_lookup, "\"#{word}\" in EDICT"))
     when :e
       word = msg.tail
       return unless word
       edict_lookup = keyword_lookup(split_into_keywords(word), @hash_edict[:keywords])
-      reply_menu = generate_menu(edict_lookup, "\"#{word}\" in EDICT")
-
-      reply_with_menu(msg, reply_menu)
+      reply_with_menu(msg, generate_menu_unambiguous(edict_lookup, "\"#{word}\" in EDICT"))
     when :jn
       word = msg.tail
       return unless word
       l_kana = @l.kana(word)
       enamdict_lookup = lookup(l_kana, [@hash_enamdict[:japanese], @hash_enamdict[:readings]])
-      reply_menu = generate_menu(enamdict_lookup, "\"#{word}\" in ENAMDICT")
-
-      reply_with_menu(msg, reply_menu)
+      reply_with_menu(msg, generate_menu_unambiguous(enamdict_lookup, "\"#{word}\" in ENAMDICT"))
     when :jr
       word = msg.tail
       return unless word
@@ -82,9 +76,7 @@ class EDICT < IRCPlugin
         return
       end
       edict_lookup_regexp = lookup_regexp(regexp_new, [@hash_edict[:japanese], @hash_edict[:readings]])
-      reply_menu = generate_menu(edict_lookup_regexp, "\"#{word}\" in EDICT")
-
-      reply_with_menu(msg, reply_menu)
+      reply_with_menu(msg, generate_menu_unambiguous(edict_lookup_regexp, "\"#{word}\" in EDICT"))
     when :jmark
       word = msg.tail
       return unless word
@@ -101,7 +93,7 @@ class EDICT < IRCPlugin
     reply
   end
 
-  def generate_menu(lookup_result, name)
+  def generate_menu_unambiguous(lookup_result, name)
     menu_items = lookup_result || []
 
     readings_display = (menu_items.length > 1) && (menu_items.collect { |e| e.japanese }.uniq.length == 1)

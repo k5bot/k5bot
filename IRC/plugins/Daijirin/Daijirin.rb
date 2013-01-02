@@ -45,11 +45,11 @@ class Daijirin < IRCPlugin
     when :dj
       word = msg.tail
       return unless word
-      reply_to_enquirer(lookup([@l.kana(word)]|[@l.hiragana(word)]|[word], [:kanji, :kana]), word, msg)
+      reply_with_menu(msg, generate_menu_unambiguous(lookup([@l.kana(word)]|[@l.hiragana(word)]|[word], [:kanji, :kana]), word))
     when :de
       word = msg.tail
       return unless word
-      reply_to_enquirer(lookup([word], [:english]), word, msg)
+      reply_with_menu(msg, generate_menu_unambiguous(lookup([word], [:english]), word))
     when :du
       word = msg.tail
       return unless word
@@ -63,11 +63,11 @@ class Daijirin < IRCPlugin
         msg.reply("Daijirin Regexp query error: #{e.to_s}")
         return
       end
-      reply_to_enquirer(lookup_regexp(regexp_new, [@hash[:kanji], @hash[:kana]]), word, msg)
+      reply_with_menu(msg, generate_menu_unambiguous(lookup_regexp(regexp_new, [@hash[:kanji], @hash[:kana]]), word))
     end
   end
 
-  def reply_to_enquirer(lookup_result, word, msg)
+  def generate_menu_unambiguous(lookup_result, word)
     menu_items = lookup_result || []
 
     amb_chk_kanji = Hash.new(0)
@@ -91,8 +91,12 @@ class Daijirin < IRCPlugin
       DaijirinMenuEntry.new(description, e)
     }
 
+    MenuNodeSimple.new("\"#{word}\" in Daijirin", menu)
+  end
+
+  def reply_with_menu(msg, result)
     @m.put_new_menu(self.name,
-                    MenuNodeSimple.new("\"#{word}\" in Daijirin", menu),
+                    result,
                     msg)
   end
 
