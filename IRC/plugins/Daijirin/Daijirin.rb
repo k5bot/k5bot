@@ -13,6 +13,7 @@ class Daijirin < IRCPlugin
   Commands = {
     :dj => "looks up a Japanese word in Daijirin",
     :de => "looks up an English word in Daijirin",
+    :djr => "searches Japanese words matching given regexp in Daijirin",
     :du => "Generates an url for lookup in dic.yahoo.jp"
   }
   Dependencies = [:Language, :Menu]
@@ -53,6 +54,16 @@ class Daijirin < IRCPlugin
       word = msg.tail
       return unless word
       msg.reply("http://dic.yahoo.co.jp/dsearch?enc=UTF-8&p=#{word}&dtype=0&dname=0ss&stype=0")
+    when :djr
+      word = msg.tail
+      return unless word
+      begin
+        regexp_new = Regexp.new(word)
+      rescue => e
+        msg.reply("Daijirin Regexp query error: #{e.to_s}")
+        return
+      end
+      reply_to_enquirer(lookup_regexp(regexp_new, [@hash[:kanji], @hash[:kana]]), word, msg)
     end
   end
 
@@ -92,6 +103,24 @@ class Daijirin < IRCPlugin
       words.each do |word|
         entry_array = @hash[h][word]
         lookup_result |= entry_array if entry_array
+      end
+    end
+    return if lookup_result.empty?
+    sort_result(lookup_result)
+    lookup_result
+  end
+
+  REGEXP_LOOKUP_LIMIT = 1000
+
+  # Matches regexp against keys of specified hash(es) and returns the result as an array of entries
+  def lookup_regexp(regex, hashes)
+    lookup_result = []
+    hashes.each do |h|
+      h.each_pair do |word, entry_array|
+        if regex =~ word
+          lookup_result |= entry_array
+          break if lookup_result.size > REGEXP_LOOKUP_LIMIT
+        end
       end
     end
     return if lookup_result.empty?
