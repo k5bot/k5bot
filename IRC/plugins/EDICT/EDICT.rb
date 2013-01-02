@@ -17,6 +17,7 @@ class EDICT < IRCPlugin
   Commands = {
     :j => "looks up a Japanese word in EDICT",
     :e => "looks up an English word in EDICT",
+    :jr => "searches Japanese words matching given regexp in EDICT",
     :jn => "looks up a Japanese word in ENAMDICT",
     :jmark => "shows the description of an EDICT/ENAMDICT marker",
   }
@@ -71,6 +72,19 @@ class EDICT < IRCPlugin
       reply_menu = generate_menu(enamdict_lookup, "\"#{word}\" in ENAMDICT")
 
       reply_with_menu(msg, reply_menu)
+    when :jr
+      word = msg.tail
+      return unless word
+      begin
+        regexp_new = Regexp.new(word)
+      rescue => e
+        msg.reply("EDICT Regexp query error: #{e.to_s}")
+        return
+      end
+      edict_lookup_regexp = lookup_regexp(regexp_new, [@hash_edict[:japanese], @hash_edict[:readings]])
+      reply_menu = generate_menu(edict_lookup_regexp, "\"#{word}\" in EDICT")
+
+      reply_with_menu(msg, reply_menu)
     when :jmark
       word = msg.tail
       return unless word
@@ -112,6 +126,24 @@ class EDICT < IRCPlugin
     hashes.each do |h|
       entry_array = h[word]
       lookup_result |= entry_array if entry_array
+    end
+    return if lookup_result.empty?
+    sort_result(lookup_result)
+    lookup_result
+  end
+
+  REGEXP_LOOKUP_LIMIT = 1000
+
+  # Matches regexp against keys of specified hash(es) and returns the result as an array of entries
+  def lookup_regexp(regex, hashes)
+    lookup_result = []
+    hashes.each do |h|
+      h.each_pair do |word, entry_array|
+        if regex =~ word
+          lookup_result |= entry_array
+          break if lookup_result.size > REGEXP_LOOKUP_LIMIT
+        end
+      end
     end
     return if lookup_result.empty?
     sort_result(lookup_result)
