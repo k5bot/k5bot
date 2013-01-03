@@ -45,11 +45,11 @@ class Daijirin < IRCPlugin
     when :dj
       word = msg.tail
       return unless word
-      reply_with_menu(msg, generate_menu_unambiguous(lookup([@l.kana(word)]|[@l.hiragana(word)]|[word], [:kanji, :kana]), word))
+      reply_with_menu(msg, generate_menu(format_description_unambiguous(lookup([@l.kana(word)]|[@l.hiragana(word)]|[word], [:kanji, :kana])), word))
     when :de
       word = msg.tail
       return unless word
-      reply_with_menu(msg, generate_menu_unambiguous(lookup([word], [:english]), word))
+      reply_with_menu(msg, generate_menu(format_description_unambiguous(lookup([word], [:english])), word))
     when :du
       word = msg.tail
       return unless word
@@ -63,24 +63,31 @@ class Daijirin < IRCPlugin
         msg.reply("Daijirin Regexp query error: #{e.to_s}")
         return
       end
-      reply_with_menu(msg, generate_menu_unambiguous(lookup_regexp(regexp_new, [@hash[:kanji], @hash[:kana]]), word))
+      reply_with_menu(msg, generate_menu(format_description_unambiguous(lookup_regexp(regexp_new, [@hash[:kanji], @hash[:kana]])), word))
     end
   end
 
-  def generate_menu_unambiguous(lookup_result, word)
-    menu_items = lookup_result || []
-
+  def format_description_unambiguous(lookup_result)
     amb_chk_kanji = Hash.new(0)
     amb_chk_kana = Hash.new(0)
-    menu_items.each do |e|
+    lookup_result.each do |e|
       amb_chk_kanji[e.kanji.join(',')] += 1
       amb_chk_kana[e.kana] += 1
     end
     render_kanji = amb_chk_kana.any? { |x, y| y > 1 } # || !render_kana
 
-    menu = menu_items.map { |e|
+    lookup_result.map do |e|
       kanji_list = e.kanji.join(',')
       render_kana = e.kana && (amb_chk_kanji[kanji_list] > 1 || kanji_list.empty?) # || !render_kanji
+
+      [e, render_kanji, render_kana]
+    end
+  end
+
+  def generate_menu(lookup, word)
+    menu = lookup.map do |e, render_kanji, render_kana|
+      kanji_list = e.kanji.join(',')
+
       description = if render_kanji && !kanji_list.empty? then
                       render_kana ? "#{kanji_list} (#{e.kana})" : kanji_list
                     elsif e.kana
@@ -89,7 +96,7 @@ class Daijirin < IRCPlugin
                       "<invalid entry>"
                     end
       DaijirinMenuEntry.new(description, e)
-    }
+    end
 
     MenuNodeSimple.new("\"#{word}\" in Daijirin", menu)
   end
@@ -109,7 +116,6 @@ class Daijirin < IRCPlugin
         lookup_result |= entry_array if entry_array
       end
     end
-    return if lookup_result.empty?
     sort_result(lookup_result)
     lookup_result
   end
