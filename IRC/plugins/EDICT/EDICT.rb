@@ -70,13 +70,12 @@ class EDICT < IRCPlugin
       word = msg.tail
       return unless word
       begin
-        regexp_new = Regexp.new(word)
+        complex_regexp = Language.parse_complex_regexp(word)
       rescue => e
-        msg.reply("EDICT Regexp query error: #{e.to_s}")
+        msg.reply("EDICT Regexp query error: #{e.message}")
         return
       end
-      edict_lookup_regexp = lookup_regexp(regexp_new, [@hash_edict[:japanese], @hash_edict[:readings]])
-      reply_with_menu(msg, generate_menu(format_description_unambiguous(edict_lookup_regexp), "\"#{word}\" in EDICT"))
+      reply_with_menu(msg, generate_menu(lookup_complex_regexp(complex_regexp), word))
     when :jmark
       word = msg.tail
       return unless word
@@ -147,21 +146,55 @@ class EDICT < IRCPlugin
     lookup_result
   end
 
+  def lookup_complex_regexp(complex_regexp)
+    operation = complex_regexp.shift
+    regs = complex_regexp
+
+    restrict = nil
+    # search for kanji and kana matches with resulting regexps
+    results = {:japanese => regs[0], :readings => regs[1]}.each_pair.map do |key, regexp|
+      tmp = lookup_regexp(regexp, @hash_edict[key], restrict)
+      restrict = tmp if operation == :intersection
+      [key, tmp]
+    end
+
+    results = Hash[results]
+
+    result = case operation
+             when :union
+               results.values.reduce {|all, one| all.union(one) }
+             when :intersection
+               results.values.reduce {|all, one| all.intersection(one) }
+             end
+
+    result = result.to_a
+    sort_result(result)
+
+    result.map do |e|
+      [e, results[:japanese].include?(e), results[:readings].include?(e)]
+    end
+  end
+
   REGEXP_LOOKUP_LIMIT = 1000
 
-  # Matches regexp against keys of specified hash(es) and returns the result as an array of entries
-  def lookup_regexp(regex, hashes)
-    lookup_result = []
-    hashes.each do |h|
-      h.each_pair do |word, entry_array|
-        if regex =~ word
-          lookup_result |= entry_array
-          break if lookup_result.size > REGEXP_LOOKUP_LIMIT
+  # Matches regexps against keys of specified hash(es) and returns the result as an array of entries
+  def lookup_regexp(regexps, hash, restrict)
+    lookup_result = Set.new
+
+    hash.each_pair do |word, entry_array|
+      if regexps.all? { |regex| regex =~ word }
+        lookup_result.merge(entry_array)
+        #break if lookup_result.size > REGEXP_LOOKUP_LIMIT
+        if lookup_result.size > REGEXP_LOOKUP_LIMIT
+          if restrict
+            lookup_result &= restrict
+          else
+            break
+          end
         end
       end
     end
-    return if lookup_result.empty?
-    sort_result(lookup_result)
+
     lookup_result
   end
 
