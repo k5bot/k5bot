@@ -71,7 +71,13 @@ class WolframAlpha < IRCPlugin
     hash['Result'] = %w()
 
     result.pods.each do |pod|
-      hash.update pod.title => pod.subpods.map {|n| unescape_unicode(n.plaintext) }
+      subpods = pod.subpods.to_a
+      sub_pods = subpods.map do |sub_pod|
+        # TODO: Some additional info might be obtained with (sub_pod.title rescue nil)
+        unescape_unicode(sub_pod.plaintext)
+      end
+
+      hash.update(pod.title => sub_pods)
     end
 
     hash
@@ -96,10 +102,7 @@ class WolframAlpha < IRCPlugin
 
     menu = []
     pods_to_hash(lookup_result).each_pair do |k,v|
-      # We usually get arrays with one element here.
-      # Convert them to text in a way, that will immediately
-      # let us know if they suddenly start having more.
-      text = v.join('<w00t>')
+      text = v.join(' ░ ')
 
       text.strip!
       next if text.empty?
