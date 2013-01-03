@@ -54,18 +54,18 @@ class EDICT < IRCPlugin
       return unless word
       l_kana = @l.kana(word)
       edict_lookup = lookup(l_kana, [@hash_edict[:japanese], @hash_edict[:readings]])
-      reply_with_menu(msg, generate_menu_unambiguous(edict_lookup, "\"#{word}\" in EDICT"))
+      reply_with_menu(msg, generate_menu(format_description_unambiguous(edict_lookup), "\"#{word}\" in EDICT"))
     when :e
       word = msg.tail
       return unless word
       edict_lookup = keyword_lookup(split_into_keywords(word), @hash_edict[:keywords])
-      reply_with_menu(msg, generate_menu_unambiguous(edict_lookup, "\"#{word}\" in EDICT"))
+      reply_with_menu(msg, generate_menu(format_description_unambiguous(edict_lookup), "\"#{word}\" in EDICT"))
     when :jn
       word = msg.tail
       return unless word
       l_kana = @l.kana(word)
       enamdict_lookup = lookup(l_kana, [@hash_enamdict[:japanese], @hash_enamdict[:readings]])
-      reply_with_menu(msg, generate_menu_unambiguous(enamdict_lookup, "\"#{word}\" in ENAMDICT"))
+      reply_with_menu(msg, generate_menu(format_description_unambiguous(enamdict_lookup), "\"#{word}\" in ENAMDICT"))
     when :jr
       word = msg.tail
       return unless word
@@ -76,7 +76,7 @@ class EDICT < IRCPlugin
         return
       end
       edict_lookup_regexp = lookup_regexp(regexp_new, [@hash_edict[:japanese], @hash_edict[:readings]])
-      reply_with_menu(msg, generate_menu_unambiguous(edict_lookup_regexp, "\"#{word}\" in EDICT"))
+      reply_with_menu(msg, generate_menu(format_description_unambiguous(edict_lookup_regexp), "\"#{word}\" in EDICT"))
     when :jmark
       word = msg.tail
       return unless word
@@ -93,12 +93,36 @@ class EDICT < IRCPlugin
     reply
   end
 
-  def generate_menu_unambiguous(lookup_result, name)
-    menu_items = lookup_result || []
+  def format_description_unambiguous(lookup_result)
+    amb_chk_kanji = Hash.new(0)
+    amb_chk_kana = Hash.new(0)
+    lookup_result.each do |e|
+      amb_chk_kanji[e.japanese] += 1
+      amb_chk_kana[e.reading] += 1
+    end
+    render_kanji = amb_chk_kana.any? { |x, y| y > 1 } # || !render_kana
 
-    readings_display = (menu_items.length > 1) && (menu_items.collect { |e| e.japanese }.uniq.length == 1)
-    menu = menu_items.map do |e|
-      MenuNodeText.new(readings_display ? e.reading : e.japanese, e)
+    lookup_result.map do |e|
+      kanji_list = e.japanese
+      render_kana = e.reading && (amb_chk_kanji[kanji_list] > 1 || kanji_list.empty?) # || !render_kanji
+
+      [e, render_kanji, render_kana]
+    end
+  end
+
+  def generate_menu(lookup, name)
+    menu = lookup.map do |e, render_kanji, render_kana|
+      kanji_list = e.japanese
+
+      description = if render_kanji && !kanji_list.empty? then
+                      render_kana ? "#{kanji_list} (#{e.reading})" : kanji_list
+                    elsif e.reading
+                      e.reading
+                    else
+                      "<invalid entry>"
+                    end
+
+      MenuNodeText.new(description, e)
     end
 
     MenuNodeSimple.new(name, menu)
@@ -119,7 +143,6 @@ class EDICT < IRCPlugin
       entry_array = h[word]
       lookup_result |= entry_array if entry_array
     end
-    return if lookup_result.empty?
     sort_result(lookup_result)
     lookup_result
   end
@@ -149,14 +172,14 @@ class EDICT < IRCPlugin
     lookup_result = nil
 
     words.each do |k|
-      return unless (entry_array = hash[k])
+      return [] unless (entry_array = hash[k])
       if lookup_result
         lookup_result &= entry_array
       else
         lookup_result = Array.new(entry_array)
       end
     end
-    return unless lookup_result && !lookup_result.empty?
+    return [] unless lookup_result && !lookup_result.empty?
     sort_result(lookup_result)
     lookup_result
   end
