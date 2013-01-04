@@ -109,6 +109,8 @@ class Language < IRCPlugin
   end
 
   def self.parse_complex_regexp(word)
+    regexp_half_width!(word)
+
     # && operator allows specifying conditions for
     # kanji && kana separately.
     differing_conditions = word.split('&&').map {|s| s.strip }
@@ -142,6 +144,11 @@ class Language < IRCPlugin
   end
 
   private
+
+  # Replace full-width special symbols with their regular equivalents.
+  def self.regexp_half_width!(word)
+    word.tr!('　＆｜「」（）。＊＾＄', ' &|[]().*^$')
+  end
 
   def self.parse_sub_regexp(word)
     multi_conditions = word.split('&').map {|s| s.strip }
