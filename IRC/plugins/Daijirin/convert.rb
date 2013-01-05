@@ -95,10 +95,7 @@ class DaijirinConverter
 
   def sort
     count = 0
-    # Sort parent entries by kana, and
-    # child entries by the first variant of its phrase,
-    # which starts with kana of the parent.
-    @all_entries .sort_by!{|e| e.kana || e.kanji[0] }
+    @all_entries .sort_by!{|e| e.sort_key_string }
     @all_entries .each do |e|
       e.sort_key = count
       # Take this opportunity to reorder all children,

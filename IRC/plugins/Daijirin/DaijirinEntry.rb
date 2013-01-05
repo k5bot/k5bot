@@ -199,7 +199,7 @@ class DaijirinEntry
 
     @kanji = []
 
-    # The variant with reading comes first. see sort() in convert.rb and the kanji() method
+    # The variant with reading comes first. see sort_key_string() and kanji() methods
     if @parent.kana
       @kanji << "#{@parent.kana}#{s}"
     end
@@ -284,5 +284,12 @@ class DaijirinEntry
     s.gsub!('・','')
     s.gsub!('-', '')
     s
+  end
+
+  def sort_key_string()
+    # Sort parent entries by kana, and
+    # child entries by the first variant of its phrase,
+    # which starts with kana of the parent.
+    kana || kanji[0]
   end
 end
