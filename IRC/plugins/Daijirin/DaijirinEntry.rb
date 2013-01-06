@@ -27,10 +27,14 @@ class DaijirinEntry
     @raw = raw
     @kanji = nil
     @kana = nil
-    @old_kana = nil
-    @alternative_kana = nil
-    @accent = nil
     @english = nil
+=begin # Those are not necessary yet.
+    @accent = nil
+    @type = nil
+    @bunka = nil
+    @alternative_kana = nil
+    @old_kana = nil
+=end
     @reference = nil
     @info = nil
     @sort_key = nil
@@ -52,8 +56,10 @@ class DaijirinEntry
   attr_reader :kana
   # Returns an array of the English translations and meta information.
   attr_reader :english
+=begin # Those are not necessary yet.
   attr_reader :old_kana
   attr_reader :accent
+=end
   attr_reader :info
   attr_reader :reference
 
@@ -78,10 +84,14 @@ class DaijirinEntry
     @raw = nil
     @kanji = nil
     @kana = nil
-    @old_kana = nil
-    @alternative_kana = nil
-    @accent = nil
     @english = nil
+=begin # Those are not necessary yet.
+    @accent = nil
+    @type = nil
+    @bunka = nil
+    @alternative_kana = nil
+    @old_kana = nil
+=end
     @reference = nil
     @info = nil
     @sort_key = nil
@@ -139,13 +149,16 @@ class DaijirinEntry
     end
     @kanji.flatten!
 
-    @accent = split_capture!(s,ACCENT_MATCHER,'%a%')
     @english = split_capture!(s,ENGLISH_MATCHER,'%e%')
+
+=begin # Those are not necessary yet.
+    @accent = split_capture!(s,ACCENT_MATCHER,'%a%')
     @type = split_capture!(s,TYPE_MATCHER,'%t%')
     @bunka = split_capture!(s,BUNKA_MATCHER,'%b%')
 
     @alternative_kana = (s.match(ALT_KANA_MATCHER) or [nil])[0]
     @old_kana = (s.match(OLD_KANA_MATCHER) or [nil])[0]
+=end
 
     @reference = @kanji[0] ? @kanji[0] : @kana
 
@@ -185,13 +198,15 @@ class DaijirinEntry
     # For search purposes, let's add the template form too
     @kanji << template_form
 
-    @accent = nil
     @english = nil
+
+=begin # Those are not necessary yet.
+    @accent = nil
     @type = nil
     @bunka = nil
-
     @alternative_kana = nil
     @old_kana = nil
+=end
 
     return true
   end
