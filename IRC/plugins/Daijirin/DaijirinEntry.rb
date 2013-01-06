@@ -34,7 +34,7 @@ class DaijirinEntry
     @parsed = nil
   end
 
-  def kanji
+  def kanji_for_display
     k = kanji_for_search
     # Only output one meaningful kanji for child entries:
     # either the first kanji form or the kana form..
@@ -292,7 +292,7 @@ class DaijirinEntry
     # Sort parent entries by kana, and
     # child entries by the first variant of its phrase,
     # which starts with kana of the parent.
-    kana || kanji[0]
+    kana || kanji_for_display[0]
   end
 
   def post_parse

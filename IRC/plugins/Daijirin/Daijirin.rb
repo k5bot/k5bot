@@ -73,13 +73,13 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
     amb_chk_kanji = Hash.new(0)
     amb_chk_kana = Hash.new(0)
     lookup_result.each do |e|
-      amb_chk_kanji[e.kanji.join(',')] += 1
+      amb_chk_kanji[e.kanji_for_display.join(',')] += 1
       amb_chk_kana[e.kana] += 1
     end
     render_kanji = amb_chk_kana.any? { |x, y| y > 1 } # || !render_kana
 
     lookup_result.map do |e|
-      kanji_list = e.kanji.join(',')
+      kanji_list = e.kanji_for_display.join(',')
       render_kana = e.kana && (amb_chk_kanji[kanji_list] > 1 || kanji_list.empty?) # || !render_kanji
 
       [e, render_kanji, render_kana]
@@ -88,7 +88,7 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
 
   def generate_menu(lookup, word)
     menu = lookup.map do |e, render_kanji, render_kana|
-      kanji_list = e.kanji.join(',')
+      kanji_list = e.kanji_for_display.join(',')
 
       description = if render_kanji && !kanji_list.empty? then
                       render_kana ? "#{kanji_list} (#{e.kana})" : kanji_list
