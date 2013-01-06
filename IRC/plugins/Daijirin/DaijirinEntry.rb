@@ -146,7 +146,7 @@ class DaijirinEntry
 
     @kana = cleanup_markup(@kana)
 
-    @kanji, s = split(s,KANJI_MATCHER,'%k%')
+    @kanji = split_capture!(s,KANJI_MATCHER,'%k%')
 
     # Process entries like 【掛(か)る・懸(か)る】
     @kanji = @kanji.collect do |k|
@@ -167,10 +167,10 @@ class DaijirinEntry
     end
     @kanji.flatten!
 
-    @accent, s = split(s,ACCENT_MATCHER,'%a%')
-    @english, s = split(s,ENGLISH_MATCHER,'%e%')
-    @type, s = split(s,TYPE_MATCHER,'%t%')
-    @bunka, s = split(s,BUNKA_MATCHER,'%b%')
+    @accent = split_capture!(s,ACCENT_MATCHER,'%a%')
+    @english = split_capture!(s,ENGLISH_MATCHER,'%e%')
+    @type = split_capture!(s,TYPE_MATCHER,'%t%')
+    @bunka = split_capture!(s,BUNKA_MATCHER,'%b%')
 
     @alternative_kana = (s.match(/[^%]+$/) or [nil])[0]
     @old_kana = (s.match(/^[^%]+/) or [nil])[0]
@@ -257,13 +257,13 @@ class DaijirinEntry
     result
   end
 
-  def split(s, pattern, substitution)
-    result, rest = separate(s.split(pattern))
-    if rest.length <= result.length
-      rest << ''
+  def split_capture!(s, pattern, substitution)
+    result = []
+    s.gsub!(pattern) do |m|
+      result << $1.strip
+      substitution
     end
-    rest = rest.join(substitution)
-    [result.map {|x| x.strip}, rest]
+    result
   end
 
   def separate(x)
