@@ -46,47 +46,16 @@ class DaijirinEntry
   end
 
   def kanji_for_search
-    @kanji unless !@parsed
-    parse
     @kanji
   end
 
-  def kana
-    @kana unless !@parsed
-    parse
-    @kana
-  end
-
-  def old_kana
-    @old_kana unless !@parsed
-    parse
-    @old_kana
-  end
-
-  def accent
-    @accent unless !@parsed
-    parse
-    @accent
-  end
-
+  attr_reader :kana
   # Returns an array of the English translations and meta information.
-  def english
-    @english unless !@parsed
-    parse
-    @english
-  end
-
-  def info
-    @info unless !@parsed
-    parse
-    @info
-  end
-
-  def reference
-    @reference unless !@parsed
-    parse
-    @reference
-  end
+  attr_reader :english
+  attr_reader :old_kana
+  attr_reader :accent
+  attr_reader :info
+  attr_reader :reference
 
   def to_lines
     info.flatten
