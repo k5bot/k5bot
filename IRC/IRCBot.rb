@@ -23,6 +23,9 @@ class IRCBot < IRCMessageRouter
   def initialize(user_pool, channel_pool, config = nil)
     super()
 
+    raise ArgumentError, "UserPool can't be nil. Check that the plugin is loaded." unless user_pool
+    raise ArgumentError, "ChannelPool can't be nil. Check that the plugin is loaded." unless channel_pool
+
     @config = config || {
       :server => 'localhost',
       :port => 6667,
