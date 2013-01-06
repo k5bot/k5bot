@@ -131,7 +131,7 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
     case operation
     when :union
       @hash[:all].each do |entry|
-        words_kanji = entry.kanji
+        words_kanji = entry.kanji_for_search
         kanji_matched = words_kanji.any? { |word| regexps_kanji.all? { |regex| regex =~ word } }
         word_kana = entry.kana
         kana_matched = word_kana && regexps_kana.all? { |regex| regex =~ word_kana }
@@ -139,7 +139,7 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
       end
     when :intersection
       @hash[:all].each do |entry|
-        words_kanji = entry.kanji
+        words_kanji = entry.kanji_for_search
         next unless words_kanji.any? { |word| regexps_kanji.all? { |regex| regex =~ word } }
         word_kana = entry.kana
         next unless word_kana && regexps_kana.all? { |regex| regex =~ word_kana }
