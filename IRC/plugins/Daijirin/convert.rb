@@ -24,7 +24,8 @@ class DaijirinConverter
     @hash[:kanji] = {}
     @hash[:kana] = {}
     @hash[:english] = {}
-    @all_entries  = []
+    @all_entries = []
+    @hash[:all] = @all_entries
 
     # Duplicated two lines from ../Language/Language.rb
     @kata2hira = YAML.load_file("../Language/kata2hira.yaml") rescue nil
