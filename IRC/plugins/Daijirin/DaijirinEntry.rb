@@ -121,6 +121,7 @@ class DaijirinEntry
     return @parsed if @parsed
     unless parse_first_line(raw[0])
       @parsed = :skip
+      post_parse()
       return @parsed
     end
 
@@ -130,6 +131,7 @@ class DaijirinEntry
     # it will be printed with the lines of first entry.
     @info[0].unshift raw[0]
 
+    post_parse()
     @parsed = true
   end
 
@@ -291,5 +293,9 @@ class DaijirinEntry
     # child entries by the first variant of its phrase,
     # which starts with kana of the parent.
     kana || kanji[0]
+  end
+
+  def post_parse
+    @raw = nil # Memory optimization. Overridden in convert.rb
   end
 end

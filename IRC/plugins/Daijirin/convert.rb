@@ -15,6 +15,13 @@ require 'iconv'
 require 'yaml'
 require_relative 'DaijirinEntry'
 
+class DaijirinEntry
+  def post_parse
+    # Do nothing. This is to prevent @raw cleanup after parsing,
+    # b/c we need to marshal it first.
+  end
+end
+
 class DaijirinConverter
   attr_reader :hash
 
