@@ -150,50 +150,26 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
 
   def lookup_complex_regexp(complex_regexp)
     operation = complex_regexp.shift
-    regs = complex_regexp
+    regexps_kanji, regexps_kana = complex_regexp
 
-    restrict = nil
-    # search for kanji and kana matches with resulting regexps
-    results = {:japanese => regs[0], :readings => regs[1]}.each_pair.map do |key, regexp|
-      tmp = lookup_regexp(regexp, @hash_edict[key], restrict)
-      restrict = tmp if operation == :intersection
-      [key, tmp]
-    end
+    lookup_result = []
 
-    results = Hash[results]
-
-    result = case operation
-             when :union
-               results.values.reduce {|all, one| all.union(one) }
-             when :intersection
-               results.values.reduce {|all, one| all.intersection(one) }
-             end
-
-    result = result.to_a
-    sort_result(result)
-
-    result.map do |e|
-      [e, results[:japanese].include?(e), results[:readings].include?(e)]
-    end
-  end
-
-  REGEXP_LOOKUP_LIMIT = 1000
-
-  # Matches regexps against keys of specified hash(es) and returns the result as an array of entries
-  def lookup_regexp(regexps, hash, restrict)
-    lookup_result = Set.new
-
-    hash.each_pair do |word, entry_array|
-      if regexps.all? { |regex| regex =~ word }
-        lookup_result.merge(entry_array)
-        #break if lookup_result.size > REGEXP_LOOKUP_LIMIT
-        if lookup_result.size > REGEXP_LOOKUP_LIMIT
-          if restrict
-            lookup_result &= restrict
-          else
-            break
-          end
-        end
+    case operation
+    when :union
+      @hash_edict[:all].each do |entry|
+        word_kanji = entry.japanese
+        kanji_matched = regexps_kanji.all? { |regex| regex =~ word_kanji }
+        word_kana = entry.reading
+        kana_matched = regexps_kana.all? { |regex| regex =~ word_kana }
+        lookup_result << [entry, kanji_matched, kana_matched] if kanji_matched || kana_matched
+      end
+    when :intersection
+      @hash_edict[:all].each do |entry|
+        word_kanji = entry.japanese
+        next unless regexps_kanji.all? { |regex| regex =~ word_kanji }
+        word_kana = entry.reading
+        next unless regexps_kana.all? { |regex| regex =~ word_kana }
+        lookup_result << [entry, true, true]
       end
     end
 
