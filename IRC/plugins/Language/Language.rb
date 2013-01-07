@@ -133,7 +133,7 @@ class Language < IRCPlugin
                 end
 
     # parse sub-expressions
-    regs = differing_conditions.map {|w| parse_sub_regexp(w)}
+    regs = differing_conditions.map {|w| parse_chained_regexps(w)}
     # duplicate condition on kana from condition on kanji, if not present
     regs << regs[0] if regs.size<2
 
@@ -150,12 +150,30 @@ class Language < IRCPlugin
     word.tr!('　＆｜「」（）。＊＾＄', ' &|[]().*^$')
   end
 
-  def self.parse_sub_regexp(word)
+  def self.parse_chained_regexps(word)
     multi_conditions = word.split('&').map {|s| s.strip }
 
     multi_conditions.map do |term|
-      Regexp.new(term)
+      parse_sub_regexp(term)
     end
+  end
+
+  KANA_CHAR_GROUP_MATCHER = /\\k/
+  NON_KANA_CHAR_GROUP_MATCHER = /\\K/
+
+  # 3040-309F hiragana
+  # 30A0-30FF katakana
+  # FF61-FF9D half-width katakana
+  # 31F0-31FF katakana phonetic extensions
+  #
+  # Source: http://www.unicode.org/charts/
+  KANA_CHAR_GROUP = '[\u3040-\u30FF\uFF61-\uFF9D\u31F0-\u31FF]'
+  NON_KANA_CHAR_GROUP = '[^\u3040-\u30FF\uFF61-\uFF9D\u31F0-\u31FF]'
+
+  def self.parse_sub_regexp(word)
+    word.gsub!(KANA_CHAR_GROUP_MATCHER, KANA_CHAR_GROUP)
+    word.gsub!(NON_KANA_CHAR_GROUP_MATCHER, NON_KANA_CHAR_GROUP)
+    Regexp.new(word)
   end
 
   def load_unicode_blocks(file_name)
