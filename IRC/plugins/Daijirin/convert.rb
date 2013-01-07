@@ -33,6 +33,7 @@ class DaijirinConverter
     @hash[:english] = {}
     @all_entries = []
     @hash[:all] = @all_entries
+    @hash[:version] = DaijirinEntry::VERSION
 
     # Duplicated two lines from ../Language/Language.rb
     @kata2hira = YAML.load_file("../Language/kata2hira.yaml") rescue nil

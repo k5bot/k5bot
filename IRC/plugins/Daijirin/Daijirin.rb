@@ -159,6 +159,8 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
       @hash = Marshal.load(io)
     end
 
+    raise "The daijirin.marshal file is outdated. Rerun convert.rb." unless @hash[:version] == DaijirinEntry::VERSION
+
     # Pre-parse all entries
     @hash[:all].each do |entry|
       raise "Failed to parse entry #{entry}" unless true == entry.parse

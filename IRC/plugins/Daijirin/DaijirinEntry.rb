@@ -7,6 +7,8 @@
 require 'yaml'
 
 class DaijirinEntry
+  VERSION = 1
+
   attr_reader :raw, :parent, :children
   attr_accessor :sort_key
 
