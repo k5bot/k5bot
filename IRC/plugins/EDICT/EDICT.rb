@@ -19,7 +19,7 @@ class EDICT < IRCPlugin
     :e => "looks up an English word in EDICT",
     :jr => "searches Japanese words matching given regexp in EDICT. In addition to standard regexp operators (e.g. ^,$,*), special operators & and && are supported. \
 Operator & is a way to match several regexps (e.g. 'A & B & C' will only match words, that contain all of A, B and C letters, in any order). \
-Operator && is a way to specify separate conditions on kanji and reading (e.g. '物 && もつ')",
+Operator && is a way to specify separate conditions on kanji and reading (e.g. '物 && もつ').  Classes: \\k (kana), \\K (non-kana)",
     :jn => "looks up a Japanese word in ENAMDICT",
     :jmark => "shows the description of an EDICT/ENAMDICT marker",
   }
