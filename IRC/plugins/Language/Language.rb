@@ -111,9 +111,13 @@ class Language < IRCPlugin
   def self.parse_complex_regexp(word)
     regexp_half_width!(word)
 
+    # replace & with @, where it doesn't conflict
+    # with && used in character groups.
+    word = regexp_custom_ampersand(word)
+
     # && operator allows specifying conditions for
     # kanji && kana separately.
-    differing_conditions = word.split('&&').map {|s| s.strip }
+    differing_conditions = word.split(/@@/).map {|s| s.strip }
 
     operation = case differing_conditions.size
                 when 1
@@ -150,8 +154,27 @@ class Language < IRCPlugin
     word.tr!('　＆｜「」（）。＊＾＄', ' &|[]().*^$')
   end
 
+  # Replace & not inside [] with @
+  def self.regexp_custom_ampersand(word)
+    depth = 0
+    result = ''
+    word.each_char do |c|
+      case c
+      when '['
+        depth+=1
+      when ']'
+        depth-=1
+      when '&'
+        c = '@' if 0==depth
+      end
+      result << c
+    end
+
+    result
+  end
+
   def self.parse_chained_regexps(word)
-    multi_conditions = word.split('&').map {|s| s.strip }
+    multi_conditions = word.split(/@/).map {|s| s.strip }
 
     multi_conditions.map do |term|
       parse_sub_regexp(term)
