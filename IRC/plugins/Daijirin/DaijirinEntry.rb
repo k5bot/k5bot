@@ -186,6 +186,25 @@ class DaijirinEntry
 
     # Process entries like "――の過(アヤマ)ち"
     # and worse, "――の＝髄(ズイ)（＝管(クダ)）から天井(テンジヨウ)を覗(ノゾ)く"
+
+    # First, split entries with =. For the example above it would be
+    # "の髄(ズイ)から天井..." and
+    # "管(クダ)から天井..."
+    equalized = kanji_split_equivalence(s)
+
+    # Prepare to gather children kanji
+    @kanji = []
+
+    equalized.each do |variant|
+      parse_braced_child_line(variant)
+    end
+
+    return true
+  end
+
+  def parse_braced_child_line(s)
+    # Get rid of readings in braces,
+    # b/c we can't reliably parse them yet
     tmp = nil
     until s.eql? tmp
       tmp = s
@@ -197,8 +216,6 @@ class DaijirinEntry
     template_form = "――#{s}"
 
     @reference = template_form
-
-    @kanji = []
 
     if @parent.kana
       @kanji << "#{@parent.kana}#{s}"
@@ -213,9 +230,62 @@ class DaijirinEntry
 
     # Sort child entries by parent key + the rest
     @sort_key_string = "#{@parent.sort_key_string}#{s}"
+  end
 
+  KANJI_EQUIVALENCE_MATCHER=/=([^=\|>]+)\|([^=\|>]+)>/
 
-    return true
+  def kanji_split_equivalence(word)
+    # Get rid of full-width
+    word.tr!('（）＝','()=')
+
+    # Filter word containing =X(=Y) into =X|Y> form,
+    # understood by KANJI_EQUIVALENCE_MATCHER,
+    # taking additional care of nested braces.
+
+    # First, replace '(=' into '|'
+    return [word] unless word.gsub!('(=', '|')
+
+    # Replace the closing brace of replacement with '>'
+    result = ''
+    depth = 0
+    in_replace = false
+    word.each_char do |c|
+      case c
+      when '('
+        depth+=1
+      when ')'
+        depth-=1
+      when '|'
+        in_replace = true
+      end
+
+      if depth<0
+        if in_replace
+          c = '>'
+          depth=0
+          in_replace = false
+        else
+          raise "Braces mismatch in #{word}"
+        end
+      end
+
+      result << c
+    end
+
+    # We know for a fact, that every word in Daijirin
+    # contains at most one =X(=Y) form, so just we
+    # simply split into 2 variants.
+
+    variant1 = result.sub(KANJI_EQUIVALENCE_MATCHER) do |_|
+      $1.strip
+    end
+    variant2 = result.sub(KANJI_EQUIVALENCE_MATCHER) do |_|
+      $2.strip
+    end
+
+    raise "Equivalency parsing failure for entry #{word}" if variant1 === variant2
+
+    [variant1, variant2]
   end
 
   def remove_parentheses(s)
