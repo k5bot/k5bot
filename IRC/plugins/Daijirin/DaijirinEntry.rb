@@ -11,6 +11,7 @@ class DaijirinEntry
 
   attr_reader :raw, :parent, :children
   attr_accessor :sort_key
+  attr_reader :sort_key_string
 
   ACCENT_MATCHER=/\[(\d+)\]-?/
   KANJI_MATCHER=/【([^】]+)】/
@@ -164,6 +165,9 @@ class DaijirinEntry
 
     @reference = @kanji[0] ? @kanji[0] : @kana
 
+    # Sort parent entries by reading
+    @sort_key_string = @kana
+
     return true
   end
 
@@ -196,7 +200,6 @@ class DaijirinEntry
 
     @kanji = []
 
-    # The variant with reading comes first. see sort_key_string() and kanji() methods
     if @parent.kana
       @kanji << "#{@parent.kana}#{s}"
     end
@@ -208,6 +211,8 @@ class DaijirinEntry
     # For search purposes, let's add the template form too
     @kanji << template_form
 
+    # Sort child entries by parent key + the rest
+    @sort_key_string = "#{@parent.sort_key_string}#{s}"
 
 
     return true
@@ -275,13 +280,6 @@ class DaijirinEntry
     s.gsub!('・','')
     s.gsub!('-', '')
     s
-  end
-
-  def sort_key_string()
-    # Sort parent entries by kana, and
-    # child entries by the first variant of its phrase,
-    # which starts with kana of the parent.
-    kana || kanji_for_display[0]
   end
 
   def post_parse
