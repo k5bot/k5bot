@@ -169,6 +169,14 @@ class DaijirinEntry
 
   def parse_first_line_parented(s)
     @kana = nil
+    @english = nil
+=begin # Those are not necessary yet.
+    @accent = nil
+    @type = nil
+    @bunka = nil
+    @alternative_kana = nil
+    @old_kana = nil
+=end
 
     s = s[2..-1] # Cut out "――" part.
 
@@ -200,15 +208,7 @@ class DaijirinEntry
     # For search purposes, let's add the template form too
     @kanji << template_form
 
-    @english = nil
 
-=begin # Those are not necessary yet.
-    @accent = nil
-    @type = nil
-    @bunka = nil
-    @alternative_kana = nil
-    @old_kana = nil
-=end
 
     return true
   end
