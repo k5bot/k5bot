@@ -106,16 +106,19 @@ and ISO-3166 country names (e.g. US, JP)",
         # Zone abbreviations are actually ambiguous.
         # Let's try and group known zones by resulting times.
         zones.group_by do |zone|
-          zone.strftime('%Y-%m-%d %H:%M:%S %Z', time)
+          zone.strftime('%Y-%m-%d %H:%M:%S', time)
         end.map do |format, sub_zones|
           best_zone = if presorted
                         # group_by() preserved desired order, the best one is the first.
-                        sub_zones[0].identifier
+                        sub_zones[0]
                       else
-                        # otherwise, find the shortest identifier.
-                        sub_zones.map { |z| z.identifier }.min_by { |id| id.size }
+                        # otherwise, find the one with the shortest identifier.
+                        sub_zones.min_by { |z| z.identifier.size }
                       end
-          "#{format}(#{best_zone}#{',...' if sub_zones.size>1})"
+
+          abbrev = best_zone.strftime('%Z', time)
+          identifier = best_zone.identifier
+          "#{format} #{abbrev}(#{identifier}#{',...' if sub_zones.size>1})"
         end.sort.join('; ')
       else
         "Unknown timezone '#{search_term}'"
