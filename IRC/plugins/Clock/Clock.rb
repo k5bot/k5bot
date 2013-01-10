@@ -14,6 +14,7 @@ class Clock < IRCPlugin
   Commands = {
       :time => "tells the current time. \
 Optionally accepts space-separated list of timezone identifiers (e.g. Asia/Tokyo), \
+or simply their parts after / and without spaces (e.g. 'NewYork'), \
 timezone abbreviations (e.g. UTC, JST), \
 and ISO-3166 country names (e.g. US, JP)",
       :jtime => 'tells the current time in Japan only',
@@ -51,11 +52,19 @@ and ISO-3166 country names (e.g. US, JP)",
     # Timezone.get() doesn't accept arbitrary case,
     # so let's compose our own case-insensitive table.
     @zone_by_identifier = {}
+    @zone_by_city = {}
 
     TZInfo::Timezone.all.each do |zone|
       identifier = normalize_zone_identifier(zone.identifier)
       @zone_by_identifier.merge!(identifier => zone) do |key, old_val, new_val|
         raise "Can't disambiguate timezone #{key}: it's either #{old_val} or #{new_val}"
+      end
+
+      # The part after first slash.
+      identifier.match(/^[^\/]+\/(.+)$/) do |m|
+        @zone_by_city.merge!(m[1] => [zone]) do |key, old_val, new_val|
+          old_val |= new_val
+        end
       end
     end
   end
@@ -96,10 +105,14 @@ and ISO-3166 country names (e.g. US, JP)",
         # Country.get() returns array ordered by relevancy descending.
         presorted = true
       end
-      # Finally, maybe it's a zone identifier, e.g. 'America/New_York'?
+      # Maybe it's a zone identifier, e.g. 'America/New_York'?
       unless zones
         zones = @zone_by_identifier[normalize_zone_identifier(search_term)]
         zones = [zones] if zones
+      end
+      # Maybe it's a part of identifier after first slash, e.g. 'NewYork'?
+      unless zones
+        zones = @zone_by_city[normalize_zone_identifier(search_term)]
       end
 
       if zones
