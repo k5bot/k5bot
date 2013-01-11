@@ -161,7 +161,7 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
         kanji_matched = regexps_kanji.all? { |regex| regex =~ word_kanji }
         word_kana = entry.reading
         kana_matched = regexps_kana.all? { |regex| regex =~ word_kana }
-        lookup_result << [entry, kanji_matched, kana_matched] if kanji_matched || kana_matched
+        lookup_result << [entry, true, kana_matched] if kanji_matched || kana_matched
       end
     when :intersection
       @hash_edict[:all].each do |entry|
