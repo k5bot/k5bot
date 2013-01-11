@@ -66,15 +66,6 @@ class Loader < IRCPlugin
           msg.reply "Cannot unload '#{name}'."
         end
       end
-    when :reload_core
-      load 'IRC/IRCBot.rb'
-      load 'IRC/IRCFirstListener.rb'
-      load 'IRC/IRCListener.rb'
-      load 'IRC/IRCMessage.rb'
-      load 'IRC/IRCMessageRouter.rb'
-      load 'IRC/IRCPlugin.rb'
-      load 'IRC/IRCPluginManager.rb'
-      msg.reply "Core files reloaded."
     end
   end
 
