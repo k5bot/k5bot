@@ -77,7 +77,7 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
         msg.reply("EDICT Regexp query error: #{e.message}")
         return
       end
-      reply_with_menu(msg, generate_menu(lookup_complex_regexp(complex_regexp), word))
+      reply_with_menu(msg, generate_menu(lookup_complex_regexp(complex_regexp), "\"#{word}\" in EDICT"))
     when :jmark
       word = msg.tail
       return unless word
