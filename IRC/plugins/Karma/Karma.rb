@@ -7,10 +7,8 @@
 require_relative '../../IRCPlugin'
 
 class Karma < IRCPlugin
-  Description = "Stores karma points for users. Give a user a karma point by writing their nick followed by '++'."
-  Commands = {
-    :karma => "shows how many karma points the specified user has"
-  }
+  Description = "Stores karma and other kinds of points for users."
+
   Dependencies = [ :NumberSpell, :StorageYAML, :UserPool ]
 
   def afterLoad
@@ -18,7 +16,30 @@ class Karma < IRCPlugin
     @storage = @plugin_manager.plugins[:StorageYAML]
     @user_pool = @plugin_manager.plugins[:UserPool]
 
-    @karma = @storage.read('karma') || {}
+    @karma = {}
+
+    @config.each do |command, sub_config|
+      @karma[command.to_sym] = @storage.read(sub_config[:file]) || {}
+
+      # Replace regexp text with actual precompiled regexps
+      sub_config[:matchers].each do |matcher|
+        regexp = matcher[:regexp]
+        next if regexp.is_a?(Regexp)
+        # regexp.gsub!('#{sender}', msg.nick) # Maybe will be useful someday
+        regexp.gsub!('#{receiver}', '([[[:ascii:]]&&\S]+)')
+        matcher[:regexp] = Regexp.new(regexp)
+      end
+    end
+  end
+
+  def store(command)
+    @storage.write(@config[command][:file], @karma[command])
+  end
+
+  def commands
+    Hash[@config.map do |command, config|
+      [command, config[:help]]
+    end]
   end
 
   def beforeUnload
@@ -31,48 +52,120 @@ class Karma < IRCPlugin
     nil
   end
 
-  def store
-    @storage.write('karma', @karma)
-  end
-
   def on_privmsg(msg)
-    case msg.botcommand
-    when :karma
-      nick = msg.tail || msg.nick
-      user = @user_pool.findUserByNick(msg.bot, nick)
-      if user && user.name
-        if k = @karma[user.name.downcase]
-          msg.reply("Karma for #{user.nick}: #{format(k)}")
-        else
-          msg.reply("#{user.nick} has no karma.")
-        end
+    if msg.botcommand
+      respond_to_query(msg)
+    elsif !msg.private?
+      respond_to_change(msg)
+    end
+  end
+
+  def respond_to_query(msg)
+    bot_command = msg.botcommand
+
+    sub_config = @config[bot_command]
+    return unless sub_config
+    sub_store = @karma[bot_command]
+
+    nick = msg.tail || msg.nick
+    user = @user_pool.findUserByNick(msg.bot, nick)
+    if get_user_id(user)
+      points = sub_store[get_user_id(user)]
+      if points
+        reply_format = random_choice(sub_config[:query])
+        msg.reply(template(reply_format, msg.nick, nil, user.nick, points))
       else
-        msg.reply('Cannot map this nick to a user at the moment, sorry.')
+        reply_format = random_choice(sub_config[:query_fail])
+        msg.reply(template(reply_format, msg.nick, nil, user.nick, nil))
       end
+    else
+      msg.reply('Cannot map this nick to a user at the moment, sorry.')
     end
-    if !msg.private? && (nick = msg.message[/(\S+)\s*\+[\+1]/, 1])
-      user = @user_pool.findUserByNick(msg.bot, nick)
-      if user && user.name
-        if user != msg.user
-          @karma[user.name.downcase] = 0 unless @karma[user.name.downcase]
-          @karma[user.name.downcase] += 1
-          store
-          msg.reply(randomMessage(msg.nick, user.nick))
+  end
+
+  def respond_to_change(msg)
+    @config.each do |bot_command, sub_config|
+      sub_store = @karma[bot_command]
+
+      sub_config[:matchers].each do |matcher|
+        match = matcher[:regexp].match(msg.message)
+        next unless match
+
+        # I didn't use the equivalent msg.user call,
+        # b/c I intend to get rid of it eventually
+        sender_user = @user_pool.findUserByNick(msg.bot, msg.nick)
+
+        if matcher[:receiver_delta]
+          # if this kind of karma has receiver, his nick
+          # must be matched by the first group of regexp
+          receiver_nick = match[1]
+          next unless receiver_nick
+
+          receiver_user = @user_pool.findUserByNick(msg.bot, receiver_nick)
+          # Disallow sender and receiver to be the same
+          next unless receiver_user != sender_user
+
+          receiver_points = change_user_points(sub_store, receiver_user, matcher[:receiver_delta])
+
+          break unless receiver_points # Failed to update receiver points, stop
+        else
+          receiver_nick = nil
+          receiver_points = nil
         end
+
+        if matcher[:sender_delta]
+          sender_points = change_user_points(sub_store, sender_user, matcher[:sender_delta])
+          raise "Bug! Failed to update #{bot_command} points for #{msg.nick}" unless sender_points
+        else
+          sender_points = nil
+        end
+
+        store(bot_command)
+
+        reply_format = random_choice(matcher[:response])
+        reply_msg = template(reply_format, msg.nick, sender_points, receiver_nick, receiver_points)
+        msg.reply(reply_msg) if reply_msg
+
+        break # Don't process further matchers for this kind of karma
       end
     end
   end
 
-  def format(num)
-    @ns.spell(num)
+  def change_user_points(sub_store, user, delta)
+    user_id = get_user_id(user)
+    return unless user_id
+    sub_store[user_id] = 0 unless sub_store[user_id]
+    sub_store[user_id] += delta
   end
 
-  def thousandSeparate(num)
-    num.to_s.reverse.scan(/..?.?/).join(' ').reverse.sub('- ', '-') if num.is_a? Integer
+  def get_user_id(user)
+    user.name.downcase if user && user.name
   end
 
-  def randomMessage(sender, receiver)
-    m = ["#{receiver}++!", "#{receiver}, #{sender} likes you.", "#{receiver}, point for you."]
-    m[rand(m.length)]
+  def random_choice(arr)
+    arr[rand(arr.size)] if arr && arr.size > 0
+  end
+
+  def template(format, sender, sender_points, receiver, receiver_points)
+    return unless format
+    format = format.dup
+
+    format.gsub!('#{sender}', sender)
+    if sender_points
+      format.gsub!('#{sender_points}', sender_points.to_s)
+      format.gsub!('#{sender_points_kanji}') do |m|
+        @ns.spell(sender_points)
+      end
+    end
+
+    format.gsub!('#{receiver}', receiver) if receiver
+    if receiver_points
+      format.gsub!('#{receiver_points}', receiver_points.to_s)
+      format.gsub!('#{receiver_points_kanji}') do |m|
+        @ns.spell(receiver_points)
+      end
+    end
+
+    format
   end
 end

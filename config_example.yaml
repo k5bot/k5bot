@@ -36,7 +36,47 @@
 #- :Menu
 - :Mecab
 - :Converter
-- :Karma
+- :Karma:
+    :karma:
+      :file: "karma"
+      :help: "shows how many karma points the specified user has. You can give a user a karma point by writing their nick followed by '++'"
+      :query:
+      - "Karma for #{receiver}: #{receiver_points_kanji}"
+      :query_fail:
+      - "#{receiver} has no karma."
+      :matchers:
+      - :regexp: '#{receiver}\s*\+[\+1]'
+        :receiver_delta: 1
+        :response:
+        - "#{receiver}++!"
+        - "#{receiver}, #{sender} likes you."
+        - "#{receiver}, point for you."
+    :hp:
+      :file: "karma_hp"
+      :help: "shows how many hentai points the specified user has. You can give a user hentai points by writing their nick followed by '変態' or 'ロリコン', or take them using '紳士'"
+      :query:
+      - "Hentai points for #{receiver}: #{receiver_points_kanji}"
+      :query_fail:
+      - "#{receiver} doesn't seem to be a pervert."
+      :matchers:
+      - :regexp: '#{receiver}\s*[がは]?(紳士|(変態|へんたい|ロリコン)(では|じゃ)?([な無]い|[あ有]りません))'
+        :receiver_delta: -3
+        :response:
+        - "#{receiver} became more of a gentleman!"
+        - "#{sender} has stolen #{receiver}'s porn collection!"
+        - "Let it be known, that #{receiver}'s hentai power has dropped to lvl #{receiver_points}."
+      - :regexp: '#{receiver}\s*の?(変態|へんたい)'
+        :receiver_delta: 1
+        :response:
+        - "#{receiver} has become even more perverted than ever!"
+        - "#{sender} can't resist #{receiver}'s ero-charm!"
+        - "Let it be known, that #{receiver} is pervert #{receiver_points}lvl."
+      - :regexp: '#{receiver}\s*の?ロリコン'
+        :receiver_delta: 5
+        :response:
+        - "#{receiver} has trespassed the society morals!"
+        - "#{sender} wishes to be #{receiver}'s little girlfriend!"
+        - "Let it be known, that #{receiver} prefers girls #{receiver_points} years younger than self."
 - :LP
 - :Statistics
 - :Tell
