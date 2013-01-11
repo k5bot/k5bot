@@ -4,7 +4,7 @@
 
 # IRCListener is the superclass to all listeners
 
-class IRCListener
+module IRCListener
 
   # Default listener behavior is to dispatch the message
   # to command-specific methods. This allows listeners to

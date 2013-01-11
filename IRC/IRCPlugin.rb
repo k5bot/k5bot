@@ -4,7 +4,11 @@
 
 # IRCPlugin is the superclass of all plugins
 
-class IRCPlugin < IRCListener
+require_relative 'IRCListener'
+
+class IRCPlugin
+  include IRCListener
+
   # Configuration options set for this plugin
   # This variable will always be a hash and never nil
   attr_reader :config

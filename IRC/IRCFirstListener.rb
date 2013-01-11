@@ -7,7 +7,8 @@
 
 require_relative 'IRCListener'
 
-class IRCFirstListener < IRCListener
+class IRCFirstListener
+  include IRCListener
 
   # This method is overridden, so that command-methods can
   # pass back their own return values.

@@ -12,7 +12,8 @@ require_relative 'IRCFirstListener'
 require_relative 'IRCPluginListener'
 require_relative 'Timer'
 
-class IRCBot < IRCMessageRouter
+class IRCBot
+  include IRCMessageRouter
   include IRCPluginListener # methods for making plugins to listen to this bot
 
   attr_reader :config, :last_sent, :last_received, :start_time, :user

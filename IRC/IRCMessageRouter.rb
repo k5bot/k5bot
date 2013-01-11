@@ -7,9 +7,10 @@
 require 'set'
 require_relative 'IRCListener'
 
-class IRCMessageRouter < IRCListener
+module IRCMessageRouter
+  include IRCListener
 
-  def initialize()
+  def initialize
     @listeners = []
   end
 
@@ -45,7 +46,7 @@ class IRCMessageRouter < IRCListener
   end
 end
 
-class IRCListener
+module IRCListener
   def priority
     0
   end
