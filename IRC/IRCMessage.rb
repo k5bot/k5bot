@@ -16,8 +16,6 @@
 class IRCMessage
   attr_reader :prefix, :command, :params, :timestamp, :bot
 
-  BotCommandPrefix = '.'
-
   def initialize(bot, raw)
     @prefix, @command, @params, @user, @ctcp = nil
     @timestamp = Time.now
@@ -69,7 +67,7 @@ class IRCMessage
   # The first word of the message if it starts with !
   def botcommand
     return unless @command == :privmsg
-    bc = message ? message[/^\s*(#{@bot.user.nick}\s*[:>,]?\s*)?#{Regexp.quote(self.class::BotCommandPrefix)}([\S]+)/i, 2] : nil
+    bc = message ? message[/^\s*(#{@bot.user.nick}\s*[:>,]?\s*)?#{Regexp.quote(command_prefix)}([\S]+)/i, 2] : nil
     bc.downcase.to_sym if bc
   end
 
@@ -89,7 +87,7 @@ class IRCMessage
 
   # The message with nick prefix and botcommand removed if it exists, otherwise the whole message
   def tail
-    tail = message ? message[/^\s*(#{@bot.user.nick}\s*[:>,]?\s*)?#{Regexp.quote(self.class::BotCommandPrefix)}([\S]+)\s*(.*)\s*/i, 3] || message : nil
+    tail = message ? message[/^\s*(#{@bot.user.nick}\s*[:>,]?\s*)?#{Regexp.quote(command_prefix)}([\S]+)\s*(.*)\s*/i, 3] || message : nil
     tail.empty? ? nil : tail if tail  # Return nil if tail is empty or nil, otherwise tail
   end
 
@@ -115,6 +113,10 @@ class IRCMessage
     return if s.empty?
     return unless @command == :privmsg
     @bot.send "NOTICE #{nick} :#{s}"
+  end
+
+  def command_prefix
+    '.'
   end
 
   def ctcp()

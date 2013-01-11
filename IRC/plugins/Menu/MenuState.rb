@@ -145,15 +145,15 @@ class MenuState
     end.join(' | ')
   end
 
-  def render_menu_footer(has_next, has_parent)
+  def render_menu_footer(has_next, has_parent, command_prefix)
     footer = ''
 
     if has_next
-      footer += " [#{IRCMessage::BotCommandPrefix}n for next]"
+      footer += " [#{command_prefix}n for next]"
     end
 
     if has_parent
-      footer += " [#{IRCMessage::BotCommandPrefix}u to go up]"
+      footer += " [#{command_prefix}u to go up]"
     end
 
     footer
@@ -163,7 +163,7 @@ class MenuState
   def on_menu_cycle(items, start, size, has_next, has_parent, msg)
     menu_text = render_menu_header(items, start)
     menu_text += render_menu_items(items, start, size)
-    menu_text += render_menu_footer(has_next, has_parent)
+    menu_text += render_menu_footer(has_next, has_parent, msg.command_prefix)
 
     msg.reply(menu_text)
   end

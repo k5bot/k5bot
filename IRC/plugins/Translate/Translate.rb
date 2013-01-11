@@ -88,7 +88,7 @@ class Translate < IRCPlugin
     cmd = "#{prefix}t".to_sym
 
     translation_map[:t] = [service, nil] # nil language pair indicates the need for lp guessing.
-    commands[:t] = "is a shortcut for #{IRCMessage::BotCommandPrefix}#{cmd}"
+    commands[:t] = "is a shortcut for '#{cmd}' command"
   end
 
   def self.fill_guess_commands(commands, translation_map)
