@@ -225,20 +225,6 @@ class IRCBot
     @channel_pool.findChannel(msg)
   end
 
-  def filter_message(listener, message)
-    return nil unless message.command == :privmsg # Only filter messages
-    filter_hash = @config[:filter]
-    return nil unless filter_hash # Filtering only if enabled in config
-    return nil unless listener.is_a?(IRCPlugin) # Filtering only works for plugins
-    allowed_channels = filter_hash[listener.name.to_sym]
-    return nil unless allowed_channels # Don't filter plugins not in list
-    # Private messages to our bot can be filtered by special :private symbol
-    channel_name = message.channelname || :private
-    result = allowed_channels[channel_name]
-    # policy for not mentioned channels can be defined by special :otherwise symbol
-    !(result != nil ? result : allowed_channels[:otherwise])
-  end
-
   private
   def login
     send "PASS #{@config[:serverpass]}" if @config[:serverpass]
