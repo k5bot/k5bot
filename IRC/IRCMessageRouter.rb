@@ -5,14 +5,12 @@
 # IRCMessageHandler routes messages to its listeners
 
 require 'set'
-require_relative 'IRCListener'
+require_relative 'IRCPlugin'
 
-module IRCMessageRouter
-  include IRCListener
+class IRCMessageRouter < IRCPlugin
 
-  alias :dispatch_message_to_self :receive_message
-  def receive_message(msg)
-    message_listeners.sort_by { |a| a.listener_priority }.each do |listener|
+  def dispatch_message(msg, additional_listeners=[])
+    message_listeners(additional_listeners).sort_by { |a| a.listener_priority }.each do |listener|
       begin
         next if filter_message(listener, msg)
         result = listener.receive_message(msg)
@@ -21,18 +19,15 @@ module IRCMessageRouter
         puts "Listener error: #{e}\n\t#{e.backtrace.join("\n\t")}"
       end
     end
-
-    nil # explicitly returning nil by contract of IRCListener
   end
-  alias :dispatch_message_to_children :receive_message
 
-  def message_listeners
-    nil
+  def message_listeners(additional_listeners)
+    additional_listeners + @plugin_manager.plugins.values
   end
 
   def filter_message(listener, message)
     return nil unless message.command == :privmsg # Only filter messages
-    filter_hash = @config[:filter]
+    filter_hash = @config
     return nil unless filter_hash # Filtering only if enabled in config
     return nil unless listener.is_a?(IRCPlugin) # Filtering only works for plugins
     allowed_channels = filter_hash[listener.name.to_sym]

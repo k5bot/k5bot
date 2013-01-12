@@ -7,12 +7,13 @@
 require 'socket'
 require_relative 'plugins/UserPool/IRCUser'
 require_relative 'IRCMessage'
+require_relative 'IRCListener'
 require_relative 'IRCMessageRouter'
 require_relative 'IRCFirstListener'
 require_relative 'Timer'
 
 class IRCBot
-  include IRCMessageRouter
+  include IRCListener # for reacting to our own messages during login time
 
   attr_reader :config, :last_sent, :last_received, :start_time, :user
 
@@ -48,10 +49,8 @@ class IRCBot
     @watchdog = nil
 
     $stdout.sync = true
-  end
 
-  def message_listeners
-    [@first_listener] + @plugin_manager.plugins.values
+    @router = IRCMessageRouter.new(@plugin_manager, config[:filter])
   end
 
   def configure
@@ -130,14 +129,16 @@ class IRCBot
     raw = encode raw
     @last_received = raw
     puts "#{timestamp} #{raw}"
-    self.receive_message IRCMessage.new(self, raw.chomp)
+
+    # We listen to messages ourselves during login.
+    # Maybe it's better to extract that into IRCLoginListener.
+    @router.dispatch_message(IRCMessage.new(self, raw.chomp), [self, @first_listener])
   end
 
-  def receive_message(msg)
-    # We override the method to listen to messages ourselves during login.
-    # Maybe it's better to extract it into IRCLoginListener.
-    dispatch_message_to_self(msg)
-    dispatch_message_to_children(msg)
+  LOGIN_LISTENER_PRIORITY = -32
+
+  def listener_priority
+    LOGIN_LISTENER_PRIORITY
   end
 
   def timestamp
