@@ -10,17 +10,17 @@
 :channels:
 - "#channel_one"
 - "#channel_two"
-:filter:
-  :LP:
-    :private: false
-    :otherwise: false
-    "##japanese": true
 :plugins:
 - :Help
 - :StorageYAML:
     :'data_directory': "~/.ircbot"
 - :UserPool
 - :ChannelPool
+- :Router:
+    :LP:
+      :private: false
+      :otherwise: false
+      "##japanese": true
 - :Clock
 - :Example:
     :foo: baz

@@ -8,7 +8,6 @@ require 'socket'
 require_relative 'plugins/UserPool/IRCUser'
 require_relative 'IRCMessage'
 require_relative 'IRCListener'
-require_relative 'IRCMessageRouter'
 require_relative 'IRCFirstListener'
 require_relative 'Timer'
 
@@ -46,11 +45,12 @@ class IRCBot
     @channel_pool = @plugin_manager.plugins[:ChannelPool] # Get channel pool
     raise ArgumentError, "ChannelPool can't be nil. Check that the plugin is loaded." unless @channel_pool
 
+    @router = @plugin_manager.plugins[:Router] # Get router
+    raise ArgumentError, "Router can't be nil. Check that the plugin is loaded." unless @router
+
     @watchdog = nil
 
     $stdout.sync = true
-
-    @router = IRCMessageRouter.new(@plugin_manager, config[:filter])
   end
 
   def configure

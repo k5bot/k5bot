@@ -2,12 +2,13 @@
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
 
-# IRCMessageHandler routes messages to its listeners
+# Router plugin routes IRCMessage-s between plugins
 
-require 'set'
-require_relative 'IRCPlugin'
+require_relative '../../IRCPlugin'
 
-class IRCMessageRouter < IRCPlugin
+class Router < IRCPlugin
+
+  Description = "Provides inter-plugin message delivery and filtering."
 
   def dispatch_message(msg, additional_listeners=[])
     message_listeners(additional_listeners).sort_by { |a| a.listener_priority }.each do |listener|
