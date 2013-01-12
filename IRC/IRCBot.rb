@@ -20,12 +20,10 @@ class IRCBot
 
   FIRST_LISTENER_PRIORITY = -16
   PLUGIN_BASE_PRIORITY = 16
-
-  def initialize(user_pool, channel_pool, config = nil)
+  def initialize(manager, config = nil)
     super()
 
-    raise ArgumentError, "UserPool can't be nil. Check that the plugin is loaded." unless user_pool
-    raise ArgumentError, "ChannelPool can't be nil. Check that the plugin is loaded." unless channel_pool
+    @plugin_manager = manager
 
     @config = config || {
       :server => 'localhost',
@@ -46,13 +44,17 @@ class IRCBot
     @first_listener = IRCFirstListener.new # Set first listener
     self.register(@first_listener, FIRST_LISTENER_PRIORITY)
 
-    @user_pool = user_pool
+    @user_pool = @plugin_manager.plugins[:UserPool] # Get user pool
+    raise ArgumentError, "UserPool can't be nil. Check that the plugin is loaded." unless @user_pool
 
-    @channel_pool = channel_pool
+    @channel_pool = @plugin_manager.plugins[:ChannelPool] # Get channel pool
+    raise ArgumentError, "ChannelPool can't be nil. Check that the plugin is loaded." unless @channel_pool
 
     @watchdog = nil
 
     $stdout.sync = true
+
+    @plugin_manager.register self
   end
 
   def configure

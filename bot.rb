@@ -69,13 +69,7 @@ plugin_manager = IRCHashPluginManager.new(config_map[:plugins]) # Add plugin man
 
 plugin_manager.load_all_plugins  # Load plugins
 
-user_pool = plugin_manager.plugins[:UserPool] # Get user pool
-
-channel_pool = plugin_manager.plugins[:ChannelPool] # Get channel pool
-
-bot = IRCBot.new(user_pool, channel_pool, config_map)
-
-plugin_manager.register bot
+bot = IRCBot.new(plugin_manager, config_map)
 
 loop do
   bot.start
