@@ -77,7 +77,18 @@
         - "#{receiver} has trespassed the society morals!"
         - "#{sender} wishes to be #{receiver}'s little girlfriend!"
         - "Let it be known, that #{receiver} prefers girls #{receiver_points} years younger than self."
-- :LP
+    :lp:
+      :file: "lp"
+      :help: "shows how many language points the specified user has. +1 if a message contains Japanese, otherwise -1"
+      :query:
+      - "Language points for #{receiver}: #{receiver_points_kanji}"
+      :query_fail:
+      - "#{receiver} has no language points."
+      :matchers:
+      - :regexp: '[\u3040-\u30FF\u4E00-\u9FC2\uFF61-\uFF9D\u31F0-\u31FF\u3000-\u303F]'
+        :sender_delta: 1
+      - :regexp: '.'
+        :sender_delta: -1
 - :Statistics
 - :Tell
 - :Seen
