@@ -45,7 +45,7 @@ end
 class KANJIDIC < IRCPlugin
   Description = "A KANJIDIC plugin."
   Commands = {
-    :k => "looks up a kanji or SKIP code in KANJIDIC",
+    :k => "looks up a given kanji, or shows list of kanji with given SKIP code or strokes number, using KANJIDIC",
     :kl => "gives a link to the kanji entry of the specified kanji at jisho.org"
   }
   Dependencies = [ :Language ]
@@ -54,15 +54,20 @@ class KANJIDIC < IRCPlugin
 
   def afterLoad
     @l = @plugin_manager.plugins[:Language]
+
     @kanji = {}
     @skip = {}
+    @stroke = {}
+
     loadKanjidic
   end
 
   def beforeUnload
-    @l = nil
-    @kanji = nil
+    @stroke = nil
     @skip = nil
+    @kanji = nil
+
+    @l = nil
 
     nil
   end
@@ -71,9 +76,10 @@ class KANJIDIC < IRCPlugin
     return unless msg.tail
     case msg.botcommand
     when :k
-      if radicalgroup = @skip[msg.tail]
-        kanjilist = radicalgroup.keys.sort.map{|key| radicalgroup[key].map{|kanji| kanji.kanji}*''}*' '
-        msg.reply(kanjilist || notFoundMsg(msg.tail))
+      radical_group = (@skip[msg.tail] || @stroke[msg.tail])
+      if radical_group
+        kanji_list = kanji_grouped_by_radicals(radical_group)
+        msg.reply(kanji_list || notFoundMsg(msg.tail))
       else
         resultCount = 0
         msg.tail.split('').each do |c|
@@ -96,8 +102,12 @@ class KANJIDIC < IRCPlugin
     end
   end
 
+  def kanji_grouped_by_radicals(radicalgroup)
+    radicalgroup.keys.sort.map { |key| radicalgroup[key].map { |kanji| kanji.kanji }*'' }*' '
+  end
+
   def notFoundMsg(requested)
-    "No entry for '#{requested}'."
+    "No entry for '#{requested}' in KANJIDIC."
   end
 
   def loadKanjidic
@@ -109,6 +119,9 @@ class KANJIDIC < IRCPlugin
         @skip[entry.skip] ||= {}
         @skip[entry.skip][entry.radicalnumber] ||= []
         @skip[entry.skip][entry.radicalnumber] << entry
+        @stroke[entry.strokecount] ||= {}
+        @stroke[entry.strokecount][entry.radicalnumber] ||= []
+        @stroke[entry.strokecount][entry.radicalnumber] << entry
       end
     end
   end
