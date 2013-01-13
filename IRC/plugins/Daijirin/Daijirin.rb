@@ -55,7 +55,7 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
     when :du
       word = msg.tail
       return unless word
-      msg.reply("http://dic.yahoo.co.jp/dsearch?enc=UTF-8&p=#{word}&dtype=0&dname=0ss&stype=0")
+      msg.reply("http://dic.yahoo.co.jp/dsearch?enc=UTF-8&p=#{word}&dtype=0&dname=0ss&stype=1")
     when :djr
       word = msg.tail
       return unless word
