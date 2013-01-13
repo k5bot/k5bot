@@ -11,6 +11,7 @@
     :channels:
     - "#channel_one"
     - "#channel_two"
+    :watchdog: 240
 - :Help
 - :StorageYAML:
     :'data_directory': "~/.ircbot"
