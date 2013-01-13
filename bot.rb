@@ -6,10 +6,11 @@
 #noinspection RubyGlobalVariableNamingConvention
 $VERBOSE = true
 
+$stdout.sync = true
+
 require 'yaml'
 
 require_relative 'IRC/IRCPluginManager'
-require_relative 'IRC/IRCBot'
 
 class IRCHashPluginManager < IRCPluginManager
   def initialize(config)
@@ -65,11 +66,16 @@ end
 
 config_map = YAML.load_file(config)
 
-plugin_manager = IRCHashPluginManager.new(config_map[:plugins]) # Add plugin manager
+plugin_manager = IRCHashPluginManager.new(config_map) # Add plugin manager
 
 plugin_manager.load_all_plugins  # Load plugins
 
-bot = IRCBot.new(plugin_manager, config_map)
+bot = plugin_manager.plugins[:IRCBot]
+
+unless bot
+  puts "IRCBot plugin is not present in configuration file, exiting."
+  exit 2
+end
 
 loop do
   bot.start

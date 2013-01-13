@@ -5,7 +5,7 @@
 # IRCLoginListener is the listener that handles login-time interaction
 # with an IRC server, which includes auth, setting nick, etc.
 
-require_relative 'IRCListener'
+require_relative '../../IRCListener'
 
 class IRCLoginListener
   include IRCListener

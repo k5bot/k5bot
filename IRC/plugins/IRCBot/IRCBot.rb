@@ -5,21 +5,29 @@
 # IRCBot
 
 require 'socket'
-require_relative 'plugins/UserPool/IRCUser'
+
+require_relative '../../Timer'
+require_relative '../../IRCPlugin'
+require_relative '../UserPool/IRCUser'
+
 require_relative 'IRCMessage'
 require_relative 'IRCLoginListener'
 require_relative 'IRCFirstListener'
-require_relative 'Timer'
 
-class IRCBot
-  attr_reader :config, :last_sent, :last_received, :start_time, :user
+class IRCBot < IRCPlugin
 
-  def initialize(manager, config = nil)
-    super()
+  Description = "Provides IRC connectivity."
 
-    @plugin_manager = manager
+  Dependencies = [ :UserPool, :ChannelPool, :Router ]
 
-    @config = config || {
+  attr_reader :last_sent, :last_received, :start_time, :user
+
+  def afterLoad
+    load_helper_class(:IRCMessage)
+    load_helper_class(:IRCLoginListener)
+    load_helper_class(:IRCFirstListener)
+
+    @config = {
       :server => 'localhost',
       :port => 6667,
       :serverpass => nil,
@@ -29,7 +37,7 @@ class IRCBot
       :userpass => nil,
       :channels => nil,
       :plugins  => nil,
-    }
+    }.merge!(@config)
 
     @config.freeze  # Don't want anything modifying this
 
@@ -40,21 +48,28 @@ class IRCBot
     @first_listener = IRCFirstListener.new # Set first listener
 
     @user_pool = @plugin_manager.plugins[:UserPool] # Get user pool
-    raise ArgumentError, "UserPool can't be nil. Check that the plugin is loaded." unless @user_pool
-
     @channel_pool = @plugin_manager.plugins[:ChannelPool] # Get channel pool
-    raise ArgumentError, "ChannelPool can't be nil. Check that the plugin is loaded." unless @channel_pool
-
     @router = @plugin_manager.plugins[:Router] # Get router
-    raise ArgumentError, "Router can't be nil. Check that the plugin is loaded." unless @router
 
     @watchdog = nil
-
-    $stdout.sync = true
   end
 
-  def configure
-    yield @config
+  def beforeUnload
+    return "Can't unload before connection is killed" if @sock
+
+    @router = nil
+    @channel_pool = nil
+    @user_pool = nil
+
+    @first_listener = nil
+    @login_listener = nil
+    @user = nil
+
+    unload_helper_class(:IRCFirstListener)
+    unload_helper_class(:IRCLoginListener)
+    unload_helper_class(:IRCMessage)
+
+    nil
   end
 
   #truncates truncates a string, so that it contains no more than byte_limit bytes
