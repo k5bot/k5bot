@@ -9,17 +9,13 @@ require_relative 'plugins/UserPool/IRCUser'
 require_relative 'IRCMessage'
 require_relative 'IRCMessageRouter'
 require_relative 'IRCFirstListener'
-require_relative 'IRCPluginListener'
 require_relative 'Timer'
 
 class IRCBot
   include IRCMessageRouter
-  include IRCPluginListener # methods for making plugins to listen to this bot
 
   attr_reader :config, :last_sent, :last_received, :start_time, :user
 
-  FIRST_LISTENER_PRIORITY = -16
-  PLUGIN_BASE_PRIORITY = 16
   def initialize(manager, config = nil)
     super()
 
@@ -42,7 +38,6 @@ class IRCBot
     @user = IRCUser.new(@config[:username], nil, @config[:realname], @config[:nickname])
 
     @first_listener = IRCFirstListener.new # Set first listener
-    self.register(@first_listener, FIRST_LISTENER_PRIORITY)
 
     @user_pool = @plugin_manager.plugins[:UserPool] # Get user pool
     raise ArgumentError, "UserPool can't be nil. Check that the plugin is loaded." unless @user_pool
@@ -53,8 +48,10 @@ class IRCBot
     @watchdog = nil
 
     $stdout.sync = true
+  end
 
-    @plugin_manager.register self
+  def message_listeners
+    [@first_listener] + @plugin_manager.plugins.values
   end
 
   def configure
@@ -227,46 +224,6 @@ class IRCBot
   def find_channel_by_msg(msg)
     @channel_pool.findChannel(msg)
   end
-
-  # route to all already present plugins
-  def attached_to_manager(plugin_manager)
-    plugin_manager.plugins.each do |_, p|
-      self.register(p, PLUGIN_BASE_PRIORITY)
-    end
-  end
-
-  # cease routing to all plugins
-  def detached_from_manager(plugin_manager)
-    plugin_manager.plugins.each do |_, p|
-      self.unregister(p)
-    end
-  end
-
-  # route to newly loaded plugins
-  def after_plugin_load(plugin_manager, to_load)
-    to_load.each do |n, _|
-      p = plugin_manager.plugins[n]
-      if p
-        self.register(p, PLUGIN_BASE_PRIORITY)
-      end
-    end
-    nil # do not object to the action
-  end
-  # add back plugins that have failed to be unloaded
-  alias :after_plugin_unload :after_plugin_load
-
-  # cease routing to unloaded plugins
-  def before_plugin_unload(plugin_manager, to_unload)
-    to_unload.each do |n, _|
-      p = plugin_manager.plugins[n]
-      if p
-        self.unregister(p)
-      end
-    end
-    nil # do not object to the action
-  end
-  # temporarily remove plugins to avoid registering them twice
-  alias :before_plugin_load :before_plugin_unload
 
   def filter_message(listener, message)
     return nil unless message.command == :privmsg # Only filter messages

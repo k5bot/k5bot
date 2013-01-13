@@ -42,4 +42,10 @@ class IRCFirstListener
 
     result # stop further message propagation, if it was CTCP query that we handled
   end
+
+  FIRST_LISTENER_PRIORITY = -16
+
+  def listener_priority
+    FIRST_LISTENER_PRIORITY
+  end
 end

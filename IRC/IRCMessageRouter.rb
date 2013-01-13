@@ -10,14 +10,9 @@ require_relative 'IRCListener'
 module IRCMessageRouter
   include IRCListener
 
-  def initialize
-    @listeners = []
-  end
-
   alias :dispatch_message_to_self :receive_message
   def receive_message(msg)
-    @listeners.each do |listener_info|
-      listener = listener_info[:listener]
+    message_listeners.sort_by { |a| a.listener_priority }.each do |listener|
       begin
         next if filter_message(listener, msg)
         result = listener.receive_message(msg)
@@ -31,14 +26,8 @@ module IRCMessageRouter
   end
   alias :dispatch_message_to_children :receive_message
 
-  def register(listener, priority_base=0)
-    return unless listener
-    @listeners << {:priority => listener.priority + priority_base, :listener => listener}
-    @listeners.sort! { |a, b| a[:priority] <=> b[:priority] }
-  end
-
-  def unregister(listener)
-    @listeners.delete_if{|l| l[:listener] == listener}
+  def message_listeners
+    nil
   end
 
   def filter_message(listener, message)
@@ -47,7 +36,7 @@ module IRCMessageRouter
 end
 
 module IRCListener
-  def priority
+  def listener_priority
     0
   end
 end
