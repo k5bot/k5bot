@@ -7,13 +7,11 @@
 require 'socket'
 require_relative 'plugins/UserPool/IRCUser'
 require_relative 'IRCMessage'
-require_relative 'IRCListener'
+require_relative 'IRCLoginListener'
 require_relative 'IRCFirstListener'
 require_relative 'Timer'
 
 class IRCBot
-  include IRCListener # for reacting to our own messages during login time
-
   attr_reader :config, :last_sent, :last_received, :start_time, :user
 
   def initialize(manager, config = nil)
@@ -36,6 +34,8 @@ class IRCBot
     @config.freeze  # Don't want anything modifying this
 
     @user = IRCUser.new(@config[:username], nil, @config[:realname], @config[:nickname])
+
+    @login_listener = IRCLoginListener.new(self) # Set login listener
 
     @first_listener = IRCFirstListener.new # Set first listener
 
@@ -130,15 +130,7 @@ class IRCBot
     @last_received = raw
     puts "#{timestamp} #{raw}"
 
-    # We listen to messages ourselves during login.
-    # Maybe it's better to extract that into IRCLoginListener.
-    @router.dispatch_message(IRCMessage.new(self, raw.chomp), [self, @first_listener])
-  end
-
-  LOGIN_LISTENER_PRIORITY = -32
-
-  def listener_priority
-    LOGIN_LISTENER_PRIORITY
+    @router.dispatch_message(IRCMessage.new(self, raw.chomp), [@login_listener, @first_listener])
   end
 
   def timestamp
@@ -156,7 +148,7 @@ class IRCBot
       end
 
       @sock = TCPSocket.open server, @config[:port]
-      login
+      @login_listener.login
       until @sock.eof? do # Throws Errno::ECONNRESET
         receive @sock.gets
         # improve latency a bit, by flushing output stream,
@@ -204,12 +196,6 @@ class IRCBot
     @watchdog = nil
   end
 
-  def on_notice(msg)
-    if msg.message && (msg.message =~ /^You are now identified for .*#{@config[:username]}.*\.$/)
-      post_login
-    end
-  end
-
   def join_channels(channels)
     send "JOIN #{channels*','}" if channels
   end
@@ -226,18 +212,6 @@ class IRCBot
     @channel_pool.findChannel(msg)
   end
 
-  private
-  def login
-    send "PASS #{@config[:serverpass]}" if @config[:serverpass]
-    send "NICK #{@config[:nickname]}" if @config[:nickname]
-    send "USER #{@config[:username]} 0 * :#{@config[:realname]}" if @config[:username] && @config[:realname]
-    if @config[:userpass]
-      send "PRIVMSG NickServ :IDENTIFY #{@config[:username]} #{@config[:userpass]}"
-    else
-      post_login
-    end
-  end
-
   def post_login
     #refresh our user info once,
     #so that truncate_for_irc_client()
@@ -245,6 +219,8 @@ class IRCBot
     @user_pool.request_whois(self, @user.nick)
     join_channels(@config[:channels])
   end
+
+  private
 
   # Checks to see if a string looks like valid UTF-8.
   # If not, it is re-encoded to UTF-8 from assumed CP1252.
