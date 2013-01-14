@@ -7,7 +7,7 @@
 require 'set'
 
 class EDICTEntry
-  attr_reader :raw
+  attr_reader :raw, :simple_entry
   attr_accessor :sortKey
 
   # TODO: the p here conflicts with P that denotes common words. should fix that somehow.
@@ -17,6 +17,7 @@ class EDICTEntry
     @raw = raw
     @japanese = nil
     @reading = nil
+    @simple_entry = nil
     @english = nil
     @info = nil
     @keywords = nil
@@ -32,7 +33,12 @@ class EDICTEntry
   def reading
     return @reading if @reading
     reading = @raw[/^[\s　]*[^\[\/]+[\s　]*\[(.*)\]/, 1]
-    @reading = (!reading || reading.empty?) ? japanese : reading
+    @reading = if reading && !reading.empty?
+                 reading
+               else
+                 @simple_entry = true
+                 japanese
+               end
   end
 
   # Returns an array of the English translations and meta information.
