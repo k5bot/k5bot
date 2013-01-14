@@ -16,7 +16,7 @@ class Router < IRCPlugin
         next if filter_message(listener, msg)
         result = listener.receive_message(msg)
         break if result # treat all non-nil results as request for stopping message propagation
-      rescue => e
+      rescue Exception => e
         puts "Listener error: #{e}\n\t#{e.backtrace.join("\n\t")}"
       end
     end
