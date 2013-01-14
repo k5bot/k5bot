@@ -4,8 +4,7 @@
 
 # Git plugin
 
-require 'rubygems'
-require 'posix-spawn'
+require 'MeCab' # mecab ruby binding
 
 require_relative '../../IRCPlugin'
 
@@ -18,9 +17,13 @@ class Mecab < IRCPlugin
 
   def afterLoad
     @menu = @plugin_manager.plugins[:Menu]
+
+    @tagger = MeCab::Tagger.new("-Ochasen2")
   end
 
   def beforeUnload
+    @tagger = nil
+
     @menu = nil
 
     nil
@@ -62,9 +65,9 @@ class Mecab < IRCPlugin
 
   def process_with_mecab(text)
     begin
-      child = POSIX::Spawn::Child.new('mecab -Ochasen2 -', :input =>"#{text}\n")
+      output = @tagger.parse(text)
 
-      child.out.force_encoding('UTF-8').each_line do |line|
+      output.force_encoding('UTF-8').each_line do |line|
         break if line.start_with?('EOS')
 
         # "なっ\tナッ\tなる\t動詞-自立\t五段・ラ行\t連用タ接続"
@@ -79,11 +82,7 @@ class Mecab < IRCPlugin
         yield [part, reading, dictionary, types]
       end
 
-      child.err.force_encoding('UTF-8').each_line do |line|
-        puts "MeCab Error: #{line}"
-      end
-
-      child.success?
+      true
     rescue => e
       puts "MeCab Error: #{e}"
 
