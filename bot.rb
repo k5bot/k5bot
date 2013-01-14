@@ -13,13 +13,30 @@ require 'yaml'
 require_relative 'IRC/IRCPluginManager'
 
 class IRCHashPluginManager < IRCPluginManager
-  def initialize(config)
+  def initialize(config_name)
     super()
-    @config = normalize_config(config)
+    @config_name = config_name
+    @config = nil
+  end
+
+  def reload_config()
+    config_map = YAML.load_file(@config_name)
+    @config = normalize_config(config_map)
   end
 
   def load_all_plugins()
+    reload_config()
     do_load_plugins(@config)
+  end
+
+  def load_plugin(name)
+    begin
+      reload_config()
+    rescue Exception => e
+      puts "Config loading error: #{e}\n\t#{e.backtrace.join("\n\t")}"
+      return false
+    end
+    super
   end
 
   # The config read from yaml is an array, containing either
@@ -64,9 +81,7 @@ if config == nil
   exit 1
 end
 
-config_map = YAML.load_file(config)
-
-plugin_manager = IRCHashPluginManager.new(config_map) # Add plugin manager
+plugin_manager = IRCHashPluginManager.new(config) # Add plugin manager
 
 plugin_manager.load_all_plugins  # Load plugins
 
