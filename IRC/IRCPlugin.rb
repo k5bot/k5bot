@@ -45,7 +45,7 @@ class IRCPlugin
   def name; self.class.name; end
 
   # Returns the root dir of this plugin
-  def plugin_root; "IRC/plugins/#{name}"; end
+  def plugin_root; "#{File.dirname(__FILE__)}/plugins/#{name}"; end
 
   def description;  self.class::Description;  end
   def commands;     self.class::Commands;     end

@@ -142,7 +142,7 @@ class IRCPluginManager
     return true if plugins[name.to_sym] # success, if already loaded
     return false if name !~ /\A[a-zA-Z0-9]+\Z/m
     begin
-      requested = "IRC/plugins/#{name.to_s}/#{name.to_s}.rb"
+      requested = plugin_file_name(name)
       filename = Dir.glob(requested, File::FNM_CASEFOLD).first
       unless requested.eql? filename
         puts "Cannot find plugin '#{name.to_s}'."
@@ -170,6 +170,10 @@ class IRCPluginManager
       return false
     end
     true
+  end
+
+  def plugin_file_name(name)
+    "#{File.dirname(__FILE__)}/plugins/#{name}/#{name}.rb"
   end
 
   def unload_plugin_class(name, fail_silently = false)
