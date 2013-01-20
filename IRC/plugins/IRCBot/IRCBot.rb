@@ -171,10 +171,12 @@ class IRCBot < IRCPlugin
         # of handling received data
         @sock.flush
       end
-    rescue SocketError, Errno::ECONNRESET => e
+    rescue SocketError, Errno::ECONNRESET, Errno::EHOSTUNREACH => e
       puts "Cannot connect: #{e}"
     rescue IOError => e
       puts "IOError: #{e}"
+    rescue Exception => e
+      puts "Unexpected exception: #{e}"
     ensure
       stop_watchdog()
       @sock = nil
