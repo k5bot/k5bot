@@ -33,7 +33,7 @@ class Statistics < IRCPlugin
   end
 
   def versionString
-    `GIT_DIR=#{File.dirname($0)}/.git $(which git) log -1 --date=iso --format='%h %ad'`.chomp
+    `GIT_DIR=#{File.dirname($0)}/.git $(which git) log -1 --date=relative --format='%h, authored %ad'`.chomp
   end
 
   def pluralize(str, num)
