@@ -44,17 +44,17 @@ class Translate < IRCPlugin
       :Excite => {:prefix=>'x', :languages=>EXCITE_SUPPORTED, :translator=>:excite_translate},
   }
   DEFAULT_SERVICE = :Honyaku
-  DEFAULT_SERVICE_LANGUAGES = %w(en ja ko tw zh).map{|x| to_lang_key(x)}
+  DEFAULT_SERVICE_LANGUAGES = {:en=>'e', :ja=>'j', :ko=>'k', :zh=>'c'}
 
   # Internal unified language id =>
   # [Shortcut form for commands, Language description for help]
   LANGUAGE_INFO = {
       :auto => ['_', 'Auto-detected language'],
-      :en => ['e', 'English'],
-      :ja => ['j', 'Japanese'],
-      :zh => ['c', 'Simplified Chinese'],
+      :en => ['en', 'English'],
+      :ja => ['ja', 'Japanese'],
+      :zh => ['zh', 'Simplified Chinese'],
       :tw => ['tw', 'Traditional Chinese'],
-      :ko => ['k', 'Korean'],
+      :ko => ['ko', 'Korean'],
       :fr => ['fr', 'French'],
       :pt => ['pt', 'Portuguese'],
       :de => ['de', 'German'],
@@ -126,7 +126,7 @@ class Translate < IRCPlugin
           # Add limited subset of commands in short form + separate help for them
           if (service == DEFAULT_SERVICE) && (DEFAULT_SERVICE_LANGUAGES.include? l_from) && (DEFAULT_SERVICE_LANGUAGES.include? l_to)
             dsc = "translates specified text from #{description_from} to #{description_to} using #{service}"
-            cmd_short = "#{abbreviation_from}#{abbreviation_to}".to_sym
+            cmd_short = "#{DEFAULT_SERVICE_LANGUAGES[l_from]}#{DEFAULT_SERVICE_LANGUAGES[l_to]}".to_sym
             translation_map[cmd_short] = [service, lp]
             short_commands[cmd_short] = dsc
           end
