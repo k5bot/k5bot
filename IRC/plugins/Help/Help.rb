@@ -24,7 +24,7 @@ class Help < IRCPlugin
       when nil
         msg.reply "Available commands: #{all_commands(msg.command_prefix)}"
       else
-        describeWord(msg, tail)
+        describe_word(msg, tail)
       end
     when :plugins
       p = @pm.plugins.keys.sort*', '
@@ -37,7 +37,7 @@ class Help < IRCPlugin
     @pm.plugins.values.reject { |p| !p.commands }.collect {|p| '[' + p.commands.keys.collect {|c| "#{prefix}#{c.to_s}" } * ' ' + ']' } * ' '
   end
 
-  def describeWord(msg, word)
+  def describe_word(msg, word)
     command_prefix = msg.command_prefix
 
     plugin = @pm.plugins[word.to_sym]
@@ -49,14 +49,20 @@ class Help < IRCPlugin
 
     c = word[/^\s*#{Regexp.quote(command_prefix)}?(\S*)\s*/, 1].downcase.to_sym
 
-    found = @pm.plugins.values.reject { |p| !(p.commands && p.commands[c]) }
+    found = @pm.plugins.each_pair.map do |name, plugin|
+      [name, plugin.commands && plugin.commands[c]]
+    end.select do |_, desc|
+      !desc.nil?
+    end
+
+    #found = @pm.plugins.values.reject { |p| !(p.commands && p.commands[c]) }
     if found.empty?
       msg.reply("There is no description for #{command_prefix}#{c.to_s}.")
       return
     end
 
-    for plugin in found
-      msg.reply("#{plugin.name} plugin: #{command_prefix}#{c.to_s} #{plugin.commands[c]}.")
+    found.each do |name, desc|
+      msg.reply("#{name} plugin: #{command_prefix}#{c.to_s} #{desc}.")
     end
   end
 end
