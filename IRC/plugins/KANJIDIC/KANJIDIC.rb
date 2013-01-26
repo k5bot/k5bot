@@ -25,19 +25,19 @@ class KANJIDICEntry
     @kanji ||= @raw[/^\s*(\S+)/, 1]
   end
 
-  def skip
-    @skip ||= @raw[/\s+P(\S+)\s*/, 1]
+  def code_skip
+    @code_skip ||= @raw[/\s+P(\S+)\s*/, 1]
   end
 
-  def radicalnumber
-    @radicalnumber ||= @raw[/\s+B(\S+)\s*/, 1]
+  def radical_number
+    @radical_number ||= @raw[/\s+B(\S+)\s*/, 1]
   end
 
-  def strokecount
-    @strokecount ||= @raw[/\s+S(\S+)\s*/, 1]
+  def stroke_count
+    @stroke_count ||= @raw[/\s+S(\S+)\s*/, 1]
   end
 
-  def to_s
+  def format
     @raw.dup
   end
 end
@@ -50,21 +50,21 @@ class KANJIDIC < IRCPlugin
   }
   Dependencies = [ :Language ]
 
-  attr_reader :kanji, :skip
+  attr_reader :kanji, :code_skip, :stroke_count
 
   def afterLoad
     @l = @plugin_manager.plugins[:Language]
 
     @kanji = {}
-    @skip = {}
-    @stroke = {}
+    @code_skip = {}
+    @stroke_count = {}
 
-    loadKanjidic
+    load_kanjidic
   end
 
   def beforeUnload
-    @stroke = nil
-    @skip = nil
+    @stroke_count = nil
+    @code_skip = nil
     @kanji = nil
 
     @l = nil
@@ -76,52 +76,57 @@ class KANJIDIC < IRCPlugin
     return unless msg.tail
     case msg.botcommand
     when :k
-      radical_group = (@skip[msg.tail] || @stroke[msg.tail])
+      radical_group = (@code_skip[msg.tail] || @stroke_count[msg.tail])
       if radical_group
         kanji_list = kanji_grouped_by_radicals(radical_group)
-        msg.reply(kanji_list || notFoundMsg(msg.tail))
+        msg.reply(kanji_list)
       else
-        resultCount = 0
-        msg.tail.split('').each do |c|
-          break if resultCount > 2
-          if entry = @kanji[c]
-            msg.reply(entry.to_s || notFoundMsg(c))
-            resultCount += 1
-          end
+        count = for_each_kanji(msg.tail) do |entry|
+          msg.reply(entry.format)
         end
+        msg.reply(not_found_msg(msg.tail)) if count <= 0
       end
     when :kl
-      resultCount = 0
-      msg.tail.split('').each do |c|
-        break if resultCount > 2
-        if entry = @kanji[c]
-          msg.reply(("Info on #{entry.kanji}: " + URI.escape("http://jisho.org/kanji/details/#{entry.kanji}")) || notFoundMsg(c))
-          resultCount += 1
-        end
+      count = for_each_kanji(msg.tail) do |entry|
+        msg.reply("Info on #{entry.kanji}: " + URI.escape("http://jisho.org/kanji/details/#{entry.kanji}"))
       end
+      msg.reply(not_found_msg(msg.tail)) if count <= 0
     end
   end
 
-  def kanji_grouped_by_radicals(radicalgroup)
-    radicalgroup.keys.sort.map { |key| radicalgroup[key].map { |kanji| kanji.kanji }*'' }*' '
+  def for_each_kanji(txt)
+    result_count = 0
+    txt.each_char do |c|
+      break if result_count > 2
+      entry = @kanji[c]
+      if entry
+        yield entry
+        result_count += 1
+      end
+    end
+    result_count
   end
 
-  def notFoundMsg(requested)
-    "No entry for '#{requested}' in KANJIDIC."
+  def kanji_grouped_by_radicals(radical_group)
+    radical_group.keys.sort.map { |key| radical_group[key].map { |kanji| kanji.kanji }*'' }*' '
   end
 
-  def loadKanjidic
-    kanjidicfile = "#{(File.dirname __FILE__)}/kanjidic"
-    File.open(kanjidicfile, 'r') do |io|
+  def not_found_msg(requested)
+    "No hits for '#{requested}' in KANJIDIC."
+  end
+
+  def load_kanjidic
+    kanjidic_file = "#{(File.dirname __FILE__)}/kanjidic"
+    File.open(kanjidic_file, 'r') do |io|
       io.each_line do |l|
         entry = KANJIDICEntry.new(Iconv.conv('UTF-8', 'EUC-JP', l))
         @kanji[entry.kanji] = entry
-        @skip[entry.skip] ||= {}
-        @skip[entry.skip][entry.radicalnumber] ||= []
-        @skip[entry.skip][entry.radicalnumber] << entry
-        @stroke[entry.strokecount] ||= {}
-        @stroke[entry.strokecount][entry.radicalnumber] ||= []
-        @stroke[entry.strokecount][entry.radicalnumber] << entry
+        @code_skip[entry.code_skip] ||= {}
+        @code_skip[entry.code_skip][entry.radical_number] ||= []
+        @code_skip[entry.code_skip][entry.radical_number] << entry
+        @stroke_count[entry.stroke_count] ||= {}
+        @stroke_count[entry.stroke_count][entry.radical_number] ||= []
+        @stroke_count[entry.stroke_count][entry.radical_number] << entry
       end
     end
   end
