@@ -18,12 +18,12 @@ require_relative 'KANJIDIC2Entry'
 class KANJIDIC2 < IRCPlugin
   Description = "A KANJIDIC2 plugin."
   Commands = {
-    :k => "looks up a given kanji, or shows list of kanji with given SKIP code or strokes number, using KANJIDIC2",
+    :k => "looks up a given kanji, or shows list of kanji with given strokes number or SKIP code (see .faq skip), using KANJIDIC2",
     :kl => "gives a link to the kanji entry of the specified kanji at jisho.org"
   }
   Dependencies = [ :Language ]
 
-  attr_reader :kanji, :code_skip, :stroke_count
+  attr_reader :kanji, :code_skip, :stroke_count, :misc
 
   def afterLoad
     load_helper_class(:KANJIDIC2Entry)
@@ -35,9 +35,11 @@ class KANJIDIC2 < IRCPlugin
     @kanji = dict[:kanji]
     @code_skip = dict[:code_skip]
     @stroke_count = dict[:stroke_count]
+    @misc = dict[:misc]
   end
 
   def beforeUnload
+    @misc = nil
     @stroke_count = nil
     @code_skip = nil
     @kanji = nil
@@ -53,10 +55,16 @@ class KANJIDIC2 < IRCPlugin
     return unless msg.tail
     case msg.botcommand
     when :k
-      radical_group = (@code_skip[msg.tail] || @stroke_count[msg.tail])
-      if radical_group
-        kanji_list = kanji_grouped_by_radicals(radical_group)
-        msg.reply(kanji_list)
+      search_result = @code_skip[msg.tail]
+      search_result ||= @stroke_count[msg.tail]
+      search_result ||= keyword_lookup(KANJIDIC2Entry.split_into_keywords(msg.tail), @misc)
+      if search_result
+        if search_result.size == 1
+          msg.reply(format_entry(search_result.first))
+        else
+          kanji_list = kanji_grouped_by_radicals(search_result)
+          msg.reply(kanji_list)
+        end
       else
         count = for_each_kanji(msg.tail) do |entry|
           msg.reply(format_entry(entry))
@@ -86,8 +94,19 @@ class KANJIDIC2 < IRCPlugin
     result_count
   end
 
-  def kanji_grouped_by_radicals(radical_group)
-    radical_group.keys.sort.map { |key| radical_group[key].map { |kanji| kanji.kanji }*'' }*' '
+  def kanji_grouped_by_radicals(entries)
+    radical_group = entries.group_by do |entry|
+      entry.radical_number
+    end
+    radical_group.keys.sort.map do |key|
+      rads = radical_group[key]
+      rads.sort_by! do |x|
+        [x.freq || 100000, x.stroke_count]
+      end
+      rads.map do |entry|
+        entry.kanji
+      end.join()
+    end.join(' ')
   end
 
   def not_found_msg(requested)
@@ -154,5 +173,24 @@ class KANJIDIC2 < IRCPlugin
     else
       out << r_list.join(' ')
     end
+  end
+
+  # Looks up keywords in the keyword hash.
+  # Specified argument is a string of one or more keywords.
+  # Returns the intersection of the results for each keyword.
+  def keyword_lookup(words, hash)
+    lookup_result = nil
+
+    words.each do |k|
+      return nil unless (entry_array = hash[k])
+      if lookup_result
+        lookup_result &= entry_array
+      else
+        lookup_result = Array.new(entry_array)
+      end
+    end
+    return nil unless lookup_result && !lookup_result.empty?
+
+    lookup_result
   end
 end

@@ -22,11 +22,13 @@ class KANJIDICConverter
     @kanji = {}
     @code_skip = {}
     @stroke_count = {}
+    @misc = {}
 
     @hash = {}
     @hash[:kanji] = @kanji
     @hash[:code_skip] = @code_skip
     @hash[:stroke_count] = @stroke_count
+    @hash[:misc] = @misc
   end
 
   def read
@@ -41,9 +43,13 @@ class KANJIDICConverter
 
         @kanji[entry.kanji] = entry
         entry.code_skip.each do |skip|
-          put_to_radical_group(@code_skip, skip, entry)
+          put_to_hash(@code_skip, skip, entry)
         end
-        put_to_radical_group(@stroke_count, entry.stroke_count.to_s, entry)
+        put_to_hash(@stroke_count, entry.stroke_count.to_s, entry)
+
+        get_misc_search_terms(entry).each do |term|
+          put_to_hash(@misc, term, entry)
+        end
       end
     end
   end
@@ -113,10 +119,28 @@ class KANJIDICConverter
     end
   end
 
-  def put_to_radical_group(hash, key, entry)
-    hash[key] ||= {}
-    hash[key][entry.radical_number] ||= []
-    hash[key][entry.radical_number] << entry
+  def put_to_hash(hash, key, entry)
+    hash[key] ||= []
+    hash[key] << entry
+  end
+
+  def get_misc_search_terms(entry)
+    result = []
+    kun = entry.readings[:ja_kun]
+    if kun
+      result |= kun.map do |r|
+        KANJIDIC2Entry.get_japanese_stem(r)
+      end
+    end
+
+    r = entry.readings
+    m = entry.meanings
+    [r[:ja_on], r[:pinyin], r[:korean_h], m[:en]].each do |terms|
+      next unless terms
+      result |= terms.map {|term| KANJIDIC2Entry.split_into_keywords(term)}.flatten
+    end
+
+    result
   end
 end
 
