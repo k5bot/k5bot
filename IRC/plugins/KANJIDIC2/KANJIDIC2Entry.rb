@@ -20,6 +20,6 @@ class KANJIDIC2Entry
   end
 
   def self.split_into_keywords(text)
-    text.downcase.gsub(/[[:punct:]]/, ' ').split(' ')
+    text.downcase.gsub(/[[[:punct:]]&&[^\-]]/, ' ').split(' ')
   end
 end

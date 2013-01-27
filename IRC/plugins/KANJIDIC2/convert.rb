@@ -42,10 +42,21 @@ class KANJIDICConverter
         fill_entry(entry, parsed.child)
 
         @kanji[entry.kanji] = entry
+
         entry.code_skip.each do |skip|
           put_to_hash(@code_skip, skip, entry)
+          put_to_hash(@misc, chk_term(skip), entry)
+          put_to_hash(@misc, chk_term("P#{skip}"), entry)
         end
+
         put_to_hash(@stroke_count, entry.stroke_count.to_s, entry)
+        put_to_hash(@misc, chk_term("S#{entry.stroke_count.to_s}"), entry)
+
+        put_to_hash(@misc, chk_term("G#{entry.grade}"), entry) if entry.grade
+
+        put_to_hash(@misc, chk_term("C#{entry.radical_number}"), entry)
+
+        put_to_hash(@misc, chk_term("F#{entry.freq}"), entry) if entry.freq
 
         get_misc_search_terms(entry).each do |term|
           put_to_hash(@misc, term, entry)
@@ -122,6 +133,14 @@ class KANJIDICConverter
   def put_to_hash(hash, key, entry)
     hash[key] ||= []
     hash[key] << entry
+  end
+
+  def chk_term(term)
+    tmp = KANJIDIC2Entry.split_into_keywords(term)
+    unless tmp.size == 1 && term.size.eql?(tmp[0].size)
+      raise "Bug! Term '#{term}' should survive KANJIDIC2Entry.split_into_keywords(). Modify it appropriately."
+    end
+    tmp[0]
   end
 
   def get_misc_search_terms(entry)
