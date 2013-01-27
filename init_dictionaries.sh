@@ -9,6 +9,12 @@ pushd "${root}/IRC/plugins/KANJIDIC" && \
 ./download.sh
 popd
 
+# KANJIDIC2
+pushd "${root}/IRC/plugins/KANJIDIC2" && \
+./download.sh && \
+./convert.rb
+popd
+
 # EDICT
 pushd "${root}/IRC/plugins/EDICT" && \
 ./download.sh && \
