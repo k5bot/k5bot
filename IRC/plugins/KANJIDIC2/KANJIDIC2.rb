@@ -23,6 +23,8 @@ class KANJIDIC2 < IRCPlugin
   }
   Dependencies = [ :Language ]
 
+  MAX_RESULTS_COUNT = 3
+
   attr_reader :kanji, :code_skip, :stroke_count, :misc
 
   def afterLoad
@@ -58,40 +60,43 @@ class KANJIDIC2 < IRCPlugin
       search_result = @code_skip[msg.tail]
       search_result ||= @stroke_count[msg.tail]
       search_result ||= keyword_lookup(KANJIDIC2Entry.split_into_keywords(msg.tail), @misc)
+      search_result ||= extract_known_kanji(msg.tail, MAX_RESULTS_COUNT)
       if search_result
-        if search_result.size == 1
-          msg.reply(format_entry(search_result.first))
+        if search_result.size <= MAX_RESULTS_COUNT
+          search_result.each do |entry|
+            msg.reply(format_entry(entry))
+          end
         else
           kanji_list = kanji_grouped_by_radicals(search_result)
           msg.reply(kanji_list)
         end
       else
-        count = for_each_kanji(msg.tail) do |entry|
-          msg.reply(format_entry(entry))
-        end
-        msg.reply(not_found_msg(msg.tail)) if count <= 0
+        msg.reply(not_found_msg(msg.tail))
       end
     when :kl
-      count = for_each_kanji(msg.tail) do |entry|
-        msg.reply("Info on #{entry.kanji}: " + URI.escape("http://jisho.org/kanji/details/#{entry.kanji}"))
+      search_result = extract_known_kanji(msg.tail, MAX_RESULTS_COUNT)
+      if search_result
+        search_result.each do |entry|
+          msg.reply("Info on #{entry.kanji}: " + URI.escape("http://jisho.org/kanji/details/#{entry.kanji}"))
+        end
+      else
+        msg.reply(not_found_msg(msg.tail))
       end
-      msg.reply(not_found_msg(msg.tail)) if count <= 0
     end
   end
 
   private
 
-  def for_each_kanji(txt)
-    result_count = 0
+  def extract_known_kanji(txt, max_results)
+    result = []
+
     txt.each_char do |c|
-      break if result_count > 2
+      break if result.size >= max_results
       entry = @kanji[c]
-      if entry
-        yield entry
-        result_count += 1
-      end
+      result << entry if entry
     end
-    result_count
+
+    result unless result.empty?
   end
 
   def kanji_grouped_by_radicals(entries)
