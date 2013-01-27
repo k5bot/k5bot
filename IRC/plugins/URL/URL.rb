@@ -125,7 +125,7 @@ class URL < IRCPlugin
 
         title = doc.css('title')[0].text.chomp
 
-        title.gsub!("[ \t\n\f\r]+", " ")
+        title.gsub!(/[ \t\n\f\r]+/, ' ')
         title.strip!
 
         msg.reply("Title: #{title}")
