@@ -80,7 +80,7 @@ class IRCBot < IRCPlugin
     raw = encode raw.dup
 
     #char-per-char correspondence replace, to make the returned count meaningful
-    raw.gsub!("\n", ' ')
+    raw.gsub!(/[\r\n]/, ' ')
     raw.strip!
 
     #raw = raw[0, 512] # Trim to max 512 characters
