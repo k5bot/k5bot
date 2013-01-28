@@ -18,7 +18,21 @@ require_relative 'KANJIDIC2Entry'
 class KANJIDIC2 < IRCPlugin
   Description = "A KANJIDIC2 plugin."
   Commands = {
-    :k => "looks up a given kanji, or shows list of kanji with given strokes number or SKIP code (see .faq skip), using KANJIDIC2",
+    :k => {
+        nil => "looks up a given kanji, or shows list of kanji with given strokes number or SKIP code (see .faq skip), using KANJIDIC2",
+        :advanced => "You can narrow your search by specifying several search terms. \
+Those can be any combination of \
+words in meanings ('west sake'), \
+kun-yomi stems (in hiragana), \
+on-yomi (in katakana), \
+pinyin ('zhun3'), \
+korean (in hangul), \
+stroke count ('S10'), \
+SKIP code ('P1-4-3' or just '1-4-3'), \
+frequency ('F15'), \
+grade (from 1 to 10, e.g. 'G3'), \
+or classic radical number (from 1 to 214, e.g. 'C15')",
+    },
     :kl => "gives a link to the kanji entry of the specified kanji at jisho.org"
   }
   Dependencies = [ :Language ]
