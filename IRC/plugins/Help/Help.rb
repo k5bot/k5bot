@@ -20,11 +20,10 @@ class Help < IRCPlugin
   def on_privmsg(msg)
     case msg.botcommand
     when :help
-      case (tail = msg.tail.split.shift if msg.tail)
-      when nil
-        msg.reply "Available commands: #{all_commands(msg.command_prefix)}"
+      if msg.tail
+        describe_word(msg, msg.tail)
       else
-        describe_word(msg, tail)
+        msg.reply "Available commands: #{all_commands(msg.command_prefix)}"
       end
     when :plugins
       p = @pm.plugins.keys.sort*', '
@@ -37,9 +36,12 @@ class Help < IRCPlugin
     @pm.plugins.values.reject { |p| !p.commands }.collect {|p| '[' + p.commands.keys.collect {|c| "#{prefix}#{c.to_s}" } * ' ' + ']' } * ' '
   end
 
-  def describe_word(msg, word)
+  def describe_word(msg, term)
     command_prefix = msg.command_prefix
 
+    term = term.split(' ')
+
+    word = term[0]
     plugin = @pm.plugins[word.to_sym]
     if plugin
       msg.reply(plugin.description || "#{plugin.name} has no description.")
@@ -47,22 +49,93 @@ class Help < IRCPlugin
       return
     end
 
-    c = word[/^\s*#{Regexp.quote(command_prefix)}?(\S*)\s*/, 1].downcase.to_sym
+    plugin_list = @pm.plugins.each_pair
 
-    found = @pm.plugins.each_pair.map do |name, plugin|
-      [name, plugin.commands && plugin.commands[c]]
+    word = term.shift
+    #strip command prefix, if any
+    word = word[/^#{Regexp.quote(command_prefix)}?(\S+)$/, 1]
+
+    bot_command = word.downcase.to_sym
+
+    found = plugin_list.map do |name, plugin|
+      [name, plugin.commands && plugin.commands[bot_command]]
     end.select do |_, desc|
       !desc.nil?
     end
 
-    #found = @pm.plugins.values.reject { |p| !(p.commands && p.commands[c]) }
     if found.empty?
-      msg.reply("There is no description for #{command_prefix}#{c.to_s}.")
+      msg.reply("There is no description for #{command_prefix}#{bot_command}.")
       return
     end
 
+    result = {}
+
     found.each do |name, desc|
-      msg.reply("#{name} plugin: #{command_prefix}#{c.to_s} #{desc}.")
+      resp = browse_command_hierarchy(term, desc, "#{command_prefix}#{bot_command}")
+      resp[:found].map! {|r| "#{name} plugin: #{r}"} if resp[:found]
+
+      result.merge!(resp) do |_, old_val, new_val|
+        old_val |= new_val
+      end
     end
+
+    if result[:found]
+      result[:found].each do |r|
+        msg.reply(r)
+      end
+      unless result[:also].empty?
+        suggestion_list = format_suggestion_list(result[:also], command_prefix)
+        msg.reply("See also: #{suggestion_list}")
+      end
+    elsif result[:fail_find]
+      suggestion_list = format_suggestion_list(result[:fail_find], command_prefix)
+      msg.reply("Key not found. Maybe you want: #{suggestion_list}")
+    elsif result[:fail_descend]
+      longest_descend = result[:fail_descend].max_by { |x| x.length }
+      msg.reply("There are no sub-keys in: #{longest_descend}")
+    else
+      raise "Bug! Command hierarchy browsing produced: #{result}."
+    end
+  end
+
+  def browse_command_hierarchy(hier, sub_catalog, bot_command)
+    hier = hier.map {|x| x.downcase.to_sym}
+
+    full_ref = [bot_command]
+    hier.each do |keyword|
+      unless sub_catalog.is_a?(Hash)
+        # Can't descend further. Remember how far we descended.
+        return {:fail_descend => [full_ref.join(' ')]}
+      end
+
+      n = sub_catalog[keyword]
+      unless n
+        # Can't find keyword in current catalog. Add its keys as suggestions.
+        known_keys = sub_catalog.keys.select { |x| !x.nil? }.map do |key|
+          (full_ref + [key]).join(' ')
+        end
+        return {:fail_find => known_keys}
+      end
+      sub_catalog = n
+
+      full_ref << keyword
+    end
+
+    if sub_catalog.is_a?(Hash)
+      # Description comes from special 'nil' key.
+      desc = sub_catalog[nil]
+      # Mention sub-keys in "See also".
+      see_also = sub_catalog.keys.select { |x| !x.nil? }.map do |key|
+        (full_ref + [key]).join(' ')
+      end
+    else
+      desc = sub_catalog
+      see_also = []
+    end
+    {:found => ["#{full_ref.join(' ')}: #{desc}."], :also => see_also}
+  end
+
+  def format_suggestion_list(suggestions, command_prefix)
+    suggestions.map { |r| "#{command_prefix}help #{r}" }.join(' | ')
   end
 end
