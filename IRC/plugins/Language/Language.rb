@@ -239,7 +239,7 @@ class Language < IRCPlugin
   def self.parse_sub_regexp(word)
     word.gsub!(KANA_CHAR_GROUP_MATCHER, KANA_CHAR_GROUP)
     word.gsub!(NON_KANA_CHAR_GROUP_MATCHER, NON_KANA_CHAR_GROUP)
-    Regexp.new(word)
+    Regexp.new(word, Regexp::EXTENDED)
   end
 
   def load_unicode_blocks(file_name)
