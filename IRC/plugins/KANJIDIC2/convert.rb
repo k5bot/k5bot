@@ -16,19 +16,43 @@ require_relative 'KANJIDIC2Entry'
 class KANJIDICConverter
   attr_reader :hash
 
-  def initialize(kanjidic_file)
+  def initialize(kanjidic_file, krad_file)
     @kanjidic_file = kanjidic_file
+    @krad_file = krad_file
 
     @kanji = {}
     @code_skip = {}
     @stroke_count = {}
     @misc = {}
+    @kanji_parts = {}
 
     @hash = {}
     @hash[:kanji] = @kanji
     @hash[:code_skip] = @code_skip
     @hash[:stroke_count] = @stroke_count
     @hash[:misc] = @misc
+    @hash[:kanji_parts] = @kanji_parts
+  end
+
+  def read_krad_file
+    File.open(@krad_file, 'r') do |io|
+      io.each_line do |line|
+        line.chomp!.strip!
+
+        # drop comments and empty lines
+        next if line.nil? || line.empty? || line.start_with?('#')
+
+        # 𪀯 : 一 ノ ⺌ 灬 鳥
+        md = line.match(/^(.) : (.*)$/)
+
+        raise "Failed to parse kradfile line: #{line}" if md.nil?
+
+        kanji = md[1]
+        parts = md[2].gsub(/\s/, '')
+
+        @kanji_parts[kanji] = parts
+      end
+    end
   end
 
   def read
@@ -163,8 +187,12 @@ class KANJIDICConverter
   end
 end
 
-def marshal_dict(dict)
-  ec = KANJIDICConverter.new("#{(File.dirname __FILE__)}/#{dict}.xml")
+def marshal_dict(dict, krad_dict)
+  ec = KANJIDICConverter.new("#{(File.dirname __FILE__)}/#{dict}.xml", "#{(File.dirname __FILE__)}/#{krad_dict}")
+
+  print "Indexing #{krad_dict.upcase}..."
+  ec.read_krad_file
+  puts "done."
 
   print "Indexing #{dict.upcase}..."
   ec.read
@@ -177,4 +205,4 @@ def marshal_dict(dict)
   puts "done."
 end
 
-marshal_dict('kanjidic2')
+marshal_dict('kanjidic2', 'kradfile-u')

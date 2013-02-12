@@ -39,7 +39,7 @@ or classic radical number (from 1 to 214, e.g. 'C15')",
 
   MAX_RESULTS_COUNT = 3
 
-  attr_reader :kanji, :code_skip, :stroke_count, :misc
+  attr_reader :kanji, :code_skip, :stroke_count, :misc, :kanji_parts
 
   def afterLoad
     load_helper_class(:KANJIDIC2Entry)
@@ -52,6 +52,7 @@ or classic radical number (from 1 to 214, e.g. 'C15')",
     @code_skip = dict[:code_skip]
     @stroke_count = dict[:stroke_count]
     @misc = dict[:misc]
+    @kanji_parts = dict[:kanji_parts]
   end
 
   def beforeUnload
@@ -154,6 +155,8 @@ or classic radical number (from 1 to 214, e.g. 'C15')",
     end
 
     out << "Freq: #{entry.freq}" if entry.freq
+
+    out << "Parts: #{@kanji_parts[entry.kanji]}" if @kanji_parts[entry.kanji]
 
     order = entry.readings.dup
 
