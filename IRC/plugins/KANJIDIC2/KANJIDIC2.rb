@@ -133,10 +133,12 @@ or classic radical number (from 1 to 214, e.g. 'C15')",
     "No hits for '#{requested}' in KANJIDIC2."
   end
 
-  def load_dict(dict)
-    File.open("#{(File.dirname __FILE__)}/#{dict}.marshal", 'r') do |io|
+  def load_dict(dict_name)
+    dict = File.open("#{(File.dirname __FILE__)}/#{dict_name}.marshal", 'r') do |io|
       Marshal.load(io)
     end
+    raise "The #{dict_name}.marshal file is outdated. Rerun convert.rb." unless dict[:version] == KANJIDIC2Entry::VERSION
+    dict
   end
 
   def format_entry(entry)

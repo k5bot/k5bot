@@ -32,6 +32,7 @@ class KANJIDICConverter
     @hash[:stroke_count] = @stroke_count
     @hash[:misc] = @misc
     @hash[:kanji_parts] = @kanji_parts
+    @hash[:version] = KANJIDIC2Entry::VERSION
   end
 
   def read_krad_file
