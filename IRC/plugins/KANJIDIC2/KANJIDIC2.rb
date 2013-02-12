@@ -186,7 +186,7 @@ or classic radical number (from 1 to 214, e.g. 'C15')",
       end
     end
 
-    out.join(' | ')
+    out.join(' ▪ ')
   end
 
   def format_reading(out, readings, type)
