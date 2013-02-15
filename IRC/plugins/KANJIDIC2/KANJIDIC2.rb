@@ -31,6 +31,7 @@ stroke count ('S10'), \
 SKIP code ('P1-4-3' or just '1-4-3'), \
 frequency ('F15'), \
 grade (from 1 to 10, e.g. 'G3'), \
+JLPT level (from 1 to 4, e.g. 'J2'), \
 or classic radical number (from 1 to 214, e.g. 'C15')",
     },
     :kl => "gives a link to the kanji entry of the specified kanji at jisho.org"
@@ -155,6 +156,8 @@ or classic radical number (from 1 to 214, e.g. 'C15')",
     when 9..10
       out << "Grade: Jinmeiyō-#{entry.grade-8}"
     end
+
+    out << "JLPT: #{entry.jlpt}" if entry.jlpt
 
     out << "Freq: #{entry.freq}" if entry.freq
 

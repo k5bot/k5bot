@@ -5,12 +5,13 @@
 # KANJIDIC2 entry
 
 class KANJIDIC2Entry
-  VERSION = 1
+  VERSION = 2
 
   attr_accessor :kanji, # One character. The kanji represented by this entry.
                 :radical_number, # Integer with classic radical number.
                 :code_skip, # String with SKIP code, e.g. '1-4-3'.
                 :grade, # An integer in the range of 1-10, or nil, if ungraded.
+                :jlpt, # An integer in the range of 1-4, or nil, if ungraded.
                 :stroke_count,
                 :freq, # Kanji popularity, integer or nil.
                 :readings, # Hash from :ja_on, etc. into arrays of readings.

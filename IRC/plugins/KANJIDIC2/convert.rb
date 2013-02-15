@@ -79,6 +79,8 @@ class KANJIDICConverter
 
         put_to_hash(@misc, chk_term("G#{entry.grade}"), entry) if entry.grade
 
+        put_to_hash(@misc, chk_term("J#{entry.jlpt}"), entry) if entry.jlpt
+
         put_to_hash(@misc, chk_term("C#{entry.radical_number}"), entry)
 
         put_to_hash(@misc, chk_term("F#{entry.freq}"), entry) if entry.freq
@@ -104,6 +106,11 @@ class KANJIDICConverter
     entry.grade = grade ? grade.text.to_i : nil
 
     raise "Unknown kanji grade: #{entry.grade}" unless entry.grade.nil? || (1..10).include?(entry.grade)
+
+    jlpt = misc.css('jlpt').first
+    entry.jlpt = jlpt ? jlpt.text.to_i : nil
+
+    raise "Unknown kanji JLPT level: #{entry.jlpt}" unless entry.jlpt.nil? || (1..4).include?(entry.jlpt)
 
     entry.stroke_count = misc.css('stroke_count').first.text.to_i
 
