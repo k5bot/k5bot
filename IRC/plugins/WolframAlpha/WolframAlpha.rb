@@ -74,7 +74,7 @@ class WolframAlpha < IRCPlugin
       subpods = pod.subpods.to_a
       sub_pods = subpods.map do |sub_pod|
         # TODO: Some additional info might be obtained with (sub_pod.title rescue nil)
-        unescape_unicode(sub_pod.plaintext)
+        replace_breaks(unescape_unicode(sub_pod.plaintext))
       end
 
       hash.update(pod.title => sub_pods)
@@ -98,11 +98,17 @@ class WolframAlpha < IRCPlugin
     end
   end
 
+  SUBPOD_SEPARATOR = ' ░ '
+
+  def replace_breaks(text)
+    text.gsub(/[\r\n]+/, SUBPOD_SEPARATOR)
+  end
+
   def generate_menu(lookup_result, name)
 
     menu = []
     pods_to_hash(lookup_result).each_pair do |k,v|
-      text = v.join(' ░ ')
+      text = v.join(SUBPOD_SEPARATOR)
 
       text.strip!
       next if text.empty?
