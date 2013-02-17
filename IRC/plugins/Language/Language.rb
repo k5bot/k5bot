@@ -45,6 +45,8 @@ class Language < IRCPlugin
     @rom = @rom2kana.keys.sort_by{|x| -x.length}
     @kata2hira = YAML.load_file("#{plugin_root}/kata2hira.yaml") rescue nil
     @katakana = @kata2hira.keys.sort_by{|x| -x.length}
+    @hira2kata = @kata2hira.invert
+    @hiragana = @hira2kata.keys.sort_by{|x| -x.length}
 
     @unicode_blocks, @unicode_desc = load_unicode_blocks("#{plugin_root}/unicode_blocks.txt")
   end
@@ -53,13 +55,25 @@ class Language < IRCPlugin
     return unless msg.tail
     case msg.botcommand
     when :kana
-      msg.reply(kana msg.tail)
+      msg.reply(romazi_to_kana msg.tail)
     end
   end
 
   def kana(text)
     kana = text.dup.downcase
     @rom.each{|r| kana.gsub!(r, @rom2kana[r])}
+    kana
+  end
+
+  def romazi_to_kana(text)
+    kana = text.dup
+    @rom.each do |r|
+      kana.gsub!(/#{Regexp.escape(r)}/i) do |k|
+        hira = @rom2kana[r].dup
+        @hiragana.each { |h| hira.gsub!(h, @hira2kata[h]) } unless k[0].eql?(r[0])
+        hira
+      end
+    end
     kana
   end
 
