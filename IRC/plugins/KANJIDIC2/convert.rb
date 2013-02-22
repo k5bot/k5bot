@@ -16,15 +16,17 @@ require_relative 'KANJIDIC2Entry'
 class KANJIDICConverter
   attr_reader :hash
 
-  def initialize(kanjidic_file, krad_file)
+  def initialize(kanjidic_file, krad_file, gsf_file)
     @kanjidic_file = kanjidic_file
     @krad_file = krad_file
+    @gsf_file = gsf_file
 
     @kanji = {}
     @code_skip = {}
     @stroke_count = {}
     @misc = {}
     @kanji_parts = {}
+    @gsf_order = {}
 
     @hash = {}
     @hash[:kanji] = @kanji
@@ -32,6 +34,7 @@ class KANJIDICConverter
     @hash[:stroke_count] = @stroke_count
     @hash[:misc] = @misc
     @hash[:kanji_parts] = @kanji_parts
+    @hash[:gsf_order] = @gsf_order
     @hash[:version] = KANJIDIC2Entry::VERSION
   end
 
@@ -57,6 +60,8 @@ class KANJIDICConverter
   end
 
   def read
+    read_gsf_file
+
     reader = Nokogiri::XML::Reader(File.open(@kanjidic_file, 'r'))
 
     reader.each do |node|
@@ -85,6 +90,8 @@ class KANJIDICConverter
 
         put_to_hash(@misc, chk_term("F#{entry.freq}"), entry) if entry.freq
 
+        put_to_hash(@misc, chk_term("FG#{@gsf_order[entry.kanji]}"), entry) if @gsf_order[entry.kanji]
+
         get_misc_search_terms(entry).each do |term|
           put_to_hash(@misc, term, entry)
         end
@@ -93,6 +100,26 @@ class KANJIDICConverter
   end
 
   private
+
+  def read_gsf_file
+    idx = 1
+    File.open(@gsf_file, 'r') do |io|
+      io.each_line do |line|
+        line.chomp!.strip!
+
+        # "的 2890000000"
+        md = line.match(/^(.) \d+$/)
+
+        raise "Failed to parse GSF line: #{line}" if md.nil?
+
+        kanji = md[1]
+
+        # We assume, that kanji are already ordered in file by frequency descending.
+        @gsf_order[kanji] = idx
+        idx += 1
+      end
+    end
+  end
 
   def fill_entry(entry, node)
     entry.kanji = node.css('literal').first.text
@@ -195,8 +222,10 @@ class KANJIDICConverter
   end
 end
 
-def marshal_dict(dict, krad_dict)
-  ec = KANJIDICConverter.new("#{(File.dirname __FILE__)}/#{dict}.xml", "#{(File.dirname __FILE__)}/#{krad_dict}")
+def marshal_dict(dict, krad_dict, gsf_dict)
+  ec = KANJIDICConverter.new("#{(File.dirname __FILE__)}/#{dict}.xml",
+                             "#{(File.dirname __FILE__)}/#{krad_dict}",
+                             "#{(File.dirname __FILE__)}/#{gsf_dict}.txt")
 
   print "Indexing #{krad_dict.upcase}..."
   ec.read_krad_file
@@ -213,4 +242,4 @@ def marshal_dict(dict, krad_dict)
   puts "done."
 end
 
-marshal_dict('kanjidic2', 'kradfile-u')
+marshal_dict('kanjidic2', 'kradfile-u', 'gsf')

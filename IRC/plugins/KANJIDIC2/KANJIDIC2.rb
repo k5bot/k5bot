@@ -19,20 +19,24 @@ class KANJIDIC2 < IRCPlugin
   Description = "A KANJIDIC2 plugin."
   Commands = {
     :k => {
-        nil => "looks up a given kanji, or shows list of kanji with given strokes number or SKIP code (see .faq skip), using KANJIDIC2",
-        :advanced => "You can narrow your search by specifying several search terms. \
-Those can be any combination of \
-words in meanings ('west sake'), \
+        nil => "looks up a given kanji, or shows list of kanji satisfying given search terms, \
+using Jim Breen's KANJIDIC2( http://www.csse.monash.edu.au/~jwb/kanjidic_doc.html ), \
+and GSF kanji list kindly provided by Con Kolivas( http://ck.kolivas.org/Japanese/entries/index.html )",
+        :terms1 => "Words in meanings ('west sake'), \
 kun-yomi stems (in hiragana), \
 on-yomi (in katakana), \
 pinyin ('zhun3'), \
 korean (in hangul), \
 stroke count ('S10'), \
-SKIP code ('P1-4-3' or just '1-4-3'), \
+SKIP code ('P1-4-3' or just '1-4-3', see also .faq skip), \
 frequency ('F15'), \
+GSF frequency ('FG15'), \
 grade (from 1 to 10, e.g. 'G3'), \
 JLPT level (from 1 to 4, e.g. 'J2'), \
 or classic radical number (from 1 to 214, e.g. 'C15')",
+        :terms2 => "You can use any space-separated combination of search terms, to find kanji that satisfies them all. \
+As a shortcut feature, you can also lookup kanji just by stroke count without S prefix (e.g. '.k 10'), \
+if it's the only given search term",
     },
     :kl => "gives a link to the kanji entry of the specified kanji at jisho.org"
   }
@@ -40,7 +44,7 @@ or classic radical number (from 1 to 214, e.g. 'C15')",
 
   MAX_RESULTS_COUNT = 3
 
-  attr_reader :kanji, :code_skip, :stroke_count, :misc, :kanji_parts
+  attr_reader :kanji, :code_skip, :stroke_count, :misc, :kanji_parts, :gsf_order
 
   def afterLoad
     load_helper_class(:KANJIDIC2Entry)
@@ -54,9 +58,11 @@ or classic radical number (from 1 to 214, e.g. 'C15')",
     @stroke_count = dict[:stroke_count]
     @misc = dict[:misc]
     @kanji_parts = dict[:kanji_parts]
+    @gsf_order = dict[:gsf_order]
   end
 
   def beforeUnload
+    @gsf_order = nil
     @kanji_parts = nil
     @misc = nil
     @stroke_count = nil
@@ -161,6 +167,8 @@ or classic radical number (from 1 to 214, e.g. 'C15')",
     out << "JLPT: #{entry.jlpt}" if entry.jlpt
 
     out << "Freq: #{entry.freq}" if entry.freq
+
+    out << "GSF: #{@gsf_order[entry.kanji]}" if @gsf_order[entry.kanji]
 
     out << "Parts: #{@kanji_parts[entry.kanji]}" if @kanji_parts[entry.kanji]
 
