@@ -57,6 +57,7 @@ or classic radical number (from 1 to 214, e.g. 'C15')",
   end
 
   def beforeUnload
+    @kanji_parts = nil
     @misc = nil
     @stroke_count = nil
     @code_skip = nil
