@@ -15,6 +15,7 @@ class Unicode < IRCPlugin
     :'urank%' => "same as .urank, but the percentages as returned by .us% are compared instead",
     :utop => "shows top 10 users, as determined by the number of characters written per specified Unicode range",
     :'utop%' => "same as .utop, but the percentages as returned by .us% are compared instead",
+    :u? => 'classify given text by Unicode ranges',
   }
   Dependencies = [ :Language, :NumberSpell, :StorageYAML, :UserPool ]
 
@@ -68,6 +69,17 @@ class Unicode < IRCPlugin
       return unless description
       reply = format_unicode_top(msg.bot, description) {|stats| abs_stats_to_percentage_stats(stats)}
       msg.reply("Top10 in %#{reply[:description]}. #{reply[:places].map { |count, user_nick| "#{user_nick}: #{count}%" }.join("; ")}")
+    when :u?
+      message = msg.tail
+      return unless message
+
+      to_merge = {}
+
+      count_unicode_stats(message, to_merge)
+
+      reply = format_unicode_stats(to_merge)
+
+      msg.reply(reply) if reply && !reply.empty?
     when nil # Count message only if it's not a bot command
       unless msg.private?
         # Update Unicode statistics
@@ -75,26 +87,30 @@ class Unicode < IRCPlugin
         user_name = msg.user.name.downcase
         message = msg.message
 
-        # text -> array of unicode block ids
-        block_ids = @l.classify_characters(message)
-
-        # Count number of chars per each block
-        counts = block_ids.each_with_object(Hash.new(0)) { |i, h| h[i] += 1 }
-
         to_merge = @unicode_stats[user_name]
         to_merge = {} unless to_merge
 
-        counts.each_pair do |block_id, count|
-          # we keep statistics saved as pairs of 'first codepoint in block' -> 'count'
-          # this is because block_id-s are subject to unicode standard changes
-          cp = @l.block_id_to_codepoint(block_id)
-          to_merge[cp] = (to_merge[cp] || 0) + count
-        end
+        count_unicode_stats(message, to_merge)
 
         @unicode_stats[user_name] = to_merge
 
         store
       end
+    end
+  end
+
+  def count_unicode_stats(message, to_merge)
+    # text -> array of unicode block ids
+    block_ids = @l.classify_characters(message)
+
+    # Count number of chars per each block
+    counts = block_ids.each_with_object(Hash.new(0)) { |i, h| h[i] += 1 }
+
+    counts.each_pair do |block_id, count|
+      # we keep statistics saved as pairs of 'first codepoint in block' -> 'count'
+      # this is because block_id-s are subject to unicode standard changes
+      cp = @l.block_id_to_codepoint(block_id)
+      to_merge[cp] = (to_merge[cp] || 0) + count
     end
   end
 
