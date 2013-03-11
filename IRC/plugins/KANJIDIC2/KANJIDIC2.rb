@@ -38,9 +38,10 @@ or classic radical number (from 1 to 214, e.g. 'C15')",
 As a shortcut feature, you can also lookup kanji just by stroke count without S prefix (e.g. '.k 10'), \
 if it's the only given search term",
     },
+    :k? => 'same as .k, but gives out long results as a menu keyed with radicals',
     :kl => "gives a link to the kanji entry of the specified kanji at jisho.org"
   }
-  Dependencies = [ :Language ]
+  Dependencies = [ :Language, :Menu ]
 
   MAX_RESULTS_COUNT = 3
 
@@ -50,6 +51,7 @@ if it's the only given search term",
     load_helper_class(:KANJIDIC2Entry)
 
     @l = @plugin_manager.plugins[:Language]
+    @m = @plugin_manager.plugins[:Menu]
 
     dict = load_dict('kanjidic2')
 
@@ -62,6 +64,8 @@ if it's the only given search term",
   end
 
   def beforeUnload
+    @m.evict_plugin_menus!(self.name)
+
     @gsf_order = nil
     @kanji_parts = nil
     @misc = nil
@@ -69,6 +73,7 @@ if it's the only given search term",
     @code_skip = nil
     @kanji = nil
 
+    @m = nil
     @l = nil
 
     unload_helper_class(:KANJIDIC2Entry)
@@ -78,8 +83,9 @@ if it's the only given search term",
 
   def on_privmsg(msg)
     return unless msg.tail
-    case msg.botcommand
-    when :k
+    bot_command = msg.botcommand
+    case bot_command
+    when :k, :k?
       search_result = @code_skip[msg.tail]
       search_result ||= @stroke_count[msg.tail]
       search_result ||= keyword_lookup(KANJIDIC2Entry.split_into_keywords(msg.tail), @misc)
@@ -90,8 +96,15 @@ if it's the only given search term",
             msg.reply(format_entry(entry))
           end
         else
-          kanji_list = kanji_grouped_by_radicals(search_result)
-          msg.reply(kanji_list)
+          kanji_map = kanji_grouped_by_radicals(search_result)
+          if bot_command == :k?
+            reply_with_menu(msg, generate_menu(kanji_map, 'KANJIDIC2'))
+          else
+            kanji_list = kanji_map.values.map do |entries|
+              format_kanji_list(entries)
+            end.join(' ')
+            msg.reply(kanji_list)
+          end
         end
       else
         msg.reply(not_found_msg(msg.tail))
@@ -110,6 +123,30 @@ if it's the only given search term",
 
   private
 
+  def generate_menu(lookup, name)
+    menu = lookup.map do |radical_number, entries|
+      description = RADICALS[radical_number-1].join(' ')
+
+      kanji_list = if entries.size == 1
+                     format_entry(entries.first)
+                   else
+                     format_kanji_list(entries)
+                   end
+
+      MenuNodeText.new(description, kanji_list)
+    end
+
+    MenuNodeSimple.new(name, menu)
+  end
+
+  def reply_with_menu(msg, result)
+    @m.put_new_menu(
+        self.name,
+        result,
+        msg
+    )
+  end
+
   def extract_known_kanji(txt, max_results)
     result = []
 
@@ -123,18 +160,16 @@ if it's the only given search term",
   end
 
   def kanji_grouped_by_radicals(entries)
-    radical_group = entries.group_by do |entry|
+    radical_groups = entries.group_by do |entry|
       entry.radical_number
     end
-    radical_group.keys.sort.map do |key|
-      rads = radical_group[key]
-      rads.sort_by! do |x|
+    radical_groups.values.each do |grouped_entries|
+      grouped_entries.sort_by! do |x|
         [x.freq || 100000, x.stroke_count]
       end
-      rads.map do |entry|
-        entry.kanji
-      end.join()
-    end.join(' ')
+    end
+
+    Hash[radical_groups.sort]
   end
 
   def not_found_msg(requested)
@@ -147,6 +182,12 @@ if it's the only given search term",
     end
     raise "The #{dict_name}.marshal file is outdated. Rerun convert.rb." unless dict[:version] == KANJIDIC2Entry::VERSION
     dict
+  end
+
+  def format_kanji_list(entries)
+    entries.map do |entry|
+      entry.kanji
+    end.join()
   end
 
   def format_entry(entry)
