@@ -53,7 +53,7 @@ class EDICTEntry
   end
 
   def self.split_into_keywords(text)
-     text.downcase.gsub(/[^a-z0-9'\- ]/, '').split.map { |e| e.strip.to_sym }
+     text.downcase.gsub(/[^a-z0-9'\- ]/, ' ').split.map { |e| e.strip.to_sym }
   end
 
   def common?
