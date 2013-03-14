@@ -26,6 +26,7 @@ class EDICTConverter
     @hash[:keywords] = {}
     @all_entries = []
     @hash[:all] = @all_entries
+    @hash[:version] = EDICTEntry::VERSION
 
     # Duplicated two lines from ../Language/Language.rb
     @kata2hira = YAML.load_file("../Language/kata2hira.yaml") rescue nil

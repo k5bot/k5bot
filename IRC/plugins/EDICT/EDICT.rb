@@ -203,10 +203,12 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
     lr.sort_by!{|e| e.sortKey} if lr
   end
 
-  def load_dict(dict)
-    File.open("#{(File.dirname __FILE__)}/#{dict}.marshal", 'r') do |io|
+  def load_dict(dict_name)
+    dict = File.open("#{(File.dirname __FILE__)}/#{dict_name}.marshal", 'r') do |io|
       Marshal.load(io)
     end
+    raise "The #{dict_name}.marshal file is outdated. Rerun convert.rb." unless dict[:version] == EDICTEntry::VERSION
+    dict
   end
 
   #noinspection RubyStringKeysInHashInspection,SpellCheckingInspection
