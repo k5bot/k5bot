@@ -69,6 +69,11 @@ class URL < IRCPlugin
       !uri.start_with?("http://", "https://")
     end
 
+    # ')' is rarely an URI resource name so assume that the ')' in URIs
+    # ending in '/)' is just an artifact from the URI having been
+    # enclosed in parentheses that URI#extract didn't quite handle
+    uris.each { |uri| uri.gsub!(/\/\)$/, '/') }
+
     put_uris_to_queue(msg.replyTo, uris)
 
     uris.each do |uri|
