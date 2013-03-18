@@ -7,7 +7,7 @@
 require 'set'
 
 class EDICTEntry
-  VERSION = 1
+  VERSION = 2
 
   attr_reader :raw
   attr_accessor :sortKey
@@ -36,7 +36,7 @@ class EDICTEntry
 
     reading = @raw[/^[\s　]*[^\[\/]+[\s　]*\[(.*)\]/, 1]
     @reading = if reading && !reading.empty?
-                 reading
+                 reading.strip
                else
                  @simple_entry = true
                  @japanese
