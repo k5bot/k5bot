@@ -208,6 +208,12 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
       Marshal.load(io)
     end
     raise "The #{dict_name}.marshal file is outdated. Rerun convert.rb." unless dict[:version] == EDICTEntry::VERSION
+
+    # Pre-parse all entries
+    dict[:all].each do |entry|
+      entry.parse
+    end
+
     dict
   end
 

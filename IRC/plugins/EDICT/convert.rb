@@ -37,6 +37,9 @@ class EDICTConverter
     File.open(@edict_file, 'r') do |io|
       io.each_line do |l|
         entry = EDICTEntry.new(Iconv.conv('UTF-8', 'EUC-JP', l).strip)
+
+        entry.parse
+
         @all_entries << entry
         (@hash[:japanese][entry.japanese] ||= []) << entry
         (@hash[:readings][hiragana(entry.reading)] ||= []) << entry

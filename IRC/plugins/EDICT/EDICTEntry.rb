@@ -9,8 +9,12 @@ require 'set'
 class EDICTEntry
   VERSION = 1
 
-  attr_reader :raw, :simple_entry
+  attr_reader :raw
   attr_accessor :sortKey
+
+  attr_reader :japanese,
+              :reading,
+              :simple_entry # precomputed boolean, true if reading matches japanese.
 
   # TODO: the p here conflicts with P that denotes common words. should fix that somehow.
   PROPER_NAME_KEYWORDS = [:s, :p, :u, :g, :f, :m, :h, :pr, :co, :st].to_set
@@ -26,20 +30,16 @@ class EDICTEntry
     @sortKey = nil
   end
 
-  def japanese
-    return @japanese if @japanese
+  def parse
     japanese = @raw[/^[\s　]*([^\[\/]+)[\s　]*[\[\/]/, 1]
     @japanese = japanese && japanese.strip
-  end
 
-  def reading
-    return @reading if @reading
     reading = @raw[/^[\s　]*[^\[\/]+[\s　]*\[(.*)\]/, 1]
     @reading = if reading && !reading.empty?
                  reading
                else
                  @simple_entry = true
-                 japanese
+                 @japanese
                end
   end
 
@@ -91,6 +91,7 @@ class EDICTEntry
   def marshal_load(data)
     @japanese = nil
     @reading = nil
+    @simple_entry = nil
     @english = nil
     @info = nil
     @keywords = nil
