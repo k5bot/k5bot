@@ -101,11 +101,11 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
       amb_chk_kanji[e.japanese] += 1
       amb_chk_kana[e.reading] += 1
     end
-    render_kanji = amb_chk_kana.any? { |x, y| y > 1 } # || !render_kana
+    render_kanji = amb_chk_kanji.keys.size > 1
 
     lookup_result.map do |e|
       kanji_list = e.japanese
-      render_kana = e.reading && (amb_chk_kanji[kanji_list] > 1 || kanji_list.empty?) # || !render_kanji
+      render_kana = amb_chk_kanji[kanji_list] > 1
 
       [e, render_kanji, render_kana]
     end
