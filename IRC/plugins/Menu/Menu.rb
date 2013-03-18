@@ -14,7 +14,8 @@ require_relative 'MenuNodeText'
 class Menu < IRCPlugin
   Description = "Provides Menu-related functionality."
   Commands = {
-    :n => 'returns the next list of entries',
+    :n => "returns the next list of menu entries. Given a number, \
+shows the list of entries starting from that position",
     :u => 'goes up in hierarchy of entries'
   }
 
@@ -44,14 +45,13 @@ class Menu < IRCPlugin
     return unless menu_state
     case msg.botcommand
       when :n
-        menu_state.show_descriptions!(msg)
+        index = Menu.get_int(msg.tail)
+        menu_state.show_descriptions!(index, msg)
       when :u
         menu_state.move_up!(msg)
       else
-        index_str = msg.message[/^\s*[0-9０１２３４５６７８９]+\s*$/]
-        return unless index_str
-        index_str.tr!('０１２３４５６７８９','0123456789')
-        index = index_str.to_i
+        index = Menu.get_int(msg.message)
+        return unless index
         menu_state.move_down_to!(menu_state.get_child(index), msg)
     end
   end
@@ -76,5 +76,15 @@ class Menu < IRCPlugin
 
   def evict_expired_menus!
     @menu_states.reject! { |k, v| v.is_expired? }
+  end
+
+  private
+
+  def self.get_int(s)
+    return unless s
+    index_str = s[/^\s*[0-9０１２３４５６７８９]+\s*$/]
+    return unless index_str
+    index_str.tr!('０１２３４５６７８９','0123456789')
+    index_str.to_i
   end
 end

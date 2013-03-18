@@ -84,13 +84,17 @@ class MenuState
     end
 
     #finally, a fork! print choices and remain there
-    self.show_descriptions!(msg)
+    self.show_descriptions!(nil, msg)
 
     true
   end
 
-  def show_descriptions!(msg)
+  def show_descriptions!(mark_override, msg)
     self.do_access!
+
+    if mark_override
+      @mark = (mark_override-1 if (1..@items.size).include?(mark_override))
+    end
 
     if @mark
       start = @mark
@@ -130,7 +134,7 @@ class MenuState
 
     @mark = 0
 
-    self.show_descriptions!(msg)
+    self.show_descriptions!(nil, msg)
 
     true
   end
