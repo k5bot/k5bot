@@ -61,7 +61,7 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
       word = msg.tail
       return unless word
       edict_lookup = keyword_lookup(split_into_keywords(word), @hash_edict[:keywords])
-      reply_with_menu(msg, generate_menu(format_description_unambiguous(edict_lookup), "\"#{word}\" in EDICT"))
+      reply_with_menu(msg, generate_menu(format_description_show_all(edict_lookup), "\"#{word}\" in EDICT"))
     when :jn
       word = msg.tail
       return unless word
@@ -108,6 +108,12 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
       render_kana = amb_chk_kanji[kanji_list] > 1
 
       [e, render_kanji, render_kana]
+    end
+  end
+
+  def format_description_show_all(lookup_result)
+    lookup_result.map do |entry|
+      [entry, !entry.simple_entry, true]
     end
   end
 
