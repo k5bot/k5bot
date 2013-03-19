@@ -52,6 +52,8 @@ class IRCBot < IRCPlugin
     @router = @plugin_manager.plugins[:Router] # Get router
 
     @watchdog = nil
+
+    @last_failed_server = nil
   end
 
   def beforeUnload
@@ -159,7 +161,13 @@ class IRCBot < IRCPlugin
 
       server = @config[:server]
       if server.instance_of? Array
-        server = server[rand(1..server.length)-1]
+        # Try to connect to the given servers in order
+        @last_failed_server = if @last_failed_server
+                                (@last_failed_server + 1) % server.length
+                              else
+                                0
+                              end
+        server = server[@last_failed_server]
       end
 
       @sock = TCPSocket.open server, @config[:port]
@@ -232,6 +240,11 @@ class IRCBot < IRCPlugin
   end
 
   def post_login
+    # Successful connection.
+    # Further reconnection attempts will try and start from
+    # the beginning of the server list.
+    @last_failed_server = nil
+
     #refresh our user info once,
     #so that truncate_for_irc_client()
     #will truncate messages properly
