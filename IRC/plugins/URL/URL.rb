@@ -96,37 +96,10 @@ class URL < IRCPlugin
       end
 
       content_type = result.content_type
-      # rescuing from stupid servers, which serve
-      # parameters without names, e.g. "text/html;UTF-8"
-      # which must be "text/html;charset=UTF-8" instead.
-      opts = result.type_params rescue {}
 
       if content_type.eql?('text/html')
-        return if result.body == nil || result.body.empty?
-
-        doc = nil
-        detected_encoding = opts['charset']
-
-        # If content-type has an unknown/misspelled encoding, get rid of it.
-        detected_encoding = nil unless (Encoding.find(detected_encoding) rescue nil)
-
-        unless detected_encoding
-          # Fix encoding errors
-          # Parse once to detect encoding from html
-
-          # HACK: ensure, that body.encoding returns "ASCII-8BIT".
-          # Sometimes it happens to be US-ASCII for some reason,
-          # and that throws off nokogiri encoding detection.
-          result.body.force_encoding('ASCII-8BIT')
-
-          doc = Nokogiri::HTML result.body
-          detected_encoding = doc.encoding
-        end
-
-        if detected_encoding
-          filtered = fix_encoding(result.body, detected_encoding)
-          doc = Nokogiri::HTML filtered
-        end
+        doc = html_to_nokogiri(result)
+        return unless doc
 
         title = doc.css('title')[0].text.chomp
 
@@ -152,6 +125,40 @@ class URL < IRCPlugin
     end
   end
 
+  def html_to_nokogiri(result)
+    return if result.body == nil || result.body.empty?
+
+    # rescuing from stupid servers, which serve
+    # parameters without names, e.g. "text/html;UTF-8"
+    # which must be "text/html;charset=UTF-8" instead.
+    opts = result.type_params rescue {}
+
+    doc = nil
+    detected_encoding = opts['charset']
+
+    # If content-type has an unknown/misspelled encoding, get rid of it.
+    detected_encoding = nil unless (Encoding.find(detected_encoding) rescue nil)
+
+    unless detected_encoding
+      # Fix encoding errors
+      # Parse once to detect encoding from html
+
+      # HACK: ensure, that body.encoding returns "ASCII-8BIT".
+      # Sometimes it happens to be US-ASCII for some reason,
+      # and that throws off nokogiri encoding detection.
+      result.body.force_encoding('ASCII-8BIT')
+
+      doc = Nokogiri::HTML result.body
+      detected_encoding = doc.encoding
+    end
+
+    if detected_encoding
+      filtered = fix_encoding(result.body, detected_encoding)
+      doc = Nokogiri::HTML filtered
+    end
+
+    doc
+  end
 
   def format_size(size)
     return sprintf("%.2fB", size) if size < 1024
