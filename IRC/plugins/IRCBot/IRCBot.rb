@@ -175,6 +175,8 @@ class IRCBot < IRCPlugin
       puts "Cannot connect: #{e}"
     rescue IOError => e
       puts "IOError: #{e}"
+    rescue SignalException => e
+      raise e # Don't ignore signals
     rescue Exception => e
       puts "Unexpected exception: #{e}"
     ensure
