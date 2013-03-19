@@ -202,7 +202,7 @@ class URL < IRCPlugin
   end
 
   # TODO: maybe use open-uri lib.
-  def fetch_by_uri(uri, limit = 10, redirects = [], &block)
+  def fetch_by_uri(uri, limit = 10, timeout = [5, 3], redirects = [], &block)
     throw ArgumentError, "Must be given receiving block" unless block_given?
 
     uri = URI.parse(uri) unless uri.is_a? URI
@@ -213,7 +213,7 @@ class URL < IRCPlugin
                                      'Accept-Language' => ACCEPT_LANGUAGE
                                  })
 
-    http = get_http_by_uri(uri)
+    http = get_http_by_uri(uri, timeout)
 
     response = http.start do
       http.request(request) do |res|
@@ -242,7 +242,7 @@ class URL < IRCPlugin
           new_uri = uri.merge(new_uri)
         end
 
-        fetch_by_uri(new_uri, limit, redirects, &block)
+        fetch_by_uri(new_uri, limit, timeout, redirects, &block)
       else
         response
     end
@@ -260,12 +260,11 @@ class URL < IRCPlugin
     opts
   end
 
-  def get_http_by_uri(uri)
+  def get_http_by_uri(uri, timeout = nil)
     opts = get_opts_by_uri(uri)
 
     http = Net::HTTP.new(uri.host, uri.port)
-    http.open_timeout = 5
-    http.read_timeout = 3
+    http.open_timeout, http.read_timeout = timeout if timeout
     http.use_ssl = opts[:use_ssl]
     http.verify_mode = opts[:verify_mode]
     http
