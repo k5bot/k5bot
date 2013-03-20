@@ -13,7 +13,7 @@ class Language < IRCPlugin
 
   Description = "Provides language-related functionality."
   Commands = {
-    :kana => 'converts specified romazi to kana'
+    :kana => 'converts specified romazi to kana. Use lower-case for hiragana, upper-case for katakana'
   }
 
   JAMO_L_TABLE = [
