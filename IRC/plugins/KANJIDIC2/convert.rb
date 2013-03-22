@@ -90,11 +90,18 @@ class KANJIDICConverter
 
         KANJIDIC2Entry::KANGXI_SEARCH_RADICALS[entry.radical_number-1].each do |rad|
           put_to_hash(@misc, chk_term("C#{rad}"), entry)
+          put_to_hash(@misc, chk_term("PP#{rad}"), entry)
         end
 
         put_to_hash(@misc, chk_term("F#{entry.freq}"), entry) if entry.freq
 
         put_to_hash(@misc, chk_term("FG#{@gsf_order[entry.kanji]}"), entry) if @gsf_order[entry.kanji]
+
+        if @kanji_parts[entry.kanji]
+          @kanji_parts[entry.kanji].each_char do |part|
+            put_to_hash(@misc, chk_term("PP#{part}"), entry)
+          end
+        end
 
         get_misc_search_terms(entry).each do |term|
           put_to_hash(@misc, term, entry)
@@ -195,7 +202,7 @@ class KANJIDICConverter
 
   def put_to_hash(hash, key, entry)
     hash[key] ||= []
-    hash[key] << entry
+    hash[key] |= [entry]
   end
 
   def chk_term(term)
