@@ -33,7 +33,7 @@ frequency ('F15'), \
 GSF frequency ('FG15'), \
 grade (from 1 to 10, e.g. 'G3'), \
 JLPT level (from 1 to 4, e.g. 'J2'), \
-or classic radical number (from 1 to 214, e.g. 'C15')",
+or classic radical (e.g. 'C水', or number from 1 to 214, e.g. 'C15')",
         :terms2 => "You can use any space-separated combination of search terms, to find kanji that satisfies them all. \
 As a shortcut feature, you can also lookup kanji just by stroke count without S prefix (e.g. '.k 10'), \
 if it's the only given search term",

@@ -88,6 +88,10 @@ class KANJIDICConverter
 
         put_to_hash(@misc, chk_term("C#{entry.radical_number}"), entry)
 
+        KANJIDIC2Entry::KANGXI_SEARCH_RADICALS[entry.radical_number-1].each do |rad|
+          put_to_hash(@misc, chk_term("C#{rad}"), entry)
+        end
+
         put_to_hash(@misc, chk_term("F#{entry.freq}"), entry) if entry.freq
 
         put_to_hash(@misc, chk_term("FG#{@gsf_order[entry.kanji]}"), entry) if @gsf_order[entry.kanji]

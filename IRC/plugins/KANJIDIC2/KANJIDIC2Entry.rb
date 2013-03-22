@@ -5,7 +5,7 @@
 # KANJIDIC2 entry
 
 class KANJIDIC2Entry
-  VERSION = 3
+  VERSION = 4
 
   attr_accessor :kanji, # One character. The kanji represented by this entry.
                 :radical_number, # Integer with classic radical number.
