@@ -242,4 +242,26 @@ class KANJIDIC2Entry
       %w(龜),
       %w(龠),
   ]
+
+  def self.kangxi_search_extension()
+    f = KANGXI_RADICALS.dup
+    f[1] = f[1].dup | %w(｜)
+    f[3] = f[3].dup | %w(ノ)
+    f[8] = f[8].dup | %w(⺅ 𠆢)
+    f[11] = f[11].dup | %w(ハ)
+    f[124] = f[124].dup | %w(⺹)
+    f[139] = f[139].dup | %w(⺾)
+    f[161] = f[161].dup | %w(辶)
+    f[162] = f[162].dup | %w(⻏)
+    f[169] = f[169].dup | %w(⻖)
+    f[198] = f[198].dup | %w(麦)
+    f[200] = f[200].dup | %w(黄)
+    f[202] = f[202].dup | %w(黒)
+    f[202] = f[202].dup | %w(黒)
+    f[209] = f[209].dup | %w(斉)
+    f[210] = f[210].dup | %w(歯)
+    f
+  end
+
+  KANGXI_SEARCH_RADICALS = KANJIDIC2Entry.kangxi_search_extension()
 end
