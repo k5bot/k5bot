@@ -193,7 +193,7 @@ if it's the only given search term",
 
   def format_entry(entry)
     out = [entry.kanji]
-    out << "Rad: #{entry.radical_number}"
+    out << "Rad: #{entry.radical_number}(#{KANJIDIC2Entry::KANGXI_RADICALS[entry.radical_number-1].join})"
     out << "SKIP: #{entry.code_skip.join(', ')}" unless entry.code_skip.empty?
     out << "Strokes: #{entry.stroke_count}"
 
