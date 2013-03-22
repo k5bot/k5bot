@@ -268,11 +268,20 @@ if it's the only given search term",
       entry_array = hash[k]
 
       if entry_array.nil?
-        kanji_to_break = k[/^pp([^a-z])$/, 1]
-        if kanji_to_break && @kanji_parts[kanji_to_break]
-          sub_words = @kanji_parts[kanji_to_break].each_char.map do |sub_part|
-            "pp#{sub_part}"
-          end
+        kanji_to_break = k[/^pp([^a-z]+)$/, 1]
+
+        if kanji_to_break
+          sub_words = if kanji_to_break.size > 1
+                        kanji_to_break.each_char.map do |sub_part|
+                          "pp#{sub_part}"
+                        end
+                      elsif @kanji_parts[kanji_to_break]
+                        @kanji_parts[kanji_to_break].each_char.map do |sub_part|
+                          "pp#{sub_part}"
+                        end
+                      else
+                        []
+                      end
           sub_search = keyword_lookup(sub_words, hash) rescue nil
           entry_array = sub_search if sub_search && !sub_search.empty?
         end
