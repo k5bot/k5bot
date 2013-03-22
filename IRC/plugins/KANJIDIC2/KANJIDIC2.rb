@@ -89,7 +89,12 @@ if it's the only given search term",
     when :k, :k?
       search_result = @code_skip[msg.tail]
       search_result ||= @stroke_count[msg.tail]
-      search_result ||= keyword_lookup(KANJIDIC2Entry.split_into_keywords(msg.tail), @misc)
+      begin
+        search_result ||= keyword_lookup(KANJIDIC2Entry.split_into_keywords(msg.tail), @misc)
+      rescue => e
+        msg.reply(e.message)
+        return
+      end
       search_result ||= extract_known_kanji(msg.tail, MAX_RESULTS_COUNT)
       if search_result
         if search_result.size <= MAX_RESULTS_COUNT
@@ -259,8 +264,26 @@ if it's the only given search term",
   def keyword_lookup(words, hash)
     lookup_result = nil
 
-    words.each do |k|
-      return nil unless (entry_array = hash[k])
+    sets = words.map do |k|
+      [k, hash[k]]
+    end
+
+    unknown_keywords = sets.select do |_, entry_array|
+      entry_array.nil?
+    end
+
+    if unknown_keywords.size > 0
+      if unknown_keywords.size < words.size
+        # We have already matched at least one keyword.
+        # Report unknown keywords.
+        raise "Unknown keywords: #{unknown_keywords.map{|k, _| k}.join(' ')}"
+      else
+        # Otherwise let someone else try and interpret it.
+        return nil
+      end
+    end
+
+    sets.each do |_, entry_array|
       if lookup_result
         lookup_result &= entry_array
       else
