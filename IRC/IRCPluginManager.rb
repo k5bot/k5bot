@@ -59,7 +59,7 @@ class IRCPluginManager
         return false
       end
 
-      error = p.beforeUnload
+      error = do_before_unloading(p)
       if error
         puts "'#{name}' refuses to unload: #{error}"
         return false
@@ -85,6 +85,17 @@ class IRCPluginManager
   # Must be overridden, in order to provide nonempty configuration
   def find_config_entry(name)
     [name, nil]
+  end
+
+  # May be overridden, in order to customize plugin post-load initialization
+  def do_after_loading(plugin)
+    plugin.afterLoad
+  end
+
+  # May be overridden, in order to customize plugin pre-unload deconstruction
+  # @return nil, if unloading is successful, an error message otherwise
+  def do_before_unloading(plugin)
+    plugin.beforeUnload
   end
 
   def do_load_plugins(to_load)
@@ -114,7 +125,7 @@ class IRCPluginManager
         if (plugin = @plugins[name])
           begin
             print "Initializing plugin #{name}..."
-            plugin.afterLoad
+            do_after_loading(plugin)
             puts "done."
 
             loaded[name] = config # Mark as loaded
