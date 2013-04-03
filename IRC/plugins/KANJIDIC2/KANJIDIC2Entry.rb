@@ -5,7 +5,7 @@
 # KANJIDIC2 entry
 
 class KANJIDIC2Entry
-  VERSION = 5
+  VERSION = 6
 
   attr_accessor :kanji, # One character. The kanji represented by this entry.
                 :radical_number, # Integer with classic radical number.
@@ -249,6 +249,7 @@ class KANJIDIC2Entry
     f[3] = f[3].dup | %w(ノ)
     f[8] = f[8].dup | %w(⺅ 𠆢)
     f[11] = f[11].dup | %w(ハ)
+    f[57] = f[57].dup | %w(ヨ)
     f[124] = f[124].dup | %w(⺹)
     f[139] = f[139].dup | %w(⺾)
     f[161] = f[161].dup | %w(辶)

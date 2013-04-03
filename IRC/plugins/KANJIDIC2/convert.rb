@@ -54,6 +54,10 @@ class KANJIDICConverter
         kanji = md[1]
         parts = md[2].gsub(/\s/, '')
 
+#        if parts.size == 1
+#          put_to_hash(@visual_equiv, parts, kanji)
+#        end
+
         @kanji_parts[kanji] = parts
       end
     end
@@ -61,6 +65,21 @@ class KANJIDICConverter
 
   def read
     read_gsf_file
+
+    # Compute visual equivalents reverse lookup for radicals.
+    visual_equivalents = {}
+    KANJIDIC2Entry::KANGXI_SEARCH_RADICALS.each do |radicals|
+      radicals.each do |radical|
+        visual_equivalents.merge!({radical => radicals}) do |_, oldval, newval|
+          oldval | newval
+        end
+      end
+    end
+
+    # No point in keeping 1-to-1 correspondence.
+    visual_equivalents.delete_if do |_, equivalents|
+      equivalents.size <= 1
+    end
 
     reader = Nokogiri::XML::Reader(File.open(@kanjidic_file, 'r'))
 
@@ -99,7 +118,10 @@ class KANJIDICConverter
 
         if @kanji_parts[entry.kanji]
           @kanji_parts[entry.kanji].each_char do |part|
-            put_to_hash(@misc, chk_term("PP#{part}"), entry)
+            # Put each part with its visual equivalents, where known.
+            (visual_equivalents[part] || [part]).each do |tmp|
+              put_to_hash(@misc, chk_term("PP#{tmp}"), entry)
+            end
           end
         end
 
