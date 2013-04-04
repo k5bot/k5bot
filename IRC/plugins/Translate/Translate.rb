@@ -35,7 +35,7 @@ class Translate < IRCPlugin
     [possibles[l_from], possibles[l_to]]
   end
 
-  GOOGLE_SUPPORTED = make_lang_service_format_map(%w(auto en ja ko fr pt de it es no ru fi hu sv da pl lt), {:zh => 'zh-CN', :tw => 'zh-TW'})
+  GOOGLE_SUPPORTED = make_lang_service_format_map(%w(auto en ja ko fr pt de it es no ru fi hu sv da pl lt nl sw), {:zh => 'zh-CN', :tw => 'zh-TW'})
   HONYAKU_SUPPORTED = make_lang_service_format_map(%w(en ja ko fr pt zh de it es))
   EXCITE_SUPPORTED = make_lang_service_format_map([], {:en => 'EN', :ja => 'JA'})
   KNOWN_SERVICES = {
@@ -68,6 +68,8 @@ class Translate < IRCPlugin
       :da => ['da', 'Danish'],
       :pl => ['pl', 'Polish'],
       :lt => ['lt', 'Lithuanian'],
+      :nl => ['nl', 'Dutch'],
+      :sw => ['sw', 'Swahili'],
   }
 
   def self.get_language_info(lang)
