@@ -26,16 +26,16 @@ class IRCLoginListener
     @server_capabilities = Set.new()
 
     # Query for extended capabilities supported by server
-    @bot.send 'CAP LS'
+    @bot.send_raw 'CAP LS'
     # Make it immediately known, that we don't intend to use any,
     # b/c authentication is suspended/impossible until that.
-    @bot.send 'CAP END'
+    @bot.send_raw 'CAP END'
 
-    @bot.send "PASS #{config[:serverpass]}" if config[:serverpass]
-    @bot.send "NICK #{config[:nickname]}" if config[:nickname]
-    @bot.send "USER #{config[:username]} 0 * :#{config[:realname]}" if config[:username] && config[:realname]
+    @bot.send_raw "PASS #{config[:serverpass]}" if config[:serverpass]
+    @bot.send_raw "NICK #{config[:nickname]}" if config[:nickname]
+    @bot.send_raw "USER #{config[:username]} 0 * :#{config[:realname]}" if config[:username] && config[:realname]
     if config[:userpass]
-      @bot.send "PRIVMSG NickServ :IDENTIFY #{config[:username]} #{config[:userpass]}"
+      @bot.send_raw "PRIVMSG NickServ :IDENTIFY #{config[:username]} #{config[:userpass]}"
     else
       @bot.post_login
     end
