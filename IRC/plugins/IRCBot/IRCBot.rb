@@ -103,17 +103,22 @@ class IRCBot < IRCPlugin
     {:truncated => truncated}
   end
 
-  #truncates truncates a string, so that it contains no more than 510 bytes
-  #we trim to 510 bytes, b/c the limit is 512, and we need to accommodate for cr/lf
+  # Truncates a string, so that it contains no more than 510 bytes.
+  # We trim to 510 bytes, b/c the limit is 512, and we need to accommodate for cr/lf.
   def truncate_for_irc_server(raw)
     truncate_for_irc(raw, 510)
   end
 
-  #this is like truncate_for_irc_server(),
-  #but it also tries to compensate for truncation, that
-  #will occur, if this command is broadcast to other clients.
+  # This is like truncate_for_irc_server(),
+  # but it also tries to compensate for truncation,
+  # that will occur, if this command is broadcast to other clients.
+  # On servers that support IDENTIFY-MSG, we also have to subtract 1,
+  # because messages will have a + or - prepended,
+  # when broadcast to clients that requested this capability.
   def truncate_for_irc_client(raw)
-    truncate_for_irc(raw, 510-@user.host_mask.bytesize-2)
+    limit = 510-@user.host_mask.bytesize-2
+    limit -= 1 if @login_listener.server_capabilities.include?(:'identify-msg')
+    truncate_for_irc(raw, limit)
   end
 
   def send(raw)
