@@ -42,10 +42,10 @@ class Help < IRCPlugin
     term = term.split(' ')
 
     word = term[0]
-    plugin = @pm.plugins[word.to_sym]
-    if plugin
-      msg.reply(plugin.description || "#{plugin.name} has no description.")
-      msg.reply("#{plugin.name} provides: #{plugin.commands.keys.sort.collect{|c| "#{command_prefix}#{c.to_s}"}*', '}") if plugin.commands
+    found_plugin = @pm.plugins[word.to_sym]
+    if found_plugin
+      msg.reply(found_plugin.description || "#{found_plugin.name} has no description.")
+      msg.reply("#{found_plugin.name} provides: #{found_plugin.commands.keys.sort.collect{|c| "#{command_prefix}#{c.to_s}"}*', '}") if found_plugin.commands
       return
     end
 
