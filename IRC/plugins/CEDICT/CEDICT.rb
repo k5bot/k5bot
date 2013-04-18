@@ -2,22 +2,16 @@
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
 
-# EDICT plugin
-#
-# The EDICT Dictionary File (edict) used by this plugin comes from Jim Breen's JMdict/EDICT Project.
-# Copyright is held by the Electronic Dictionary Research Group at Monash University.
-#
-# http://www.csse.monash.edu.au/~jwb/edict.html
+# CEDICT plugin
 
 require_relative '../../IRCPlugin'
 require_relative 'CEDICTEntry'
 
 class CEDICT < IRCPlugin
-  Description = "An EDICT plugin."
+  Description = "A CEDICT plugin."
   Commands = {
-    :tw => "looks up an English word in EDICT",
-    :zh => "looks up a Japanese word in EDICT",
-    :en => "looks up a Japanese word in EDICT",
+    :zh => "looks up a Mandarin word in CEDICT",
+    :en => "looks up an English word in CEDICT",
   }
   Dependencies = [ :Language, :Menu ]
 
@@ -48,23 +42,16 @@ class CEDICT < IRCPlugin
     when :zh
       word = msg.tail
       return unless word
-      cedict_lookup = lookup(word, [@hash_cedict[:mandarin_zh], @hash_cedict[:pinyin]])
+      cedict_lookup = lookup(word, [@hash_cedict[:mandarin_zh], @hash_cedict[:mandarin_tw], @hash_cedict[:pinyin]])
       cedict_lookup.each do |e|
         msg.reply(e.raw)
       end
       if cedict_lookup.length < 1
         msg.reply("#{word} not found in CEDICT.")
       end
-    when :tw
-      word = msg.tail
-      return unless word
-      cedict_lookup = lookup(word, [@hash_cedict[:mandarin_tw], @hash_cedict[:pinyin]])
-      cedict_lookup.each do |e|
-        msg.reply(e.raw)
-      end
-      if cedict_lookup.length < 1
-        msg.reply("#{word} not found in CEDICT.")
-      end
+    when :en
+      puts "not yet implemented"
+    end
   end
 
   # Looks up a word in specified hash(es) and returns the result as an array of entries
