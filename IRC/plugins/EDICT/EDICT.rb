@@ -56,7 +56,7 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
       return unless word
       l_kana = @l.kana(word)
       edict_lookup = lookup(l_kana, [@hash_edict[:japanese], @hash_edict[:readings]])
-      reply_with_menu(msg, generate_menu(format_description_unambiguous(edict_lookup), "\"#{word}\" in EDICT"))
+      reply_with_menu(msg, generate_menu(format_description_unambiguous(edict_lookup), "\"#{word}\" #{"(\"#{l_kana}\") " unless word.eql?(l_kana)}in EDICT"))
     when :e
       word = msg.tail
       return unless word
@@ -67,7 +67,7 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
       return unless word
       l_kana = @l.kana(word)
       enamdict_lookup = lookup(l_kana, [@hash_enamdict[:japanese], @hash_enamdict[:readings]])
-      reply_with_menu(msg, generate_menu(format_description_unambiguous(enamdict_lookup), "\"#{word}\" in ENAMDICT"))
+      reply_with_menu(msg, generate_menu(format_description_unambiguous(enamdict_lookup), "\"#{word}\" #{"(\"#{l_kana}\") " unless word.eql?(l_kana)}in ENAMDICT"))
     when :jr
       word = msg.tail
       return unless word
