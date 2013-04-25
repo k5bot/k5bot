@@ -47,11 +47,13 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
     when :dj
       word = msg.tail
       return unless word
-      reply_with_menu(msg, generate_menu(format_description_unambiguous(lookup([@l.kana(word)]|[@l.hiragana(word)]|[word], [:kanji, :kana])), word))
+      l_kana = @l.kana(word)
+      l_hiragana = @l.hiragana(word)
+      reply_with_menu(msg, generate_menu(format_description_unambiguous(lookup([l_kana]|[l_hiragana]|[word], [:kanji, :kana])), "\"#{word}\" #{"(\"#{l_kana}\") " unless word.eql?(l_kana)}in Daijirin"))
     when :de
       word = msg.tail
       return unless word
-      reply_with_menu(msg, generate_menu(format_description_unambiguous(lookup([word], [:english])), word))
+      reply_with_menu(msg, generate_menu(format_description_unambiguous(lookup([word], [:english])), "\"#{word}\" in Daijirin"))
     when :du
       word = msg.tail
       return unless word
@@ -65,7 +67,7 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
         msg.reply("Daijirin Regexp query error: #{e.message}")
         return
       end
-      reply_with_menu(msg, generate_menu(lookup_complex_regexp(complex_regexp), word))
+      reply_with_menu(msg, generate_menu(lookup_complex_regexp(complex_regexp), "\"#{word}\" in Daijirin"))
     end
   end
 
@@ -86,7 +88,7 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
     end
   end
 
-  def generate_menu(lookup, word)
+  def generate_menu(lookup, menu_name)
     menu = lookup.map do |e, render_kanji, render_kana|
       kanji_list = e.kanji_for_display.join(',')
 
@@ -100,7 +102,7 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
       DaijirinMenuEntry.new(description, e)
     end
 
-    MenuNodeSimple.new("\"#{word}\" in Daijirin", menu)
+    MenuNodeSimple.new(menu_name, menu)
   end
 
   def reply_with_menu(msg, result)
