@@ -5,18 +5,52 @@
 # Pinyin plugin
 
 require_relative '../../IRCPlugin'
+require 'ting'
+require 'ting/string'
 require 'ruby-pinyin'
 
 class Pinyin < IRCPlugin
-  Description = "Pinyin translation plugin."
-  Commands = { :pinyin => "translates hanzi to pinyin" }
+  Description = "Hanzi conversion plugin."
+  Commands = {
+    :pinyin => "convert hanzi to pinyin",
+    :zhuyin => "convert hanzi to zhuyin (bopomofo)",
+    :wadegiles => "convert hanzi to wadegiles",
+    :ipa => "convert hanzi to ipa",
+  }
 
   def on_privmsg(msg)
     case msg.botcommand
     when :pinyin
-      pinyin = PinYin.sentence(msg.tail, true) 
+      pinyin = _pinyin(msg.tail).pretty_tones
       msg.reply pinyin if pinyin
+    when :zhuyin
+      zhuyin = _translation msg.tail, :zhuyin, :marks
+      msg.reply zhuyin if zhuyin
+    when :wadegiles
+      wadegiles = _translation msg.tail, :wadegiles, :supernum
+      msg.reply wadegiles if wadegiles
+    when :ipa
+      ipa = _translation msg.tail, :ipa, :ipa
+      msg.reply ipa if ipa
     end
+  end
+  
+  def _pinyin text
+    PinYin.sentence text, true
+  end
+  
+  def _reader
+    Ting.reader :hanyu, :numbers
+  end
+  
+  def _writer type, tone
+    Ting.writer type, tone
+  end
+  
+  def _translation text, type, tone
+    pinyin = _pinyin text
+    x = _writer type, tone
+    x = x << (_reader << pinyin)
   end
 
 end
