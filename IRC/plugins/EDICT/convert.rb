@@ -52,7 +52,7 @@ class EDICTConverter
 
   def sort
     count = 0
-    @all_entries.sort_by!{|e| [ (e.common? ? -1 : 1), (!e.xrated? ? -1 : 1), (!e.vulgar? ? -1 : 1), e.reading, e.keywords.size, e.japanese.length]}
+    @all_entries.sort_by!{|e| [ (e.common? ? -1 : 1), (!e.xrated? ? -1 : 1), (!e.vulgar? ? -1 : 1), e.reading.size, e.reading, e.keywords.size, e.japanese.length]}
     @all_entries.each do |e|
       e.sortKey = count
       count += 1
