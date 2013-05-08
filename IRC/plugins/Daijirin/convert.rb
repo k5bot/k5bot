@@ -50,7 +50,7 @@ class DaijirinConverter
         lines = []
         io.each_line do |l|
           unless l[0..3] == '----'
-            lines << l
+            lines << l.chomp
             next
           end
           lns = lines
