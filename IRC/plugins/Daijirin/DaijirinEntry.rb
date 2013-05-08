@@ -7,7 +7,7 @@
 require 'yaml'
 
 class DaijirinEntry
-  VERSION = 3
+  VERSION = 4
 
   attr_reader :raw, :parent, :children
   attr_accessor :sort_key
@@ -133,6 +133,8 @@ class DaijirinEntry
     blocks = hierarchy_to_blocks(hierarchy)
 
     @info = blocks_to_subentries(blocks)
+
+    @info = @info.map {|lg| compact_xrefs(lg)}.to_a
 
     post_parse()
     @parsed = true
@@ -406,6 +408,28 @@ class DaijirinEntry
     result << accumulator unless accumulator.empty?
 
     result
+  end
+
+  def compact_xrefs(lines_group)
+    replacement = nil
+
+    lines_group.map do |line|
+      if line.match(/^\s*[→⇔]/)
+        if replacement
+          replacement << ', '
+          replacement << line
+          nil
+        else
+          replacement = line.dup
+          replacement
+        end
+      else
+        replacement = nil
+        line
+      end
+    end.delete_if do |line|
+      line.nil?
+    end
   end
 
   def split_capture!(s, pattern, substitution)
