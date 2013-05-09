@@ -6,7 +6,6 @@
 
 require_relative '../../IRCPlugin'
 require 'ting'
-require 'ting/string'
 require 'ruby-pinyin'
 
 class Pinyin < IRCPlugin
@@ -21,7 +20,7 @@ class Pinyin < IRCPlugin
   def on_privmsg(msg)
     case msg.botcommand
     when :pinyin
-      pinyin = _pinyin(msg.tail).pretty_tones
+      pinyin = _pinyin(msg.tail)
       msg.reply pinyin if pinyin
     when :zhuyin
       zhuyin = _translation msg.tail, :zhuyin, :marks
