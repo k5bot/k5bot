@@ -12,6 +12,8 @@ class Router < IRCPlugin
   DENY_COMMAND = :ban
   LIST_COMMAND = :show
   TEST_COMMAND = :test
+  OP_COMMAND = :op
+  DEOP_COMMAND = :deop
   OP_ADD_COMMAND = :add_op!
   OP_DEL_COMMAND = :del_op!
 
@@ -20,6 +22,7 @@ class Router < IRCPlugin
   Dependencies = [:StorageYAML]
 
   PRIVATE_RESTRICTION_DISCLAIMER = 'This command works only in private and only for bot operators'
+  RESTRICTION_DISCLAIMER = 'This command works only for bot operators'
 
   Commands = {
       :acl => {
@@ -28,6 +31,8 @@ class Router < IRCPlugin
           ALLOW_COMMAND => "removes existing ban rule or adds ban exception. #{PRIVATE_RESTRICTION_DISCLAIMER}",
           LIST_COMMAND => "shows currently effective access list. #{PRIVATE_RESTRICTION_DISCLAIMER}",
           TEST_COMMAND => "matches given 'nick!ident@host' against access lists. #{PRIVATE_RESTRICTION_DISCLAIMER}",
+          OP_COMMAND => "applies +o to calling user on current channel. #{RESTRICTION_DISCLAIMER}",
+          DEOP_COMMAND => "applies -o to calling user on current channel. #{RESTRICTION_DISCLAIMER}",
       }
   }
 
@@ -94,6 +99,23 @@ class Router < IRCPlugin
     command, tail = tail.split(/\s+/, 2)
     command.downcase!
     command = command.to_sym
+
+    case command
+    when OP_COMMAND
+      if msg.private?
+        msg.reply('Call this command in the channel where you want it to take effect.')
+      else
+        msg.bot.send_raw("CHANSERV OP #{msg.channelname} #{msg.nick}")
+      end
+      return
+    when DEOP_COMMAND
+      if msg.private?
+        msg.reply('Call this command in the channel where you want it to take effect.')
+      else
+        msg.bot.send_raw("CHANSERV DEOP #{msg.channelname} #{msg.nick}")
+      end
+      return
+    end
 
     return unless msg.private?
 
