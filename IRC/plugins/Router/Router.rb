@@ -8,28 +8,27 @@ require_relative '../../IRCPlugin'
 
 class Router < IRCPlugin
 
-  ALLOW_COMMAND = :acl_unban
-  DENY_COMMAND = :acl_ban
-  LIST_COMMAND = :acl_show
-  TEST_COMMAND = :acl_test
-  OP_COMMAND = :acl_op
-  DEOP_COMMAND = :acl_deop
+  ALLOW_COMMAND = :unban
+  DENY_COMMAND = :ban
+  LIST_COMMAND = :show
+  TEST_COMMAND = :test
+  OP_ADD_COMMAND = :add_op!
+  OP_DEL_COMMAND = :del_op!
 
   Description = "Provides inter-plugin message delivery and filtering."
 
   Dependencies = [:StorageYAML]
 
-  RESTRICTION_DISCLAIMER = "These commands only work in private and only for a restricted set of users"
-
-  SUB_COMMANDS = {
-      DENY_COMMAND => "denies access to the bot to any user, whose 'nick!ident@host' matches given mask",
-      ALLOW_COMMAND => "removes existing ban rule or adds ban exception",
-      LIST_COMMAND => "shows currently effective access list",
-      TEST_COMMAND => "matches given 'nick!ident@host' against access lists",
-  }
+  PRIVATE_RESTRICTION_DISCLAIMER = 'This command works only in private and only for bot operators'
 
   Commands = {
-      :acl => "- access list commands: #{SUB_COMMANDS.map { |k, v| "'.#{k}' #{v}."}.join(' ')} #{RESTRICTION_DISCLAIMER}"
+      :acl => {
+          nil => "Bot access list and routing commands",
+          DENY_COMMAND => "denies access to the bot to any user, whose 'nick!ident@host' matches given mask. #{PRIVATE_RESTRICTION_DISCLAIMER}",
+          ALLOW_COMMAND => "removes existing ban rule or adds ban exception. #{PRIVATE_RESTRICTION_DISCLAIMER}",
+          LIST_COMMAND => "shows currently effective access list. #{PRIVATE_RESTRICTION_DISCLAIMER}",
+          TEST_COMMAND => "matches given 'nick!ident@host' against access lists. #{PRIVATE_RESTRICTION_DISCLAIMER}",
+      }
   }
 
   def afterLoad
@@ -87,46 +86,52 @@ class Router < IRCPlugin
   end
 
   def on_privmsg(msg)
-    return unless msg.botcommand
-    return unless msg.private?
+    return unless msg.botcommand == :acl
     return unless check_is_op(msg)
     tail = msg.tail
 
-    case msg.botcommand
+    return unless tail
+    command, tail = tail.split(/\s+/, 2)
+    command.downcase!
+    command = command.to_sym
+
+    return unless msg.private?
+
+    if command == LIST_COMMAND
+      msg.reply("Ops: #{@rules[:ops].join(' | ')}")
+      msg.reply("Bans: #{@rules[:bans].join(' | ')}")
+      msg.reply("Exludes: #{@rules[:excludes].join(' | ')}")
+      return
+    end
+
+    return unless tail
+
+    case command
     when DENY_COMMAND
-      return unless tail
       @rules[:bans] |= [tail]
       if @rules[:excludes].delete(tail)
-        msg.reply("Found ban exclusion rule for #{tail}. Removed it and added ban rule instead. To unban, use #{msg.command_prefix}#{ALLOW_COMMAND} #{tail}")
+        msg.reply("Found ban exclusion rule for #{tail}. Removed it and added ban rule instead. To unban, use #{msg.command_prefix}acl #{ALLOW_COMMAND} #{tail}")
       else
-        msg.reply("Added ban rule for #{tail}. To unban, use #{msg.command_prefix}#{ALLOW_COMMAND} #{tail}")
+        msg.reply("Added ban rule for #{tail}. To unban, use #{msg.command_prefix}acl #{ALLOW_COMMAND} #{tail}")
       end
     when ALLOW_COMMAND
-      return unless tail
       if @rules[:bans].delete(tail)
         msg.reply("Found ban rule for #{tail}. Removed it without adding an exclusion rule. Repeat this command to add an exclusion rule.")
       else
         @rules[:excludes] |= [tail]
-        msg.reply("Didn't found ban rule for #{tail}. Added an exclusion rule. To remove it, use #{msg.command_prefix}#{DENY_COMMAND} #{tail}")
+        msg.reply("Didn't found ban rule for #{tail}. Added an exclusion rule. To remove it, use #{msg.command_prefix}acl #{DENY_COMMAND} #{tail}")
       end
-    when OP_COMMAND
-      return unless tail
+    when OP_ADD_COMMAND
       @rules[:ops] |= [tail]
       msg.reply("Added #{tail} to ops.")
-    when DEOP_COMMAND
+    when OP_DEL_COMMAND
       return unless tail
       if @rules[:ops].delete(tail)
         msg.reply("Deopped #{tail}.")
       else
         msg.reply("There's no #{tail} among ops.")
       end
-    when LIST_COMMAND
-      msg.reply("Ops: #{@rules[:ops].join(' | ')}")
-      msg.reply("Bans: #{@rules[:bans].join(' | ')}")
-      msg.reply("Exludes: #{@rules[:excludes].join(' | ')}")
-      return
     when TEST_COMMAND
-      return unless tail
       msg.reply("Ops: #{!!check_is_op(tail)}; Bans: #{!!check_is_banned(tail)}; Exludes: #{!!check_is_excluded(tail)}")
       return
     else
