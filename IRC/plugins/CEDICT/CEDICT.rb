@@ -33,7 +33,6 @@ class CEDICT < IRCPlugin
     @l = nil
 
     unload_helper_class(:CEDICTEntry)
-
     nil
   end
 
@@ -50,8 +49,33 @@ class CEDICT < IRCPlugin
         msg.reply("#{word} not found in CEDICT.")
       end
     when :en
-      puts "not yet implemented"
+      word = msg.tail
+      return unless word
+      edict_lookup = keyword_lookup(split_into_keywords(word), @hash_cedict[:keywords])
+      reply_with_menu(msg, generate_menu(edict_lookup, "\"#{word}\" in CEDICT."))
     end
+  end
+
+  def generate_menu(lookup, name)
+    menu = lookup.map do |e, hanzi, pinyin|
+      description = if e.mandarin_zh then e.mandarin_zh
+                    elsif e.pinyin
+                      e.pinyin
+                    else
+                      "<invalid entry>"
+                    end
+      MenuNodeText.new(description, e)
+    end
+
+    MenuNodeSimple.new(name, menu)
+  end
+
+  def reply_with_menu(msg, result)
+    @m.put_new_menu(
+      self.name,
+      result,
+      msg
+    )
   end
 
   # Looks up a word in specified hash(es) and returns the result as an array of entries
@@ -63,6 +87,25 @@ class CEDICT < IRCPlugin
     end
     sort_result(lookup_result)
     lookup_result
+  end
+
+  def keyword_lookup(words, hash)
+    lookup_result = nil
+
+    words.each do |k|
+      return [] unless (entry_array = hash[k])
+      if lookup_result
+        lookup_result &= entry_array
+      else
+        lookup_result = Array.new(entry_array)
+      end
+    end
+    return [] unless lookup_result && !lookup_result.empty?
+    lookup_result
+  end
+
+  def split_into_keywords(word)
+    CEDICTEntry.split_into_keywords(word).uniq
   end
 
   def sort_result(lr)
