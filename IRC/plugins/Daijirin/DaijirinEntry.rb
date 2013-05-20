@@ -7,7 +7,7 @@
 require 'yaml'
 
 class DaijirinEntry
-  VERSION = 4
+  VERSION = 5
 
   attr_reader :raw, :parent, :children
   attr_accessor :sort_key
@@ -326,6 +326,22 @@ class DaijirinEntry
       /^([❶❷❸❹❺❻❼❽❾❿⓫⓬⓭⓮⓯⓰⓱⓲⓳⓴])/,
   ]
 
+  REPLACEMENTS = {
+      '（ア）' => '㋐',
+      '（イ）' => '㋑',
+      '（ウ）' => '㋒',
+      '（エ）' => '㋓',
+      '（オ）' => '㋔',
+  }
+
+  REPLACEMENTS_REGEX = Regexp.new(REPLACEMENTS.keys.map {|key| Regexp.escape(key)}.join('|'))
+
+  def do_replacements(s)
+    s.gsub(REPLACEMENTS_REGEX) do |match|
+      REPLACEMENTS[match]
+    end
+  end
+
   # Parses the rest of lines into tree of hashes with headers as keys
   def parse_rest_of_lines(s)
     best_pos = s.length
@@ -340,7 +356,7 @@ class DaijirinEntry
     end
 
     unless top_header
-      return s.lines.map {|l| l.rstrip}.to_a
+      return s.lines.map {|l| do_replacements(l.rstrip)}.to_a
     end
 
     key_value_array = s.split(top_header, -1).to_a
