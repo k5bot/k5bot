@@ -27,15 +27,16 @@ kun-yomi stems (in hiragana), \
 on-yomi (in katakana), \
 pinyin ('zhun3'), \
 korean (in hangul), \
-stroke count ('S10'), \
-SKIP code ('P1-4-3' or just '1-4-3', see also .faq skip), \
+stroke count ('S10')",
+        :terms2 => "SKIP code ('P1-4-3' or just '1-4-3', see also .faq skip), \
+partial SKIP code (e.g. 'P1', 'P1-4', 'P*-4', 'P*-*-3'), \
 frequency ('F15'), \
 GSF frequency ('FG15'), \
 grade (from 1 to 10, e.g. 'G3'), \
 JLPT level (from 1 to 4, e.g. 'J2'), \
 classic radical (e.g. 'C水', or number from 1 to 214, e.g. 'C15'), \
 or constituent parts (e.g. 'PP水')",
-        :terms2 => "You can use any space-separated combination of search terms, to find kanji that satisfies them all. \
+        :terms3 => "You can use any space-separated combination of search terms, to find kanji that satisfies them all. \
 As a shortcut feature, you can also lookup kanji just by stroke count without S prefix (e.g. '.k 10'), \
 if it's the only given search term",
     },

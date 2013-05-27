@@ -5,7 +5,7 @@
 # KANJIDIC2 entry
 
 class KANJIDIC2Entry
-  VERSION = 6
+  VERSION = 7
 
   attr_accessor :kanji, # One character. The kanji represented by this entry.
                 :radical_number, # Integer with classic radical number.
@@ -23,7 +23,7 @@ class KANJIDIC2Entry
   end
 
   def self.split_into_keywords(text)
-    text.downcase.gsub(/[[[:punct:]]&&[^\-]]/, ' ').split(' ')
+    text.downcase.gsub(/[[[:punct:]]&&[^\-\*]]/, ' ').split(' ')
   end
 
   KANGXI_RADICALS = [

@@ -96,6 +96,12 @@ class KANJIDICConverter
           put_to_hash(@code_skip, skip, entry)
           put_to_hash(@misc, chk_term(skip), entry)
           put_to_hash(@misc, chk_term("P#{skip}"), entry)
+          skips = skip.split(/-/)
+          throw "Bug! Invalid skip code: #{skip}" unless skips.size == 3
+          put_to_hash(@misc, chk_term("P#{skips[0]}"), entry)
+          put_to_hash(@misc, chk_term("P*-#{skips[1]}"), entry)
+          put_to_hash(@misc, chk_term("P#{skips[0]}-#{skips[1]}"), entry)
+          put_to_hash(@misc, chk_term("P*-*-#{skips[2]}"), entry)
         end
 
         put_to_hash(@stroke_count, entry.stroke_count.to_s, entry)
