@@ -98,22 +98,20 @@ class WolframAlpha < IRCPlugin
     end
   end
 
-  SUBPOD_SEPARATOR = ' ░ '
+  BREAK_SEPARATOR = ' ░ '
 
   def replace_breaks(text)
-    text.gsub(/[\r\n]+/, SUBPOD_SEPARATOR)
+    text.gsub(/[\r\n]+/, BREAK_SEPARATOR)
   end
 
   def generate_menu(lookup_result, name)
 
     menu = []
     pods_to_hash(lookup_result).each_pair do |k,v|
-      text = v.join(SUBPOD_SEPARATOR)
-
-      text.strip!
+      text = v.map {|l| l.strip}.to_a
       next if text.empty?
 
-      menu << MenuNodeText.new(k, text)
+      menu << MenuNodeTextEnumerable.new(k, text)
     end
 
     assumptions_menu = []
