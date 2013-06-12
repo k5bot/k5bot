@@ -10,6 +10,7 @@ require_relative 'MenuState'
 require_relative 'MenuNode'
 require_relative 'MenuNodeSimple'
 require_relative 'MenuNodeText'
+require_relative 'MenuNodeTextEnumerable'
 
 class Menu < IRCPlugin
   Description = "Provides Menu-related functionality."
@@ -24,6 +25,7 @@ shows the list of entries starting from that position",
     load_helper_class(:MenuNode)
     load_helper_class(:MenuNodeSimple)
     load_helper_class(:MenuNodeText)
+    load_helper_class(:MenuNodeTextEnumerable)
 
     @menu_states = {}
   end
@@ -31,6 +33,7 @@ shows the list of entries starting from that position",
   def beforeUnload
     @menu_states = nil
 
+    unload_helper_class(:MenuNodeTextEnumerable)
     unload_helper_class(:MenuNodeText)
     unload_helper_class(:MenuNodeSimple)
     unload_helper_class(:MenuNode)
