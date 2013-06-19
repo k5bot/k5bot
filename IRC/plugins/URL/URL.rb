@@ -75,16 +75,16 @@ class URL < IRCPlugin
         uri.gsub!(/[^a-zA-Z_0-9]/) { "\\" + $& }
 
         # most fugly part: match for the extracted URI plus anything that 
-        # is not comma, blank character, period, parentheses...
-        match = /(#{uri}[^,\s.)]*)/.match(text);
+        # is not comma, blank character, period, exclamation mark, parentheses...
+        match = /(#{uri}[^\s,.)!]*)/.match(text);
         if match[0] then
             uri = match[0].to_s
         end
 
-        # shamelessly assume that an URL ending in . , ! ? 、
+        # shamelessly assume that an URL ending in . , ? 、
         # doesn't actually have that. 
         # (I never said the fugly part was the only fugly one)
-        uri.gsub!(/[.,!?、]$/, "")
+        uri.gsub!(/[.,?、]$/, "")
 
         # ')' is rarely an URI resource name so assume that the ')' in URIs
         # ending in '/)' is just an artifact from the URI having been
