@@ -10,6 +10,7 @@ require_relative '../../Counter'
 require 'rubygems'
 require 'bundler/setup'
 require 'nokogiri'
+require 'addressable/uri'
 require 'net/http'
 require 'time'
 require 'json'
@@ -227,7 +228,7 @@ class URL < IRCPlugin
   def fetch_by_uri(uri, limit = 10, timeout = [5, 3], redirects = [], &block)
     throw ArgumentError, "Must be given receiving block" unless block_given?
 
-    uri = URI.parse(uri) unless uri.is_a? URI
+    uri = Addressable::URI.parse(uri) unless uri.is_a? Addressable::URI
 
     request = Net::HTTP::Get.new(uri.request_uri,
                                  {
@@ -257,7 +258,7 @@ class URL < IRCPlugin
         end
         redirects << uri.to_s
 
-        new_uri = URI.parse(response['location'])
+        new_uri = Addressable::URI.parse(response['location'])
         if new_uri.relative?
           # Although it violates RFC2616, Location: field may have relative
           # URI.  It is converted to absolute URI using uri as a base URI.
@@ -285,7 +286,7 @@ class URL < IRCPlugin
   def get_http_by_uri(uri, timeout = nil)
     opts = get_opts_by_uri(uri)
 
-    http = Net::HTTP.new(uri.host, uri.port)
+    http = Net::HTTP.new(uri.host, uri.inferred_port)
     http.open_timeout, http.read_timeout = timeout if timeout
     http.use_ssl = opts[:use_ssl]
     http.verify_mode = opts[:verify_mode]
