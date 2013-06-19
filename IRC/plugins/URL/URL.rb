@@ -72,27 +72,25 @@ class URL < IRCPlugin
       !uri.start_with?("http://", "https://")
     end
 
-    uris = uris.map do |uri_orig|
-      uri = Regexp.quote(uri_orig)
+    uris = uris.map do |uri|
+      no_re = Regexp.quote(uri)
 
       # Most ugly part: match for the extracted URI plus anything that
-      # is not comma, blank character, period, exclamation mark, parentheses...
-      match = /(#{uri}[^\s,.)!]*)/.match(text)
+      # looks like it might have been part of it, but wasn't
+      # approved of by URI.extract()
+      match = /(#{no_re}[^\s,!\\\]\[>　'"]*)/u.match(text)
       unless match[0]
-        raise "Bug! Couldn't find uri in the same text it was extracted from: #{uri_orig}"
+        raise "Bug! Couldn't find uri in the same text it was extracted from: #{uri}"
       end
 
       uri = match[0].to_s
 
-      # Shamelessly assume that an URL ending in . , ? 、
-      # doesn't actually have that.
-      # (I never said the ugly part was the only ugly one)
-      uri.gsub!(/[.,?、]$/, '')
-
-      # ')' is rarely an URI resource name so assume that the ')' in URIs
-      # ending in '/)' is just an artifact from the URI having been
-      # enclosed in parentheses that URI#extract didn't quite handle
-      uri.gsub!(/\/\)$/, '/')
+      # Try handling final ')' which may be just an artifact
+      # from the URI having been enclosed in parentheses
+      # that URI#extract didn't quite handle
+      if uri.end_with?(')') && text =~ /\([^)]*?#{no_re}/u
+        uri.gsub!(/\)$/u, '')
+      end
 
       uri
     end
