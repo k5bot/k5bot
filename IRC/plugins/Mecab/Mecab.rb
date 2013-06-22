@@ -40,6 +40,10 @@ class Mecab < IRCPlugin
       text = msg.tail
       return unless text
       msg.reply(nyanify(text))
+    when :azunyanify
+      text = msg.tail
+      return unless text
+      msg.reply(azunyanify(text))
     end
   end
 
@@ -48,16 +52,9 @@ class Mecab < IRCPlugin
 
     return text if analysis.empty?
 
-    parts = analysis.map {|term| Regexp.quote(term[:part])}
+    separators = extract_separators(analysis, text)
 
-    m = text.match(Regexp.new('(.*)(' + parts.join(')(.*)(') + ')(.*)'))
-    unless m
-      raise "Bug! Can't restore original form from mecab breakup"
-    end
-
-    separators = m.captures.select.each_with_index {|_, i| i.even?}
-
-    new_parts = process_with_mecab_as_hashes(text).map do |term|
+    new_parts = analysis.map do |term|
       if term[:reading].include?('ナ')
         t1 = term[:part].gsub!('な', 'にゃ')
         t2 = term[:part].gsub!('ナ', 'ニャ')
@@ -72,6 +69,43 @@ class Mecab < IRCPlugin
     end
 
     separators.zip(new_parts).flatten.compact.join
+  end
+
+  def azunyanify(text)
+    analysis = process_with_mecab_as_hashes(text)
+
+    return text if analysis.empty?
+
+    separators = extract_separators(analysis, text)
+
+    new_parts = analysis.map do |term|
+      if term[:reading].include?('ナ') || term[:reading].include?('モウ')
+        replaced = term[:part].gsub!('な', 'にゃ')
+        replaced = term[:part].gsub!('ナ', 'ニャ') || replaced
+        replaced = term[:part].gsub!('もう', 'みょう') || replaced
+        replaced = term[:part].gsub!('モウ', 'ミョウ') || replaced
+        if replaced
+          term[:part]
+        else
+          @plugin_manager.plugins[:Language].hiragana(term[:reading]).gsub('な', 'にゃ').gsub('もう', 'みょう')
+        end
+      else
+        term[:part]
+      end
+    end
+
+    separators.zip(new_parts).flatten.compact.join
+  end
+
+  def extract_separators(analysis, text)
+    parts = analysis.map { |term| Regexp.quote(term[:part]) }
+
+    m = text.match(Regexp.new('(.*)(' + parts.join(')(.*)(') + ')(.*)'))
+    unless m
+      raise "Bug! Can't restore original form from mecab breakup"
+    end
+
+    m.captures.select.each_with_index { |_, i| i.even? }
   end
 
   def get_sentence_menu(text)
