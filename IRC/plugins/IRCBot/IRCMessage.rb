@@ -14,10 +14,16 @@
 # unless it is the 15th <param> in which case ':' is optional.
 
 class IRCMessage
-  attr_reader :prefix, :command, :params, :timestamp, :bot
+  attr_reader :prefix,
+              :command,
+              :params,
+              :timestamp,
+              :bot,
+              :bot_command, # The first word of the message if it starts with 'command_prefix'
+              :tail # The message with nick prefix and botcommand removed if it exists, otherwise the whole message
 
   def initialize(bot, raw)
-    @prefix, @command, @params, @user, @ctcp = nil
+    @prefix, @command, @params, @user, @ctcp, @bot_command, @tail, @is_private = nil
     @timestamp = Time.now
     @bot = bot
     parse @raw = raw
@@ -34,6 +40,20 @@ class IRCMessage
     msg_parts.first.slice!(0) if msg_parts.first
     @params.delete_if{|param| param.empty?}
     @params << msg_parts.join(' ') if !msg_parts.empty?
+
+    if @command == :privmsg
+      @is_private = @params.first.eql?(@bot.user.nick)
+
+      m = message && message.match(/^\s*(#{@bot.user.nick}\s*[:>,]?\s*)?#{command_prefix_matcher}([\p{ASCII}\uFF01-\uFF5E&&[^\p{Z}]]+)\p{Z}*(.*)\s*/i)
+
+      if m
+        bc = m[2]
+        @bot_command = bc.tr("\uFF01-\uFF5E", "\u{21}-\u{7E}").downcase.to_sym if bc
+      end
+
+      tail = (m && m[3]) || message
+      @tail = tail.empty? ? nil : tail
+    end
   end
 
   def to_s
@@ -64,11 +84,9 @@ class IRCMessage
     @server ||= @prefix
   end
 
-  # The first word of the message if it starts with !
+  # Deprecated. Backward compatibility for bot_command.
   def botcommand
-    return unless @command == :privmsg
-    bc = message ? message[/^\s*(#{Regexp.quote(@bot.user.nick)}\s*[:>,]?\s*)?#{Regexp.quote(command_prefix)}([\S]+)/i, 2] : nil
-    bc.downcase.to_sym if bc
+    @bot_command
   end
 
   # The channel name (e.g. '#channel')
@@ -85,14 +103,8 @@ class IRCMessage
     @params.last if @params
   end
 
-  # The message with nick prefix and botcommand removed if it exists, otherwise the whole message
-  def tail
-    tail = message ? message[/^\s*(#{Regexp.quote(@bot.user.nick)}\s*[:>,]?\s*)?#{Regexp.quote(command_prefix)}([\S]+)\s*(.*)\s*/i, 3] || message : nil
-    tail.empty? ? nil : tail if tail  # Return nil if tail is empty or nil, otherwise tail
-  end
-
   def private?
-    (@command == :privmsg) && (@params.first.eql? @bot.user.nick)
+    @is_private
   end
 
   def replyTo
@@ -117,6 +129,10 @@ class IRCMessage
 
   def command_prefix
     '.'
+  end
+
+  def command_prefix_matcher
+    /[.．｡。]/.to_s
   end
 
   def ctcp()
