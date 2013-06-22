@@ -61,7 +61,7 @@ class Mecab < IRCPlugin
         if t1 || t2
           term[:part]
         else
-          @plugin_manager.plugins[:Language].hiragana(term[:reading]).gsub('な', 'にゃ')
+          term[:reading].gsub('ナ', 'ニャ')
         end
       else
         term[:part]
@@ -87,7 +87,7 @@ class Mecab < IRCPlugin
         if replaced
           term[:part]
         else
-          @plugin_manager.plugins[:Language].hiragana(term[:reading]).gsub('な', 'にゃ').gsub('もう', 'みょう')
+          term[:reading].gsub('ナ', 'ニャ').gsub('モウ', 'ミョウ')
         end
       else
         term[:part]
