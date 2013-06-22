@@ -36,7 +36,42 @@ class Mecab < IRCPlugin
       return unless text
       reply_menu = get_sentence_menu(text)
       reply_with_menu(msg, reply_menu)
+    when :nyanify
+      text = msg.tail
+      return unless text
+      msg.reply(nyanify(text))
     end
+  end
+
+  def nyanify(text)
+    analysis = process_with_mecab_as_hashes(text)
+
+    return text if analysis.empty?
+
+    parts = analysis.map {|term| Regexp.quote(term[:part])}
+
+    m = text.match(Regexp.new('(.*)(' + parts.join(')(.*)(') + ')(.*)'))
+    unless m
+      raise "Bug! Can't restore original form from mecab breakup"
+    end
+
+    separators = m.captures.select.each_with_index {|_, i| i.even?}
+
+    new_parts = process_with_mecab_as_hashes(text).map do |term|
+      if term[:reading].include?('ナ')
+        t1 = term[:part].gsub!('な', 'にゃ')
+        t2 = term[:part].gsub!('ナ', 'ニャ')
+        if t1 || t2
+          term[:part]
+        else
+          @plugin_manager.plugins[:Language].hiragana(term[:reading]).gsub('な', 'にゃ')
+        end
+      else
+        term[:part]
+      end
+    end
+
+    separators.zip(new_parts).flatten.compact.join
   end
 
   def get_sentence_menu(text)
@@ -88,6 +123,15 @@ class Mecab < IRCPlugin
 
       nil
     end
+  end
+
+  def process_with_mecab_as_hashes(text)
+    result = []
+    process_with_mecab(text) do |part, reading, dictionary, types|
+      result << { :part => part, :reading => reading, :dictionary => dictionary, :types => types}
+    end
+
+    result
   end
 
   def reply_with_menu(msg, result)
