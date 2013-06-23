@@ -31,6 +31,8 @@ class CEDICTConverter
   def read
     File.open(@cedict_file, 'r', :encoding => "utf-8") do |io|
       io.each_line do |l|
+        next if l.start_with?('#') # Skip comments
+
         entry = CEDICTEntry.new(l.strip)
         @all_entries << entry
         (@hash[:mandarin_zh][entry.mandarin_zh] ||= []) << entry

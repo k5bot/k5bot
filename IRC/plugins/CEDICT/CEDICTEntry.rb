@@ -25,13 +25,13 @@ class CEDICTEntry
   def mandarin_zh
     return @mandarin_zh if @mandarin_zh
     mandarin_zh = @raw[/^[\s]*[^\s]+([^\[\/]+)[\s]*[\[\/]/, 1]
-    @mandarin_zh = mandarin_zh && mandarin_zh.strip
+    @mandarin_zh = mandarin_zh.strip
   end
 
   def mandarin_tw
     return @mandarin_tw if @mandarin_tw
     mandarin_tw = @raw[/^[\s]*([^\s]+)[^\[\/]+[\s]*[\[\/]/, 1]
-    @mandarin_tw = mandarin_tw && mandarin_tw.strip
+    @mandarin_tw = mandarin_tw.strip
   end
 
   def pinyin
