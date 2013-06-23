@@ -28,7 +28,7 @@ class YEDICTConverter
   end
 
   def read
-    File.open(@yedict_file, 'r') do |io|
+    File.open(@yedict_file, 'r', :encoding=> "utf-8") do |io|
       io.each_line do |l|
         entry = YEDICTEntry.new(l.strip)
         @all_entries << entry
