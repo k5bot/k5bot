@@ -7,6 +7,7 @@
 require 'socket'
 
 require_relative '../../Timer'
+require_relative '../../Throttler'
 require_relative '../../IRCPlugin'
 require_relative '../UserPool/IRCUser'
 
@@ -41,6 +42,8 @@ class IRCBot < IRCPlugin
 
     @config.freeze  # Don't want anything modifying this
 
+    @throttler = Throttler.new(@config[:burst] || 0, @config[:rate] || 0)
+
     @user = IRCUser.new(@config[:username], nil, @config[:realname], @config[:nickname])
 
     @login_listener = IRCLoginListener.new(self) # Set login listener
@@ -66,6 +69,8 @@ class IRCBot < IRCPlugin
     @first_listener = nil
     @login_listener = nil
     @user = nil
+
+    @throttler = nil
 
     unload_helper_class(:IRCFirstListener)
     unload_helper_class(:IRCLoginListener)
@@ -129,11 +134,13 @@ class IRCBot < IRCPlugin
   def send_raw(raw)
     raw = truncate_for_irc_server(raw)
 
-    @last_sent = raw
-    raw = raw[:truncated]
-    log_sent_message(raw)
+    @throttler.throttle do
+      @last_sent = raw
+      raw = raw[:truncated]
+      log_sent_message(raw)
 
-    @sock.write "#{raw}\r\n"
+      @sock.write "#{raw}\r\n"
+    end
 
     raw.length
   end

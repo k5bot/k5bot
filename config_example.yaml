@@ -12,6 +12,8 @@
     - "#channel_one"
     - "#channel_two"
     :watchdog: 240
+    :burst: 8
+    :rate: 1
 - :Help
 - :StorageYAML:
     :'data_directory': "~/.ircbot"
