@@ -3,11 +3,11 @@
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
 
-# EDICT converter
+# CEDICT converter
 #
-# Converts the EDICT file to a marshalled hash, readable by the EDICT plugin.
-# When there are changes to EDICTEntry or EDICT is updated, run this script
-# to re-index (./convert.rb), then reload the EDICT plugin (!load EDICT).
+# Converts the CEDICT file to a marshalled hash, readable by the CEDICT plugin.
+# When there are changes to CEDICTEntry or CEDICT is updated, run this script
+# to re-index (./convert.rb), then reload the CEDICT plugin (!load CEDICT).
 
 $VERBOSE = true
 
