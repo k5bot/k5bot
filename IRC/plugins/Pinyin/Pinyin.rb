@@ -8,6 +8,10 @@ require_relative '../../IRCPlugin'
 require 'ting'
 require 'ruby-pinyin'
 
+# Hack: remove Pinyin = Ting compatibility alias, defined in ting,
+# because it conflicts with our class name.
+Object.send(:remove_const, 'Pinyin')
+
 class Pinyin < IRCPlugin
   Description = "Hanzi conversion plugin."
   Commands = {
