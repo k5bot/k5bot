@@ -21,6 +21,12 @@ pushd "${root}/IRC/plugins/EDICT" && \
 ./convert.rb
 popd
 
+# CEDICT
+pushd "${root}/IRC/plugins/CEDICT" && \
+./download.sh && \
+./convert.rb
+popd
+
 # Language
 pushd "${root}/IRC/plugins/Language" && \
 ./download.sh
