@@ -42,13 +42,71 @@ class YEDICT < IRCPlugin
       word = msg.tail
       return unless word
       yedict_lookup = lookup(word, [@hash_yedict[:cantonese], @hash_yedict[:jyutping]])
-      yedict_lookup.each do |e|
-        msg.reply(e.raw)
-      end
-      if yedict_lookup.length < 1
-        msg.reply("#{word} not found in YEDICT.")
-      end
+      reply_with_menu(msg, generate_menu(format_description_unambiguous(yedict_lookup), "\"#{word}\" in YEDICT"))
     end
+  end
+
+  def format_description_unambiguous(lookup_result)
+    amb_chk_hanzi = Hash.new(0)
+    amb_chk_pinyin = Hash.new(0)
+
+    lookup_result.each do |e|
+      hanzi_list = YEDICT.format_hanzi_list(e)
+      pinyin_list = YEDICT.format_pinyin_list(e)
+
+      amb_chk_hanzi[hanzi_list] += 1
+      amb_chk_pinyin[pinyin_list] += 1
+    end
+    render_hanzi = amb_chk_hanzi.keys.size > 1
+
+    lookup_result.map do |e|
+      hanzi_list = YEDICT.format_hanzi_list(e)
+
+      render_pinyin = amb_chk_hanzi[hanzi_list] > 1
+
+      [e, render_hanzi, render_pinyin]
+    end
+  end
+
+  def format_description_show_hanzi(lookup_result)
+    lookup_result.map do |entry|
+      [entry, true, false]
+    end
+  end
+
+  def self.format_hanzi_list(e)
+    e.cantonese
+  end
+
+  def self.format_pinyin_list(e)
+    e.jyutping
+  end
+
+  def generate_menu(lookup, name)
+    menu = lookup.map do |e, render_hanzi, render_pinyin|
+      hanzi_list = YEDICT.format_hanzi_list(e)
+      pinyin_list = YEDICT.format_pinyin_list(e)
+
+      description = if render_hanzi && !hanzi_list.empty? then
+                      render_pinyin ? "#{hanzi_list} (#{pinyin_list})" : hanzi_list
+                    elsif pinyin_list
+                      pinyin_list
+                    else
+                      '<invalid entry>'
+                    end
+
+      MenuNodeText.new(description, e)
+    end
+
+    MenuNodeSimple.new(name, menu)
+  end
+
+  def reply_with_menu(msg, result)
+    @m.put_new_menu(
+        self.name,
+        result,
+        msg
+    )
   end
 
   # Looks up a word in specified hash(es) and returns the result as an array of entries
