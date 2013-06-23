@@ -29,7 +29,7 @@ class CEDICTConverter
   end
 
   def read
-    File.open(@cedict_file, 'r') do |io|
+    File.open(@cedict_file, 'r', :encoding => "utf-8") do |io|
       io.each_line do |l|
         entry = CEDICTEntry.new(l.strip)
         @all_entries << entry
