@@ -3,11 +3,7 @@
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
 
-# EDICT converter
-#
-# Converts the EDICT file to a marshalled hash, readable by the EDICT plugin.
-# When there are changes to EDICTEntry or EDICT is updated, run this script
-# to re-index (./convert.rb), then reload the EDICT plugin (!load EDICT).
+# YEDICT converter
 
 $VERBOSE = true
 
@@ -28,7 +24,7 @@ class YEDICTConverter
   end
 
   def read
-    File.open(@yedict_file, 'r', :encoding=> "utf-8") do |io|
+    File.open(@yedict_file, 'r', :encoding=> 'utf-8') do |io|
       io.each_line do |l|
         entry = YEDICTEntry.new(l.strip)
         @all_entries << entry
@@ -47,13 +43,13 @@ def marshal_dict(dict)
 
   print "Indexing #{dict.upcase}..."
   yc.read
-  puts "done."
+  puts 'done.'
 
   print "Marshalling #{dict.upcase}..."
   File.open("#{(File.dirname __FILE__)}/#{dict}.marshal", 'w') do |io|
     Marshal.dump(yc.hash, io)
   end
-  puts "done."
+  puts 'done.'
 end
 
 marshal_dict('yedict')

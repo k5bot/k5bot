@@ -8,9 +8,9 @@ require_relative '../../IRCPlugin'
 require_relative 'YEDICTEntry'
 
 class YEDICT < IRCPlugin
-  Description = "A YEDICT plugin."
+  Description = 'A YEDICT plugin.'
   Commands = {
-    :cn => "looks up a Cantonese word in YEDICT",
+    :cn => 'looks up a Cantonese word in YEDICT',
   }
   Dependencies = [ :Language, :Menu ]
 
@@ -20,7 +20,7 @@ class YEDICT < IRCPlugin
     @l = @plugin_manager.plugins[:Language]
     @m = @plugin_manager.plugins[:Menu]
 
-    @hash_yedict = load_dict("yedict")
+    @hash_yedict = load_dict('yedict')
   end
 
   def beforeUnload
@@ -63,7 +63,7 @@ class YEDICT < IRCPlugin
   end
 
   def sort_result(lr)
-    lr.sort_by!{|e| e.sortKey} if lr
+    lr.sort_by!{|e| e.sort_key} if lr
   end
 
   def load_dict(dict)
@@ -71,10 +71,4 @@ class YEDICT < IRCPlugin
       Marshal.load(io)
     end
   end
-
-  #noinspection RubyHashKeysTypesInspection
-  def self.to_named_hash(name, hash)
-    Hash[hash.each_pair.map { |k, v| [k, {name=>v}] }]
-  end
-
 end
