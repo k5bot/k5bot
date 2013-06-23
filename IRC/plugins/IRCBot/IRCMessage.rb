@@ -113,6 +113,8 @@ $
 
       tail = m ? m[:tail] : message
       @tail = tail.empty? ? nil : tail
+
+      @bot_command ||= :j if @is_private && !/^[\d０１２３４５６７８９\p{Z}]+$/.match(tail)
     end
   end
 
