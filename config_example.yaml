@@ -42,6 +42,7 @@
 #- :YEDICT
 # need dictionary files that are not distributed with this project.
 # See the plugin directories for more information.
+- :Pinyin
 - :Menu
 - :Mecab
 - :Converter
