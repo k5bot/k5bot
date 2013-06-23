@@ -2,16 +2,13 @@
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
 
-# EDICT entry
+# CEDICT entry
 
 require 'set'
 
 class CEDICTEntry
   attr_reader :raw, :simple_entry
-  attr_accessor :sortKey
-
-  # TODO: the p here conflicts with P that denotes common words. should fix that somehow.
-  PROPER_NAME_KEYWORDS = [:s, :p, :u, :g, :f, :m, :h, :pr, :co, :st].to_set
+  attr_accessor :sort_key
 
   def initialize(raw)
     @raw = raw
@@ -22,7 +19,7 @@ class CEDICTEntry
     @english = nil
     @info = nil
     @keywords = nil
-    @sortKey = nil
+    @sort_key = nil
   end
 
   def mandarin_zh
@@ -63,22 +60,6 @@ class CEDICTEntry
      text.downcase.gsub(/[^a-z0-9'\- ]/, '').split.map { |e| e.strip.to_sym }
   end
 
-  def common?
-    keywords.include? :p
-  end
-
-  def xrated?
-    keywords.include? :x
-  end
-
-  def vulgar?
-    keywords.include? :vulg
-  end
-
-  def proper_name?
-    keywords.any? { |k| PROPER_NAME_KEYWORDS.include? k }
-  end
-
   def info
     return @info if @info
     info = @raw[/^.*?\/\((.*?)\)/, 1]
@@ -90,7 +71,7 @@ class CEDICTEntry
   end
 
   def marshal_dump
-    [@sortKey, @raw]
+    [@sort_key, @raw]
   end
 
   def marshal_load(data)
@@ -100,6 +81,6 @@ class CEDICTEntry
     @english = nil
     @info = nil
     @keywords = nil
-    @sortKey, @raw = data
+    @sort_key, @raw = data
   end
 end

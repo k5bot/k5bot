@@ -8,10 +8,10 @@ require_relative '../../IRCPlugin'
 require_relative 'CEDICTEntry'
 
 class CEDICT < IRCPlugin
-  Description = "A CEDICT plugin."
+  Description = 'A CEDICT plugin.'
   Commands = {
-    :zh => "looks up a Mandarin word in CEDICT",
-    :en => "looks up an English word in CEDICT",
+    :zh => 'looks up a Mandarin word in CEDICT',
+    :en => 'looks up an English word in CEDICT',
   }
   Dependencies = [ :Language, :Menu ]
 
@@ -21,7 +21,7 @@ class CEDICT < IRCPlugin
     @l = @plugin_manager.plugins[:Language]
     @m = @plugin_manager.plugins[:Menu]
 
-    @hash_cedict = load_dict("cedict")
+    @hash_cedict = load_dict('cedict')
   end
 
   def beforeUnload
@@ -57,12 +57,12 @@ class CEDICT < IRCPlugin
   end
 
   def generate_menu(lookup, name)
-    menu = lookup.map do |e, hanzi, pinyin|
+    menu = lookup.map do |e|
       description = if e.mandarin_zh then e.mandarin_zh
                     elsif e.pinyin
                       e.pinyin
                     else
-                      "<invalid entry>"
+                      '<invalid entry>'
                     end
       MenuNodeText.new(description, e)
     end
@@ -109,7 +109,7 @@ class CEDICT < IRCPlugin
   end
 
   def sort_result(lr)
-    lr.sort_by!{|e| e.sortKey} if lr
+    lr.sort_by!{|e| e.sort_key} if lr
   end
 
   def load_dict(dict)
@@ -117,10 +117,4 @@ class CEDICT < IRCPlugin
       Marshal.load(io)
     end
   end
-
-  #noinspection RubyHashKeysTypesInspection
-  def self.to_named_hash(name, hash)
-    Hash[hash.each_pair.map { |k, v| [k, {name=>v}] }]
-  end
-
 end
