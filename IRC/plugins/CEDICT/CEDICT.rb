@@ -11,7 +11,7 @@ class CEDICT < IRCPlugin
   Description = 'A CEDICT plugin.'
   Commands = {
     :zh => 'looks up a Mandarin word in CEDICT',
-    :en => 'looks up an English word in CEDICT',
+    :zhen => 'looks up an English word in CEDICT',
   }
   Dependencies = [ :Language, :Menu ]
 
@@ -48,7 +48,7 @@ class CEDICT < IRCPlugin
       if cedict_lookup.length < 1
         msg.reply("#{word} not found in CEDICT.")
       end
-    when :en
+    when :zhen
       word = msg.tail
       return unless word
       edict_lookup = keyword_lookup(split_into_keywords(word), @hash_cedict[:keywords])
