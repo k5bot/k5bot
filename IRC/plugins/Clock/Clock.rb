@@ -82,7 +82,7 @@ and ISO-3166 country names (e.g. US, JP)",
       msg.reply "#{time(time, zones)}"
     when :jtime
       time = Time.now
-      msg.reply jtime(time)
+      msg.reply "#{time(time, %w(JST))}"
     when :utime
       time = Time.now
       msg.reply utime(time)
@@ -142,9 +142,5 @@ and ISO-3166 country names (e.g. US, JP)",
 
   def utime(t)
     Time.at(t).utc
-  end
-
-  def jtime(t)
-    Time.at(t).localtime("+09:00").strftime '%Y-%m-%d %H:%M:%S JST'
   end
 end
