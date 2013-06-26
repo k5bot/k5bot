@@ -70,7 +70,7 @@ class IRCPluginManager
       @plugins.delete name.to_sym
 
       unload_plugin_class(name)
-    rescue => e
+    rescue Exception => e
       puts "Cannot unload plugin '#{name}': #{e}\n\t#{e.backtrace.join("\n\t")}"
       return false
     ensure
@@ -129,7 +129,7 @@ class IRCPluginManager
             puts "done."
 
             loaded[name] = config # Mark as loaded
-          rescue ScriptError, StandardError => e
+          rescue Exception => e
             puts "Cannot initialize plugin '#{name}': #{e}"
             overall = false
 
@@ -175,7 +175,7 @@ class IRCPluginManager
       print "Loading #{name}..."
       @plugins[name.to_sym] = pluginClass.new(self, (config || {}).freeze)
       puts "done."
-    rescue ScriptError, StandardError => e
+    rescue Exception => e
       puts "Cannot load plugin '#{name}': #{e}"
       unload_plugin_class(name, true)
       return false
@@ -190,7 +190,7 @@ class IRCPluginManager
   def unload_plugin_class(name, fail_silently = false)
     begin
       Object.send(:remove_const, name.to_sym)
-    rescue => e
+    rescue Exception => e
       if fail_silently
         puts(e)
       else
