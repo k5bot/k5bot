@@ -17,6 +17,7 @@ class Unicode < IRCPlugin
     :'utop%' => "same as .utop, but the percentages as returned by .us% are compared instead",
     :u? => 'classify given text by Unicode ranges',
     :'u??' => 'output Unicode codepoints in hexadecimal for given text',
+    :uu => 'output Unicode description urls for given text',
   }
   Dependencies = [ :Language, :NumberSpell, :StorageYAML, :UserPool ]
 
@@ -87,6 +88,16 @@ class Unicode < IRCPlugin
       reply = message.unpack('U*').map do |codepoint|
         codepoint.to_s(16)
       end.join(' ')
+
+      msg.reply(reply) if reply && !reply.empty?
+    when :uu
+      message = msg.tail
+      return unless message
+
+      reply = message.unpack('U*').map do |codepoint|
+        [codepoint].pack('U') + ' ' +
+        URI.escape("http://www.fileformat.info/info/unicode/char/#{codepoint.to_s(16)}/index.htm")
+      end.join(' | ')
 
       msg.reply(reply) if reply && !reply.empty?
     when nil # Count message only if it's not a bot command
