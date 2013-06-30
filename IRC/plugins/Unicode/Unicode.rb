@@ -16,6 +16,7 @@ class Unicode < IRCPlugin
     :utop => "shows top 10 users, as determined by the number of characters written per specified Unicode range",
     :'utop%' => "same as .utop, but the percentages as returned by .us% are compared instead",
     :u? => 'classify given text by Unicode ranges',
+    :'u??' => 'output Unicode codepoints in hexadecimal for given text',
   }
   Dependencies = [ :Language, :NumberSpell, :StorageYAML, :UserPool ]
 
@@ -78,6 +79,14 @@ class Unicode < IRCPlugin
       count_unicode_stats(message, to_merge)
 
       reply = format_unicode_stats(to_merge)
+
+      msg.reply(reply) if reply && !reply.empty?
+    when :'u??'
+      message = msg.tail
+      return unless message
+      reply = message.unpack('U*').map do |codepoint|
+        codepoint.to_s(16)
+      end.join(' ')
 
       msg.reply(reply) if reply && !reply.empty?
     when nil # Count message only if it's not a bot command
