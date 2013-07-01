@@ -5,6 +5,7 @@
 # Converter plugin
 
 require 'rubygems'
+require 'bundler/setup'
 require 'wolfram'
 
 require_relative '../../IRCPlugin'

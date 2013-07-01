@@ -5,6 +5,9 @@
 # Pinyin plugin
 
 require_relative '../../IRCPlugin'
+
+require 'rubygems'
+require 'bundler/setup'
 require 'ting'
 require 'ruby-pinyin'
 

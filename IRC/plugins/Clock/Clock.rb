@@ -5,6 +5,7 @@
 # Clock plugin tells the time
 
 require 'rubygems'
+require 'bundler/setup'
 require 'tzinfo'
 
 require_relative '../../IRCPlugin'

@@ -9,6 +9,8 @@
 # When there are changes to KANJIDICEntry or KANJIDIC2 is updated, run this script
 # to re-index (./convert.rb), then reload the KANJIDIC2 plugin (!load KANJIDIC2).
 
+require 'rubygems'
+require 'bundler/setup'
 require 'nokogiri'
 
 require_relative 'KANJIDIC2Entry'

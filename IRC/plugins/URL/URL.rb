@@ -6,7 +6,9 @@
 
 require_relative '../../IRCPlugin'
 require_relative '../../Counter'
+
 require 'rubygems'
+require 'bundler/setup'
 require 'nokogiri'
 require 'net/http'
 require 'time'
