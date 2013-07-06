@@ -337,7 +337,7 @@ class URL < IRCPlugin
 
   def do_shorten_url(url)
     # Call shortener API
-    uri = URI.parse(SHORTENER_SERVICE_URL)
+    uri = Addressable::URI.parse(SHORTENER_SERVICE_URL)
 
     http = get_http_by_uri(uri)
 
