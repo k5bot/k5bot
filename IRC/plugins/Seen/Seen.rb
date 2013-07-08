@@ -44,10 +44,9 @@ class Seen < IRCPlugin
 
     case msg.botcommand
     when :seen
-      sought_nick = msg.tail[/\s*(\S+)/, 1]
-      return unless sought_nick
+      sought_nick = msg.tail
 
-      if sought_nick.casecmp(msg.nick) == 0
+      if !sought_nick || sought_nick.casecmp(msg.nick) == 0
         msg.reply("#{msg.nick}: watching your every move.")
         return
       end
