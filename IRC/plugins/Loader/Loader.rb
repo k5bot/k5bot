@@ -77,4 +77,13 @@ class Loader < IRCPlugin
     end
   end
 
+  # Make us process message after all other plugins,
+  # because we may end up messing with them, leading to e.g.
+  # Router attempting to send messages to plugins in their
+  # uninitialized state with potentially bad consequences.
+  LISTENER_PRIORITY = 16384
+
+  def listener_priority
+    LISTENER_PRIORITY
+  end
 end
