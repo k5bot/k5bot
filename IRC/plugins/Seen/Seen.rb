@@ -7,9 +7,9 @@
 require_relative '../../IRCPlugin'
 
 class Seen < IRCPlugin
-  Description = "A plugin that keeps track of when a user was last seen and where."
+  Description = 'A plugin that keeps track of when a user was last seen and where.'
   Commands = {
-    :seen => "[nick] (ex.: !seen K5) gives information on when [nick] was last seen"
+    :seen => '[nick] (ex.: !seen K5) gives information on when [nick] was last seen'
   }
 
   Dependencies = [ :StorageYAML, :UserPool ]
@@ -35,39 +35,44 @@ class Seen < IRCPlugin
   end
 
   def on_privmsg(msg)
-    unless msg.private?
-      @seen[msg.user.name.downcase] = {
+    # only remember public appearances
+    update_seen_info(msg.user, {
         :time => msg.timestamp,
         :channel => msg.channelname,
         :nick => msg.nick,
-        :message => msg.message }
-      store
-    end
+        :message => msg.message}) unless msg.private?
+
     case msg.botcommand
     when :seen
-      return unless soughtNick = msg.tail[/\s*(\S+)/, 1]
-      if soughtNick.casecmp(msg.nick) == 0
+      sought_nick = msg.tail[/\s*(\S+)/, 1]
+      return unless sought_nick
+
+      if sought_nick.casecmp(msg.nick) == 0
         msg.reply("#{msg.nick}: watching your every move.")
         return
       end
-      if soughtNick.casecmp(msg.bot.user.nick) == 0
+      if sought_nick.casecmp(msg.bot.user.nick) == 0
         msg.reply("#{msg.nick}: o/")
         return
       end
-      soughtUser = @user_pool.findUserByNick(msg.bot, soughtNick)
-      if soughtUser && soughtUser.name
-        if seenData = @seen[soughtUser.name.downcase]
-          as = agoStr(seenData[:time])
-          if seenData[:channel] && msg.channelname
-            thisChannel = seenData[:channel] == msg.channelname
-            cs = thisChannel ? 'in this channel' : 'in another channel'
-            m = thisChannel && seenData[:message] ? ' saying: ' + truncate(seenData[:message], 80) : '.'
+
+      sought_user = @user_pool.findUserByNick(msg.bot, sought_nick)
+
+      if sought_user && sought_user.name
+        seen_data = @seen[user_to_uid(sought_user)]
+        if seen_data && seen_data[:time]
+          as = format_ago_string(seen_data[:time])
+          if seen_data[:channel] && msg.channelname
+            in_this_channel = seen_data[:channel] == msg.channelname
+            cs = in_this_channel ? 'in this channel' : 'in another channel'
+            m = in_this_channel && seen_data[:message] ? ' saying: ' + truncate(seen_data[:message], 80) : '.'
           else
+            cs = nil
             m = '.'
           end
-          msg.reply("#{soughtUser.nick} was last seen #{as + ' ' if as}#{cs + ' ' if cs}".rstrip + m)
+          msg.reply("#{sought_user.nick} was last seen #{as + ' ' if as}#{cs + ' ' if cs}".rstrip + m)
         else
-          msg.reply("#{msg.nick}: I have not seen #{soughtUser.nick}.")
+          msg.reply("#{msg.nick}: I have not seen #{sought_user.nick}.")
         end
       else
         msg.reply("#{msg.nick}: I do not know who that is.")
@@ -75,7 +80,17 @@ class Seen < IRCPlugin
     end
   end
 
-  def agoStr(time)
+  def user_to_uid(user)
+    user.name.downcase
+  end
+
+  def update_seen_info(user, data)
+    (@seen[user_to_uid(user)] ||= {}).merge!(data)
+
+    store
+  end
+
+  def format_ago_string(time)
     ago = Time.now - time
     return 'just now' if ago <= 5
     a = {}
