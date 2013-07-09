@@ -7,7 +7,12 @@
     :username: bot
     :nickname: bot
     :realname: Bot
-    :userpass:
+    :identify:
+      :login: <your nickserv login here>
+      :password: <your nickserv password here>
+      # :service: NickServ # Service nick to identify to, NickServ by default.
+      :invitation: "^This nickname is registered. Please choose a different nickname, or identify"
+      :confirmation: "^You are now identified for"
     :channels:
     - "#channel_one"
     - "#channel_two"

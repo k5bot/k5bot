@@ -5,6 +5,7 @@
 # IRCBot
 
 require 'socket'
+require 'ostruct'
 
 require_relative '../../Timer'
 require_relative '../../Throttler'
@@ -25,7 +26,11 @@ class IRCBot < IRCPlugin
 
   def afterLoad
     load_helper_class(:IRCMessage)
+    load_helper_class(:IRCCapsListener)
+    load_helper_class(:IRCServerPassListener)
     load_helper_class(:IRCLoginListener)
+    load_helper_class(:IRCIdentifyListener)
+    load_helper_class(:IRCJoinListener)
     load_helper_class(:IRCFirstListener)
 
     @config = {
@@ -35,7 +40,6 @@ class IRCBot < IRCPlugin
       :username => 'bot',
       :nickname => 'bot',
       :realname => 'Bot',
-      :userpass => nil,
       :channels => nil,
       :plugins  => nil,
     }.merge!(@config)
@@ -46,9 +50,21 @@ class IRCBot < IRCPlugin
 
     @user = IRCUser.new(@config[:username], nil, @config[:realname], @config[:nickname])
 
-    @login_listener = IRCLoginListener.new(self) # Set login listener
+    @caps_listener = IRCCapsListener.new(self)
+    @server_pass_listener = IRCServerPassListener.new(self, @config[:serverpass])
+    @login_listener = IRCLoginListener.new(self, @config)
+    @identify_listener = IRCIdentifyListener.new(self, @config[:identify])
+    @join_listener = IRCJoinListener.new(self, @config[:channels])
+    @first_listener = IRCFirstListener.new
 
-    @first_listener = IRCFirstListener.new # Set first listener
+    @additional_listeners = [
+        @caps_listener,
+        @server_pass_listener,
+        @login_listener,
+        @identify_listener,
+        @join_listener,
+        @first_listener,
+    ]
 
     @user_pool = @plugin_manager.plugins[:UserPool] # Get user pool
     @channel_pool = @plugin_manager.plugins[:ChannelPool] # Get channel pool
@@ -67,13 +83,22 @@ class IRCBot < IRCPlugin
     @user_pool = nil
 
     @first_listener = nil
+    @join_listener = nil
+    @identify_listener = nil
     @login_listener = nil
+    @server_pass_listener = nil
+    @caps_listener = nil
+
     @user = nil
 
     @throttler = nil
 
     unload_helper_class(:IRCFirstListener)
+    unload_helper_class(:IRCJoinListener)
+    unload_helper_class(:IRCIdentifyListener)
     unload_helper_class(:IRCLoginListener)
+    unload_helper_class(:IRCServerPassListener)
+    unload_helper_class(:IRCCapsListener)
     unload_helper_class(:IRCMessage)
 
     nil
@@ -122,7 +147,7 @@ class IRCBot < IRCPlugin
   # when broadcast to clients that requested this capability.
   def truncate_for_irc_client(raw)
     limit = 510-@user.host_mask.bytesize-2
-    limit -= 1 if @login_listener.server_capabilities.include?(:'identify-msg')
+    limit -= 1 if @caps_listener.server_capabilities.include?(:'identify-msg')
     truncate_for_irc(raw, limit)
   end
 
@@ -159,7 +184,11 @@ class IRCBot < IRCPlugin
     @last_received = raw
     puts "#{timestamp} #{raw}"
 
-    @router.dispatch_message(IRCMessage.new(self, raw.chomp), [@login_listener, @first_listener])
+    dispatch(IRCMessage.new(self, raw.chomp))
+  end
+
+  def dispatch(msg)
+    @router.dispatch_message(msg, @additional_listeners)
   end
 
   def timestamp
@@ -183,7 +212,7 @@ class IRCBot < IRCPlugin
       end
 
       @sock = TCPSocket.open server, @config[:port]
-      @login_listener.login
+      dispatch(OpenStruct.new({:command => :connection}))
       until @sock.eof? do # Throws Errno::ECONNRESET
         receive @sock.gets
         # improve latency a bit, by flushing output stream,
@@ -200,6 +229,7 @@ class IRCBot < IRCPlugin
     rescue Exception => e
       puts "Unexpected exception: #{e}"
     ensure
+      dispatch(OpenStruct.new({:command => :disconnection}))
       stop_watchdog()
       @sock = nil
     end
