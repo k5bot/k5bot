@@ -15,11 +15,10 @@ Example: .seen K5",
 .seen command on you. Example: .seenwhile drinking beer",
   }
 
-  Dependencies = [ :StorageYAML, :UserPool ]
+  Dependencies = [ :StorageYAML ]
 
   def afterLoad
     @storage = @plugin_manager.plugins[:StorageYAML]
-    @user_pool = @plugin_manager.plugins[:UserPool]
 
     @seen = @storage.read('seen') || {}
   end
@@ -27,7 +26,6 @@ Example: .seen K5",
   def beforeUnload
     @seen = nil
 
-    @user_pool = nil
     @storage = nil
 
     nil
@@ -63,7 +61,7 @@ Example: .seen K5",
         return
       end
 
-      sought_user = @user_pool.findUserByNick(msg.bot, sought_nick)
+      sought_user = msg.bot.find_user_by_nick(sought_nick)
 
       if sought_user && sought_user.name
         seen_data = get_seen_info(sought_user)

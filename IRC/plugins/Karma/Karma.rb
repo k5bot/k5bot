@@ -9,12 +9,11 @@ require_relative '../../IRCPlugin'
 class Karma < IRCPlugin
   Description = "Stores karma and other kinds of points for users."
 
-  Dependencies = [ :NumberSpell, :StorageYAML, :UserPool ]
+  Dependencies = [ :NumberSpell, :StorageYAML ]
 
   def afterLoad
     @ns = @plugin_manager.plugins[:NumberSpell]
     @storage = @plugin_manager.plugins[:StorageYAML]
-    @user_pool = @plugin_manager.plugins[:UserPool]
 
     @karma = {}
 
@@ -45,7 +44,6 @@ class Karma < IRCPlugin
   def beforeUnload
     @karma = nil
 
-    @user_pool = nil
     @storage = nil
     @ns = nil
 
@@ -68,7 +66,7 @@ class Karma < IRCPlugin
     sub_store = @karma[bot_command]
 
     nick = msg.tail || msg.nick
-    user = @user_pool.findUserByNick(msg.bot, nick)
+    user = msg.bot.find_user_by_nick(nick)
     if get_user_id(user)
       points = sub_store[get_user_id(user)]
       if points
@@ -91,9 +89,7 @@ class Karma < IRCPlugin
         match = matcher[:regexp].match(msg.message)
         next unless match
 
-        # I didn't use the equivalent msg.user call,
-        # b/c I intend to get rid of it eventually
-        sender_user = @user_pool.findUserByNick(msg.bot, msg.nick)
+        sender_user = msg.user
 
         if matcher[:receiver_delta]
           # if this kind of karma has receiver, his nick
@@ -101,7 +97,7 @@ class Karma < IRCPlugin
           receiver_nick = match[1]
           next unless receiver_nick
 
-          receiver_user = @user_pool.findUserByNick(msg.bot, receiver_nick)
+          receiver_user = msg.bot.find_user_by_nick(receiver_nick)
           # Disallow sender and receiver to be the same
           next unless receiver_user != sender_user
 

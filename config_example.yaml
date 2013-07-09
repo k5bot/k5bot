@@ -22,7 +22,6 @@
 - :Help
 - :StorageYAML:
     :'data_directory': "~/.ircbot"
-- :UserPool
 - :ChannelPool
 - :Router:
     :LP:

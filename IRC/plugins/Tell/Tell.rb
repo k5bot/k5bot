@@ -18,11 +18,10 @@ class Tell < IRCPlugin
     :tell => "[nick] [message] (ex.: !tell K5 I will be back later) sends [message] to [nick] when he/she/it says something the next time"
   }
 
-  Dependencies = [ :StorageYAML, :UserPool ]
+  Dependencies = [ :StorageYAML ]
 
   def afterLoad
     @storage = @plugin_manager.plugins[:StorageYAML]
-    @user_pool = @plugin_manager.plugins[:UserPool]
 
     @tell = @storage.read('tell') || {}
   end
@@ -30,7 +29,6 @@ class Tell < IRCPlugin
   def beforeUnload
     @tell = nil
 
-    @user_pool = nil
     @storage = nil
 
     nil
@@ -55,7 +53,7 @@ class Tell < IRCPlugin
     return unless recipientNick and tellMessage
     return if recipientNick.casecmp(msg.nick) == 0
     return if recipientNick.casecmp(msg.bot.user.nick) == 0
-    user = @user_pool.findUserByNick(msg.bot, recipientNick)
+    user = msg.bot.find_user_by_nick(recipientNick)
     if user && user.name
       @tell[user.name.downcase] ||= {}
       rcpt = @tell[user.name.downcase]
@@ -78,7 +76,7 @@ class Tell < IRCPlugin
       if @tell[msg.user.name.downcase]
         @tell[msg.user.name.downcase].each do |senderName, tellMsgs|
           senderNick = tellMsgs.last[1]  # default to use the second element ( = the nick) of the last message as the sender nick
-          if senderUser = @user_pool.findUserByUsername(msg.bot, senderName)
+          if senderUser = msg.bot.find_user_by_name(senderName)
             senderNick = senderUser.nick
           end
           tellMsgs.each do |t, n, tellMsg|

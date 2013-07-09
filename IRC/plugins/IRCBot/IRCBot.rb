@@ -10,8 +10,8 @@ require 'ostruct'
 require_relative '../../Timer'
 require_relative '../../Throttler'
 require_relative '../../IRCPlugin'
-require_relative '../UserPool/IRCUser'
 
+require_relative 'IRCUser'
 require_relative 'IRCMessage'
 require_relative 'IRCLoginListener'
 require_relative 'IRCFirstListener'
@@ -20,14 +20,16 @@ class IRCBot < IRCPlugin
 
   Description = "Provides IRC connectivity."
 
-  Dependencies = [ :UserPool, :ChannelPool, :Router ]
+  Dependencies = [ :ChannelPool, :Router, :StorageYAML ]
 
   attr_reader :last_sent, :last_received, :start_time, :user
 
   def afterLoad
+    load_helper_class(:IRCUser)
     load_helper_class(:IRCMessage)
     load_helper_class(:IRCCapsListener)
     load_helper_class(:IRCServerPassListener)
+    load_helper_class(:IRCUserListener)
     load_helper_class(:IRCLoginListener)
     load_helper_class(:IRCIdentifyListener)
     load_helper_class(:IRCJoinListener)
@@ -52,6 +54,7 @@ class IRCBot < IRCPlugin
 
     @caps_listener = IRCCapsListener.new(self)
     @server_pass_listener = IRCServerPassListener.new(self, @config[:serverpass])
+    @user_listener = IRCUserListener.new(@plugin_manager.plugins[:StorageYAML])
     @login_listener = IRCLoginListener.new(self, @config)
     @identify_listener = IRCIdentifyListener.new(self, @config[:identify])
     @join_listener = IRCJoinListener.new(self, @config[:channels])
@@ -60,13 +63,13 @@ class IRCBot < IRCPlugin
     @additional_listeners = [
         @caps_listener,
         @server_pass_listener,
+        @user_listener,
         @login_listener,
         @identify_listener,
         @join_listener,
         @first_listener,
     ]
 
-    @user_pool = @plugin_manager.plugins[:UserPool] # Get user pool
     @channel_pool = @plugin_manager.plugins[:ChannelPool] # Get channel pool
     @router = @plugin_manager.plugins[:Router] # Get router
 
@@ -80,12 +83,12 @@ class IRCBot < IRCPlugin
 
     @router = nil
     @channel_pool = nil
-    @user_pool = nil
 
     @first_listener = nil
     @join_listener = nil
     @identify_listener = nil
     @login_listener = nil
+    @user_listener = nil
     @server_pass_listener = nil
     @caps_listener = nil
 
@@ -97,9 +100,11 @@ class IRCBot < IRCPlugin
     unload_helper_class(:IRCJoinListener)
     unload_helper_class(:IRCIdentifyListener)
     unload_helper_class(:IRCLoginListener)
+    unload_helper_class(:IRCUserListener)
     unload_helper_class(:IRCServerPassListener)
     unload_helper_class(:IRCCapsListener)
     unload_helper_class(:IRCMessage)
+    unload_helper_class(:IRCUser)
 
     nil
   end
@@ -273,8 +278,16 @@ class IRCBot < IRCPlugin
     send "PART #{channels*','}" if channels
   end
 
+  def find_user_by_nick(nick)
+    @user_listener.findUserByNick(self, msg)
+  end
+
+  def find_user_by_name(name)
+    @user_listener.findUserByUsername(self, name)
+  end
+
   def find_user_by_msg(msg)
-    @user_pool.findUser(msg)
+    @user_listener.findUser(msg)
   end
 
   def find_channel_by_msg(msg)
@@ -290,7 +303,7 @@ class IRCBot < IRCPlugin
     #refresh our user info once,
     #so that truncate_for_irc_client()
     #will truncate messages properly
-    @user_pool.request_whois(self, @user.nick)
+    @user_listener.request_whois(self, @user.nick)
     join_channels(@config[:channels])
   end
 

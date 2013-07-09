@@ -19,12 +19,11 @@ class Unicode < IRCPlugin
     :'u??' => 'output Unicode codepoints in hexadecimal for given text',
     :uu => 'output Unicode description urls for given text',
   }
-  Dependencies = [ :Language, :NumberSpell, :StorageYAML, :UserPool ]
+  Dependencies = [ :Language, :NumberSpell, :StorageYAML ]
 
   def afterLoad
     @l = @plugin_manager.plugins[:Language]
     @storage = @plugin_manager.plugins[:StorageYAML]
-    @user_pool = @plugin_manager.plugins[:UserPool]
 
     @unicode_stats = @storage.read('ustats') || {}
   end
@@ -36,7 +35,6 @@ class Unicode < IRCPlugin
   def beforeUnload
     @unicode_stats = nil
 
-    @user_pool = nil
     @storage = nil
     @l = nil
 
@@ -136,7 +134,7 @@ class Unicode < IRCPlugin
 
   def stats_by_msg(msg)
     nick = msg.tail || msg.nick
-    user = @user_pool.findUserByNick(msg.bot, nick)
+    user = msg.bot.find_user_by_nick(nick)
     if user && user.name
       us = @unicode_stats[user.name.downcase]
       if us
@@ -248,7 +246,7 @@ class Unicode < IRCPlugin
 
       next unless stats.include?(description)
 
-      user = @user_pool.findUserByUsername(bot, user_name)
+      user = bot.find_user_by_name(user_name)
 
       next unless user && user.nick
 

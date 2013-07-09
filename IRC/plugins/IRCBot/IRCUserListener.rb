@@ -2,23 +2,19 @@
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
 
-# IRCUserPool keeps track of all users. It keeps the user database
+# IRCUserListener keeps track of all users. It keeps the user database
 # updated by listening to user-related messages.
 # To find the user who sent a message, use IRCMessage#user.
 
-require_relative '../../IRCPlugin'
+require_relative '../../IRCListener'
 
 require_relative 'IRCUser'
 
-class UserPool < IRCPlugin
-  Description = "Provides user resolution service and persistently maintains various related information."
+class IRCUserListener
+  include IRCListener
 
-  Dependencies = [ :StorageYAML ]
-
-  def afterLoad
-    load_helper_class(:IRCUser)
-
-    @storage = @plugin_manager.plugins[:StorageYAML]
+  def initialize(storage)
+    @storage = storage
 
     @users = @storage.read('users') || {}
 
@@ -26,23 +22,7 @@ class UserPool < IRCPlugin
     @users.values.each { |u| @nicks[normalize(u.nick)] = u }
   end
 
-  def beforeUnload
-    #@nicks = nil
-
-    #@users = nil
-
-    #@storage = nil
-
-    #unload_helper_class(:IRCUser)
-
-    "This plugin is not unloadable"
-  end
-
   def normalize(s)
-    UserPool.normalize(s)
-  end
-
-  def self.normalize(s)
     s.downcase
   end
 
