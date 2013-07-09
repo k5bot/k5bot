@@ -20,7 +20,7 @@ class IRCUser
 
   def ident
     name if identified?
-    "~#@name"
+    "~#{@name}"
   end
 
   def identified?
@@ -28,7 +28,7 @@ class IRCUser
   end
 
   def host_mask
-    "#@nick!#{ident}@#@host"
+    "#{@nick}!#{ident}@#{@host}"
   end
 
   def self.ident_to_name(name)

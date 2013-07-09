@@ -279,11 +279,11 @@ class IRCBot < IRCPlugin
   end
 
   def find_user_by_nick(nick)
-    @user_listener.findUserByNick(self, msg)
+    @user_listener.findUserByNick(nick)
   end
 
   def find_user_by_name(name)
-    @user_listener.findUserByUsername(self, name)
+    @user_listener.findUserByUsername(name)
   end
 
   def find_user_by_msg(msg)
