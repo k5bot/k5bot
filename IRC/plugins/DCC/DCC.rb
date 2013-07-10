@@ -128,9 +128,19 @@ class DCC < IRCPlugin
         return
       end
 
+      unless @router.check_permission(:can_use_dcc_chat, msg)
+        msg.reply("Sorry, you don't have the permission to use DCC chat.")
+        return
+      end
+
       reply = IRCMessage.make_ctcp_message(:DCC, ['CHAT', 'chat', @announce_ip, @announce_port])
       msg.reply(reply, :force_private => true)
     when COMMAND_REGISTER
+      unless @router.check_permission(:can_use_dcc_chat, msg)
+        msg.reply("Sorry, you don't have the permission to use DCC chat.")
+        return
+      end
+
       tail = msg.tail
       return unless tail
 
@@ -154,6 +164,11 @@ class DCC < IRCPlugin
 
       store
     when COMMAND_UNREGISTER
+      unless @router.check_permission(:can_use_dcc_chat, msg)
+        msg.reply("Sorry, you don't have the permission to use DCC chat.")
+        return
+      end
+
       tail = msg.tail
       return unless tail
 
