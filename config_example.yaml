@@ -24,10 +24,13 @@
     :'data_directory': "~/.ircbot"
 - :ChannelPool
 - :Router:
-    :LP:
-      :private: false
-      :otherwise: false
-      "##japanese": true
+    :owners: # list of hostmasks that will have unlimited access no matter what
+      - "*@unaffiliated/albel727"
+    :channels: # hash of plugin names, which will be filtered per-channel
+      :LP:
+        :private: false
+        :otherwise: false
+        "##japanese": true
 - :Clock
 - :Example:
     :foo: baz
