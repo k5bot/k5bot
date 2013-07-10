@@ -175,7 +175,7 @@ class IRCBot < IRCPlugin
 
       log_hide = raw[:log_hide]
       raw = raw[:truncated]
-      log_sent_message(log_hide || raw)
+      log(:out, log_hide || raw)
 
       @sock.write "#{raw}\r\n"
     end
@@ -183,26 +183,19 @@ class IRCBot < IRCPlugin
     raw.length
   end
 
-  def log_sent_message(str)
-    puts "#{timestamp} \e[#34m#{str}\e[0m"
-  end
-
   def receive(raw)
     @watch_time = Time.now
 
     raw = encode raw
     @last_received = raw
-    puts "#{timestamp} #{raw}"
+
+    log(:in, raw)
 
     dispatch(IRCMessage.new(self, raw.chomp))
   end
 
   def dispatch(msg)
     @router.dispatch_message(msg, @additional_listeners)
-  end
-
-  def timestamp
-    "\e[#37m#{Time.now}\e[0m"
   end
 
   def start
@@ -231,13 +224,13 @@ class IRCBot < IRCPlugin
         @sock.flush
       end
     rescue SocketError, Errno::ECONNRESET, Errno::EHOSTUNREACH => e
-      puts "Cannot connect: #{e}"
+      log(:error, "Cannot connect: #{e}")
     rescue IOError => e
-      puts "IOError: #{e}"
+      log(:error, "IOError: #{e}")
     rescue SignalException => e
       raise e # Don't ignore signals
     rescue Exception => e
-      puts "Unexpected exception: #{e}"
+      log(:error, "Unexpected exception: #{e.inspect} #{e.backtrace.join(' ')}")
     ensure
       dispatch(OpenStruct.new({:command => :disconnection}))
       stop_watchdog()
@@ -247,7 +240,7 @@ class IRCBot < IRCPlugin
 
   def stop
     if @sock
-      puts "Forcibly closing socket"
+      log(:log, 'Forcibly closing socket')
       @sock.close
     end
   end
@@ -260,7 +253,7 @@ class IRCBot < IRCPlugin
         interval = @config[:watchdog]
         elapsed = Time.now - @watch_time
         if elapsed > interval
-          puts "#{timestamp} Watchdog interval (#{interval}) elapsed, restarting bot"
+          log(:error, "Watchdog interval (#{interval}) elapsed, restarting bot")
           stop
         end
       end
@@ -314,13 +307,19 @@ class IRCBot < IRCPlugin
 
   private
 
+  TIMESTAMP_MODE = {:log => '=', :in => '>', :out => '<', :error => '!'}
+
+  def log(mode, text)
+    puts "#{TIMESTAMP_MODE[mode]}IRC#{start_time.to_i}: #{Time.now}: #{text}"
+  end
+
   # Checks to see if a string looks like valid UTF-8.
   # If not, it is re-encoded to UTF-8 from assumed CP1252.
   # This is to fix strings like "abcd\xE9f".
   def encode(str)
     str.force_encoding('UTF-8')
-    if !str.valid_encoding?
-      str.force_encoding('CP1252').encode!("UTF-8", {:invalid => :replace, :undef => :replace})
+    unless str.valid_encoding?
+      str.force_encoding('CP1252').encode!('UTF-8', {:invalid => :replace, :undef => :replace})
     end
     str
   end
