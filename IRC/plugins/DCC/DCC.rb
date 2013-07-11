@@ -86,7 +86,7 @@ class DCC < IRCPlugin
         return
       end
 
-      unless @router.check_permission(:can_use_dcc_chat, msg)
+      unless @router.check_permission(:can_use_dcc_chat, msg.prefix)
         msg.reply("Sorry, you don't have the permission to use DCC chat.")
         return
       end
@@ -100,7 +100,7 @@ class DCC < IRCPlugin
           return
         end
 
-        unless @router.check_permission(:can_use_dcc_chat, msg)
+        unless @router.check_permission(:can_use_dcc_chat, msg.prefix)
           msg.reply("Sorry, you don't have the permission to use DCC chat.")
           return
         end
@@ -108,7 +108,7 @@ class DCC < IRCPlugin
         reply = IRCMessage.make_ctcp_message(:DCC, ['SCHAT', 'chat', @secure_chat_info[1], @secure_chat_info[0].port])
         msg.reply(reply, :force_private => true)
     when COMMAND_REGISTER
-      unless @router.check_permission(:can_use_dcc_chat, msg)
+      unless @router.check_permission(:can_use_dcc_chat, msg.prefix)
         msg.reply("Sorry, you don't have the permission to use DCC chat.")
         return
       end
@@ -136,7 +136,7 @@ class DCC < IRCPlugin
 
       store
     when COMMAND_UNREGISTER
-      unless @router.check_permission(:can_use_dcc_chat, msg)
+      unless @router.check_permission(:can_use_dcc_chat, msg.prefix)
         msg.reply("Sorry, you don't have the permission to use DCC chat.")
         return
       end

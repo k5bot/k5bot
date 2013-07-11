@@ -152,7 +152,7 @@ class Router < IRCPlugin
     when META_ADD_COMMAND
       list_name, user_mask = tail.split(/\s+/, 2)
       return unless user_mask
-      list_name = list_name.downcase.to_sym
+      list_name = normalize(list_name)
       unless can_alter_list(list_name, msg.prefix)
         msg.reply("I'm sorry, Dave. I'm afraid, you can't alter #{list_name} list.")
         return
@@ -162,7 +162,7 @@ class Router < IRCPlugin
     when META_DEL_COMMAND
       list_name, user_mask = tail.split(/\s+/, 2)
       return unless user_mask
-      list_name = list_name.downcase.to_sym
+      list_name = normalize(list_name)
       unless can_alter_list(list_name, msg.prefix)
         msg.reply("I'm sorry, Dave. I'm afraid, you can't alter #{list_name} list.")
         return
@@ -207,32 +207,38 @@ class Router < IRCPlugin
   end
 
   # externally used generic-purpose permission checking API
-  def check_permission(permission, msg)
-    !!check_is_in_list(permission.to_s.downcase.to_sym, msg.prefix)
+  def check_permission(permission, credential)
+    !!check_is_in_list(normalize(permission), credential)
   end
 
   protected
+
+  def normalize(list_name)
+    list_name.to_s.downcase
+  end
 
   def message_listeners(additional_listeners)
     additional_listeners + @plugin_manager.plugins.values
   end
 
   def check_is_in_list(list_name, credential)
-    list = @compiled_rules[list_name]
+    list = @compiled_rules[list_name.to_sym]
     list && credential && list.match(credential)
   end
 
   def can_alter_list(list_name, prefix)
-    check_is_in_list("can_alter_#{list_name}".to_sym, prefix) ||
+    check_is_in_list("can_alter_#{list_name}", prefix) ||
         check_is_in_list(:can_do_everything, prefix)
   end
 
   def add_to_list(list_name, mask)
+    list_name = list_name.to_sym
     @rules[list_name] ||= []
     @rules[list_name] |= [mask]
   end
 
   def remove_from_list(list_name, mask)
+    list_name = list_name.to_sym
     result = @rules[list_name].delete(mask)
     @rules.delete(list_name) if @rules[list_name].empty?
     result
