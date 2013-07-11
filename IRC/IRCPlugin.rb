@@ -70,4 +70,14 @@ class IRCPlugin
       puts "Cannot unload #{class_name}: #{e}" unless fail_silently
     end
   end
+
+  def dispatch_message_by_command(msg, allowed_commands = nil)
+    bot_command = msg.bot_command
+    return unless (!allowed_commands || allowed_commands.include?(bot_command))
+    meth = "cmd_#{bot_command}"
+    if self.respond_to?(meth) && (!block_given? || yield(msg))
+      self.__send__(meth, msg)
+    end
+    true
+  end
 end
