@@ -9,6 +9,7 @@ require 'digest/sha2'
 
 require 'ipaddr'
 require 'socket'
+require 'ostruct'
 
 require_relative '../../IRCPlugin'
 
@@ -91,11 +92,11 @@ class DCC < IRCPlugin
       end
 
       unless @router.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
-        msg.reply("Sorry, you don't have the permission to use DCC chat.")
+        msg.reply("Sorry, you don't have 'can_use_dcc_chat' permission.")
         return
       end
 
-      reply = IRCMessage.make_ctcp_message(:DCC, ['CHAT', 'chat', @plain_chat_info[1], @plain_chat_info[0].port])
+      reply = IRCMessage.make_ctcp_message(:DCC, ['CHAT', 'chat', @plain_chat_info.announce_ip, @plain_chat_info.server.port])
       msg.reply(reply, :force_private => true)
     when :schat
         return unless @secure_chat_info
@@ -105,15 +106,15 @@ class DCC < IRCPlugin
         end
 
         unless @router.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
-          msg.reply("Sorry, you don't have the permission to use DCC chat.")
+          msg.reply("Sorry, you don't have 'can_use_dcc_chat' permission.")
           return
         end
 
-        reply = IRCMessage.make_ctcp_message(:DCC, ['SCHAT', 'chat', @secure_chat_info[1], @secure_chat_info[0].port])
+        reply = IRCMessage.make_ctcp_message(:DCC, ['SCHAT', 'chat', @secure_chat_info.announce_ip, @secure_chat_info.server.port])
         msg.reply(reply, :force_private => true)
     when COMMAND_REGISTER
       unless @router.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
-        msg.reply("Sorry, you don't have the permission to use DCC chat.")
+        msg.reply("Sorry, you don't have 'can_use_dcc_chat' permission.")
         return
       end
 
@@ -141,7 +142,7 @@ class DCC < IRCPlugin
       store
     when COMMAND_UNREGISTER
       unless @router.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
-        msg.reply("Sorry, you don't have the permission to use DCC chat.")
+        msg.reply("Sorry, you don't have 'can_use_dcc_chat' permission.")
         return
       end
 
@@ -184,6 +185,46 @@ class DCC < IRCPlugin
       end
 
       store
+    when :dcc_kill
+      unless @router.check_permission(:can_kill_dcc_connection, msg_to_principal(msg))
+        msg.reply("Sorry, you don't have 'can_kill_dcc_connection' permission.")
+        return
+      end
+      unless msg.private?
+        msg.reply("Respect people's privacy, do that in PM.")
+        return
+      end
+
+      connections = {}
+
+      merge_labeled(connections, @plain_chat_info, 'CHAT')
+      merge_labeled(connections, @secure_chat_info, 'SCHAT')
+
+      tail = msg.tail
+      if tail
+        # kill connections with given ports
+        bots = tail.split.map {|port| [port, connections[port.to_i]]}
+        bots.each do |port, connection|
+          if connection
+            bot = connection[0]
+            type = connection[1]
+            bot.close rescue nil
+            msg.reply("Killed connection #{format_connection_info(bot, port, type)}")
+          else
+            msg.reply("Unknown connection '#{port}'.")
+          end
+        end
+      else
+        # output the list of connections
+        connections.each do |port, connection|
+          bot = connection[0]
+          type = connection[1]
+          msg.reply(format_connection_info(bot, port, type))
+        end
+        if connections.empty?
+          msg.reply('No DCC connections present.')
+        end
+      end
     end
   end
 
@@ -212,6 +253,19 @@ class DCC < IRCPlugin
 
   private
 
+  def merge_labeled(map, submap, label)
+    if submap
+      labeled = submap.server.port_to_bot.map do |p, b|
+        [p, [b, label]]
+      end
+      map.merge!(Hash[labeled])
+    end
+  end
+
+  def format_connection_info(bot, port, type)
+    "#{port}: #{type}; Principals: #{bot.principals.join(' ')}; Credentials: #{bot.credentials.join(' ')}"
+  end
+
   def merged_config(config, branch)
     return unless config.include?(branch)
     config = config.dup
@@ -230,7 +284,7 @@ class DCC < IRCPlugin
     server = DCCPlainChatServer.new(self, chat_config)
     server.start
 
-    [server, announce_ip]
+    OpenStruct.new({:server => server, :announce_ip => announce_ip})
   end
 
   def start_secure_server(chat_config)
@@ -246,12 +300,12 @@ class DCC < IRCPlugin
     server = DCCSecureChatServer.new(self, chat_config)
     server.start
 
-    [server, announce_ip]
+    OpenStruct.new({:server => server, :announce_ip => announce_ip})
   end
 
   def stop_server(server_info)
     return unless server_info
-    server_info[0].shutdown rescue nil
-    server_info[0].join rescue nil
+    server_info.server.shutdown rescue nil
+    server_info.server.join rescue nil
   end
 end
