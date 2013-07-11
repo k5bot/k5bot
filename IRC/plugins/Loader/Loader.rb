@@ -7,64 +7,82 @@
 require_relative '../../IRCPlugin'
 
 class Loader < IRCPlugin
-  Description = "Loads, reloads, and unloads plugins."
+  Description = 'Loads, reloads, and unloads plugins.'
   Commands = {
-    :load => "loads or reloads specified plugin",
-    :unload => "unloads specified plugin",
-    # :reload_core => "reloads core files"
+    :load => 'loads or reloads specified plugin',
+    :unload => 'unloads specified plugin',
   }
+  Dependencies = [ :Router ]
 
   def on_privmsg(msg)
-    case msg.botcommand
-    when :load
-      return unless msg.tail
-      plugins = msg.tail.split
+    return unless msg.tail
 
-      plugins_to_load = {}
+    dispatch_message_by_command(msg, [:load, :unload]) do
+      check_and_complain(@plugin_manager.plugins[:Router], msg, :can_manage_plugins)
+    end
+  end
 
-      cycle_while_reducing(plugins) do |name|
-        exists = !!(@plugin_manager.plugins[name.to_sym])
-        unload_successful = !exists || !!(@plugin_manager.unload_plugin name)
-        if unload_successful
-          plugins_to_load[name] = exists
-          true
-        else
-          false
-        end
+  def check_and_complain(checker, msg, permission)
+    if checker.check_permission(permission, msg_to_principal(msg))
+      true
+    else
+      msg.reply("Sorry, you don't have '#{permission}' permission.")
+      false
+    end
+  end
+
+  def msg_to_principal(msg)
+    msg.prefix
+  end
+
+  def cmd_load(msg)
+    plugins = msg.tail.split
+
+    plugins_to_load = {}
+
+    cycle_while_reducing(plugins) do |name|
+      exists = !!(@plugin_manager.plugins[name.to_sym])
+      unload_successful = !exists || !!(@plugin_manager.unload_plugin name)
+      if unload_successful
+        plugins_to_load[name] = exists
+        true
+      else
+        false
       end
+    end
 
-      plugins.each do |name|
+    plugins.each do |name|
+      msg.reply "Cannot unload '#{name}'."
+    end
+
+    # Since hash in Ruby 1.9 preserves order of addition,
+    # reverse order would be the best one for loading
+    plugins_to_load = plugins_to_load.to_a.reverse!
+
+    cycle_while_reducing(plugins_to_load) do |name, existed|
+      if @plugin_manager.load_plugin(name)
+        msg.reply "'#{name}' #{'re' if existed}loaded."
+        true
+      else
+        false
+      end
+    end
+
+    plugins_to_load.each do |name, existed|
+      msg.reply "Cannot #{'re' if existed}load '#{name}'."
+    end
+  end
+
+  def cmd_unload(msg)
+    msg.tail.split.each do |name|
+      if name.eql? 'Loader'
+        msg.reply 'Refusing to unload the loader plugin.'
+        next
+      end
+      if @plugin_manager.unload_plugin name
+        msg.reply "'#{name}' unloaded."
+      else
         msg.reply "Cannot unload '#{name}'."
-      end
-
-      # Since hash in Ruby 1.9 preserves order of addition,
-      # reverse order would be the best one for loading
-      plugins_to_load = plugins_to_load.to_a.reverse!
-
-      cycle_while_reducing(plugins_to_load) do |name, existed|
-        if @plugin_manager.load_plugin(name)
-          msg.reply "'#{name}' #{'re' if existed}loaded."
-          true
-        else
-          false
-        end
-      end
-
-      plugins_to_load.each do |name, existed|
-        msg.reply "Cannot #{'re' if existed}load '#{name}'."
-      end
-    when :unload
-      return unless msg.tail
-      msg.tail.split.each do |name|
-        if name.eql? 'Loader'
-          msg.reply "Refusing to unload the loader plugin."
-          next
-        end
-        if @plugin_manager.unload_plugin name
-          msg.reply "'#{name}' unloaded."
-        else
-          msg.reply "Cannot unload '#{name}'."
-        end
       end
     end
   end
