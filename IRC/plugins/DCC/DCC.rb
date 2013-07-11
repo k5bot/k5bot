@@ -14,9 +14,6 @@ require_relative '../../IRCPlugin'
 
 class DCC < IRCPlugin
   Description = 'Direct Client-to-Client protocol plugin.'
-  Commands = {
-    :chat => 'convenience command that sends a DCC chat request back to the caller',
-  }
   Dependencies = [ :Router, :StorageYAML, :IRCBot ]
 
   DEFAULT_LISTEN_INTERFACE = '0.0.0.0'
@@ -25,13 +22,19 @@ class DCC < IRCPlugin
 
   attr_reader :parent_ircbot
 
-  def afterLoad
-    unless @config[:announce] || @config[:listen]
-      raise "DCC configuration error! At least 'announce' or 'listen' ip must be defined."
+  def commands
+    result = {}
+    if @plain_chat_info
+      result[:chat] = 'sends a DCC CHAT request back to the caller'
+    end
+    if @secure_chat_info
+      result[:schat] = 'sends a DCC SCHAT (SSL-encrypted chat) request back to the caller'
     end
 
-    @announce_ip = IPAddr.new(@config[:announce] || @config[:listen]).to_i
+    result
+  end
 
+  def afterLoad
     load_helper_class(:DCCMessage)
     load_helper_class(:DCCBot)
     load_helper_class(:DCCPlainChatServer)
@@ -40,19 +43,15 @@ class DCC < IRCPlugin
     @storage = @plugin_manager.plugins[:StorageYAML]
     @router = @plugin_manager.plugins[:Router]
     @parent_ircbot = @plugin_manager.plugins[:IRCBot]
-
     @dcc_access = @storage.read('dcc_access') || {}
 
-    @tcp_server = DCCSecureChatServer.new(self, @config)
-
-    @tcp_server.start
-    @announce_port = @tcp_server.port
+    @plain_chat_info = start_plain_server(merged_config(@config, :chat))
+    @secure_chat_info = start_secure_server(merged_config(@config, :schat))
   end
 
   def beforeUnload
-    @tcp_server.shutdown rescue nil
-    @tcp_server.join rescue nil
-    @tcp_server = nil
+    stop_server(@secure_chat_info)
+    stop_server(@plain_chat_info)
 
     @dcc_access = nil
     @parent_ircbot = nil
@@ -63,9 +62,6 @@ class DCC < IRCPlugin
     unload_helper_class(:DCCPlainChatServer)
     unload_helper_class(:DCCBot)
     unload_helper_class(:DCCMessage)
-
-    @announce_port = nil
-    @announce_ip = nil
 
     nil
   end
@@ -84,6 +80,7 @@ class DCC < IRCPlugin
   def on_privmsg(msg)
     case msg.botcommand
     when :chat
+      return unless @plain_chat_info
       if msg.bot.instance_of?(DCCBot)
         msg.reply('Cannot initiate DCC chat from DCC chat.')
         return
@@ -94,9 +91,10 @@ class DCC < IRCPlugin
         return
       end
 
-      reply = IRCMessage.make_ctcp_message(:DCC, ['CHAT', 'chat', @announce_ip, @announce_port])
+      reply = IRCMessage.make_ctcp_message(:DCC, ['CHAT', 'chat', @plain_chat_info[1], @plain_chat_info[0].port])
       msg.reply(reply, :force_private => true)
     when :schat
+        return unless @secure_chat_info
         if msg.bot.instance_of?(DCCBot)
           msg.reply('Cannot initiate DCC chat from DCC chat.')
           return
@@ -107,7 +105,7 @@ class DCC < IRCPlugin
           return
         end
 
-        reply = IRCMessage.make_ctcp_message(:DCC, ['SCHAT', 'chat', @announce_ip, @announce_port])
+        reply = IRCMessage.make_ctcp_message(:DCC, ['SCHAT', 'chat', @secure_chat_info[1], @secure_chat_info[0].port])
         msg.reply(reply, :force_private => true)
     when COMMAND_REGISTER
       unless @router.check_permission(:can_use_dcc_chat, msg)
@@ -205,5 +203,50 @@ class DCC < IRCPlugin
     end
 
     result[:a]
+  end
+
+  private
+
+  def merged_config(config, branch)
+    return unless config.include?(branch)
+    config = config.dup
+    branch_config = config.delete(branch) || {}
+    config.merge!(branch_config)
+    config
+  end
+
+  def start_plain_server(chat_config)
+    return unless chat_config
+
+    unless chat_config[:announce] || chat_config[:listen]
+      raise "DCC CHAT configuration error! At least 'announce' or 'listen' ip must be defined."
+    end
+    announce_ip = IPAddr.new(chat_config[:announce] || chat_config[:listen]).to_i
+    server = DCCPlainChatServer.new(self, chat_config)
+    server.start
+
+    [server, announce_ip]
+  end
+
+  def start_secure_server(chat_config)
+    return unless chat_config
+
+    unless chat_config[:announce] || chat_config[:listen]
+      raise "DCC SCHAT configuration error! At least 'announce' or 'listen' ip must be defined."
+    end
+    announce_ip = IPAddr.new(chat_config[:announce] || chat_config[:listen]).to_i
+    unless chat_config[:ssl_cert]
+      raise "DCC SCHAT configuration error! 'ssl_cert' must be defined."
+    end
+    server = DCCSecureChatServer.new(self, chat_config)
+    server.start
+
+    [server, announce_ip]
+  end
+
+  def stop_server(server_info)
+    return unless server_info
+    server_info[0].shutdown rescue nil
+    server_info[0].join rescue nil
   end
 end

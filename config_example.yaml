@@ -25,6 +25,12 @@
     #:listen: 0.0.0.0 # interface to actually listen on, 0.0.0.0 by default.
     #:port: 55554 # port to listen on, will be chosen randomly by default
     :limit: 50 # number of simultaneously accepted connections, 10 by default.
+    :chat: # if present, then DCC CHAT server will be started.
+      # you can override all the settings above here, except salt.
+    :schat: # if present, then DCC SSL CHAT server will be started.
+      :ssl_cert: <path to your ssl certificate file>
+      #:ssl_key: <path to your ssl private key file>, by default same as ssl_cert
+      #:ssl_key_passphrase: <passphrase to your private key, if it's encrypted>
 - :Help
 - :StorageYAML:
     :'data_directory': "~/.ircbot"
