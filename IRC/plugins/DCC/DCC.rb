@@ -20,7 +20,8 @@ class DCC < IRCPlugin
   Dependencies = [ :Router, :StorageYAML, :IRCBot ]
 
   DEFAULT_LISTEN_INTERFACE = '0.0.0.0'
-  DEFAULT_LISTEN_PORT = 55554
+  DEFAULT_LISTEN_PORT = 0 # Make OS choose a free port
+  DEFAULT_CONNECTION_LIMIT = 10
 
   attr_reader :parent_ircbot
 
@@ -30,10 +31,10 @@ class DCC < IRCPlugin
     end
 
     @announce_ip = IPAddr.new(@config[:announce] || @config[:listen]).to_i
-    @announce_port = @config[:port] || DEFAULT_LISTEN_PORT
 
     load_helper_class(:DCCMessage)
     load_helper_class(:DCCBot)
+    load_helper_class(:DCCPlainChatServer)
 
     @storage = @plugin_manager.plugins[:StorageYAML]
     @router = @plugin_manager.plugins[:Router]
@@ -41,24 +42,26 @@ class DCC < IRCPlugin
 
     @dcc_access = @storage.read('dcc_access') || {}
 
-    @tcp_server = TCPServer.new(@config[:listen] || DEFAULT_LISTEN_INTERFACE, @announce_port)
+    @tcp_server = DCCPlainChatServer.new(self,
+                                         @config[:port] || DEFAULT_LISTEN_PORT,
+                                         @config[:listen] || DEFAULT_LISTEN_INTERFACE,
+                                         @config[:limit] || DEFAULT_CONNECTION_LIMIT)
 
-    @listen_thread = Thread.start(self) do |dcc_instance|
-      listen_thread_body(dcc_instance, @parent_ircbot)
-    end
+    @tcp_server.start
+    @announce_port = @tcp_server.port
   end
 
   def beforeUnload
     @tcp_server.shutdown rescue nil
+    @tcp_server.join rescue nil
     @tcp_server = nil
 
-    (@listen_thread.join unless Thread.current.eql?(@listen_thread)) rescue nil
-    @listen_thread = nil
-
     @dcc_access = nil
+    @parent_ircbot = nil
     @router = nil
     @storage = nil
 
+    unload_helper_class(:DCCPlainChatServer)
     unload_helper_class(:DCCBot)
     unload_helper_class(:DCCMessage)
 
@@ -70,47 +73,6 @@ class DCC < IRCPlugin
 
   def store
     @storage.write('dcc_access', @dcc_access)
-  end
-
-  def listen_thread_body(dcc_plugin, parent_ircbot)
-    clients = []
-    begin
-      loop do
-        client = DCCBot.new(@tcp_server.accept, dcc_plugin, parent_ircbot)
-
-        client.credentials = client.caller_id.map { |key| key_to_credential(key) }
-        client.authorities = client.credentials.map { |cred| check_credential_authorized(cred) }.reject { |x| !x }.uniq
-
-        if client.authorities.empty?
-          begin
-            client.dcc_send('Unauthorized connection. Use command .chat_reg first.')
-
-            client.caller_id.zip(client.credentials).each do |id, cred|
-              client.dcc_send("To approve '#{id}' use: .#{DCC::COMMAND_REGISTER} #{cred}")
-            end
-          rescue Exception => e
-            puts "=DCC: Exception while declining unauthorized access: #{e.inspect}"
-          ensure
-            client.close
-          end
-          next
-        end
-
-        client.start
-
-        clients << client
-        clients.delete_if do |c|
-          if c.is_dead?
-            c.close
-            true
-          end
-        end
-      end
-    ensure
-      clients.each do |client|
-        client.close rescue nil
-      end
-    end
   end
 
   def dispatch(msg)
@@ -210,8 +172,6 @@ class DCC < IRCPlugin
       store
     end
   end
-
-  private
 
   def msg_to_authority(msg)
     msg.prefix

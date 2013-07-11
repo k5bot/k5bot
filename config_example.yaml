@@ -23,7 +23,8 @@
     :salt: <type some random stuff here to protect privacy of your users>
     :announce: <your external ip here>
     #:listen: 0.0.0.0 # interface to actually listen on, 0.0.0.0 by default.
-    :port: 55554 # port to listen on
+    #:port: 55554 # port to listen on, will be chosen randomly by default
+    :limit: 50 # number of simultaneously accepted connections, 10 by default.
 - :Help
 - :StorageYAML:
     :'data_directory': "~/.ircbot"

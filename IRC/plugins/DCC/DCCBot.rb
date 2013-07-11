@@ -4,15 +4,9 @@
 
 # Direct Client-to-Client chat worker
 
-require 'ipaddr'
-require 'socket'
-require 'ostruct'
-
-require_relative '../../IRCPlugin'
-
 class DCCBot
-  attr_reader :last_sent, :last_received, :start_time, :caller_id
-  attr_accessor :credentials, :authorities
+  attr_reader :last_sent, :last_received, :start_time
+  attr_accessor :caller_info, :credentials, :authorities
 
   def initialize(socket, dcc_plugin, parent_bot)
     @socket = socket
@@ -23,12 +17,7 @@ class DCCBot
     @last_received = nil
     @start_time = Time.now
 
-    # [host, ip] or [ip], if reverse resolution failed
-    @caller_id = @socket.peeraddr(true)[2..-1].uniq
-
-    @credentials = @authorities = nil
-
-    log(:log, "Got incoming connection from #{@caller_id.join(' ')}")
+    @caller_info = @credentials = @authorities = nil
   end
 
   def user
@@ -47,37 +36,28 @@ class DCCBot
     @parent_bot.find_user_by_uid(name)
   end
 
-  def start
-    log(:log, 'Starting interaction.')
+  def serve
+    log(:log, "Starting interaction with #{@caller_info}")
 
-    @listen_thread = Thread.start(self) do |dcc_bot|
-      begin
-        dcc_bot.dcc_send("Hello! You're authorized as: #{authorities.join(' ')}; Credentials: #{credentials.join(' ')}")
+    begin
+      self.dcc_send("Hello! You're authorized as: #{authorities.join(' ')}; Credentials: #{credentials.join(' ')}")
+      @socket.flush
+
+      #until @socket.eof? do # for some reason blocks until user sends several lines.
+      while (raw = @socket.gets) do
+        self.receive(raw)
+        # improve latency a bit, by flushing output stream,
+        # which was probably written into during the process
+        # of handling received data
         @socket.flush
-
-        #until @socket.eof? do # for some reason blocks until user sends several lines.
-        loop do
-          dcc_bot.receive(@socket.gets)
-          # improve latency a bit, by flushing output stream,
-          # which was probably written into during the process
-          # of handling received data
-          @socket.flush
-        end
-      ensure
-        dcc_bot.close
       end
+    ensure
+      log(:log, "Stopping interaction with #{@caller_info}")
     end
   end
 
-  def is_dead?
-    @socket.closed? rescue true # assume the worst
-  end
-
   def close
-    log(:log, 'Terminating connection.')
-
-    @socket.close rescue nil
-    (@listen_thread.join unless Thread.current.eql?(@listen_thread)) rescue nil
+    @socket.close
   end
 
   def receive(raw)
@@ -91,7 +71,7 @@ class DCCBot
     begin
       @dcc_plugin.dispatch(DCCMessage.new(self, raw.chomp, @authorities.first))
     rescue Exception => e
-      log(:error, e.inspect)
+      log(:error, "#{e.inspect} #{e.backtrace.join("\n")}")
     end
   end
 
