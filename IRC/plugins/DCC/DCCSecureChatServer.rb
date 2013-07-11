@@ -48,8 +48,16 @@ class DCCSecureChatServer < DCCPlainChatServer
 
     do_log(:log, "Got incoming connection from #{caller_info}")
 
-    credentials = caller_id.map { |key| @dcc_plugin.key_to_credential(key) }
-    authorities = credentials.map { |cred| @dcc_plugin.check_credential_authorized(cred) }.reject { |x| !x }.uniq
+    credentials = caller_id.map { |id_part| @dcc_plugin.caller_id_to_credential(id_part) }
+    authorizations = credentials.map { |cred| @dcc_plugin.get_credential_authorization(cred) }.reject { |x| !x }
+
+    principals = authorizations.map { |principal, _| principal }.uniq
+
+    unless authorizations.empty? || authorizations.any? { |_, is_authorized| is_authorized }
+      do_log(:log, "Identified #{caller_info} as non-authorized #{principals}")
+      # Drop connection immediately.
+      return
+    end
 
     client_socket = OpenSSL::SSL::SSLSocket.new(client_socket, @ssl_context)
     client_socket.sync_close = true
@@ -57,7 +65,7 @@ class DCCSecureChatServer < DCCPlainChatServer
 
     do_log(:log, "Completed SSL handshake with #{caller_info}")
 
-    create_dcc_chat(client_socket, caller_id, credentials, authorities, caller_info)
+    create_dcc_chat(client_socket, caller_id, credentials, principals, caller_info)
   end
 
   def socket_to_port(socket)

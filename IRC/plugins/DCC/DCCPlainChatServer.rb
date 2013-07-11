@@ -37,20 +37,28 @@ class DCCPlainChatServer < GServer
 
     do_log(:log, "Got incoming connection from #{caller_info}")
 
-    credentials = caller_id.map { |key| @dcc_plugin.key_to_credential(key) }
-    authorities = credentials.map { |cred| @dcc_plugin.check_credential_authorized(cred) }.reject { |x| !x }.uniq
+    credentials = caller_id.map { |id_part| @dcc_plugin.caller_id_to_credential(id_part) }
+    authorizations = credentials.map { |cred| @dcc_plugin.get_credential_authorization(cred) }.reject { |x| !x }
 
-    create_dcc_chat(client_socket, caller_id, credentials, authorities, caller_info)
+    principals = authorizations.map { |principal, _| principal }.uniq
+
+    unless authorizations.empty? || authorizations.any? { |_, is_authorized| is_authorized }
+      do_log(:log, "Identified #{caller_info} as non-authorized #{principals}")
+      # Drop connection immediately.
+      return
+    end
+
+    create_dcc_chat(client_socket, caller_id, credentials, principals, caller_info)
   end
 
-  def create_dcc_chat(client_socket, caller_id, credentials, authorities, caller_info)
+  def create_dcc_chat(client_socket, caller_id, credentials, principals, caller_info)
     client = DCCBot.new(client_socket, @dcc_plugin, @dcc_plugin.parent_ircbot)
 
     client.caller_info = caller_info
     client.credentials = credentials
-    client.authorities = authorities
+    client.principals = principals
 
-    if client.authorities.empty?
+    if client.principals.empty?
       begin
         client.dcc_send('Unauthorized connection. Use command .chat_reg first.')
 

@@ -20,6 +20,10 @@ class DCC < IRCPlugin
   DEFAULT_LISTEN_PORT = 0 # Make OS choose a free port
   DEFAULT_CONNECTION_LIMIT = 10
 
+  ACCESS_TIMESTAMP_KEY = :t
+  ACCESS_PRINCIPAL_KEY = :p
+  ACCESS_FORMER_PRINCIPAL_KEY = :w
+
   attr_reader :parent_ircbot
 
   def commands
@@ -86,7 +90,7 @@ class DCC < IRCPlugin
         return
       end
 
-      unless @router.check_permission(:can_use_dcc_chat, msg.prefix)
+      unless @router.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
         msg.reply("Sorry, you don't have the permission to use DCC chat.")
         return
       end
@@ -100,7 +104,7 @@ class DCC < IRCPlugin
           return
         end
 
-        unless @router.check_permission(:can_use_dcc_chat, msg.prefix)
+        unless @router.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
           msg.reply("Sorry, you don't have the permission to use DCC chat.")
           return
         end
@@ -108,7 +112,7 @@ class DCC < IRCPlugin
         reply = IRCMessage.make_ctcp_message(:DCC, ['SCHAT', 'chat', @secure_chat_info[1], @secure_chat_info[0].port])
         msg.reply(reply, :force_private => true)
     when COMMAND_REGISTER
-      unless @router.check_permission(:can_use_dcc_chat, msg.prefix)
+      unless @router.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
         msg.reply("Sorry, you don't have the permission to use DCC chat.")
         return
       end
@@ -116,15 +120,15 @@ class DCC < IRCPlugin
       tail = msg.tail
       return unless tail
 
-      authority = msg_to_authority(msg)
+      principal = msg_to_principal(msg)
       credentials = tail.split
 
       credentials.each do |cred|
         if @dcc_access.include?(cred)
-          if @dcc_access[cred][:a]
-            msg.reply("DCC credential is already assigned to #{@dcc_access[cred][:a]}; Delete it first, using .#{COMMAND_UNREGISTER} #{cred}")
+          if @dcc_access[cred][ACCESS_PRINCIPAL_KEY]
+            msg.reply("DCC credential is already assigned to #{@dcc_access[cred][ACCESS_PRINCIPAL_KEY]}; Delete it first, using .#{COMMAND_UNREGISTER} #{cred}")
           else
-            @dcc_access[cred] = {:a => authority, :t => Time.now.utc.to_i}
+            @dcc_access[cred] = {ACCESS_PRINCIPAL_KEY => principal, ACCESS_TIMESTAMP_KEY => Time.now.utc.to_i}
             msg.reply("Associated you with DCC credential: #{cred}")
           end
         else
@@ -136,7 +140,7 @@ class DCC < IRCPlugin
 
       store
     when COMMAND_UNREGISTER
-      unless @router.check_permission(:can_use_dcc_chat, msg.prefix)
+      unless @router.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
         msg.reply("Sorry, you don't have the permission to use DCC chat.")
         return
       end
@@ -150,14 +154,14 @@ class DCC < IRCPlugin
         # his ip/host hash-compute to.
         allowed_credentials = msg.bot.credentials
         # As well as all credentials, that resolve
-        # to the same authorities as the credentials he
-        # has now.
-        allowed_authorities = msg.bot.authorities
+        # to the same principals as the credentials
+        # that he has now.
+        allowed_principals = msg.bot.principals
       else
-        # We're not under DCC, so we can only delete
-        # credentials that resolve to the same authority
-        # as we have now.
-        allowed_authorities = msg_to_authority(msg)
+        # We're not under DCC, so user can only delete
+        # credentials that resolve to the same principal
+        # as him.
+        allowed_principals = msg_to_principal(msg)
         allowed_credentials = []
       end
 
@@ -165,11 +169,11 @@ class DCC < IRCPlugin
 
       credentials.each do |cred|
         ok = @dcc_access.include?(cred)
-        ok &&= allowed_credentials.include?(cred) || allowed_authorities.include?(@dcc_access[cred][:a])
+        ok &&= allowed_credentials.include?(cred) || allowed_principals.include?(@dcc_access[cred][ACCESS_PRINCIPAL_KEY])
         if ok
-          was = @dcc_access[cred].delete(:a)
+          was = @dcc_access[cred].delete(ACCESS_PRINCIPAL_KEY)
           if was
-            @dcc_access[cred][:w] = was
+            @dcc_access[cred][ACCESS_FORMER_PRINCIPAL_KEY] = was
             msg.reply("Disassociated DCC credential: #{cred}")
           else
             msg.reply("DCC credential isn't associated: #{cred}")
@@ -183,26 +187,27 @@ class DCC < IRCPlugin
     end
   end
 
-  def msg_to_authority(msg)
+  def msg_to_principal(msg)
     msg.prefix
   end
 
-  def key_to_credential(key)
+  def caller_id_to_credential(key)
     salt = (@config[:salt] || 'lame ass salt for those who did not set it themselves')
     Base64.strict_encode64(Digest::SHA2.digest(key.to_s + salt))
   end
 
-  def check_credential_authorized(credential)
-    # checks if credential is already stored and has authorization,
-    # otherwise mark it as being attempted for non-authorized access.
+  # Checks if credential is already stored and has associated principal,
+  # otherwise mark it as being attempted for non-authorized access.
+  def get_credential_authorization(credential)
     result = @dcc_access[credential]
 
     unless result
-      result = @dcc_access[credential] = {:t => Time.now.utc.to_i}
+      result = @dcc_access[credential] = {ACCESS_TIMESTAMP_KEY => Time.now.utc.to_i}
       store
     end
 
-    result[:a]
+    principal = result[ACCESS_PRINCIPAL_KEY]
+    [principal, @router.check_permission(:can_use_dcc_chat, principal)] if principal
   end
 
   private

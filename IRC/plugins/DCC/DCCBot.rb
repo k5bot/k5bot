@@ -6,7 +6,7 @@
 
 class DCCBot
   attr_reader :last_sent, :last_received, :start_time
-  attr_accessor :caller_info, :credentials, :authorities
+  attr_accessor :caller_info, :credentials, :principals
 
   def initialize(socket, dcc_plugin, parent_bot)
     @socket = socket
@@ -17,7 +17,7 @@ class DCCBot
     @last_received = nil
     @start_time = Time.now
 
-    @caller_info = @credentials = @authorities = nil
+    @caller_info = @credentials = @principals = nil
   end
 
   def user
@@ -40,7 +40,7 @@ class DCCBot
     log(:log, "Starting interaction with #{@caller_info}")
 
     begin
-      self.dcc_send("Hello! You're authorized as: #{authorities.join(' ')}; Credentials: #{credentials.join(' ')}")
+      self.dcc_send("Hello! You're authorized as: #{principals.join(' ')}; Credentials: #{credentials.join(' ')}")
       @socket.flush
 
       #until @socket.eof? do # for some reason blocks until user sends several lines.
@@ -69,7 +69,7 @@ class DCCBot
     log(:in, raw)
 
     begin
-      @dcc_plugin.dispatch(DCCMessage.new(self, raw.chomp, @authorities.first))
+      @dcc_plugin.dispatch(DCCMessage.new(self, raw.chomp, @principals.first))
     rescue Exception => e
       log(:error, "#{e.inspect} #{e.backtrace.join("\n")}")
     end
