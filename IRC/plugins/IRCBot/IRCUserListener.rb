@@ -22,8 +22,8 @@ class IRCUserListener
     @users.values.each { |u| @nicks[normalize(u.nick)] = u }
   end
 
-  def normalize(s)
-    s.downcase
+  def request_whois(bot, nick)
+    bot.send_raw "WHOIS #{nick}"
   end
 
   # Finds and returns the user who send the specified message.
@@ -39,26 +39,6 @@ class IRCUserListener
 
     update_user(msg.bot.user, user, msg.nick, msg.ident, msg.host)
     user
-  end
-
-  def maybe_update_user_map(bot_user, user, user_map, old_val, new_val)
-    return false unless new_val
-    return true if user == bot_user #bot mustn't end up in user maps.
-    old_val = normalize(old_val)
-    new_val = normalize(new_val)
-
-    user_map.delete(old_val) if user_map[old_val] == user
-    user_map[new_val] = user
-
-    !old_val.eql?(new_val)
-  end
-
-  def update_user(bot_user, user, nick, ident=nil, host=nil, realname=nil)
-    user.nick = nick if maybe_update_user_map(bot_user, user, @nicks, user.nick, nick)
-    user.ident = ident if maybe_update_user_map(bot_user, user, @users, user.name, IRCUser.ident_to_name(ident))
-    user.host = host if host
-    user.realname = realname if realname
-    store
   end
 
   # Finds a user from nick.
@@ -113,11 +93,33 @@ class IRCUserListener
     update_user(msg.bot.user, msg.bot.user, nil, nil, host)
   end
 
-  def request_whois(bot, nick)
-    bot.send_raw "WHOIS #{nick}"
+  private
+
+  def maybe_update_user_map(bot_user, user, user_map, old_val, new_val)
+    return false unless new_val
+    return true if user == bot_user #bot mustn't end up in user maps.
+    old_val = normalize(old_val)
+    new_val = normalize(new_val)
+
+    user_map.delete(old_val) if user_map[old_val] == user
+    user_map[new_val] = user
+
+    !old_val.eql?(new_val)
+  end
+
+  def update_user(bot_user, user, nick, ident=nil, host=nil, realname=nil)
+    user.nick = nick if maybe_update_user_map(bot_user, user, @nicks, user.nick, nick)
+    user.ident = ident if maybe_update_user_map(bot_user, user, @users, user.name, IRCUser.ident_to_name(ident))
+    user.host = host if host
+    user.realname = realname if realname
+    store
   end
 
   def store
     @storage.write('users', @users)
+  end
+
+  def normalize(s)
+    s.downcase
   end
 end
