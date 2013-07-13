@@ -51,16 +51,18 @@ class URL < IRCPlugin
           msg.reply("Short URL: #{short_url} for URL: #{url.abbreviate(100)}") if short_url
         end
       when nil # Don't react to url-s in commands
-        scan_for_uri(msg)
+        scan_for_uri(msg.tail, msg)
     end
   end
 
-  def on_action(msg)
-    scan_for_uri(msg)
+  def on_ctcp_privmsg(msg)
+    msg.ctcp.each do |ctcp|
+      next if ctcp.command != :ACTION
+      scan_for_uri(ctcp.raw, msg)
+    end
   end
 
-  def scan_for_uri(msg)
-    text = msg.tail
+  def scan_for_uri(text, msg)
     return unless text
 
     uris = URI.extract(text)
