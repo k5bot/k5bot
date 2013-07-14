@@ -124,12 +124,15 @@ class URL < IRCPlugin
         doc = html_to_nokogiri(result)
         return unless doc
 
-        title = doc.css('title')[0].text.chomp
+        text_node = doc.css('title')[0]
+        if text_node
+          title = text_node.text.chomp
 
-        title.gsub!(/[ \t\n\f\r]+/, ' ')
-        title.strip!
+          title.gsub!(/[ \t\n\f\r]+/, ' ')
+          title.strip!
 
-        msg.reply("Title: #{title}")
+          msg.reply("Title: #{title}")
+        end
       else
         response = []
 
