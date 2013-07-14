@@ -13,9 +13,9 @@
 require_relative '../../IRCPlugin'
 
 class Tell < IRCPlugin
-  Description = "A plugin that can pass messages between users."
+  Description = 'A plugin that can pass messages between users.'
   Commands = {
-    :tell => "[nick] [message] (ex.: !tell K5 I will be back later) sends [message] to [nick] when he/she/it says something the next time"
+    :tell => '[nick] [message] (ex.: !tell K5 I will be back later) sends [message] to [nick] when he/she/it says something the next time'
   }
 
   Dependencies = [ :StorageYAML ]
@@ -41,27 +41,27 @@ class Tell < IRCPlugin
   def on_privmsg(msg)
     case msg.botcommand
     when :tell
-      storeTell(msg)
+      store_tell(msg)
     end
-    doTell(msg)
+    do_tell(msg)
   end
 
   # Stores a message from the sender
-  def storeTell(msg)
+  def store_tell(msg)
     return unless msg.tail
-    recipientNick, tellMessage = msg.tail.scan(/^\s*(\S+)\s+(.+)\s*$/).flatten
-    return unless recipientNick and tellMessage
-    return if recipientNick.casecmp(msg.nick) == 0
-    return if recipientNick.casecmp(msg.bot.user.nick) == 0
-    user = msg.bot.find_user_by_nick(recipientNick)
+    recipient_nick, tell_message = msg.tail.scan(/^\s*(\S+)\s+(.+)\s*$/).flatten
+    return unless recipient_nick and tell_message
+    return if recipient_nick.casecmp(msg.nick) == 0
+    return if recipient_nick.casecmp(msg.bot.user.nick) == 0
+    user = msg.bot.find_user_by_nick(recipient_nick)
     if user && user.name
       @tell[user.name.downcase] ||= {}
       rcpt = @tell[user.name.downcase]
-      tellMessages = rcpt[msg.user.name.downcase] ||= []
-      if tellMessages.index { |t, n, m| m == tellMessage }
+      tell_messages = rcpt[msg.user.name.downcase] ||= []
+      if tell_messages.index { |_, _, m| m == tell_message }
         msg.reply("#{msg.nick}: Already noted.")
       else
-        tellMessages << [Time.now, msg.nick, tellMessage]
+        tell_messages << [Time.now, msg.nick, tell_message]
         store
         msg.reply("#{msg.nick}: Will do.")
       end
@@ -71,17 +71,18 @@ class Tell < IRCPlugin
   end
 
   # Checks if the sender has any messages and delivers them
-  def doTell(msg)
+  def do_tell(msg)
     unless msg.private?
       if @tell[msg.user.name.downcase]
-        @tell[msg.user.name.downcase].each do |senderName, tellMsgs|
-          senderNick = tellMsgs.last[1]  # default to use the second element ( = the nick) of the last message as the sender nick
-          if senderUser = msg.bot.find_user_by_name(senderName)
-            senderNick = senderUser.nick
+        @tell[msg.user.name.downcase].each do |sender_name, tell_msgs|
+          sender_nick = tell_msgs.last[1]  # default to use the second element ( = the nick) of the last message as the sender nick
+          sender_user = msg.bot.find_user_by_name(sender_name)
+          if sender_user
+            sender_nick = sender_user.nick
           end
-          tellMsgs.each do |t, n, tellMsg|
-            as = agoStr(t)
-            msg.reply("#{msg.nick}, #{senderNick} told me #{as + ' ' if as}to tell you: #{tellMsg}")
+          tell_msgs.each do |t, _, tell_msg|
+            as = format_ago_string(t)
+            msg.reply("#{msg.nick}, #{sender_nick} told me #{as + ' ' if as}to tell you: #{tell_msg}")
           end
         end
         @tell.delete(msg.user.name.downcase)
@@ -90,7 +91,7 @@ class Tell < IRCPlugin
     end
   end
 
-  def agoStr(time)
+  def format_ago_string(time)
     ago = Time.now - time
     return 'just now' if ago <= 5
     a = {}
