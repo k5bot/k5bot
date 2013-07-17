@@ -62,11 +62,13 @@
 # need dictionary files that are not distributed with this project.
 # See the plugin directories for more information.
 - :EPWING: # This plugin also requires dictionaries in EPWING format
-    :daijirin: # dictionary name, whatever you want
+    :daijirin: # dictionary name, see options depending on it below.
       #:command: bot command to assign, same as dictionary name by default.
       :path: <path to directory containing CATALOGS file>
       #:subbook: 0 # subbook index in the given book, 0 by default.
       #:title: how it will be called in help, subbook title by default.
+      #:gaiji: name of file with gaiji mappings in StorageYAML's data_directory,
+      #        "gaiji_<dictionary name>" by default.
     #:kojien: # another dictionary name
     # ... same options as above, etc ...
 - :Pinyin

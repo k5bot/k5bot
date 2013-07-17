@@ -24,11 +24,15 @@ class EPWING < IRCPlugin
 
   def afterLoad
     @m = @plugin_manager.plugins[:Menu]
+    @storage = @plugin_manager.plugins[:StorageYAML]
 
     books = @config.map do |book_id, book_config|
       command = (book_config[:command] || book_id.to_s.downcase).to_sym
       path = book_config[:path] or raise "EPWING configuration error! Book path for #{book_id} must be defined."
       subbook = book_config[:subbook] || 0
+      gaiji_file = book_config[:gaiji] || "gaiji_#{book_id}"
+
+      gaiji_data = @storage.read(gaiji_file) || {}
 
       book = EB::Book.new
       begin
@@ -40,7 +44,27 @@ class EPWING < IRCPlugin
 
       title = config[:title] || convert_from_eb(book.title(subbook))
 
-      [command, OpenStruct.new({:book => book, :title => title})]
+      hookset = EB::Hookset.new
+
+      book.hookset=hookset
+
+      hookset.register(EB::HOOK_WIDE_FONT) do |_, argv|
+        char_code = argv[0].to_s(16).upcase.to_sym
+        convert_to_eb("<?W#{char_code}?>")
+      end
+
+      hookset.register(EB::HOOK_NARROW_FONT) do |_, argv|
+        char_code = argv[0].to_s(16).upcase.to_sym
+        convert_to_eb("<?N#{char_code}?>")
+      end
+
+      [command,
+       OpenStruct.new({
+                          :book => book,
+                          :title => title,
+                          :gaiji_file => gaiji_file,
+                          :gaiji_data => gaiji_data,
+                      })]
     end
 
     @books = Hash[books]
@@ -52,6 +76,7 @@ class EPWING < IRCPlugin
     @books = nil
 
     @m = nil
+    @storage = nil
 
     nil
   end
@@ -63,7 +88,7 @@ class EPWING < IRCPlugin
     case msg.botcommand
       when :epwing
         lookups = @books.map do |_, book_record|
-          [book_record.title, lookup_containing(book_record.book, word)]
+          [book_record.title, lookup_containing(book_record, word)]
         end
 
         menus = lookups.map do |book_title, lookup|
@@ -74,7 +99,7 @@ class EPWING < IRCPlugin
       else
         book_record = @books[msg.botcommand]
         if book_record
-          book_lookup = lookup_containing(book_record.book, word)
+          book_lookup = lookup_containing(book_record, word)
           reply = generate_menu(book_lookup, "#{word} in #{book_record.title}")
           reply_with_menu(msg, reply)
         end
@@ -100,11 +125,25 @@ class EPWING < IRCPlugin
   end
 
   # Looks up all words containing given text
-  def lookup_containing(book, word)
+  def lookup_containing(book_record, word)
+    book = book_record.book
     lookup = book.search(convert_to_eb(word))
     lookup.uniq!
     lookup.map do |heading, text|
-      [convert_from_eb(heading), convert_from_eb(text).split("\n")]
+      [
+          format_text(heading, book_record.gaiji_data),
+          format_text(text, book_record.gaiji_data).split("\n")
+      ]
+    end
+  end
+
+  def format_text(text, gaiji_data)
+    replace_gaiji(convert_from_eb(text), gaiji_data)
+  end
+
+  def replace_gaiji(text, gaiji_data)
+    text.gsub(/<\?([WN]\h{4})\?>/) do |_|
+      gaiji_data[$1.to_sym] || "<?#{$1}?>"
     end
   end
 
