@@ -44,8 +44,17 @@ class Help < IRCPlugin
     word = term[0]
     found_plugin = @pm.plugins[word.to_sym]
     if found_plugin
-      msg.reply(found_plugin.description || "#{found_plugin.name} has no description.")
-      msg.reply("#{found_plugin.name} provides: #{found_plugin.commands.keys.sort.collect{|c| "#{command_prefix}#{c.to_s}"}*', '}") if found_plugin.commands
+      if found_plugin.description
+        resp = browse_command_hierarchy(term[1..-1], found_plugin.description, [found_plugin.name])
+        resp[:found].map! {|r| "Plugin #{r}"} if resp[:found]
+        reply_with_hierarchy(msg, resp, '')
+      else
+        msg.reply("#{found_plugin.name} has no description.")
+      end
+      if term.size <= 1
+        # Don't show commands if user is browsing description subkeys.
+        msg.reply("#{found_plugin.name} commands: #{found_plugin.commands.keys.sort.collect{|c| "#{command_prefix}#{c.to_s}"}*', '}") if found_plugin.commands
+      end
       return
     end
 
@@ -71,14 +80,19 @@ class Help < IRCPlugin
     result = {}
 
     found.each do |name, desc|
-      resp = browse_command_hierarchy(term, desc, "#{command_prefix}#{bot_command}")
+      resp = browse_command_hierarchy(term, desc, %W(#{command_prefix}#{bot_command}))
       resp[:found].map! {|r| "#{name} plugin: #{r}"} if resp[:found]
 
       result.merge!(resp) do |_, old_val, new_val|
         old_val |= new_val
+        old_val
       end
     end
 
+    reply_with_hierarchy(msg, result, command_prefix)
+  end
+
+  def reply_with_hierarchy(msg, result, command_prefix)
     if result[:found]
       result[:found].each do |r|
         msg.reply(r)
@@ -98,11 +112,11 @@ class Help < IRCPlugin
     end
   end
 
-  def browse_command_hierarchy(hier, sub_catalog, bot_command)
-    hier = hier.map {|x| x.downcase.to_sym}
+  def browse_command_hierarchy(hier_key, sub_catalog, ref_prefix)
+    hier_key = hier_key.map {|x| x.downcase.to_sym}
 
-    full_ref = [bot_command]
-    hier.each do |keyword|
+    full_ref = ref_prefix.dup
+    hier_key.each do |keyword|
       unless sub_catalog.is_a?(Hash)
         # Can't descend further. Remember how far we descended.
         return {:fail_descend => [full_ref.join(' ')]}
@@ -132,7 +146,7 @@ class Help < IRCPlugin
       desc = sub_catalog
       see_also = []
     end
-    {:found => ["#{full_ref.join(' ')}: #{desc}."], :also => see_also}
+    {:found => ["#{full_ref.join(' ')}: #{desc}"], :also => see_also}
   end
 
   def format_suggestion_list(suggestions, command_prefix)
