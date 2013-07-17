@@ -85,21 +85,42 @@ class EPWING < IRCPlugin
     word = msg.tail
     return unless word
 
-    case msg.botcommand
+    botcommand = msg.botcommand
+    return unless botcommand
+
+    m = botcommand.to_s.match(/(.+)([!$@])$/)
+    if m
+      lookup_type = case m[2]
+                      when '!'
+                        :exact
+                      when '$'
+                        :ends_with
+                      when '@'
+                        :keyword
+                      else
+                        raise "Bug! Parse failure of #{botcommand}"
+                     end
+      botcommand = m[1].to_sym
+    else
+      lookup_type = :contains
+    end
+
+    case botcommand
       when :epwing
         lookups = @books.map do |_, book_record|
-          [book_record.title, lookup_containing(book_record, word)]
+          l_up = lookup(book_record, word, lookup_type)
+          ["#{book_record.title} (#{l_up.size} hit(s))", l_up]
         end
 
         menus = lookups.map do |book_title, lookup|
-          generate_menu(lookup, book_title)
-        end
+          generate_menu(lookup, book_title) if lookup.size > 0
+        end.reject {|x| !x}
 
         reply_with_menu(msg, MenuNodeSimple.new("#{word} in EPWING dictionaries", menus))
       else
-        book_record = @books[msg.botcommand]
+        book_record = @books[botcommand]
         if book_record
-          book_lookup = lookup_containing(book_record, word)
+          book_lookup = lookup(book_record, word, lookup_type)
           reply = generate_menu(book_lookup, "#{word} in #{book_record.title}")
           reply_with_menu(msg, reply)
         end
@@ -125,9 +146,20 @@ class EPWING < IRCPlugin
   end
 
   # Looks up all words containing given text
-  def lookup_containing(book_record, word)
+  def lookup(book_record, word, lookup_type)
     book = book_record.book
-    lookup = book.search(convert_to_eb(word))
+    lookup = case lookup_type
+               when :contains
+                 book.search(convert_to_eb(word))
+               when :exact
+                 book.exactsearch(convert_to_eb(word))
+               when :ends_with
+                 book.endsearch(convert_to_eb(word))
+               when :keyword
+                 book.keywordsearch(convert_to_eb(word).split(/[ 　]+/))
+               else
+                 raise "Bug! Unknown lookup type #{lookup_type.inspect}"
+             end
     lookup.uniq!
     lookup.map do |heading, text|
       [
@@ -135,6 +167,9 @@ class EPWING < IRCPlugin
           format_text(text, book_record.gaiji_data).split("\n")
       ]
     end
+  rescue Exception => e
+    puts "Error looking up in #{book.title}: #{e.inspect} #{e.backtrace}"
+    []
   end
 
   def format_text(text, gaiji_data)
