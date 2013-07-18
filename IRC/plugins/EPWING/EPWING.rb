@@ -157,9 +157,11 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
       when :gaiji
         change_gaiji(msg, word)
       when :'gaiji?'
-        display_gaiji(msg, word, [' ','▄','▀','█']) # 'Ｏ', '　'
+        display_gaiji(msg, word, [' ','▄','▀','█'])
       when :'gaiji??'
-        display_gaiji(msg, word, ['_','▄','▀','█']) # '▓', '░'
+        display_gaiji(msg, word, %w(░ ▄ ▀ █))
+      when :'gaiji???'
+        display_gaiji(msg, word, %w(░ ▓)) # 'Ｏ', '　'
       when :epwing
         return unless check_and_complain(@router, msg, :can_use_mass_epwing_lookup)
 
@@ -331,6 +333,9 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
     x = font.to_xpm
 
     lines = []
+    skipped_first = 0
+    skipped_last = 0
+
     x.each_line do |l|
       m = l.match(/^"(.{16,})"/)
       next unless m
@@ -340,24 +345,32 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
       lines << r
     end
 
-    lines = lines.each_slice(2).map do |top_line, bottom_line|
-      top_line.each_char.zip(bottom_line.each_char).map do |top_char, bottom_char|
-        x = top_char == '0' ? 0 : 2
-        y = bottom_char == '0' ? 0 : 1
-        charmap[x+y]
-      end.join
-    end
+    case charmap.size
+    when 4
+      lines = lines.each_slice(2).map do |top_line, bottom_line|
+        top_line.each_char.zip(bottom_line.each_char).map do |top_char, bottom_char|
+          x = top_char == '0' ? 0 : 2
+          y = bottom_char == '0' ? 0 : 1
+          charmap[x+y]
+        end.join
+      end
 
-    skipped_first = 0
-    while lines.first.delete(charmap[0]).empty?
-      lines.shift
-      skipped_first += 1
-    end
+      while lines.first.delete(charmap[0]).empty?
+        lines.shift
+        skipped_first += 1
+      end
 
-    skipped_last = 0
-    while lines.last.delete(charmap[0]).empty?
-      lines.pop
-      skipped_last += 1
+      while lines.last.delete(charmap[0]).empty?
+        lines.pop
+        skipped_last += 1
+      end
+    when 2
+      lines.each do |l|
+        l.gsub!(/0/, charmap[0])
+        l.gsub!(/1/, charmap[1])
+      end
+    else
+      raise "Bug! Charmap size is #{charmap.size}"
     end
 
     if skipped_first > 0
