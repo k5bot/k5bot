@@ -99,6 +99,7 @@ for WD500 in Daijirin.",
        OpenStruct.new({
                           :book => book,
                           :title => title,
+                          :command => command,
                           :help_extension => help_extension,
                           :gaiji_file => gaiji_file,
                           :gaiji_data => gaiji_data,
@@ -155,13 +156,16 @@ for WD500 in Daijirin.",
       when :epwing
         return unless check_and_complain(@router, msg, :can_use_mass_epwing_lookup)
 
-        lookups = @books.map do |command, book_record|
+        lookups = @books.map do |_, book_record|
           l_up = lookup(book_record, word, lookup_type)
-          ["#{command} (#{l_up.size} #{pluralize('hit', l_up.size)})", l_up]
+          [book_record, l_up]
         end
 
-        menus = lookups.map do |book_title, lookup|
-          generate_menu(lookup, book_title, msg.private?) if lookup.size > 0
+        menus = lookups.map do |book_record, lookup|
+          if lookup.size > 0
+            description = "#{book_record.command} (#{lookup.size} #{pluralize('hit', lookup.size)})"
+            generate_menu(lookup, description, msg.private?, book_record)
+          end
         end.reject {|x| !x}
 
         reply_with_menu(msg, MenuNodeSimple.new("#{word} in EPWING dictionaries", menus))
@@ -169,7 +173,7 @@ for WD500 in Daijirin.",
         book_record = @books[botcommand]
         if book_record
           book_lookup = lookup(book_record, word, lookup_type)
-          reply = generate_menu(book_lookup, "#{word} in #{book_record.title}", msg.private?)
+          reply = generate_menu(book_lookup, "#{word} in #{book_record.title}", msg.private?, book_record)
           reply_with_menu(msg, reply)
         end
     end
@@ -177,11 +181,12 @@ for WD500 in Daijirin.",
 
   private
 
-  def generate_menu(lookup, name, is_private)
+  def generate_menu(lookup, name, is_private, book_record)
     menu = lookup.map do |heading, text|
       EPWINGMenuEntry.new(
           heading,
-          text.each_slice(is_private ? 10 : 3).to_a
+          text.each_slice(is_private ? 10 : 3).to_a,
+          book_record
       )
     end
 
@@ -214,23 +219,13 @@ for WD500 in Daijirin.",
     lookup.uniq!
     lookup.map do |heading, text|
       [
-          format_text(heading, book_record.gaiji_data),
-          format_text(text, book_record.gaiji_data).split("\n")
+          heading,
+          text.split("\n")
       ]
     end
   rescue Exception => e
     puts "Error looking up in #{book.title}: #{e.inspect} #{e.backtrace}"
     []
-  end
-
-  def format_text(text, gaiji_data)
-    replace_gaiji(convert_from_eb(text), gaiji_data)
-  end
-
-  def replace_gaiji(text, gaiji_data)
-    text.gsub(/<\?([WN]\h{4})\?>/) do |_|
-      gaiji_data[$1.to_sym] || "<?#{$1}?>"
-    end
   end
 
   def convert_to_eb(word)

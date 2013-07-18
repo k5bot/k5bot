@@ -8,15 +8,20 @@ require_relative '../../IRCPlugin'
 require_relative '../Menu/MenuNode'
 
 class EPWINGMenuEntry < MenuNode
-  def initialize(description, entry)
+  def initialize(description, entry, book_record)
     @description = description
     @entry = entry
+    @book_record = book_record
     @to_show = 0
   end
 
   def enter(from_child, msg)
     do_reply(msg, @entry)
     nil
+  end
+
+  def description
+    format_text(@description, @book_record.gaiji_data)
   end
 
   def do_reply(msg, entry)
@@ -32,7 +37,7 @@ class EPWINGMenuEntry < MenuNode
     end
 
     entry[@to_show].each do |line|
-      msg.reply(line)
+      msg.reply(format_text(line, @book_record.gaiji_data))
     end
 
     @to_show += 1
@@ -46,5 +51,19 @@ class EPWINGMenuEntry < MenuNode
 
   def pluralize(str, num)
     num != 1 ? str + 's' : str
+  end
+
+  def format_text(text, gaiji_data)
+    replace_gaiji(convert_from_eb(text), gaiji_data)
+  end
+
+  def replace_gaiji(text, gaiji_data)
+    text.gsub(/<\?([WN]\h{4})\?>/) do |_|
+      gaiji_data[$1.to_sym] || "<?#{$1}?>"
+    end
+  end
+
+  def convert_from_eb(word)
+    word.encode('UTF-8')
   end
 end
