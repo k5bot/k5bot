@@ -64,6 +64,8 @@ class URL < IRCPlugin
 
   def scan_for_uri(text, msg)
     return unless text
+    # We'll be modifying text in place, so copy it beforehand.
+    text = text.dup
 
     uris = URI.extract(text)
 
@@ -77,15 +79,23 @@ class URL < IRCPlugin
     uris = uris.map do |uri|
       no_re = Regexp.quote(uri)
 
+      uri_extended = nil
+
       # Most ugly part: match for the extracted URI plus anything that
       # looks like it might have been part of it, but wasn't
       # approved of by URI.extract()
-      match = /(#{no_re}[^\s,!\\\]\[>　'"]*)/u.match(text)
-      unless match[0]
+      # We also immediately remove the match, so that weird urls with
+      # similar prefixes don't always match to the first of them.
+      text.sub!(/(#{no_re}[^\s,!\\\]\[>　'"]*)/u) do |match|
+        uri_extended = match
+        ''
+      end
+
+      unless uri_extended
         raise "Bug! Couldn't find uri in the same text it was extracted from: #{uri}"
       end
 
-      uri = match[0].to_s
+      uri = uri_extended.to_s
 
       # Try handling final ')' which may be just an artifact
       # from the URI having been enclosed in parentheses
