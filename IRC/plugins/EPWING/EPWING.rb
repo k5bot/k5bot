@@ -22,9 +22,9 @@ also use .epwing command to search in all available dictionaries simultaneously.
       :postfix => "Search commands can \
 (where supported by underlying dictionary) be postfixed with \
 one of the following: ! for exact search, $ for ends-with search, \
-@ for keyword search. No postfix is 'contains' search. \
-The exact meaning of those seems to vary with dictionary, so try and find \
-what suits you best.",
+@ for keyword search. No postfix is 'contains' search. ~ is the same, but
+doesn't substitute gaiji. The exact meaning of search modes seems to vary \
+with dictionary, so try and find what suits you best.",
       :gaiji => "Because EPWING dictionaries internally use JIS encodings, \
 they can't represent lots of characters. As a workaround \
 they use actual pictures instead, which they call 'GAIJI'. \
@@ -136,7 +136,7 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
     botcommand = msg.botcommand
     return unless botcommand
 
-    m = botcommand.to_s.match(/(.+)([!$@])$/)
+    m = botcommand.to_s.match(/(.+)([!$@~])$/)
     if m
       lookup_type = case m[2]
                       when '!'
@@ -145,6 +145,8 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
                         :ends_with
                       when '@'
                         :keyword
+                      when '~'
+                        :preserve_gaiji
                       else
                         raise "Bug! Parse failure of #{botcommand}"
                      end
@@ -173,7 +175,12 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
         menus = lookups.map do |book_record, lookup|
           if lookup.size > 0
             description = "#{book_record.command} (#{lookup.size} #{pluralize('hit', lookup.size)})"
-            generate_menu(lookup, description, msg.private?, book_record)
+            generate_menu(
+                lookup,
+                description,
+                msg.private?,
+                book_record,
+                lookup_type == :preserve_gaiji)
           end
         end.reject {|x| !x}
 
@@ -182,7 +189,12 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
         book_record = @books[botcommand]
         if book_record
           book_lookup = lookup(book_record, word, lookup_type)
-          reply = generate_menu(book_lookup, "#{word} in #{book_record.title}", msg.private?, book_record)
+          reply = generate_menu(
+              book_lookup,
+              "#{word} in #{book_record.title}",
+              msg.private?,
+              book_record,
+              lookup_type == :preserve_gaiji)
           reply_with_menu(msg, reply)
         end
     end
@@ -190,12 +202,13 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
 
   private
 
-  def generate_menu(lookup, name, is_private, book_record)
+  def generate_menu(lookup, name, is_private, book_record, preserve_gaiji)
     menu = lookup.map do |heading, text|
       EPWINGMenuEntry.new(
           heading,
           text.each_slice(is_private ? 10 : 3).to_a,
-          book_record
+          book_record,
+          preserve_gaiji
       )
     end
 
@@ -214,7 +227,7 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
   def lookup(book_record, word, lookup_type)
     book = book_record.book
     lookup = case lookup_type
-               when :contains
+               when :contains, :preserve_gaiji
                  book.search(convert_to_eb(word))
                when :exact
                  book.exactsearch(convert_to_eb(word))

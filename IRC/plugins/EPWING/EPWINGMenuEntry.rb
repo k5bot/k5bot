@@ -8,10 +8,11 @@ require_relative '../../IRCPlugin'
 require_relative '../Menu/MenuNode'
 
 class EPWINGMenuEntry < MenuNode
-  def initialize(description, entry, book_record)
+  def initialize(description, entry, book_record, preserve_gaiji)
     @description = description
     @entry = entry
     @book_record = book_record
+    @preserve_gaiji = preserve_gaiji
     @to_show = 0
   end
 
@@ -54,7 +55,11 @@ class EPWINGMenuEntry < MenuNode
   end
 
   def format_text(text, gaiji_data)
-    replace_gaiji(convert_from_eb(text), gaiji_data)
+    text = convert_from_eb(text)
+    unless @preserve_gaiji
+      text = replace_gaiji(text, gaiji_data)
+    end
+    text
   end
 
   def replace_gaiji(text, gaiji_data)
