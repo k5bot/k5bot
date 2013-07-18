@@ -87,7 +87,7 @@ class DCCBot
 
     #char-per-char correspondence replace, to make the returned count meaningful
     raw.gsub!(/[\r\n]/, ' ')
-    raw.strip!
+    raw.rstrip!
 
     @last_sent = raw
 
