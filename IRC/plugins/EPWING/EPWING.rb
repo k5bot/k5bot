@@ -30,8 +30,8 @@ they can't represent lots of characters. As a workaround \
 they use actual pictures instead, which they call 'GAIJI'. \
 Whenever you see text like <?A2C4W?>, that's them. Meanwhile, \
 you can ask me to upload corresponding pic somewhere, \
-until I automate the uploading and add possibility for users to suggest \
-Unicode equivalents.",
+until I automate the uploading. Using .gaiji command to supply \
+unicode equivalents for gaiji is strongly encouraged.",
   }
   Dependencies = [ :Menu, :StorageYAML, :Router ]
 
@@ -46,7 +46,12 @@ Unicode equivalents.",
     end
     Hash[book_cmds].merge(
         :epwing => "looks up given word in all opened EPWING dictionaries. \
-See '.help #{name}' for more info."
+See '.help #{name}' for more info.",
+        :gaiji => "supplies given replacement symbol(s) for specified gaiji in \
+specified dictionary. See '.help #{name} gaiji' for more info. \
+Example: .gaiji daijirin WD500 (1) <-- to add (1) as replacement for <?WD500?> \
+in Daijirin. Example: .gaiji daijirin WD500 <-- to remove existing mapping \
+for WD500 in Daijirin.",
     )
   end
 
@@ -117,6 +122,9 @@ See '.help #{name}' for more info."
     nil
   end
 
+  SPACE_REGEXP = /[ 　]+/
+  USER_GAIJI_REGEXP = /^[WwNn]\h{4}$/
+
   def on_privmsg(msg)
     word = msg.tail
     return unless word
@@ -142,12 +150,14 @@ See '.help #{name}' for more info."
     end
 
     case botcommand
+      when :gaiji
+        change_gaiji(msg, word)
       when :epwing
         return unless check_and_complain(@router, msg, :can_use_mass_epwing_lookup)
 
-        lookups = @books.map do |_, book_record|
+        lookups = @books.map do |command, book_record|
           l_up = lookup(book_record, word, lookup_type)
-          ["#{book_record.title} (#{l_up.size} #{pluralize('hit', l_up.size)})", l_up]
+          ["#{command} (#{l_up.size} #{pluralize('hit', l_up.size)})", l_up]
         end
 
         menus = lookups.map do |book_title, lookup|
@@ -197,7 +207,7 @@ See '.help #{name}' for more info."
                when :ends_with
                  book.endsearch(convert_to_eb(word))
                when :keyword
-                 book.keywordsearch(convert_to_eb(word).split(/[ 　]+/))
+                 book.keywordsearch(convert_to_eb(word).split(SPACE_REGEXP))
                else
                  raise "Bug! Unknown lookup type #{lookup_type.inspect}"
              end
@@ -246,5 +256,36 @@ See '.help #{name}' for more info."
 
   def msg_to_principal(msg)
     msg.prefix
+  end
+
+  def change_gaiji(msg, word)
+    return unless check_and_complain(@router, msg, :can_add_gaiji)
+    dictionary, gaiji, replacement = word.split(SPACE_REGEXP, 3)
+    book_record = @books[dictionary.downcase.to_sym]
+    unless book_record
+      msg.reply("Unknown dictionary name '#{dictionary}'. Must be one of: #{@books.keys.join(', ')}")
+      return
+    end
+    unless gaiji && gaiji.match(USER_GAIJI_REGEXP)
+      msg.reply('Gaiji must be in format Wxxxx or Nxxxx, where xxxx are hexadecimal digits.')
+      return
+    end
+    gaiji = gaiji.upcase.to_sym
+    previous_value = book_record.gaiji_data[gaiji]
+    if replacement
+      book_record.gaiji_data[gaiji] = replacement
+      msg.reply("Replaced #{gaiji} in dictionary '#{dictionary}' with #{replacement}#{" (was #{previous_value})" if previous_value}.")
+    elsif previous_value
+      book_record.gaiji_data.delete(gaiji)
+      msg.reply("Removed mapping for #{gaiji} in dictionary '#{dictionary}'#{" (was #{previous_value})" if previous_value}.")
+    else
+      msg.reply("Can't remove non-existing mapping for #{gaiji} in dictionary '#{dictionary}'.")
+    end
+
+    store_gaiji(book_record)
+  end
+
+  def store_gaiji(book_record)
+    @storage.write(book_record.gaiji_file, book_record.gaiji_data)
   end
 end
