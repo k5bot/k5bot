@@ -37,7 +37,12 @@ Unicode equivalents.",
 
   def commands
     book_cmds = @books.each_pair.map do |command, book_record|
-      [command, "looks up given word in #{book_record.title}. See '.help #{name}' for more info."]
+      [
+          command,
+          {
+              nil => "looks up given word in #{book_record.title}. See '.help #{name}' for more info."
+          }.merge(book_record.help_extension)
+      ]
     end
     Hash[book_cmds].merge(
         :epwing => "looks up given word in all opened EPWING dictionaries. \
@@ -56,6 +61,7 @@ See '.help #{name}' for more info."
       command = (book_config[:command] || book_id.to_s.downcase).to_sym
       path = book_config[:path] or raise "EPWING configuration error! Book path for #{book_id} must be defined."
       subbook = book_config[:subbook] || 0
+      help_extension = book_config[:help] || {}
       gaiji_file = book_config[:gaiji] || "gaiji_#{book_id}"
 
       gaiji_data = @storage.read(gaiji_file) || {}
@@ -88,6 +94,7 @@ See '.help #{name}' for more info."
        OpenStruct.new({
                           :book => book,
                           :title => title,
+                          :help_extension => help_extension,
                           :gaiji_file => gaiji_file,
                           :gaiji_data => gaiji_data,
                       })]

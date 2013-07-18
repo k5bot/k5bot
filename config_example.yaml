@@ -69,6 +69,8 @@
       #:title: how it will be called in help, subbook title by default.
       #:gaiji: name of file with gaiji mappings in StorageYAML's data_directory,
       #        "gaiji_<dictionary name>" by default.
+      #:help: #hash to insert into command help, e.g.:
+      #  :usage: <blah blah>, this will be accessible from '.help daijirin usage'
     #:kojien: # another dictionary name
     # ... same options as above, etc ...
 - :Pinyin
