@@ -33,7 +33,7 @@ you can ask me to upload corresponding pic somewhere, \
 until I automate the uploading and add possibility for users to suggest \
 Unicode equivalents.",
   }
-  Dependencies = [ :Menu, :StorageYAML ]
+  Dependencies = [ :Menu, :StorageYAML, :Router ]
 
   def commands
     book_cmds = @books.each_pair.map do |command, book_record|
@@ -48,6 +48,7 @@ See '.help #{name}' for more info."
   def afterLoad
     load_helper_class(:EPWINGMenuEntry)
 
+    @router = @plugin_manager.plugins[:Router]
     @m = @plugin_manager.plugins[:Menu]
     @storage = @plugin_manager.plugins[:StorageYAML]
 
@@ -102,6 +103,7 @@ See '.help #{name}' for more info."
 
     @m = nil
     @storage = nil
+    @router = nil
 
     unload_helper_class(:EPWINGMenuEntry)
 
@@ -134,6 +136,8 @@ See '.help #{name}' for more info."
 
     case botcommand
       when :epwing
+        return unless check_and_complain(@router, msg, :can_use_mass_epwing_lookup)
+
         lookups = @books.map do |_, book_record|
           l_up = lookup(book_record, word, lookup_type)
           ["#{book_record.title} (#{l_up.size} #{pluralize('hit', l_up.size)})", l_up]
@@ -222,5 +226,18 @@ See '.help #{name}' for more info."
 
   def pluralize(str, num)
     num != 1 ? str + 's' : str
+  end
+
+  def check_and_complain(checker, msg, permission)
+    if checker.check_permission(permission, msg_to_principal(msg))
+      true
+    else
+      msg.reply("Sorry, you don't have '#{permission}' permission.")
+      false
+    end
+  end
+
+  def msg_to_principal(msg)
+    msg.prefix
   end
 end
