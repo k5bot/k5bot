@@ -46,6 +46,8 @@ See '.help #{name}' for more info."
   end
 
   def afterLoad
+    load_helper_class(:EPWINGMenuEntry)
+
     @m = @plugin_manager.plugins[:Menu]
     @storage = @plugin_manager.plugins[:StorageYAML]
 
@@ -101,6 +103,8 @@ See '.help #{name}' for more info."
     @m = nil
     @storage = nil
 
+    unload_helper_class(:EPWINGMenuEntry)
+
     nil
   end
 
@@ -132,11 +136,11 @@ See '.help #{name}' for more info."
       when :epwing
         lookups = @books.map do |_, book_record|
           l_up = lookup(book_record, word, lookup_type)
-          ["#{book_record.title} (#{l_up.size} hit(s))", l_up]
+          ["#{book_record.title} (#{l_up.size} #{pluralize('hit', l_up.size)})", l_up]
         end
 
         menus = lookups.map do |book_title, lookup|
-          generate_menu(lookup, book_title) if lookup.size > 0
+          generate_menu(lookup, book_title, msg.private?) if lookup.size > 0
         end.reject {|x| !x}
 
         reply_with_menu(msg, MenuNodeSimple.new("#{word} in EPWING dictionaries", menus))
@@ -144,7 +148,7 @@ See '.help #{name}' for more info."
         book_record = @books[botcommand]
         if book_record
           book_lookup = lookup(book_record, word, lookup_type)
-          reply = generate_menu(book_lookup, "#{word} in #{book_record.title}")
+          reply = generate_menu(book_lookup, "#{word} in #{book_record.title}", msg.private?)
           reply_with_menu(msg, reply)
         end
     end
@@ -152,9 +156,12 @@ See '.help #{name}' for more info."
 
   private
 
-  def generate_menu(lookup, name)
+  def generate_menu(lookup, name, is_private)
     menu = lookup.map do |heading, text|
-      MenuNodeTextEnumerable.new(heading, text)
+      EPWINGMenuEntry.new(
+          heading,
+          text.each_slice(is_private ? 10 : 3).to_a
+      )
     end
 
     MenuNodeSimple.new(name, menu)
@@ -213,4 +220,7 @@ See '.help #{name}' for more info."
     word.encode('UTF-8')
   end
 
+  def pluralize(str, num)
+    num != 1 ? str + 's' : str
+  end
 end
