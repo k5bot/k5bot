@@ -28,10 +28,10 @@ what suits you best.",
       :gaiji => "Because EPWING dictionaries internally use JIS encodings, \
 they can't represent lots of characters. As a workaround \
 they use actual pictures instead, which they call 'GAIJI'. \
-Whenever you see text like <?A2C4W?>, that's them. Meanwhile, \
-you can ask me to upload corresponding pic somewhere, \
-until I automate the uploading. Using .gaiji command to supply \
-unicode equivalents for gaiji is strongly encouraged.",
+Whenever you see text like <?A2C4W?>, that's them. \
+You can look up ASCII rendering of them using .gaiji? command. \
+Using .gaiji command to supply unicode equivalents for gaiji \
+is strongly encouraged.",
   }
   Dependencies = [ :Menu, :StorageYAML, :Router ]
 
@@ -52,6 +52,9 @@ specified dictionary. See '.help #{name} gaiji' for more info. \
 Example: .gaiji daijirin WD500 (1) <-- to add (1) as replacement for <?WD500?> \
 in Daijirin. Example: .gaiji daijirin WD500 <-- to remove existing mapping \
 for WD500 in Daijirin.",
+        :'gaiji?' => "renders in ASCII symbol for specified gaiji in \
+specified dictionary. Use .gaiji?? and .gaiji??? for different formats. \
+See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
     )
   end
 
@@ -153,6 +156,10 @@ for WD500 in Daijirin.",
     case botcommand
       when :gaiji
         change_gaiji(msg, word)
+      when :'gaiji?'
+        display_gaiji(msg, word, 'Ｏ', '　')
+      when :'gaiji??'
+        display_gaiji(msg, word, '▓', '░')
       when :epwing
         return unless check_and_complain(@router, msg, :can_use_mass_epwing_lookup)
 
@@ -282,5 +289,56 @@ for WD500 in Daijirin.",
 
   def store_gaiji(book_record)
     @storage.write(book_record.gaiji_file, book_record.gaiji_data)
+  end
+
+  def display_gaiji(msg, word, dot, white)
+    return unless check_and_complain(@router, msg, :can_add_gaiji)
+    dictionary, gaiji = word.split(SPACE_REGEXP, 2)
+    book_record = @books[dictionary.downcase.to_sym]
+    unless book_record
+      msg.reply("Unknown dictionary name '#{dictionary}'. Must be one of: #{@books.keys.join(', ')}")
+      return
+    end
+
+    gaiji = gaiji.upcase
+    m = gaiji && gaiji.match(/([WN])(\h{4})/)
+    unless m
+      msg.reply('Gaiji must be in format Wxxxx or Nxxxx, where xxxx are hexadecimal digits.')
+      return
+    end
+    gaiji = gaiji.to_sym
+
+    previous_value = book_record.gaiji_data[gaiji]
+
+    code = m[2].to_i(16)
+
+    font_codes = book_record.book.fontcode_list.dup
+    font_codes.sort_by!{|x| -x}
+
+    book_record.book.fontcode=font_codes.first
+
+    begin
+      font = if m[1] == 'W'
+               book_record.book.get_widefont(code)
+             else
+               book_record.book.get_narrowfont(code)
+             end
+    rescue Exception => _
+      msg.reply("Failed to obtain bitmap for #{gaiji} in dictionary '#{dictionary}'.")
+      return
+    end
+
+    x = font.to_xpm
+
+    x.each_line do |l|
+      m = l.match(/^"(.{16,})"/)
+      next unless m
+      r = m[1]
+      r.gsub!(/\S/, dot)
+      r.gsub!(/\s/, white)
+      msg.reply(r)
+    end
+
+    msg.reply("Currently set as #{previous_value}") if previous_value
   end
 end
