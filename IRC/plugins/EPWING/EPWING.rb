@@ -348,8 +348,28 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
       end.join
     end
 
+    skipped_first = 0
+    while lines.first.delete(charmap[0]).empty?
+      lines.shift
+      skipped_first += 1
+    end
+
+    skipped_last = 0
+    while lines.last.delete(charmap[0]).empty?
+      lines.pop
+      skipped_last += 1
+    end
+
+    if skipped_first > 0
+      msg.reply("(#{skipped_first} empty #{pluralize('line', skipped_first)} skipped)")
+    end
+
     lines.each do |l|
       msg.reply(l)
+    end
+
+    if skipped_last > 0
+      msg.reply("(#{skipped_last} empty #{pluralize('line', skipped_last)} skipped)")
     end
 
     msg.reply("Currently set as #{previous_value}") if previous_value
