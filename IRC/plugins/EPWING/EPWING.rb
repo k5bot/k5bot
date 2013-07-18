@@ -12,14 +12,37 @@ require 'ostruct'
 require_relative '../../IRCPlugin'
 
 class EPWING < IRCPlugin
-  Description = 'Plugin for working with dictionaries in EPWING format.'
+  Description = {
+      nil => 'Plugin for working with dictionaries in EPWING format.',
+      :search => "Searching is straightforward, but it's worth noting that \
+since used EPWING library searches both English and Japanese words via \
+the same call, no convenient input word mangling is done. In particular, \
+text in ro-maji isn't converted to kana, you must do it yourself. You can \
+also use .epwing command to search in all available dictionaries simultaneously.",
+      :postfix => "Search commands can \
+(where supported by underlying dictionary) be postfixed with \
+one of the following: ! for exact search, $ for ends-with search, \
+@ for keyword search. No postfix is 'contains' search. \
+The exact meaning of those seems to vary with dictionary, so try and find \
+what suits you best.",
+      :gaiji => "Because EPWING dictionaries internally use JIS encodings, \
+they can't represent lots of characters. As a workaround \
+they use actual pictures instead, which they call 'GAIJI'. \
+Whenever you see text like <?A2C4W?>, that's them. Meanwhile, \
+you can ask me to upload corresponding pic somewhere, \
+until I automate the uploading and add possibility for users to suggest \
+Unicode equivalents.",
+  }
   Dependencies = [ :Menu, :StorageYAML ]
 
   def commands
     book_cmds = @books.each_pair.map do |command, book_record|
-      [command, "looks up given word in #{book_record.title}"]
+      [command, "looks up given word in #{book_record.title}. See '.help #{name}' for more info."]
     end
-    Hash[book_cmds].merge(:epwing => 'looks up given word in all opened EPWING dictionaries')
+    Hash[book_cmds].merge(
+        :epwing => "looks up given word in all opened EPWING dictionaries. \
+See '.help #{name}' for more info."
+    )
   end
 
   def afterLoad
