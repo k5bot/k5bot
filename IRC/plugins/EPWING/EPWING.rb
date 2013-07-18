@@ -157,9 +157,9 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
       when :gaiji
         change_gaiji(msg, word)
       when :'gaiji?'
-        display_gaiji(msg, word, 'Ｏ', '　')
+        display_gaiji(msg, word, [' ','▄','▀','█']) # 'Ｏ', '　'
       when :'gaiji??'
-        display_gaiji(msg, word, '▓', '░')
+        display_gaiji(msg, word, ['_','▄','▀','█']) # '▓', '░'
       when :epwing
         return unless check_and_complain(@router, msg, :can_use_mass_epwing_lookup)
 
@@ -291,7 +291,7 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
     @storage.write(book_record.gaiji_file, book_record.gaiji_data)
   end
 
-  def display_gaiji(msg, word, dot, white)
+  def display_gaiji(msg, word, charmap)
     return unless check_and_complain(@router, msg, :can_add_gaiji)
     dictionary, gaiji = word.split(SPACE_REGEXP, 2)
     book_record = @books[dictionary.downcase.to_sym]
@@ -330,13 +330,26 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
 
     x = font.to_xpm
 
+    lines = []
     x.each_line do |l|
       m = l.match(/^"(.{16,})"/)
       next unless m
       r = m[1]
-      r.gsub!(/\S/, dot)
-      r.gsub!(/\s/, white)
-      msg.reply(r)
+      r.gsub!(/\S/, '1')
+      r.gsub!(/\s/, '0')
+      lines << r
+    end
+
+    lines = lines.each_slice(2).map do |top_line, bottom_line|
+      top_line.each_char.zip(bottom_line.each_char).map do |top_char, bottom_char|
+        x = top_char == '0' ? 0 : 2
+        y = bottom_char == '0' ? 0 : 1
+        charmap[x+y]
+      end.join
+    end
+
+    lines.each do |l|
+      msg.reply(l)
     end
 
     msg.reply("Currently set as #{previous_value}") if previous_value
