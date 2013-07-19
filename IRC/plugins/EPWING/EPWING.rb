@@ -371,12 +371,12 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
         end.join
       end
 
-      while lines.first.delete(charmap[0]).empty?
+      while lines.first && lines.first.delete(charmap[0]).empty?
         lines.shift
         skipped_first += 1
       end
 
-      while lines.last.delete(charmap[0]).empty?
+      while lines.last && lines.last.delete(charmap[0]).empty?
         lines.pop
         skipped_last += 1
       end
