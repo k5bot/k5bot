@@ -45,7 +45,7 @@ class URL < IRCPlugin
     case msg.botcommand
       when :short
         text = msg.tail
-        url = get_uri_from_queue(msg.replyTo, text)
+        url = get_uri_from_queue(msg.context, text)
         if url
           short_url = shorten_url(url)
           msg.reply("Short URL: #{short_url} for URL: #{url.abbreviate(100)}") if short_url
@@ -97,7 +97,7 @@ class URL < IRCPlugin
       uri
     end
 
-    put_uris_to_queue(msg.replyTo, uris)
+    put_uris_to_queue(msg.context, uris)
 
     uris.each do |uri|
       handle_uri(uri, msg)

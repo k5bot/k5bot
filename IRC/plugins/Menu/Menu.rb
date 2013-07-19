@@ -44,7 +44,7 @@ shows the list of entries starting from that position",
 
   def on_privmsg(msg)
     self.evict_expired_menus!
-    menu_state = @menu_states[msg.replyTo]
+    menu_state = @menu_states[msg.context]
     return unless menu_state
     case msg.botcommand
       when :n
@@ -66,11 +66,11 @@ shows the list of entries starting from that position",
 
   def put_new_menu_ex(menu_state, root_node, msg)
     menu_state.move_down_to!(root_node, msg)
-    @menu_states[msg.replyTo] = menu_state
+    @menu_states[msg.context] = menu_state
   end
 
   def delete_menu(plugin, msg)
-    @menu_states.delete(msg.replyTo)
+    @menu_states.delete(msg.context)
   end
 
   def evict_plugin_menus!(plugin)
