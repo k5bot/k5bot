@@ -161,6 +161,15 @@ class IRCMessage
     /[.．｡。]/.to_s
   end
 
+  # Object that identifies the medium through which this message has passed.
+  # This is useful to identify the group of people who may also have seen it,
+  # and who will (or rather sensibly should) see our replies.
+  def context
+    # if public message, all the people in the channel saw it.
+    # if private message, only the user in question did.
+    [bot, private? ? user : channelname]
+  end
+
   def self.make_ctcp_message(command, arguments)
     command = normalize_ctcp_command(command)
     arguments = arguments.map { |arg| ctcp_quote(arg) } if ENCODED_COMMANDS.include? command

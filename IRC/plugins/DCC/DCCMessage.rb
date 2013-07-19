@@ -124,4 +124,13 @@ class DCCMessage
   def command_prefix_matcher
     /[.．｡。]/.to_s
   end
+
+  # Object that identifies the medium through which this message has passed.
+  # This is useful to identify the group of people who may also have seen it,
+  # and who will (or rather sensibly should) see our replies.
+  def context
+    # We're peer-to-peer. The bot uniquely identifies the connection and
+    # the user on the other side of it.
+    bot
+  end
 end
