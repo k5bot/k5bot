@@ -349,8 +349,11 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
     skipped_first = 0
     skipped_last = 0
 
-    x.each_line do |l|
-      m = l.match(/^"(.{16,})"/)
+    x = x.each_line.to_a
+    x.slice!(0, 5) # truncate out the XPM header
+
+    x.each do |l|
+      m = l.match(/^"(.+)"/)
       next unless m
       r = m[1]
       r.gsub!(/\S/, '1')
