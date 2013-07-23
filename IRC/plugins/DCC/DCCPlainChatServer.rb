@@ -6,6 +6,8 @@
 
 require 'gserver'
 
+require_relative '../../ContextMetadata'
+
 class DCCPlainChatServer < GServer
   attr_reader :port_to_bot
   attr_reader :config
@@ -87,7 +89,9 @@ class DCCPlainChatServer < GServer
     client_port = socket_to_port(client_socket)
     client = @port_to_bot[client_port]
     if client
-      client.serve
+      ContextMetadata.run_with(@config[:metadata]) do
+        client.serve
+      end
     else
       raise "Bug! #{self.class.to_s} attempted to serve unknown client on port #{client_port}"
     end

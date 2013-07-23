@@ -27,6 +27,8 @@
     #:listen: 0.0.0.0 # interface to actually listen on, 0.0.0.0 by default.
     #:port: 55554 # port to listen on, will be chosen randomly by default
     :limit: 50 # number of simultaneously accepted connections, 10 by default.
+    #:metadata: # ContextMetadata hash to attach to this bot, to be accessed by various plugins.
+    #  :menu_size: 60
     :chat: # if present, then DCC CHAT server will be started.
       # you can override all the settings above here, except salt.
     :schat: # if present, then DCC SSL CHAT server will be started.
