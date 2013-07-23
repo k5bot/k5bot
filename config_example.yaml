@@ -19,6 +19,8 @@
     :watchdog: 240
     :burst: 8
     :rate: 1
+    #:metadata: # ContextMetadata hash to attach to this bot, to be accessed by various plugins.
+    #  :menu_size: 20
 - :DCC:
     :salt: <type some random stuff here to protect privacy of your users>
     :announce: <your external ip here>

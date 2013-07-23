@@ -10,6 +10,7 @@ require 'ostruct'
 require_relative '../../Timer'
 require_relative '../../Throttler'
 require_relative '../../IRCPlugin'
+require_relative '../../ContextMetadata'
 
 require_relative 'IRCUser'
 require_relative 'IRCMessage'
@@ -18,7 +19,7 @@ require_relative 'IRCFirstListener'
 
 class IRCBot < IRCPlugin
 
-  Description = "Provides IRC connectivity."
+  Description = 'Provides IRC connectivity.'
 
   Dependencies = [ :ChannelPool, :Router, :StorageYAML ]
 
@@ -199,6 +200,12 @@ class IRCBot < IRCPlugin
   end
 
   def start
+    ContextMetadata.run_with(@config[:metadata]) do
+      start_in_context
+    end
+  end
+
+  def start_in_context
     @start_time = Time.now
     begin
       start_watchdog()
