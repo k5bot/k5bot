@@ -79,6 +79,7 @@
     # ... same options as above, etc ...
 - :Pinyin
 - :Menu
+# Menu plugin understands ContextMetadata value :menu_size: <number of menu entries per message>
 - :Mecab
 - :Converter
 - :Karma:

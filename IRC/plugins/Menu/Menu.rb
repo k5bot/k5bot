@@ -6,6 +6,8 @@
 
 require 'yaml'
 require_relative '../../IRCPlugin'
+require_relative '../../ContextMetadata'
+
 require_relative 'MenuState'
 require_relative 'MenuNode'
 require_relative 'MenuNodeSimple'
@@ -59,7 +61,10 @@ shows the list of entries starting from that position",
     end
   end
 
-  def put_new_menu(plugin, root_node, msg, menu_size = 12, expire_duration = 1920)
+  def put_new_menu(plugin, root_node, msg, menu_size = nil, expire_duration = 1920)
+    unless menu_size
+      menu_size = ContextMetadata.get_key(:menu_size) || 12
+    end
     menu_state = MenuState.new(plugin, menu_size, expire_duration)
     put_new_menu_ex(menu_state, root_node, msg)
   end
