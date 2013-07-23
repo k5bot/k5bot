@@ -135,3 +135,5 @@
     :id: "<api-id-here>"
 - :MapDoc
 - :WebScrape
+- :HelpExport:
+    :xml: 'help_export.xml' # file name to write XML help to
