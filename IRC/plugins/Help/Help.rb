@@ -4,6 +4,8 @@
 
 # Help plugin displays help
 
+require 'ostruct'
+
 require_relative '../../IRCPlugin'
 
 class Help < IRCPlugin
@@ -28,6 +30,16 @@ class Help < IRCPlugin
     when :plugins
       p = @pm.plugins.keys.sort*', '
       msg.reply "Loaded plugins: #{p}" if p && !p.empty?
+    end
+  end
+
+  # Used externally
+  def get_all_plugin_documentation
+    @pm.plugins.each_pair.map do |name, plugin|
+      OpenStruct.new({
+                         :name => name,
+                         :description => plugin.description || {},
+                         :commands => plugin.commands || {}})
     end
   end
 
