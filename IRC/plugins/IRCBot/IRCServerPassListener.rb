@@ -19,7 +19,14 @@ class IRCServerPassListener
     return if @password_sent # Something resent connection event, ignore it.
 
     @password_sent = true
-    @bot.send_raw("PASS #{@server_pass}") if @server_pass && !@server_pass.empty?
+
+    if @server_pass && !@server_pass.empty?
+      reply = {
+          :original => "PASS #{@server_pass}",
+          :log_hide => 'PASS *SRP*'
+      }
+      @bot.send_raw(reply)
+    end
   end
 
   def on_disconnection(msg)

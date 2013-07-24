@@ -113,7 +113,13 @@ class IRCBot < IRCPlugin
   #returns hash with key :truncated, containing resulting string.
   #hash is used to avoid double truncation and for future truncation customization.
   def truncate_for_irc(raw, byte_limit)
-    return raw if (raw.instance_of? Hash) #already truncated
+    if raw.instance_of?(Hash)
+      return raw if raw[:truncated] #already truncated
+      opts = raw
+      raw = raw[:original]
+    else
+      opts = {:original => raw}
+    end
     raw = encode raw.dup
 
     #char-per-char correspondence replace, to make the returned count meaningful
@@ -135,7 +141,7 @@ class IRCBot < IRCPlugin
       i-=1
     end
 
-    {:truncated => truncated}
+    opts.merge(:truncated => truncated)
   end
 
   # Truncates a string, so that it contains no more than 510 bytes.
@@ -166,8 +172,10 @@ class IRCBot < IRCPlugin
 
     @throttler.throttle do
       @last_sent = raw
+
+      log_hide = raw[:log_hide]
       raw = raw[:truncated]
-      log_sent_message(raw)
+      log_sent_message(log_hide || raw)
 
       @sock.write "#{raw}\r\n"
     end
@@ -175,10 +183,7 @@ class IRCBot < IRCPlugin
     raw.length
   end
 
-  def log_sent_message(raw)
-    str = raw.dup
-    str.gsub!(@config[:serverpass], '*SRP*') if @config[:serverpass]
-    str.gsub!(@config[:userpass], '*USP*') if @config[:userpass]
+  def log_sent_message(str)
     puts "#{timestamp} \e[#34m#{str}\e[0m"
   end
 

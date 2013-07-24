@@ -79,7 +79,12 @@ class IRCIdentifyListener
 
   def auth_identify
     return unless @config
-    @bot.send_raw "PRIVMSG #{@config[:service]} :IDENTIFY #{@config[:login]} #{@config[:password]}"
+
+    reply = {
+      :original => "PRIVMSG #{@config[:service]} :IDENTIFY #{@config[:login]} #{@config[:password]}",
+      :log_hide => "PRIVMSG #{@config[:service]} :IDENTIFY #{@config[:login]} *USP*"
+    }
+    @bot.send_raw(reply)
   end
 
   LISTENER_PRIORITY = -31
