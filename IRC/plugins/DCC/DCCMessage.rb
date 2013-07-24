@@ -59,6 +59,8 @@ class DCCMessage
 
     tail = (m && m[2]) || message
     @tail = tail.empty? ? nil : tail
+
+    @bot_command ||= :j if private? && !/^[\d０１２３４５６７８９\p{Z}]+$/.match(tail)
   end
 
   def to_s
