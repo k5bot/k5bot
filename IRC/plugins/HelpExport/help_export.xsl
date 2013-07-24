@@ -4,6 +4,34 @@
 
   <xsl:template match="/">
     <html>
+      <head>
+        <style type="text/css">
+          h1, h2, h3, h4, h5, h6 {
+            font-style: italic;
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+          }
+          .padder { padding-left: 1em; }
+          .command-cell {
+            vertical-align: top;
+            font-weight: bold;
+          }
+          .command-list, .command-list td, .command-list th {
+            border: 1px solid black;
+            border-collapse:collapse;
+            padding: 0.5em;
+          }
+          .command-list th {
+            background-color: #9acd32;
+            color: white;
+            font-style: italic;
+            font-weight: bold;
+          }
+          a, a:active { color: #006699; }
+          a:visited { color: #663333; }
+          a:hover { color: #0099ff; }
+        </style>
+      </head>
       <body>
         <h1>K5 Bot help</h1>
         <ol>
@@ -22,7 +50,7 @@
       Plugin '<xsl:value-of select="@name"/>'
     </xsl:element>
 
-    <div style="padding-left: 1em">
+    <div class="padder">
       <xsl:apply-templates select="description">
         <xsl:with-param name="hierarchy_id" select="$hierarchy_id"/>
       </xsl:apply-templates>
@@ -56,7 +84,7 @@
     <xsl:param name="hierarchy_id" />
 
     <h3>Description</h3>
-    <div style="padding-left: 1em">
+    <div class="padder">
       <xsl:apply-templates select="*">
         <xsl:with-param name="hierarchy" select="3"/>
         <xsl:with-param name="hierarchy_id" select="$hierarchy_id"/>
@@ -101,7 +129,7 @@
       <xsl:value-of select="@name" />
     </xsl:element>
 
-    <div style="padding-left: 1em">
+    <div class="padder">
       <xsl:apply-templates select="*">
         <xsl:with-param name="hierarchy" select="$hierarchy+1"/>
         <xsl:with-param name="hierarchy_id" select="$new_id"/>
@@ -132,8 +160,8 @@
 
   <xsl:template match="commands">
     <h3>Commands</h3>
-    <table border="1">
-      <tr bgcolor="#9acd32">
+    <table class="command-list">
+      <tr>
         <th>Command</th>
         <th>Description</th>
       </tr>
@@ -151,7 +179,7 @@
     <xsl:variable name="hierarchy_id" select="concat('command-', @name)"/>
 
     <tr>
-      <td style="vertical-align: top; ">.<xsl:value-of select="@name"/></td>
+      <td class="command-cell">.<xsl:value-of select="@name"/></td>
       <td>
         <xsl:apply-templates select="*">
           <xsl:with-param name="hierarchy" select="3"/>
