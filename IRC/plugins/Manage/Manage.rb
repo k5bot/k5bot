@@ -10,7 +10,9 @@ class Manage < IRCPlugin
   Description = "A plugin for basic bot management."
   Commands = {
     :join => "joins specified channel(s)",
-    :part => "parts from specified channel(s)"
+    :part => "parts from specified channel(s)",
+    :raw => "sends raw text to server",
+    :kill => "kills current connection",
   }
 
   def on_privmsg(msg)
@@ -19,6 +21,10 @@ class Manage < IRCPlugin
       msg.bot.join_channels(msg.tail.split(/[;,\s]+/))
     when :part
       msg.bot.part_channels(msg.tail.split(/[;,\s]+/))
+    when :raw
+      msg.bot.send_raw msg.tail
+    when :kill
+      msg.bot.stop
     end
   end
 end
