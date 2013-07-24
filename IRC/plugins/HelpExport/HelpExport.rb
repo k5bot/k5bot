@@ -63,6 +63,13 @@ class HelpExport < IRCPlugin
                 end
               end
 
+              unless plugin_docs.dependencies.empty?
+                xml.dependencies do
+                  plugin_docs.dependencies.sort.each do |dep|
+                    xml.dep(dep)
+                  end
+                end
+              end
             end
 
           end

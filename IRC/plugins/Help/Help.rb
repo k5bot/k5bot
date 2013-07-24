@@ -39,7 +39,9 @@ class Help < IRCPlugin
       OpenStruct.new({
                          :name => name,
                          :description => plugin.description || {},
-                         :commands => plugin.commands || {}})
+                         :commands => plugin.commands || {},
+                         :dependencies => plugin.dependencies || [],
+                     })
     end
   end
 
