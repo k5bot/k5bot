@@ -70,11 +70,6 @@ class DaijirinEntry
     info.flatten
   end
 
-  def to_s
-   tmp = to_lines
-   tmp.join("\n")
-  end
-
   def add_child!(child)
     @children = (@children || []) << child
   end
