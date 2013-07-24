@@ -25,7 +25,23 @@ class Help < IRCPlugin
       if msg.tail
         describe_word(msg, msg.tail)
       else
-        msg.reply "Available commands: #{all_commands(msg.command_prefix)}"
+        all_cmds = all_commands(msg.command_prefix)
+        until all_cmds.empty?
+          chunk_size = all_cmds.size
+
+          begin
+            text = "Commands: #{all_cmds[0..chunk_size-1].join(' ')}"
+            # make msg.reply throw exception if the text doesn't fit
+            msg.reply(text, :dont_truncate => (chunk_size > 1))
+          rescue
+            # sending without truncation failed
+            chunk_size-=1
+            # retry with smaller menu size
+            retry if chunk_size > 0
+          end
+
+          all_cmds.slice!(0, chunk_size)
+        end
       end
     when :plugins
       p = @pm.plugins.keys.sort*', '
@@ -47,7 +63,11 @@ class Help < IRCPlugin
 
   private
   def all_commands(prefix)
-    @pm.plugins.values.reject { |p| !p.commands }.collect {|p| '[' + p.commands.keys.collect {|c| "#{prefix}#{c.to_s}" } * ' ' + ']' } * ' '
+    @pm.plugins.values.reject do |p|
+      !p.commands
+    end.collect do |p|
+      '[' + p.commands.keys.collect { |c| "#{prefix}#{c.to_s}" } * ' ' + ']'
+    end
   end
 
   def describe_word(msg, term)
