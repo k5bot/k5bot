@@ -98,16 +98,24 @@ class MenuState
 
     if @mark
       start = @mark
-      @mark += @menu_size
-      has_next = @mark < @items.length
+      size = @menu_size
+      items = @items
+      has_parent = @location.size > 1
+
+      begin
+        has_next = (start + size < items.length)
+        on_menu_cycle(items, start, size, has_next, has_parent, msg)
+      rescue
+        # sending without truncation failed
+        size-=1
+        # retry with smaller menu size
+        retry if size > 0
+      end
+
+      @mark += size
       unless has_next
         @mark = nil
       end
-      has_parent = @location.size > 1
-      items = @items
-      size = @menu_size
-
-      on_menu_cycle(items, start, size, has_next, has_parent, msg)
     else
       return if on_leaf_or_empty_menu(@location[-1], @items, msg)
 
@@ -169,7 +177,8 @@ class MenuState
     menu_text += render_menu_items(items, start, size)
     menu_text += render_menu_footer(has_next, has_parent, msg.command_prefix)
 
-    msg.reply(menu_text)
+    # make msg.reply throw exception if the text doesn't fit
+    msg.reply(menu_text, :dont_truncate => (size > 1))
   end
 
   # Overridable behavior for when current menu content is exhausted
