@@ -40,7 +40,9 @@ class HelpExport < IRCPlugin
     builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
       xml.help do
         xml.plugins do
-          @help_plugin.get_all_plugin_documentation.each do |plugin_docs|
+          @help_plugin.get_all_plugin_documentation.sort_by do |plugin_docs|
+            plugin_docs.name
+          end.each do |plugin_docs|
             next if plugin_docs.name == :HelpExport
 
             xml.plugin(:name => plugin_docs.name) do
@@ -53,7 +55,7 @@ class HelpExport < IRCPlugin
 
               unless plugin_docs.commands.empty?
                 xml.commands do
-                  plugin_docs.commands.each_pair do |command, desc|
+                  plugin_docs.commands.sort.each do |command, desc|
                     xml.command(:name => command) do
                       recursive_xml_convert(xml, desc)
                     end
