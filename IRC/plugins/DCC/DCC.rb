@@ -35,6 +35,7 @@ class DCC < IRCPlugin
     load_helper_class(:DCCMessage)
     load_helper_class(:DCCBot)
     load_helper_class(:DCCPlainChatServer)
+    load_helper_class(:DCCSecureChatServer)
 
     @storage = @plugin_manager.plugins[:StorageYAML]
     @router = @plugin_manager.plugins[:Router]
@@ -42,10 +43,7 @@ class DCC < IRCPlugin
 
     @dcc_access = @storage.read('dcc_access') || {}
 
-    @tcp_server = DCCPlainChatServer.new(self,
-                                         @config[:port] || DEFAULT_LISTEN_PORT,
-                                         @config[:listen] || DEFAULT_LISTEN_INTERFACE,
-                                         @config[:limit] || DEFAULT_CONNECTION_LIMIT)
+    @tcp_server = DCCSecureChatServer.new(self, @config)
 
     @tcp_server.start
     @announce_port = @tcp_server.port
@@ -61,6 +59,7 @@ class DCC < IRCPlugin
     @router = nil
     @storage = nil
 
+    unload_helper_class(:DCCSecureChatServer)
     unload_helper_class(:DCCPlainChatServer)
     unload_helper_class(:DCCBot)
     unload_helper_class(:DCCMessage)
@@ -97,6 +96,19 @@ class DCC < IRCPlugin
 
       reply = IRCMessage.make_ctcp_message(:DCC, ['CHAT', 'chat', @announce_ip, @announce_port])
       msg.reply(reply, :force_private => true)
+    when :schat
+        if msg.bot.instance_of?(DCCBot)
+          msg.reply('Cannot initiate DCC chat from DCC chat.')
+          return
+        end
+
+        unless @router.check_permission(:can_use_dcc_chat, msg)
+          msg.reply("Sorry, you don't have the permission to use DCC chat.")
+          return
+        end
+
+        reply = IRCMessage.make_ctcp_message(:DCC, ['SCHAT', 'chat', @announce_ip, @announce_port])
+        msg.reply(reply, :force_private => true)
     when COMMAND_REGISTER
       unless @router.check_permission(:can_use_dcc_chat, msg)
         msg.reply("Sorry, you don't have the permission to use DCC chat.")

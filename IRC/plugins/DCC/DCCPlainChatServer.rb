@@ -8,10 +8,17 @@ require 'gserver'
 
 class DCCPlainChatServer < GServer
   attr_reader :port_to_bot
+  attr_reader :config
 
-  def initialize(dcc_plugin, port, host, max_connections)
-    super(port, host, max_connections, nil, true, true)
+  def initialize(dcc_plugin, config)
+    super(config[:port] || dcc_plugin.class::DEFAULT_LISTEN_PORT,
+          config[:listen] || dcc_plugin.class::DEFAULT_LISTEN_INTERFACE,
+          config[:limit] || dcc_plugin.class::DEFAULT_CONNECTION_LIMIT,
+          nil, true, true)
+
     @dcc_plugin = dcc_plugin
+    @config = config
+
     @port_to_bot = {}
   end
 
@@ -23,18 +30,25 @@ class DCCPlainChatServer < GServer
 
   def connecting(client_socket)
     caller_info = client_socket.peeraddr(true)
-
     # [host, ip] or [ip], if reverse resolution failed
     caller_id = caller_info[2..-1].uniq
+    # [family, port, host, ip] or [family, port, ip]
     caller_info = caller_info.uniq
 
     do_log(:log, "Got incoming connection from #{caller_info}")
 
+    credentials = caller_id.map { |key| @dcc_plugin.key_to_credential(key) }
+    authorities = credentials.map { |cred| @dcc_plugin.check_credential_authorized(cred) }.reject { |x| !x }.uniq
+
+    create_dcc_chat(client_socket, caller_id, credentials, authorities, caller_info)
+  end
+
+  def create_dcc_chat(client_socket, caller_id, credentials, authorities, caller_info)
     client = DCCBot.new(client_socket, @dcc_plugin, @dcc_plugin.parent_ircbot)
 
     client.caller_info = caller_info
-    client.credentials = caller_id.map { |key| @dcc_plugin.key_to_credential(key) }
-    client.authorities = client.credentials.map { |cred| @dcc_plugin.check_credential_authorized(cred) }.reject { |x| !x }.uniq
+    client.credentials = credentials
+    client.authorities = authorities
 
     if client.authorities.empty?
       begin
