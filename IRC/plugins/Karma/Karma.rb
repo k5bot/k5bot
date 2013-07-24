@@ -67,8 +67,8 @@ class Karma < IRCPlugin
 
     nick = msg.tail || msg.nick
     user = msg.bot.find_user_by_nick(nick)
-    if get_user_id(user)
-      points = sub_store[get_user_id(user)]
+    if user && user.uid
+      points = sub_store[user.uid]
       if points
         reply_format = random_choice(sub_config[:query])
         msg.reply(template(reply_format, msg.nick, nil, user.nick, points))
@@ -128,14 +128,10 @@ class Karma < IRCPlugin
   end
 
   def change_user_points(sub_store, user, delta)
-    user_id = get_user_id(user)
+    user_id = user && user.uid
     return unless user_id
     sub_store[user_id] = 0 unless sub_store[user_id]
     sub_store[user_id] += delta
-  end
-
-  def get_user_id(user)
-    user.name.downcase if user && user.name
   end
 
   def random_choice(arr)

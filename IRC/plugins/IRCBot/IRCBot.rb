@@ -280,8 +280,8 @@ class IRCBot < IRCPlugin
     @user_listener.findUserByNick(nick)
   end
 
-  def find_user_by_name(name)
-    @user_listener.findUserByUsername(name)
+  def find_user_by_uid(name)
+    @user_listener.findUserByUID(name)
   end
 
   def find_user_by_msg(msg)

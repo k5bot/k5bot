@@ -19,7 +19,7 @@ class IRCUser
   end
 
   def ident
-    name if identified?
+    @name if identified?
     "~#{@name}"
   end
 
@@ -33,5 +33,9 @@ class IRCUser
 
   def self.ident_to_name(name)
     name.sub(/^~/, '') if name
+  end
+
+  def uid
+    IRCUserListener.normalize(name) if name
   end
 end

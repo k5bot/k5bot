@@ -52,9 +52,8 @@ class IRCUserListener
   # Finds a user from user name.
   # Does not modify the user database.
   # If the user is not found, nil will be returned.
-  def findUserByUsername(username)
-    return if !username || username.empty?
-    @users[normalize(username)]
+  def findUserByUID(uid)
+    @users[uid]
   end
 
   def on_nick(msg)
@@ -120,6 +119,10 @@ class IRCUserListener
   end
 
   def normalize(s)
+    self.class.normalize(s)
+  end
+
+  def self.normalize(s)
     s.downcase
   end
 end

@@ -102,15 +102,15 @@ class Unicode < IRCPlugin
       unless msg.private?
         # Update Unicode statistics
 
-        user_name = msg.user.name.downcase
+        user_id = msg.user.uid
         message = msg.message
 
-        to_merge = @unicode_stats[user_name]
+        to_merge = @unicode_stats[user_id]
         to_merge = {} unless to_merge
 
         count_unicode_stats(message, to_merge)
 
-        @unicode_stats[user_name] = to_merge
+        @unicode_stats[user_id] = to_merge
 
         store
       end
@@ -135,8 +135,8 @@ class Unicode < IRCPlugin
   def stats_by_msg(msg)
     nick = msg.tail || msg.nick
     user = msg.bot.find_user_by_nick(nick)
-    if user && user.name
-      us = @unicode_stats[user.name.downcase]
+    if user && user.uid
+      us = @unicode_stats[user.uid]
       if us
         [user, us]
       else
@@ -241,12 +241,12 @@ class Unicode < IRCPlugin
   def format_unicode_top(bot, description)
     result = []
 
-    @unicode_stats.each do |user_name, stats|
+    @unicode_stats.each do |user_uid, stats|
       stats = codepoint_stats_to_desc_stats(stats)
 
       next unless stats.include?(description)
 
-      user = bot.find_user_by_name(user_name)
+      user = bot.find_user_by_uid(user_uid)
 
       next unless user && user.nick
 

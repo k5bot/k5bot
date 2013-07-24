@@ -54,10 +54,10 @@ class Tell < IRCPlugin
     return if recipient_nick.casecmp(msg.nick) == 0
     return if recipient_nick.casecmp(msg.bot.user.nick) == 0
     user = msg.bot.find_user_by_nick(recipient_nick)
-    if user && user.name
-      @tell[user.name.downcase] ||= {}
-      rcpt = @tell[user.name.downcase]
-      tell_messages = rcpt[msg.user.name.downcase] ||= []
+    if user && user.uid
+      @tell[user.uid] ||= {}
+      rcpt = @tell[user.uid]
+      tell_messages = rcpt[msg.user.uid] ||= []
       if tell_messages.index { |_, _, m| m == tell_message }
         msg.reply("#{msg.nick}: Already noted.")
       else
@@ -73,10 +73,10 @@ class Tell < IRCPlugin
   # Checks if the sender has any messages and delivers them
   def do_tell(msg)
     unless msg.private?
-      if @tell[msg.user.name.downcase]
-        @tell[msg.user.name.downcase].each do |sender_name, tell_msgs|
+      if @tell[msg.user.uid]
+        @tell[msg.user.uid].each do |sender_uid, tell_msgs|
           sender_nick = tell_msgs.last[1]  # default to use the second element ( = the nick) of the last message as the sender nick
-          sender_user = msg.bot.find_user_by_name(sender_name)
+          sender_user = msg.bot.find_user_by_uid(sender_uid)
           if sender_user
             sender_nick = sender_user.nick
           end
@@ -85,7 +85,7 @@ class Tell < IRCPlugin
             msg.reply("#{msg.nick}, #{sender_nick} told me #{as + ' ' if as}to tell you: #{tell_msg}")
           end
         end
-        @tell.delete(msg.user.name.downcase)
+        @tell.delete(msg.user.uid)
         store
       end
     end

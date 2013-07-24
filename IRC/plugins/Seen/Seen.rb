@@ -63,7 +63,7 @@ Example: .seen K5",
 
       sought_user = msg.bot.find_user_by_nick(sought_nick)
 
-      if sought_user && sought_user.name
+      if sought_user && sought_user.uid
         seen_data = get_seen_info(sought_user)
         if seen_data && seen_data[:time]
           as = format_ago_string(seen_data[:time])
@@ -99,15 +99,11 @@ Example: .seen K5",
   end
 
   def get_seen_info(user)
-    @seen[user_to_uid(user)]
-  end
-
-  def user_to_uid(user)
-    user.name.downcase
+    @seen[user.uid]
   end
 
   def update_seen_info(user, data)
-    (@seen[user_to_uid(user)] ||= {}).merge!(data)
+    (@seen[user.uid] ||= {}).merge!(data)
 
     store
   end
