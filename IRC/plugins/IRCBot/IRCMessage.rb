@@ -128,8 +128,8 @@ class IRCMessage
     @is_private
   end
 
-  def replyTo
-    @replyTo ||= private? ? nick : @params.first
+  def replyTo(*force_private)
+    @replyTo ||= (private? || force_private.first) ? nick : @params.first
   end
 
   def reply(text, opts = {})
@@ -138,7 +138,7 @@ class IRCMessage
     text = text.to_s
     return if text.empty?
 
-    @bot.send(opts.merge(:original=>"PRIVMSG #{replyTo} :#{text}"))
+    @bot.send(opts.merge(:original=>"PRIVMSG #{replyTo(opts[:force_private])} :#{text}"))
   end
 
   def notice_user(text)

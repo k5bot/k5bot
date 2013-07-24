@@ -19,6 +19,11 @@
     :watchdog: 240
     :burst: 8
     :rate: 1
+- :DCC:
+    :salt: <type some random stuff here to protect privacy of your users>
+    :announce: <your external ip here>
+    #:listen: 0.0.0.0 # interface to actually listen on, 0.0.0.0 by default.
+    :port: 55554 # port to listen on
 - :Help
 - :StorageYAML:
     :'data_directory': "~/.ircbot"
