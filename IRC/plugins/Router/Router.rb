@@ -204,7 +204,7 @@ class Router < IRCPlugin
   end
 
   def filter_message_global(message)
-    return nil unless message.command == :privmsg # Only filter messages
+    return nil unless message.can_reply?  # Only filter messages
     # Ban by mask, if not in ban exclusion list.
     check_is_banned(message) && !check_is_excluded(message)
   end

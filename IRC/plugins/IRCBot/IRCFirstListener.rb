@@ -28,14 +28,14 @@ class IRCFirstListener
     true # stop further message propagation
   end
 
-  def on_privmsg(msg)
+  def on_ctcp_privmsg(msg)
     result = nil
 
     queries = msg.ctcp
     queries.each do |ctcp|
-      case ctcp[:command]
+      case ctcp.command
         when :PING
-          msg.notice_user(IRCMessage.make_ctcp_message(:PING, ctcp[:arguments]))
+          msg.notice_user(IRCMessage.make_ctcp_message(:PING, ctcp.arguments))
           result = true # stop further message propagation
       end
     end
