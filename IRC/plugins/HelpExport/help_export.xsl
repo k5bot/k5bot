@@ -27,6 +27,7 @@
         <xsl:with-param name="hierarchy_id" select="$hierarchy_id"/>
       </xsl:apply-templates>
       <xsl:apply-templates select="commands"/>
+      <xsl:apply-templates select="dependencies"/>
     </div>
   </xsl:template>
 
@@ -178,5 +179,22 @@
         <xsl:with-param name="hierarchy_id" select="concat('command-', @name)"/>
       </xsl:apply-templates>
     </ul>
+  </xsl:template>
+
+  <xsl:template match="dependencies">
+    <h4>Depends on:
+      <xsl:for-each select="dep">
+        <xsl:variable name="hierarchy_id" select="concat('plugin-', .)"/>
+
+        <xsl:element name="a">
+          <xsl:attribute name="href">#<xsl:value-of select="$hierarchy_id"/></xsl:attribute>
+          <xsl:value-of select="."/>
+        </xsl:element>
+
+        <xsl:if test="position() != last()">
+          <xsl:text>, </xsl:text>
+        </xsl:if>
+      </xsl:for-each>
+    </h4>
   </xsl:template>
 </xsl:stylesheet>
