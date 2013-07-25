@@ -11,8 +11,8 @@ class Seen < IRCPlugin
   Commands = {
     :seen => "[nick] - gives information on when [nick] was last seen. \
 Example: .seen K5",
-    :seenwhile => "[text] - specifies text to show whenever someone uses \
-.seen command on you. Example: .seenwhile drinking beer",
+    :seenwhile => "[text] - specifies additional text to show whenever someone \
+uses .seen command on you. Example: .seenwhile drinking beer",
   }
 
   Dependencies = [ :StorageYAML ]
