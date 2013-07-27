@@ -70,6 +70,8 @@
       #:command: bot command to assign, same as dictionary name by default.
       :path: <path to directory containing CATALOGS file>
       #:subbook: 0 # subbook index in the given book, 0 by default.
+      #:appendix: <path to directory containing appendix>
+      #  appendix may be necessary to override stop code. see EB library help.
       #:title: how it will be called in help, subbook title by default.
       #:gaiji: name of file with gaiji mappings in StorageYAML's data_directory,
       #        "gaiji_<dictionary name>" by default.

@@ -69,6 +69,7 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
       command = (book_config[:command] || book_id.to_s.downcase).to_sym
       path = book_config[:path] or raise "EPWING configuration error! Book path for #{book_id} must be defined."
       subbook = book_config[:subbook] || 0
+      appendix = book_config[:appendix]
       help_extension = book_config[:help] || {}
       gaiji_file = book_config[:gaiji] || "gaiji_#{book_id}"
 
@@ -77,6 +78,10 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
       book = EB::Book.new
       begin
         book.bind(path)
+        if appendix
+          # Must be set before setting subbook, or it won't take effect.
+          book.appendix_path = appendix
+        end
         book.subbook = subbook
       rescue Exception => e
         raise "Failed opening #{book_id}: #{e.inspect} #{e.backtrace}"
