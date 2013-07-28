@@ -27,6 +27,8 @@ class DCC < IRCPlugin
 
   COMMAND_KILL = :dcc_kill
   COMMAND_KILL_ALL = :dcc_kill!
+  COMMAND_REGISTER = :dcc_reg
+  COMMAND_UNREGISTER = :dcc_unreg
 
   attr_reader :parent_ircbot
 
@@ -81,9 +83,6 @@ class DCC < IRCPlugin
   def dispatch(msg)
     @router.dispatch_message(msg)
   end
-
-  COMMAND_REGISTER = :chat_reg
-  COMMAND_UNREGISTER = :chat_unreg
 
   def on_privmsg(msg)
     bot_command = msg.botcommand
