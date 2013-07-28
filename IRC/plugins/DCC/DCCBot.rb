@@ -5,7 +5,7 @@
 # Direct Client-to-Client chat worker
 
 class DCCBot
-  attr_reader :last_sent, :last_received, :start_time
+  attr_reader :last_sent, :last_received, :start_time, :last_received_time
   attr_accessor :caller_info, :credentials, :principals
 
   def initialize(socket, dcc_plugin, parent_bot)
@@ -15,7 +15,7 @@ class DCCBot
 
     @last_sent = nil
     @last_received = nil
-    @start_time = Time.now
+    @start_time = @last_received_time = Time.now
 
     @caller_info = @credentials = @principals = nil
   end
@@ -62,6 +62,7 @@ class DCCBot
 
     raw = encode raw
     @last_received = raw
+    @last_received_time = Time.now
 
     log(:in, raw)
 

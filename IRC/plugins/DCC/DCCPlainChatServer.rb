@@ -81,7 +81,7 @@ class DCCPlainChatServer < GServer
         client.dcc_send("Exceeded per-user connection limit (#{@config[:hard_limit]}). Killing oldest connection. See also '.help #{@dcc_plugin.class::COMMAND_KILL}'")
 
         connections = connections.values.sort_by do |connection|
-          connection.bot.start_time
+          connection.bot.last_received_time
         end.to_a
 
         while connections.size >= @config[:hard_limit]
