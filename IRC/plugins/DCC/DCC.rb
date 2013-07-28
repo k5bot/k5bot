@@ -189,6 +189,11 @@ every DCC connection from user.",
 
       store
     when COMMAND_KILL, COMMAND_KILL_ALL
+      unless @router.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
+        msg.reply("Sorry, you don't have 'can_use_dcc_chat' permission.")
+        return
+      end
+
       unless msg.private?
         msg.reply('This command must be issued in private.')
         return
