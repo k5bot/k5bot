@@ -89,7 +89,14 @@ class DCCPlainChatServer < GServer
           connection.bot.close rescue nil
         end
       elsif @config[:soft_limit] && connections.size >= @config[:soft_limit]
-        client.dcc_send("You have #{connections.size+1} active connections. When this number exceeds #{@config[:hard_limit]}, older connections will be killed. See also '.help #{@dcc_plugin.class::COMMAND_KILL}'")
+        if @config[:hard_limit]
+          client.dcc_send("You have #{connections.size+1} active connections. \
+When this number exceeds #{@config[:hard_limit]}, older connections will be killed. \
+See also '.help #{@dcc_plugin.class::COMMAND_KILL}'")
+        else
+          client.dcc_send("You have #{connections.size+1} active connections. \
+See '.help #{@dcc_plugin.class::COMMAND_KILL}'")
+        end
       end
 
       @port_to_bot[socket_to_port(client_socket)] = client
