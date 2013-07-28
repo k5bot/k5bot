@@ -40,6 +40,21 @@ class DCC < IRCPlugin
     if @secure_chat_info
       result[:schat] = 'sends a DCC SCHAT (SSL-encrypted chat) request back to the caller'
     end
+    unless result.empty?
+      result.merge!(
+          {
+              COMMAND_KILL => "allows to show and kill DCC connections from \
+current user. When no arguments supplied, shows connections. Accepts any of: \
+connection number (e.g. 12345), 'current' (kills current connection), \
+'other' (kills all but current connection), 'all'. Example: .dcc_kill other",
+              COMMAND_REGISTER => "associates given DCC connection \
+credentials with the current IRC user. The credentials are given out on \
+every DCC connection attempt from user.",
+              COMMAND_UNREGISTER => "disassociates given DCC connection \
+credentials from the current IRC user. The credentials are given out on \
+every DCC connection from user.",
+          })
+    end
 
     result
   end
