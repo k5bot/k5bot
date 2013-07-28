@@ -25,6 +25,9 @@ class DCC < IRCPlugin
   ACCESS_PRINCIPAL_KEY = :p
   ACCESS_FORMER_PRINCIPAL_KEY = :w
 
+  COMMAND_KILL = :dcc_kill
+  COMMAND_KILL_ALL = :dcc_kill!
+
   attr_reader :parent_ircbot
 
   def commands
@@ -83,7 +86,8 @@ class DCC < IRCPlugin
   COMMAND_UNREGISTER = :chat_unreg
 
   def on_privmsg(msg)
-    case msg.botcommand
+    bot_command = msg.botcommand
+    case bot_command
     when :chat
       return unless @plain_chat_info
       if msg.bot.instance_of?(DCCBot)
@@ -149,22 +153,7 @@ class DCC < IRCPlugin
       tail = msg.tail
       return unless tail
 
-      if msg.bot.instance_of?(DCCBot)
-        # If we got this command from DCC, then user
-        # has the right to delete credentials, that
-        # his ip/host hash-compute to.
-        allowed_credentials = msg.bot.credentials
-        # As well as all credentials, that resolve
-        # to the same principals as the credentials
-        # that he has now.
-        allowed_principals = msg.bot.principals
-      else
-        # We're not under DCC, so user can only delete
-        # credentials that resolve to the same principal
-        # as him.
-        allowed_principals = msg_to_principal(msg)
-        allowed_credentials = []
-      end
+      allowed_credentials, allowed_principals = get_allowed_sets(msg)
 
       credentials = tail.split
 
@@ -185,45 +174,33 @@ class DCC < IRCPlugin
       end
 
       store
-    when :dcc_kill
-      unless @router.check_permission(:can_kill_dcc_connection, msg_to_principal(msg))
-        msg.reply("Sorry, you don't have 'can_kill_dcc_connection' permission.")
-        return
-      end
+    when COMMAND_KILL, COMMAND_KILL_ALL
       unless msg.private?
-        msg.reply("Respect people's privacy, do that in PM.")
+        msg.reply('This command must be issued in private.')
         return
       end
 
-      connections = {}
+      if COMMAND_KILL_ALL == bot_command
+        unless @router.check_permission(:can_kill_any_dcc_connection, msg_to_principal(msg))
+          msg.reply("Sorry, you don't have 'can_kill_any_dcc_connection' permission.")
+          return
+        end
+        can_kill_anyone = true
+      else
+        can_kill_anyone = false
+      end
 
-      merge_labeled(connections, @plain_chat_info, 'CHAT')
-      merge_labeled(connections, @secure_chat_info, 'SCHAT')
+      connections = get_connections()
+
+      allowed_credentials, allowed_principals = get_allowed_sets(msg)
+
+      filter_allowed_connections!(connections, allowed_principals, allowed_credentials, can_kill_anyone)
 
       tail = msg.tail
       if tail
-        # kill connections with given ports
-        bots = tail.split.map {|port| [port, connections[port.to_i]]}
-        bots.each do |port, connection|
-          if connection
-            bot = connection[0]
-            type = connection[1]
-            bot.close rescue nil
-            msg.reply("Killed connection #{format_connection_info(bot, port, type)}")
-          else
-            msg.reply("Unknown connection '#{port}'.")
-          end
-        end
+        kill_connections(connections, msg, tail.split)
       else
-        # output the list of connections
-        connections.each do |port, connection|
-          bot = connection[0]
-          type = connection[1]
-          msg.reply(format_connection_info(bot, port, type))
-        end
-        if connections.empty?
-          msg.reply('No DCC connections present.')
-        end
+        list_connections(connections, msg)
       end
     end
   end
@@ -253,17 +230,127 @@ class DCC < IRCPlugin
 
   private
 
+  def kill_connections(connections, msg, ports)
+    kill_current_connection_too = false
+    preserved_current_connection = false
+    wrong_ports = []
+
+    # kill connections with given ports
+    ports = ports.map do |port|
+      if port.to_i > 0
+        [port.to_i]
+      elsif port.casecmp('all') == 0
+        kill_current_connection_too = true
+        connections.keys
+      elsif port.casecmp('other') == 0
+        connections.keys
+      elsif port.casecmp('current') == 0
+        kill_current_connection_too = true
+        []
+      else
+        wrong_ports << port
+        []
+      end
+    end
+
+    ports.flatten!
+    ports.uniq!
+
+    ports.each do |port|
+      connection = connections[port.to_i]
+      if connection
+        bot = connection.bot
+        type = connection.label
+        if bot != msg.bot
+          bot.close rescue nil
+          msg.reply("Killed connection #{format_connection_info(bot, port, type)}")
+        else
+          preserved_current_connection = true
+        end
+      else
+        wrong_ports << port
+      end
+    end
+
+    unless wrong_ports.empty?
+      msg.reply("Unknown connections: #{wrong_ports.uniq.join(', ')}.")
+    end
+
+    if kill_current_connection_too
+      if msg.bot.instance_of?(DCCBot)
+        msg.reply('Killing current connection...')
+        msg.bot.close rescue nil
+      end
+    elsif preserved_current_connection
+      msg.reply('Preserved current connection.')
+    end
+  end
+
+  def list_connections(connections, msg)
+    connections.each do |port, connection|
+      bot = connection.bot
+      type = connection.label
+      msg.reply(format_connection_info(bot, port, type))
+    end
+    if connections.empty?
+      msg.reply('No DCC connections present.')
+    end
+  end
+
+  def filter_allowed_connections!(connections, allowed_principals, allowed_credentials, can_kill_anyone)
+    unless can_kill_anyone
+      connections.delete_if do |_, connection|
+        !check_affiliation(connection.bot, allowed_credentials, allowed_principals)
+      end
+    end
+  end
+
+  def check_affiliation(bot, allowed_credentials, allowed_principals)
+    !(
+    (bot.principals & allowed_principals).empty? &&
+        (bot.credentials & allowed_credentials).empty?
+    )
+  end
+
+  def get_connections
+    connections = {}
+    merge_labeled(connections, @plain_chat_info, 'CHAT')
+    merge_labeled(connections, @secure_chat_info, 'SCHAT')
+    connections
+  end
+
+  def get_allowed_sets(msg)
+    if msg.bot.instance_of?(DCCBot)
+      # If we got this command from DCC, then user
+      # has the right to delete credentials, that
+      # his ip/host hash-compute to.
+      allowed_credentials = msg.bot.credentials
+      # As well as all credentials, that resolve
+      # to the same principals as the credentials
+      # that he has now.
+      allowed_principals = msg.bot.principals
+    else
+      # We're not under DCC, so user can only delete
+      # credentials that resolve to the same principal
+      # as him.
+      allowed_principals = [msg_to_principal(msg)]
+      allowed_credentials = []
+    end
+
+    [allowed_credentials, allowed_principals]
+  end
+
   def merge_labeled(map, submap, label)
     if submap
-      labeled = submap.server.port_to_bot.map do |p, b|
-        [p, [b, label]]
+      labeled = submap.server.port_to_bot.map do |port, bot|
+        [port, OpenStruct.new({:bot => bot, :label => label, :port => port})]
       end
       map.merge!(Hash[labeled])
     end
   end
 
   def format_connection_info(bot, port, type)
-    "#{port}: #{type}; Principals: #{bot.principals.join(' ')}; Credentials: #{bot.credentials.join(' ')}"
+    "##{port}: Type: #{type}; Started: #{bot.start_time.utc}; Principals: #{bot.principals.join(' ')}; Credentials: #{bot.credentials.join(' ')}"
   end
 
   def merged_config(config, branch)
