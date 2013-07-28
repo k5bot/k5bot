@@ -375,7 +375,7 @@ every DCC connection from user.",
   end
 
   def format_connection_info(bot, port, type)
-    "##{port}: Type: #{type}; Started: #{bot.start_time.utc}; Principals: #{bot.principals.join(' ')}; Credentials: #{bot.credentials.join(' ')}"
+    "##{port}: Type: #{type}; Started: #{bot.start_time.utc}; Last used: #{bot.last_received_time.utc}; Principals: #{bot.principals.join(' ')}; Credentials: #{bot.credentials.join(' ')}"
   end
 
   def merged_config(config, branch)
