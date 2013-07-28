@@ -40,9 +40,6 @@ class DCCBot
     log(:log, "Starting interaction with #{@caller_info}")
 
     begin
-      self.dcc_send("Hello! You're authorized as: #{principals.join(' ')}; Credentials: #{credentials.join(' ')}")
-      @socket.flush
-
       #until @socket.eof? do # for some reason blocks until user sends several lines.
       while (raw = @socket.gets) do
         self.receive(raw)

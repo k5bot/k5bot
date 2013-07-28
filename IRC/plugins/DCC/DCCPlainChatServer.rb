@@ -73,6 +73,25 @@ class DCCPlainChatServer < GServer
 
       false
     else
+      connections = @dcc_plugin.get_affiliated_connections(client)
+
+      client.dcc_send("Hello! You're authorized as: #{principals.join(' ')}; Credentials: #{credentials.join(' ')}")
+
+      if @config[:hard_limit] && connections.size >= @config[:hard_limit]
+        client.dcc_send("Exceeded per-user connection limit (#{@config[:hard_limit]}). Killing oldest connection. See also '.help #{@dcc_plugin.class::COMMAND_KILL}'")
+
+        connections = connections.values.sort_by do |connection|
+          connection.bot.start_time
+        end.to_a
+
+        while connections.size >= @config[:hard_limit]
+          connection = connections.shift
+          connection.bot.close rescue nil
+        end
+      elsif @config[:soft_limit] && connections.size >= @config[:soft_limit]
+        client.dcc_send("You have #{connections.size+1} active connections. When this number exceeds #{@config[:hard_limit]}, older connections will be killed. See also '.help #{@dcc_plugin.class::COMMAND_KILL}'")
+      end
+
       @port_to_bot[socket_to_port(client_socket)] = client
 
       true

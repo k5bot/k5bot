@@ -27,6 +27,10 @@
     #:listen: 0.0.0.0 # interface to actually listen on, 0.0.0.0 by default.
     #:port: 55554 # port to listen on, will be chosen randomly by default
     :limit: 50 # number of simultaneously accepted connections, 10 by default.
+    :hard_limit: 4 # number of connections per user. when exceeded,
+      # older connections from the same user will be killed. unlimited by default.
+    :soft_limit: 2 # number of connections per user. when exceeded,
+      # user will be shown a warning. unlimited by default.
     #:metadata: # ContextMetadata hash to attach to this bot, to be accessed by various plugins.
     #  :menu_size: 60
     :chat: # if present, then DCC CHAT server will be started.

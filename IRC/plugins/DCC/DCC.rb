@@ -242,6 +242,12 @@ every DCC connection from user.",
     [principal, @router.check_permission(:can_use_dcc_chat, principal)] if principal
   end
 
+  def get_affiliated_connections(bot)
+    connections = get_connections()
+    filter_allowed_connections!(connections, bot.principals, bot.credentials, false)
+    connections
+  end
+
   private
 
   def kill_connections(connections, msg, ports)
