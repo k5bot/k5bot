@@ -44,26 +44,62 @@ class MapDoc < IRCPlugin
     sub_catalog = @catalog[bot_command]
     return unless sub_catalog
 
-    hier = (msg.tail || '').split.map {|x| x.downcase}
+    hier = (msg.tail || '').split
 
     full_ref = []
+    case_ambiguous = []
+
     hier.each do |keyword|
       unless sub_catalog.is_a?(Hash)
         msg.reply("#{bot_command}: can't descend further, because '#{full_ref.join(' ')}' is a string.")
         return
       end
-      full_ref << keyword
-      sub_catalog = sub_catalog[keyword]
+
+      # Find all keys that case-insensitively match with given keyword
+      case_ambiguous = sub_catalog.keys.find_all { |w| w && (0 == keyword.casecmp(w)) }
+      case case_ambiguous.size
+        when 0
+          # Found nothing.
+          word = nil
+        when 1
+          # Only one variant. Assume user meant that.
+          word = case_ambiguous.pop
+        else
+          # Several variants. See if one of them matches case-sensitively with keywords.
+          # If yes, then use it, the rest is to be shown as suggestions.
+          # Otherwise everything will be shown as suggestions.
+          word = case_ambiguous.delete(keyword)
+      end
+
+      # If not found anything, just use keyword for help printing purposes.
+      word ||= keyword
+
+      sub_catalog = sub_catalog[word]
       unless sub_catalog
-        msg.reply("#{bot_command}: can't find key '#{full_ref.join(' ')}'.")
+        reply = "#{bot_command}: can't find key '#{word}'"
+        reply += " in '#{full_ref.join(' ')}'" unless full_ref.empty?
+        reply += '.'
+        reply += " Maybe you meant: #{case_ambiguous.join(', ')}." unless case_ambiguous.empty?
+        msg.reply(reply)
         return
       end
+
+      full_ref << word
     end
 
-    if sub_catalog.is_a?(Hash)
-      msg.reply("#{([bot_command] + hier).join(' ')} contains: #{sub_catalog.keys.select {|x| !x.nil?}.join(', ')}")
-    else
-      msg.reply("#{([bot_command] + hier).join(' ')}: #{sub_catalog.to_s}")
+    reply = if sub_catalog.is_a?(Hash)
+              "#{([bot_command] + full_ref).join(' ')} contains: #{sub_catalog.keys.select { |x| !x.nil? }.join(', ')}"
+            else
+              "#{([bot_command] + full_ref).join(' ')}: #{sub_catalog.to_s}"
+            end
+
+    unless case_ambiguous.empty?
+      reply += " See also: #{case_ambiguous.join(', ')}"
+      full_ref.pop # drop last matched key
+      reply += " in '#{full_ref.join(' ')}'" unless full_ref.empty?
+      reply += '.'
     end
+
+    msg.reply(reply)
   end
 end
