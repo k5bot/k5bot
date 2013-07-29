@@ -87,19 +87,46 @@ class MapDoc < IRCPlugin
       full_ref << word
     end
 
-    reply = if sub_catalog.is_a?(Hash)
-              "#{([bot_command] + full_ref).join(' ')} contains: #{sub_catalog.keys.select { |x| !x.nil? }.join(', ')}"
-            else
-              "#{([bot_command] + full_ref).join(' ')}: #{sub_catalog.to_s}"
-            end
-
-    unless case_ambiguous.empty?
-      reply += " See also: #{case_ambiguous.join(', ')}"
-      full_ref.pop # drop last matched key
-      reply += " in '#{full_ref.join(' ')}'" unless full_ref.empty?
-      reply += '.'
+    if sub_catalog.is_a?(Hash)
+      print_catalog_keys([bot_command] + full_ref, sub_catalog, msg)
+      reply = format_see_also(case_ambiguous, full_ref)
+    else
+      reply = "#{([bot_command] + full_ref).join(' ')}: #{sub_catalog.to_s}"
+      see_also = format_see_also(case_ambiguous, full_ref)
+      reply += ' ' + see_also if see_also
     end
 
     msg.reply(reply)
+  end
+
+  def print_catalog_keys(full_ref, sub_catalog, msg)
+    all_keys = sub_catalog.keys.select { |x| !x.nil? }
+
+    until all_keys.empty?
+      chunk_size = all_keys.size
+
+      begin
+        text = "#{full_ref.join(' ')} contains: #{all_keys[0..chunk_size-1].join(', ')}"
+        # make msg.reply throw exception if the text doesn't fit
+        msg.reply(text, :dont_truncate => (chunk_size > 1))
+      rescue Exception => _
+        # sending without truncation failed
+        chunk_size-=1
+        # retry with smaller menu size
+        retry if chunk_size > 0
+      end
+
+      all_keys.slice!(0, chunk_size)
+    end
+  end
+
+  def format_see_also(case_ambiguous, full_ref)
+    return if case_ambiguous.empty?
+    reply = "See also: #{case_ambiguous.join(', ')}"
+    full_ref.pop # drop last matched key
+    reply += " in '#{full_ref.join(' ')}'" unless full_ref.empty?
+    reply += '.'
+
+    reply
   end
 end
