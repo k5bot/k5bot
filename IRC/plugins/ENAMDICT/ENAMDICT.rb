@@ -2,72 +2,66 @@
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
 
-# EDICT plugin
+# ENAMDICT plugin
 #
-# The EDICT Dictionary File (edict) used by this plugin comes from Jim Breen's JMdict/EDICT Project.
+# The ENAMDICT Dictionary File (enamdict) used by this plugin comes from Jim Breen's ENAMDICT/JMnedict Project.
 # Copyright is held by the Electronic Dictionary Research Group at Monash University.
 #
 # http://www.csse.monash.edu.au/~jwb/edict.html
 
 require_relative '../../IRCPlugin'
-require_relative 'EDICTEntry'
+require_relative 'ENAMDICTEntry'
 
-class EDICT < IRCPlugin
-  Description = 'An EDICT plugin.'
+class ENAMDICT < IRCPlugin
+  Description = 'An ENAMDICT plugin.'
   Commands = {
-    :j => 'looks up a Japanese word in EDICT',
-    :e => 'looks up an English word in EDICT',
-    :jr => "searches Japanese words matching given regexp in EDICT. In addition to standard regexp operators (e.g. ^,$,*), special operators & and && are supported. \
+    :jn => 'looks up a Japanese word in ENAMDICT',
+    :jnr => "searches Japanese words matching given regexp in ENAMDICT. In addition to standard regexp operators (e.g. ^,$,*), special operators & and && are supported. \
 Operator & is a way to match several regexps (e.g. 'A & B & C' will only match words, that contain all of A, B and C letters, in any order). \
 Operator && is a way to specify separate conditions on kanji and reading (e.g. '物 && もつ').  Classes: \\k (kana), \\K (non-kana)",
   }
   Dependencies = [ :Language, :Menu ]
 
   def afterLoad
-    load_helper_class(:EDICTEntry)
+    load_helper_class(:ENAMDICTEntry)
 
     @l = @plugin_manager.plugins[:Language]
     @m = @plugin_manager.plugins[:Menu]
 
-    @hash_edict = load_dict("edict")
+    @hash_enamdict = load_dict('enamdict')
   end
 
   def beforeUnload
     @m.evict_plugin_menus!(self.name)
 
-    @hash_edict = nil
+    @hash_enamdict = nil
 
     @m = nil
     @l = nil
 
-    unload_helper_class(:EDICTEntry)
+    unload_helper_class(:ENAMDICTEntry)
 
     nil
   end
 
   def on_privmsg(msg)
     case msg.botcommand
-    when :j
+    when :jn
       word = msg.tail
       return unless word
       l_kana = @l.kana(word)
-      edict_lookup = lookup(l_kana, [@hash_edict[:japanese], @hash_edict[:readings]])
-      reply_with_menu(msg, generate_menu(format_description_unambiguous(edict_lookup), "\"#{word}\" #{"(\"#{l_kana}\") " unless word.eql?(l_kana)}in EDICT"))
-    when :e
-      word = msg.tail
-      return unless word
-      edict_lookup = keyword_lookup(split_into_keywords(word), @hash_edict[:keywords])
-      reply_with_menu(msg, generate_menu(format_description_show_all(edict_lookup), "\"#{word}\" in EDICT"))
-    when :jr
+      enamdict_lookup = lookup(l_kana, [@hash_enamdict[:japanese], @hash_enamdict[:readings]])
+      reply_with_menu(msg, generate_menu(format_description_unambiguous(enamdict_lookup), "\"#{word}\" #{"(\"#{l_kana}\") " unless word.eql?(l_kana)}in ENAMDICT"))
+    when :jnr
       word = msg.tail
       return unless word
       begin
         complex_regexp = Language.parse_complex_regexp(word)
       rescue => e
-        msg.reply("EDICT Regexp query error: #{e.message}")
+        msg.reply("ENAMDICT Regexp query error: #{e.message}")
         return
       end
-      reply_with_menu(msg, generate_menu(lookup_complex_regexp(complex_regexp), "\"#{word}\" in EDICT"))
+      reply_with_menu(msg, generate_menu(lookup_complex_regexp(complex_regexp), "\"#{word}\" in ENAMDICT"))
     end
   end
 
@@ -139,7 +133,7 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
 
     case operation
     when :union
-      @hash_edict[:all].each do |entry|
+      @hash_enamdict[:all].each do |entry|
         word_kanji = entry.japanese
         kanji_matched = regexps_kanji.all? { |regex| regex =~ word_kanji }
         word_kana = entry.reading
@@ -147,7 +141,7 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
         lookup_result << [entry, !entry.simple_entry, kana_matched] if kanji_matched || kana_matched
       end
     when :intersection
-      @hash_edict[:all].each do |entry|
+      @hash_enamdict[:all].each do |entry|
         word_kanji = entry.japanese
         next unless regexps_kanji.all? { |regex| regex =~ word_kanji }
         word_kana = entry.reading
@@ -179,7 +173,7 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
   end
 
   def split_into_keywords(word)
-    EDICTEntry.split_into_keywords(word).uniq
+    ENAMDICTEntry.split_into_keywords(word).uniq
   end
 
   def sort_result(lr)
@@ -190,7 +184,7 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
     dict = File.open("#{(File.dirname __FILE__)}/#{dict_name}.marshal", 'r') do |io|
       Marshal.load(io)
     end
-    raise "The #{dict_name}.marshal file is outdated. Rerun convert.rb." unless dict[:version] == EDICTEntry::VERSION
+    raise "The #{dict_name}.marshal file is outdated. Rerun convert.rb." unless dict[:version] == ENAMDICTEntry::VERSION
 
     # Pre-parse all entries
     dict[:all].each do |entry|

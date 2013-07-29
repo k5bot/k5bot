@@ -21,6 +21,12 @@ pushd "${root}/IRC/plugins/EDICT" && \
 ./convert.rb
 popd
 
+# ENAMDICT
+pushd "${root}/IRC/plugins/ENAMDICT" && \
+./download.sh && \
+./convert.rb
+popd
+
 # CEDICT
 pushd "${root}/IRC/plugins/CEDICT" && \
 ./download.sh && \

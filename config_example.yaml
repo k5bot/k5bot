@@ -62,6 +62,7 @@
 - :Language
 # The following plugins
 #- :EDICT
+#- :ENAMDICT
 #- :KANJIDIC
 #- :KANJIDIC2
 #- :Daijirin

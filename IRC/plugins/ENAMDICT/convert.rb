@@ -3,40 +3,40 @@
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
 
-# EDICT converter
+# ENAMDICT converter
 #
-# Converts the EDICT file to a marshalled hash, readable by the EDICT plugin.
-# When there are changes to EDICTEntry or EDICT is updated, run this script
-# to re-index (./convert.rb), then reload the EDICT plugin (!load EDICT).
+# Converts the ENAMDICT file to a marshalled hash, readable by the ENAMDICT plugin.
+# When there are changes to ENAMDICTEntry or ENAMDICT is updated, run this script
+# to re-index (./convert.rb), then reload the ENAMDICT plugin (!load ENAMDICT).
 
 $VERBOSE = true
 
 require 'iconv'
 require 'yaml'
-require_relative 'EDICTEntry'
+require_relative 'ENAMDICTEntry'
 
-class EDICTConverter
+class ENAMDICTConverter
   attr_reader :hash
 
-  def initialize(edict_file)
-    @edict_file = edict_file
+  def initialize(enamdict_file)
+    @enamdict_file = enamdict_file
     @hash = {}
     @hash[:japanese] = {}
     @hash[:readings] = {}
     @hash[:keywords] = {}
     @all_entries = []
     @hash[:all] = @all_entries
-    @hash[:version] = EDICTEntry::VERSION
+    @hash[:version] = ENAMDICTEntry::VERSION
 
     # Duplicated two lines from ../Language/Language.rb
-    @kata2hira = YAML.load_file("../Language/kata2hira.yaml") rescue nil
+    @kata2hira = YAML.load_file('../Language/kata2hira.yaml') rescue nil
     @katakana = @kata2hira.keys.sort_by{|x| -x.length}
   end
 
   def read
-    File.open(@edict_file, 'r') do |io|
+    File.open(@enamdict_file, 'r') do |io|
       io.each_line do |l|
-        entry = EDICTEntry.new(Iconv.conv('UTF-8', 'EUC-JP', l).strip)
+        entry = ENAMDICTEntry.new(Iconv.conv('UTF-8', 'EUC-JP', l).strip)
 
         entry.parse
 
@@ -69,21 +69,21 @@ class EDICTConverter
 end
 
 def marshal_dict(dict)
-  ec = EDICTConverter.new("#{(File.dirname __FILE__)}/#{dict}")
+  ec = ENAMDICTConverter.new("#{(File.dirname __FILE__)}/#{dict}")
 
   print "Indexing #{dict.upcase}..."
   ec.read
-  puts "done."
+  puts 'done.'
 
   print "Sorting #{dict.upcase}..."
   ec.sort
-  puts "done."
+  puts 'done.'
 
   print "Marshalling #{dict.upcase}..."
   File.open("#{(File.dirname __FILE__)}/#{dict}.marshal", 'w') do |io|
     Marshal.dump(ec.hash, io)
   end
-  puts "done."
+  puts 'done.'
 end
 
-marshal_dict('edict')
+marshal_dict('enamdict')
