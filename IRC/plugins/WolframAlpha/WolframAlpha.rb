@@ -7,6 +7,7 @@
 require 'rubygems'
 require 'bundler/setup'
 require 'wolfram'
+require 'resolv'
 
 require_relative '../../IRCPlugin'
 
@@ -42,7 +43,11 @@ class WolframAlpha < IRCPlugin
   private
 
   def wolfram(query, msg)
-    result = Wolfram.fetch(query, 'format'=>'plaintext')
+    user_host = msg.prefix[/@([^@]+)$/, 1]
+    addr = Resolv.getaddress(user_host) rescue nil
+    addr = '212.45.111.17' unless Resolv::IPv4::Regex =~ addr
+
+    result = Wolfram.fetch(query, 'format'=>'plaintext', 'ip' => addr)
     # to see the result as a hash of pods and assumptions:
     if result.success
       reply_menu = generate_menu(result, "\"#{query}\" in WolframAlpha")
