@@ -22,6 +22,12 @@ class IRCUserListener
     @users.values.each { |u| @nicks[normalize(u.nick)] = u }
   end
 
+  LISTENER_PRIORITY = -40
+
+  def listener_priority
+    LISTENER_PRIORITY
+  end
+
   def request_whois(bot, nick)
     bot.send_raw "WHOIS #{nick}"
   end
