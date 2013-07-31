@@ -23,7 +23,6 @@ class ENAMDICTConverter
     @hash = {}
     @hash[:japanese] = {}
     @hash[:readings] = {}
-    @hash[:keywords] = {}
     @all_entries = []
     @hash[:all] = @all_entries
     @hash[:version] = ENAMDICTEntry::VERSION
@@ -43,16 +42,13 @@ class ENAMDICTConverter
         @all_entries << entry
         (@hash[:japanese][entry.japanese] ||= []) << entry
         (@hash[:readings][hiragana(entry.reading)] ||= []) << entry
-        entry.keywords.each do |k|
-          (@hash[:keywords][k] ||= []) << entry
-        end
       end
     end
   end
 
   def sort
     count = 0
-    @all_entries.sort_by!{|e| [ (e.common? ? -1 : 1), (!e.xrated? ? -1 : 1), (!e.vulgar? ? -1 : 1), e.reading.size, e.reading, e.keywords.size, e.japanese.length]}
+    @all_entries.sort_by!{|e| [e.reading.size, e.reading, e.keywords.size, e.japanese.length]}
     @all_entries.each do |e|
       e.sortKey = count
       count += 1

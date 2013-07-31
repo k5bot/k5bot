@@ -7,7 +7,7 @@
 require 'set'
 
 class ENAMDICTEntry
-  VERSION = 2
+  VERSION = 3
 
   attr_reader :raw
   attr_accessor :sortKey
@@ -15,9 +15,6 @@ class ENAMDICTEntry
   attr_reader :japanese,
               :reading,
               :simple_entry # precomputed boolean, true if reading matches japanese.
-
-  # TODO: the p here conflicts with P that denotes common words. should fix that somehow.
-  PROPER_NAME_KEYWORDS = [:s, :p, :u, :g, :f, :m, :h, :pr, :co, :st].to_set
 
   def initialize(raw)
     @raw = raw
@@ -56,22 +53,6 @@ class ENAMDICTEntry
 
   def self.split_into_keywords(text)
      text.downcase.gsub(/[^a-z0-9'\- ]/, ' ').split.map { |e| e.strip.to_sym }
-  end
-
-  def common?
-    keywords.include? :p
-  end
-
-  def xrated?
-    keywords.include? :x
-  end
-
-  def vulgar?
-    keywords.include? :vulg
-  end
-
-  def proper_name?
-    keywords.any? { |k| PROPER_NAME_KEYWORDS.include? k }
   end
 
   def info

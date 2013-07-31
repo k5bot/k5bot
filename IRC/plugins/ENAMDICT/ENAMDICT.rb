@@ -153,29 +153,6 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
     lookup_result
   end
 
-  # Looks up keywords in the keyword hash.
-  # Specified argument is a string of one or more keywords.
-  # Returns the intersection of the results for each keyword.
-  def keyword_lookup(words, hash)
-    lookup_result = nil
-
-    words.each do |k|
-      return [] unless (entry_array = hash[k])
-      if lookup_result
-        lookup_result &= entry_array
-      else
-        lookup_result = Array.new(entry_array)
-      end
-    end
-    return [] unless lookup_result && !lookup_result.empty?
-    sort_result(lookup_result)
-    lookup_result
-  end
-
-  def split_into_keywords(word)
-    ENAMDICTEntry.split_into_keywords(word).uniq
-  end
-
   def sort_result(lr)
     lr.sort_by!{|e| e.sortKey} if lr
   end
