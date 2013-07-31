@@ -21,16 +21,18 @@ class IRCBot < IRCPlugin
 
   Description = 'Provides IRC connectivity.'
 
-  Dependencies = [ :ChannelPool, :Router, :StorageYAML ]
+  Dependencies = [ :Router, :StorageYAML ]
 
   attr_reader :last_sent, :last_received, :start_time, :user
 
   def afterLoad
     load_helper_class(:IRCUser)
+    load_helper_class(:IRCChannel)
     load_helper_class(:IRCMessage)
     load_helper_class(:IRCCapsListener)
     load_helper_class(:IRCServerPassListener)
     load_helper_class(:IRCUserListener)
+    load_helper_class(:IRCChannelListener)
     load_helper_class(:IRCLoginListener)
     load_helper_class(:IRCIdentifyListener)
     load_helper_class(:IRCJoinListener)
@@ -56,6 +58,7 @@ class IRCBot < IRCPlugin
     @caps_listener = IRCCapsListener.new(self)
     @server_pass_listener = IRCServerPassListener.new(self, @config[:serverpass])
     @user_listener = IRCUserListener.new(@plugin_manager.plugins[:StorageYAML])
+    @channel_listener = IRCChannelListener.new
     @login_listener = IRCLoginListener.new(self, @config)
     @identify_listener = IRCIdentifyListener.new(self, @config[:identify])
     @join_listener = IRCJoinListener.new(self, @config[:channels])
@@ -65,13 +68,13 @@ class IRCBot < IRCPlugin
         @caps_listener,
         @server_pass_listener,
         @user_listener,
+        @channel_listener,
         @login_listener,
         @identify_listener,
         @join_listener,
         @first_listener,
     ]
 
-    @channel_pool = @plugin_manager.plugins[:ChannelPool] # Get channel pool
     @router = @plugin_manager.plugins[:Router] # Get router
 
     @watchdog = nil
@@ -83,12 +86,12 @@ class IRCBot < IRCPlugin
     return "Can't unload before connection is killed" if @sock
 
     @router = nil
-    @channel_pool = nil
 
     @first_listener = nil
     @join_listener = nil
     @identify_listener = nil
     @login_listener = nil
+    @channel_listener = nil
     @user_listener = nil
     @server_pass_listener = nil
     @caps_listener = nil
@@ -101,10 +104,12 @@ class IRCBot < IRCPlugin
     unload_helper_class(:IRCJoinListener)
     unload_helper_class(:IRCIdentifyListener)
     unload_helper_class(:IRCLoginListener)
+    unload_helper_class(:IRCChannelListener)
     unload_helper_class(:IRCUserListener)
     unload_helper_class(:IRCServerPassListener)
     unload_helper_class(:IRCCapsListener)
     unload_helper_class(:IRCMessage)
+    unload_helper_class(:IRCChannel)
     unload_helper_class(:IRCUser)
 
     nil
@@ -296,7 +301,7 @@ class IRCBot < IRCPlugin
   end
 
   def find_channel_by_msg(msg)
-    @channel_pool.findChannel(msg)
+    @channel_listener.findChannel(msg)
   end
 
   def post_login
