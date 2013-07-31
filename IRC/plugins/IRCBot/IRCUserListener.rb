@@ -15,11 +15,21 @@ class IRCUserListener
 
   def initialize(storage)
     @storage = storage
+  end
+
+  def on_connection(msg)
+    return if @users
 
     @users = @storage.read('users') || {}
 
     @nicks = {}
     @users.values.each { |u| @nicks[normalize(u.nick)] = u }
+  end
+
+  def on_disconnection(msg)
+    @nicks = nil
+
+    @users = nil
   end
 
   LISTENER_PRIORITY = -40
