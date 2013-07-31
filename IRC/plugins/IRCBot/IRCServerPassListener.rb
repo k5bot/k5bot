@@ -33,7 +33,7 @@ class IRCServerPassListener
     @password_sent = nil
   end
 
-  LISTENER_PRIORITY = -32
+  LISTENER_PRIORITY = -48
 
   def listener_priority
     LISTENER_PRIORITY
