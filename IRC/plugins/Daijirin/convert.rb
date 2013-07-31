@@ -11,7 +11,6 @@
 
 $VERBOSE = true
 
-require 'iconv'
 require 'yaml'
 require_relative 'DaijirinEntry'
 
