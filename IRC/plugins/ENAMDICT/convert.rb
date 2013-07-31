@@ -11,7 +11,6 @@
 
 $VERBOSE = true
 
-require 'iconv'
 require 'yaml'
 require_relative 'ENAMDICTEntry'
 
@@ -33,9 +32,9 @@ class ENAMDICTConverter
   end
 
   def read
-    File.open(@enamdict_file, 'r') do |io|
+    File.open(@enamdict_file, 'r', :encoding => 'EUC-JP') do |io|
       io.each_line do |l|
-        entry = ENAMDICTEntry.new(Iconv.conv('UTF-8', 'EUC-JP', l).strip)
+        entry = ENAMDICTEntry.new(l.encode('UTF-8').strip)
 
         entry.parse
 
