@@ -11,7 +11,6 @@
 
 $VERBOSE = true
 
-require 'iconv'
 require 'yaml'
 require_relative 'EDICTEntry'
 
@@ -34,9 +33,9 @@ class EDICTConverter
   end
 
   def read
-    File.open(@edict_file, 'r') do |io|
+    File.open(@edict_file, 'r', :encoding => 'EUC-JP') do |io|
       io.each_line do |l|
-        entry = EDICTEntry.new(Iconv.conv('UTF-8', 'EUC-JP', l).strip)
+        entry = EDICTEntry.new(l.encode('UTF-8').strip)
 
         entry.parse
 
