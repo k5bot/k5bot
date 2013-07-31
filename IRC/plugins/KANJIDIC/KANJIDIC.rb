@@ -10,7 +10,6 @@
 # http://www.csse.monash.edu.au/~jwb/kanjidic.html
 
 require_relative '../../IRCPlugin'
-require 'iconv'
 require 'uri'
 
 class KANJIDICEntry
@@ -117,9 +116,9 @@ class KANJIDIC < IRCPlugin
 
   def load_kanjidic
     kanjidic_file = "#{(File.dirname __FILE__)}/kanjidic"
-    File.open(kanjidic_file, 'r') do |io|
+    File.open(kanjidic_file, 'r', :encoding => 'EUC-JP') do |io|
       io.each_line do |l|
-        entry = KANJIDICEntry.new(Iconv.conv('UTF-8', 'EUC-JP', l))
+        entry = KANJIDICEntry.new(l.encode('UTF-8'))
         @kanji[entry.kanji] = entry
         @code_skip[entry.code_skip] ||= {}
         @code_skip[entry.code_skip][entry.radical_number] ||= []
