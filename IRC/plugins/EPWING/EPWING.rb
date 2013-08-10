@@ -22,7 +22,7 @@ also use .epwing command to search in all available dictionaries simultaneously.
       :postfix => "Search commands can \
 (where supported by underlying dictionary) be postfixed with \
 one of the following: ! for exact search, $ for ends-with search, \
-@ for keyword search. No postfix is 'contains' search. ~ is the same, but
+@ for keyword search. No postfix is 'contains' search. # is the same, but
 doesn't substitute gaiji. The exact meaning of search modes seems to vary \
 with dictionary, so try and find what suits you best.",
       :gaiji => "Because EPWING dictionaries internally use JIS encodings, \
@@ -141,7 +141,7 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
     botcommand = msg.botcommand
     return unless botcommand
 
-    m = botcommand.to_s.match(/(.+)([!$@~])$/)
+    m = botcommand.to_s.match(/(.+)([!$@#])$/)
     if m
       lookup_type = case m[2]
                       when '!'
@@ -150,7 +150,7 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
                         :ends_with
                       when '@'
                         :keyword
-                      when '~'
+                      when '#'
                         :preserve_gaiji
                       else
                         raise "Bug! Parse failure of #{botcommand}"
