@@ -238,6 +238,8 @@ class Language < IRCPlugin
     end
   end
 
+  HIRAGANA_CHAR_GROUP_MATCHER = /\\kh/
+  KATAKANA_CHAR_GROUP_MATCHER = /\\kk/
   KANA_CHAR_GROUP_MATCHER = /\\k/
   NON_KANA_CHAR_GROUP_MATCHER = /\\K/
 
@@ -247,10 +249,14 @@ class Language < IRCPlugin
   # 31F0-31FF katakana phonetic extensions
   #
   # Source: http://www.unicode.org/charts/
+  HIRAGANA_CHAR_GROUP = '[\u3040-\u309F]'
+  KATAKANA_CHAR_GROUP = '[\u30A0-\u30FF\uFF61-\uFF9D\u31F0-\u31FF]'
   KANA_CHAR_GROUP = '[\u3040-\u30FF\uFF61-\uFF9D\u31F0-\u31FF]'
   NON_KANA_CHAR_GROUP = '[^\u3040-\u30FF\uFF61-\uFF9D\u31F0-\u31FF]'
 
   def self.parse_sub_regexp(word)
+    word.gsub!(HIRAGANA_CHAR_GROUP_MATCHER, HIRAGANA_CHAR_GROUP)
+    word.gsub!(KATAKANA_CHAR_GROUP_MATCHER, KATAKANA_CHAR_GROUP)
     word.gsub!(KANA_CHAR_GROUP_MATCHER, KANA_CHAR_GROUP)
     word.gsub!(NON_KANA_CHAR_GROUP_MATCHER, NON_KANA_CHAR_GROUP)
     Regexp.new(word, Regexp::EXTENDED)
