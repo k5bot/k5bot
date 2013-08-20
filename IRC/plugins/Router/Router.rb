@@ -239,9 +239,14 @@ class Router < IRCPlugin
 
   def remove_from_list(list_name, mask)
     list_name = list_name.to_sym
-    result = @rules[list_name].delete(mask)
-    @rules.delete(list_name) if @rules[list_name].empty?
-    result
+    rules_list = @rules[list_name]
+
+    if rules_list && !rules_list.empty?
+      rules_list.delete(mask)
+    else
+      @rules.delete(list_name)
+      nil
+    end
   end
 
   def check_is_banned(credential)
