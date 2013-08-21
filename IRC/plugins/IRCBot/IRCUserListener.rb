@@ -15,6 +15,7 @@ class IRCUserListener
 
   def initialize(storage)
     @storage = storage
+    @users = @nicks = nil
   end
 
   def on_connection(msg)
