@@ -13,7 +13,8 @@ class Language < IRCPlugin
 
   Description = "Provides language-related functionality."
   Commands = {
-    :kana => 'converts specified romazi to kana. Use lower-case for hiragana, upper-case for katakana'
+    :kana => 'converts specified romazi to kana. Use lower-case for hiragana, upper-case for katakana',
+    :romaja => 'converts given hangul to romaja',
   }
 
   JAMO_L_TABLE = [
@@ -56,6 +57,8 @@ class Language < IRCPlugin
     case msg.botcommand
     when :kana
       msg.reply(romazi_to_kana msg.tail)
+    when :romaja
+      msg.reply(from_hangul(msg.tail).join)
     end
   end
 
