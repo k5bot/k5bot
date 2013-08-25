@@ -78,7 +78,7 @@ See '.faq regexp'",
       kanji_list = e.kanji_for_display.join(',')
       render_kana = e.kana && (amb_chk_kanji[kanji_list] > 1 || kanji_list.empty?) # || !render_kanji
 
-      [e, render_kanji, render_kana]
+      [e, render_kanji || !e.kana, render_kana]
     end
   end
 
