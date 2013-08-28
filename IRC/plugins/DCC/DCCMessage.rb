@@ -70,6 +70,16 @@ class DCCMessage
     @raw.dup
   end
 
+  # Principals of the message originator
+  def principals
+    @bot.principals
+  end
+
+  # Credentials of the message originator
+  def credentials
+    @bot.credentials
+  end
+
   def user
     @bot.find_user_by_msg(self)
   end

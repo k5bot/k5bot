@@ -167,7 +167,11 @@ every DCC connection from user.",
       tail = msg.tail
       return unless tail
 
-      allowed_credentials, allowed_principals = get_allowed_sets(msg)
+      # User has the right to delete his credentials,
+      # as well as all credentials, that resolve
+      # to the same principals as the credentials
+      # that he has now.
+      allowed_credentials, allowed_principals = [msg.credentials, msg.principals]
 
       credentials = tail.split
 
@@ -211,9 +215,7 @@ every DCC connection from user.",
 
       connections = get_connections()
 
-      allowed_credentials, allowed_principals = get_allowed_sets(msg)
-
-      filter_allowed_connections!(connections, allowed_principals, allowed_credentials, can_kill_anyone)
+      filter_allowed_connections!(connections, msg.principals, msg.credentials, can_kill_anyone)
 
       tail = msg.tail
       if tail
@@ -342,27 +344,6 @@ every DCC connection from user.",
     merge_labeled(connections, @plain_chat_info, 'CHAT')
     merge_labeled(connections, @secure_chat_info, 'SCHAT')
     connections
-  end
-
-  def get_allowed_sets(msg)
-    if msg.bot.instance_of?(DCCBot)
-      # If we got this command from DCC, then user
-      # has the right to delete credentials, that
-      # his ip/host hash-compute to.
-      allowed_credentials = msg.bot.credentials
-      # As well as all credentials, that resolve
-      # to the same principals as the credentials
-      # that he has now.
-      allowed_principals = msg.bot.principals
-    else
-      # We're not under DCC, so user can only delete
-      # credentials that resolve to the same principal
-      # as him.
-      allowed_principals = [msg_to_principal(msg)]
-      allowed_credentials = []
-    end
-
-    [allowed_credentials, allowed_principals]
   end
 
   def merge_labeled(map, submap, label)

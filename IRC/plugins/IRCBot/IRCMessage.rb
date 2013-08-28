@@ -81,6 +81,16 @@ class IRCMessage
     @raw.dup
   end
 
+  # Principals of the message originator
+  def principals
+    [@prefix]
+  end
+
+  # Credentials of the message originator
+  def credentials
+    []
+  end
+
   def user
     @user ||= @bot.find_user_by_msg(self)
   end
