@@ -15,20 +15,14 @@ require_relative '../../IRCPlugin'
 
 class DCC < IRCPlugin
   Description = 'Direct Client-to-Client protocol plugin.'
-  Dependencies = [ :Router, :StorageYAML, :IRCBot ]
+  Dependencies = [ :Router, :IRCBot, :Auth ]
 
   DEFAULT_LISTEN_INTERFACE = '0.0.0.0'
   DEFAULT_LISTEN_PORT = 0 # Make OS choose a free port
   DEFAULT_CONNECTION_LIMIT = 10
 
-  ACCESS_TIMESTAMP_KEY = :t
-  ACCESS_PRINCIPAL_KEY = :p
-  ACCESS_FORMER_PRINCIPAL_KEY = :w
-
   COMMAND_KILL = :dcc_kill
   COMMAND_KILL_ALL = :dcc_kill!
-  COMMAND_REGISTER = :dcc_reg
-  COMMAND_UNREGISTER = :dcc_unreg
 
   attr_reader :parent_ircbot
 
@@ -47,12 +41,6 @@ class DCC < IRCPlugin
 current user. When no arguments supplied, shows connections. Accepts any of: \
 connection number (e.g. 12345), 'current' (kills current connection), \
 'other' (kills all but current connection), 'all'. Example: .dcc_kill other",
-              COMMAND_REGISTER => "associates given DCC connection \
-credentials with the current IRC user. The credentials are given out on \
-every DCC connection attempt from user.",
-              COMMAND_UNREGISTER => "disassociates given DCC connection \
-credentials from the current IRC user. The credentials are given out on \
-every DCC connection from user.",
           })
     end
 
@@ -65,10 +53,9 @@ every DCC connection from user.",
     load_helper_class(:DCCPlainChatServer)
     load_helper_class(:DCCSecureChatServer)
 
-    @storage = @plugin_manager.plugins[:StorageYAML]
     @router = @plugin_manager.plugins[:Router]
+    @auth = @plugin_manager.plugins[:Auth]
     @parent_ircbot = @plugin_manager.plugins[:IRCBot]
-    @dcc_access = @storage.read('dcc_access') || {}
 
     @plain_chat_info = start_plain_server(merged_config(@config, :chat))
     @secure_chat_info = start_secure_server(merged_config(@config, :schat))
@@ -78,10 +65,9 @@ every DCC connection from user.",
     stop_server(@secure_chat_info)
     stop_server(@plain_chat_info)
 
-    @dcc_access = nil
     @parent_ircbot = nil
+    @auth = nil
     @router = nil
-    @storage = nil
 
     unload_helper_class(:DCCSecureChatServer)
     unload_helper_class(:DCCPlainChatServer)
@@ -89,10 +75,6 @@ every DCC connection from user.",
     unload_helper_class(:DCCMessage)
 
     nil
-  end
-
-  def store
-    @storage.write('dcc_access', @dcc_access)
   end
 
   def dispatch(msg)
@@ -109,7 +91,7 @@ every DCC connection from user.",
         return
       end
 
-      unless @router.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
+      unless @auth.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
         msg.reply("Sorry, you don't have 'can_use_dcc_chat' permission.")
         return
       end
@@ -123,77 +105,15 @@ every DCC connection from user.",
           return
         end
 
-        unless @router.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
+        unless @auth.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
           msg.reply("Sorry, you don't have 'can_use_dcc_chat' permission.")
           return
         end
 
         reply = IRCMessage.make_ctcp_message(:DCC, ['SCHAT', 'chat', @secure_chat_info.announce_ip, @secure_chat_info.server.port])
         msg.reply(reply, :force_private => true)
-    when COMMAND_REGISTER
-      unless @router.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
-        msg.reply("Sorry, you don't have 'can_use_dcc_chat' permission.")
-        return
-      end
-
-      tail = msg.tail
-      return unless tail
-
-      principal = msg_to_principal(msg)
-      credentials = tail.split
-
-      credentials.each do |cred|
-        if @dcc_access.include?(cred)
-          if @dcc_access[cred][ACCESS_PRINCIPAL_KEY]
-            msg.reply("DCC credential is already assigned to #{@dcc_access[cred][ACCESS_PRINCIPAL_KEY]}; Delete it first, using .#{COMMAND_UNREGISTER} #{cred}")
-          else
-            @dcc_access[cred] = {ACCESS_PRINCIPAL_KEY => principal, ACCESS_TIMESTAMP_KEY => Time.now.utc.to_i}
-            msg.reply("Associated you with DCC credential: #{cred}")
-          end
-        else
-          # Credential should be touched by actual attempt to connect first,
-          # To prevent database pollution with random credentials.
-          msg.reply("Unknown or invalid DCC credential: #{cred}")
-        end
-      end
-
-      store
-    when COMMAND_UNREGISTER
-      unless @router.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
-        msg.reply("Sorry, you don't have 'can_use_dcc_chat' permission.")
-        return
-      end
-
-      tail = msg.tail
-      return unless tail
-
-      # User has the right to delete his credentials,
-      # as well as all credentials, that resolve
-      # to the same principals as the credentials
-      # that he has now.
-      allowed_credentials, allowed_principals = [msg.credentials, msg.principals]
-
-      credentials = tail.split
-
-      credentials.each do |cred|
-        ok = @dcc_access.include?(cred)
-        ok &&= allowed_credentials.include?(cred) || allowed_principals.include?(@dcc_access[cred][ACCESS_PRINCIPAL_KEY])
-        if ok
-          was = @dcc_access[cred].delete(ACCESS_PRINCIPAL_KEY)
-          if was
-            @dcc_access[cred][ACCESS_FORMER_PRINCIPAL_KEY] = was
-            msg.reply("Disassociated DCC credential: #{cred}")
-          else
-            msg.reply("DCC credential isn't associated: #{cred}")
-          end
-        else
-          msg.reply("Unknown, invalid or not your DCC credential: #{cred}"  )
-        end
-      end
-
-      store
     when COMMAND_KILL, COMMAND_KILL_ALL
-      unless @router.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
+      unless @auth.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
         msg.reply("Sorry, you don't have 'can_use_dcc_chat' permission.")
         return
       end
@@ -204,7 +124,7 @@ every DCC connection from user.",
       end
 
       if COMMAND_KILL_ALL == bot_command
-        unless @router.check_permission(:can_kill_any_dcc_connection, msg_to_principal(msg))
+        unless @auth.check_permission(:can_kill_any_dcc_connection, msg_to_principal(msg))
           msg.reply("Sorry, you don't have 'can_kill_any_dcc_connection' permission.")
           return
         end
@@ -238,15 +158,8 @@ every DCC connection from user.",
   # Checks if credential is already stored and has associated principal,
   # otherwise mark it as being attempted for non-authorized access.
   def get_credential_authorization(credential)
-    result = @dcc_access[credential]
-
-    unless result
-      result = @dcc_access[credential] = {ACCESS_TIMESTAMP_KEY => Time.now.utc.to_i}
-      store
-    end
-
-    principal = result[ACCESS_PRINCIPAL_KEY]
-    [principal, @router.check_permission(:can_use_dcc_chat, principal)] if principal
+    principal = @auth.get_principal_by_credential(credential)
+    [principal, @auth.check_permission(:can_use_dcc_chat, principal)] if principal
   end
 
   def get_affiliated_connections(bot)

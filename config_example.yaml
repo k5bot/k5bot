@@ -42,6 +42,7 @@
 - :Help
 - :StorageYAML:
     :'data_directory': "~/.ircbot"
+- :Auth
 - :Router:
     :owners: # list of hostmasks that will have unlimited access no matter what
       - "*@unaffiliated/albel727"

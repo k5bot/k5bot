@@ -62,10 +62,10 @@ class DCCPlainChatServer < GServer
 
     if client.principals.empty?
       begin
-        client.dcc_send("Unauthorized connection. Use command .#{@dcc_plugin.class::COMMAND_REGISTER} first.")
+        client.dcc_send("Unauthorized connection. Use command .#{Auth::COMMAND_REGISTER} first.")
 
         caller_id.zip(client.credentials).each do |id, cred|
-          client.dcc_send("To approve '#{id}' use: .#{@dcc_plugin.class::COMMAND_REGISTER} #{cred}")
+          client.dcc_send("To approve '#{id}' use: .#{Auth::COMMAND_REGISTER} #{cred}")
         end
       rescue Exception => e
         do_log(:error, "Exception while declining #{caller_info}: #{e.inspect}")
