@@ -4,9 +4,6 @@
 
 # Direct Client-to-Client plugin
 
-require 'base64'
-require 'digest/sha2'
-
 require 'ipaddr'
 require 'socket'
 require 'ostruct'
@@ -151,8 +148,7 @@ connection number (e.g. 12345), 'current' (kills current connection), \
   end
 
   def caller_id_to_credential(key)
-    salt = (@config[:salt] || 'lame ass salt for those who did not set it themselves')
-    Base64.strict_encode64(Digest::SHA2.digest(key.to_s + salt))
+    @auth.hash_credential(key)
   end
 
   # Checks if credential is already stored and has associated principal,

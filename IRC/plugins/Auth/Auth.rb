@@ -4,6 +4,9 @@
 
 # Auth plugin provides functions for authentication and authorization
 
+require 'base64'
+require 'digest/sha2'
+
 require_relative '../../IRCPlugin'
 
 class Auth < IRCPlugin
@@ -117,6 +120,16 @@ class Auth < IRCPlugin
   def check_permission(permission, credential)
     # temporary fallback to auth via Router
     @router.check_permission(permission, credential)
+  end
+
+  def hash_credential(key)
+    # TODO: ensure that all plugins hash their credentials
+    # with this function, before using them.
+    # This can be done e.g. by wrapping resulting string into Credential class and
+    # checking instanceof() in all other functions.
+
+    salt = (@config[:salt] || 'lame ass salt for those who did not set it themselves')
+    Base64.strict_encode64(Digest::SHA2.digest(key.to_s + salt))
   end
 
   private
