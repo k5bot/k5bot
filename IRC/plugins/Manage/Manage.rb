@@ -71,6 +71,6 @@ by help contents, as if sender was in ##japanese and issued .help command"
   end
 
   def msg_to_principal(msg)
-    msg.prefix
+    msg.principals.first
   end
 end

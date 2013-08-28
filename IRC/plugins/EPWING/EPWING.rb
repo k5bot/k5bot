@@ -277,7 +277,7 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
   end
 
   def msg_to_principal(msg)
-    msg.prefix
+    msg.principals.first
   end
 
   def change_gaiji(msg, word)

@@ -32,7 +32,7 @@ class Loader < IRCPlugin
   end
 
   def msg_to_principal(msg)
-    msg.prefix
+    msg.principals.first
   end
 
   def cmd_load(msg)

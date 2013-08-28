@@ -227,7 +227,7 @@ every DCC connection from user.",
   end
 
   def msg_to_principal(msg)
-    msg.prefix
+    msg.principals.first
   end
 
   def caller_id_to_credential(key)
