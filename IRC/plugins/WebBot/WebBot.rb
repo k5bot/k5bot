@@ -88,7 +88,7 @@ class WebBot < IRCPlugin
       when :wchat
         return unless @plain_chat_info || @secure_chat_info
 
-        unless @auth.check_permission(USAGE_PERMISSION, msg_to_principal(msg))
+        unless check_access(msg_to_principal(msg))
           msg.reply("Sorry, you don't have '#{USAGE_PERMISSION}' permission.")
           return
         end
@@ -114,10 +114,15 @@ class WebBot < IRCPlugin
   # otherwise mark it as being attempted for non-authorized access.
   def get_credential_authorization(credential)
     principal = @auth.get_principal_by_credential(credential)
-    [principal, @auth.check_permission(USAGE_PERMISSION, principal)] if principal
+    [principal, check_access(principal)] if principal
   end
 
   private
+
+  def check_access(principal)
+    @auth.check_direct_access_permission(principal) &&
+        @auth.check_permission(USAGE_PERMISSION, principal)
+  end
 
   def msg_to_principal(msg)
     msg.principals.first

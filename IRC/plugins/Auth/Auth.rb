@@ -122,6 +122,12 @@ class Auth < IRCPlugin
     @router.check_permission(permission, credential)
   end
 
+  def check_direct_access_permission(credential)
+    # Use the same permission as the permission for adding credentials,
+    # because without that there's not much meaning in giving access.
+    check_permission(USAGE_PERMISSION, credential)
+  end
+
   def hash_credential(key)
     # TODO: ensure that all plugins hash their credentials
     # with this function, before using them.
