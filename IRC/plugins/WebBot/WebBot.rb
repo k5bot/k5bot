@@ -51,7 +51,12 @@ class WebBot < IRCPlugin
     @logger = WebLogger.new($stdout)
 
     @plain_chat_info = start_plain_server(merged_config(@config, :chat))
-    @secure_chat_info = start_secure_server(merged_config(@config, :schat))
+    begin
+      @secure_chat_info = start_secure_server(merged_config(@config, :schat))
+    rescue Exception
+      stop_server(@plain_chat_info)
+      raise
+    end
   end
 
   def beforeUnload
