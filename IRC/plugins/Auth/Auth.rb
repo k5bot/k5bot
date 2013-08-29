@@ -12,6 +12,8 @@ require_relative '../../IRCPlugin'
 class Auth < IRCPlugin
   Description = 'Auth plugin provides functions for authentication and authorization'
 
+  USAGE_PERMISSION = :can_register_credentials
+
   ACCESS_TIMESTAMP_KEY = :t
   ACCESS_PRINCIPAL_KEY = :p
   ACCESS_FORMER_PRINCIPAL_KEY = :w
@@ -45,8 +47,8 @@ class Auth < IRCPlugin
   def on_privmsg(msg)
     case msg.bot_command
       when COMMAND_REGISTER
-        unless check_permission(:can_register_credentials, msg_to_principal(msg))
-          msg.reply("Sorry, you don't have 'can_register_credentials' permission.")
+        unless check_permission(USAGE_PERMISSION, msg_to_principal(msg))
+          msg.reply("Sorry, you don't have '#{USAGE_PERMISSION}' permission.")
           return
         end
 
@@ -73,8 +75,8 @@ class Auth < IRCPlugin
 
         store
       when COMMAND_UNREGISTER
-        unless check_permission(:can_register_credentials, msg_to_principal(msg))
-          msg.reply("Sorry, you don't have 'can_register_credentials' permission.")
+        unless check_permission(USAGE_PERMISSION, msg_to_principal(msg))
+          msg.reply("Sorry, you don't have '#{USAGE_PERMISSION}' permission.")
           return
         end
 
