@@ -97,6 +97,11 @@ class WebBotServlet < WEBrick::HTTPServlet::AbstractServlet
     response_array << raw
   end
 
+  # Stub to avoid hanging on unknown method
+  def send_raw(raw)
+    raise "Can't send_raw() in WebBot! Raw: #{raw}"
+  end
+
   TIMESTAMP_MODE = {:log => '=', :in => '>', :out => '<', :error => '!'}
 
   def do_log(mode, text)
