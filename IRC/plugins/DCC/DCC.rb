@@ -65,6 +65,9 @@ connection number (e.g. 12345), 'current' (kills current connection), \
     stop_server(@secure_chat_info)
     stop_server(@plain_chat_info)
 
+    @secure_chat_info = nil
+    @plain_chat_info = nil
+
     @parent_ircbot = nil
     @auth = nil
     @router = nil
