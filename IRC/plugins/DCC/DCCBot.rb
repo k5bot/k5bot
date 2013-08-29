@@ -94,6 +94,11 @@ class DCCBot
     @socket.write "#{raw}\r\n"
   end
 
+  # Stub to avoid hanging on unknown method
+  def send_raw(raw)
+    raise "Can't send_raw() in DCC! Raw: #{raw}"
+  end
+
   TIMESTAMP_MODE = {:log => '=', :in => '>', :out => '<', :error => '!'}
 
   def log(mode, text)
