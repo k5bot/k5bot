@@ -10,6 +10,7 @@ require 'eb'
 require 'ostruct'
 
 require_relative '../../IRCPlugin'
+require_relative '../../AutoMonitor'
 
 class EPWING < IRCPlugin
   Description = {
@@ -75,7 +76,9 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
 
       gaiji_data = @storage.read(gaiji_file) || {}
 
-      book = EB::Book.new
+      # Create new book and synchronize access to it,
+      # b/c EPWING library can be built non-thread-safe.
+      book = AutoMonitor.new(EB::Book.new)
       begin
         book.bind(path)
         if appendix
