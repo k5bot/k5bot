@@ -14,6 +14,9 @@ class DCC < IRCPlugin
   Description = 'Direct Client-to-Client protocol plugin.'
   Dependencies = [ :Router, :IRCBot, :Auth ]
 
+  USAGE_PERMISSION = :can_use_dcc_chat
+  KILL_ALL_PERMISSION = :can_kill_any_dcc_connection
+
   DEFAULT_LISTEN_INTERFACE = '0.0.0.0'
   DEFAULT_LISTEN_PORT = 0 # Make OS choose a free port
   DEFAULT_CONNECTION_LIMIT = 10
@@ -88,8 +91,8 @@ connection number (e.g. 12345), 'current' (kills current connection), \
         return
       end
 
-      unless @auth.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
-        msg.reply("Sorry, you don't have 'can_use_dcc_chat' permission.")
+      unless @auth.check_permission(USAGE_PERMISSION, msg_to_principal(msg))
+        msg.reply("Sorry, you don't have '#{USAGE_PERMISSION}' permission.")
         return
       end
 
@@ -102,16 +105,16 @@ connection number (e.g. 12345), 'current' (kills current connection), \
           return
         end
 
-        unless @auth.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
-          msg.reply("Sorry, you don't have 'can_use_dcc_chat' permission.")
+        unless @auth.check_permission(USAGE_PERMISSION, msg_to_principal(msg))
+          msg.reply("Sorry, you don't have '#{USAGE_PERMISSION}' permission.")
           return
         end
 
         reply = IRCMessage.make_ctcp_message(:DCC, ['SCHAT', 'chat', @secure_chat_info.announce_ip, @secure_chat_info.server.port])
         msg.reply(reply, :force_private => true)
     when COMMAND_KILL, COMMAND_KILL_ALL
-      unless @auth.check_permission(:can_use_dcc_chat, msg_to_principal(msg))
-        msg.reply("Sorry, you don't have 'can_use_dcc_chat' permission.")
+      unless @auth.check_permission(USAGE_PERMISSION, msg_to_principal(msg))
+        msg.reply("Sorry, you don't have '#{USAGE_PERMISSION}' permission.")
         return
       end
 
@@ -121,8 +124,8 @@ connection number (e.g. 12345), 'current' (kills current connection), \
       end
 
       if COMMAND_KILL_ALL == bot_command
-        unless @auth.check_permission(:can_kill_any_dcc_connection, msg_to_principal(msg))
-          msg.reply("Sorry, you don't have 'can_kill_any_dcc_connection' permission.")
+        unless @auth.check_permission(KILL_ALL_PERMISSION, msg_to_principal(msg))
+          msg.reply("Sorry, you don't have '#{KILL_ALL_PERMISSION}' permission.")
           return
         end
         can_kill_anyone = true
@@ -155,7 +158,7 @@ connection number (e.g. 12345), 'current' (kills current connection), \
   # otherwise mark it as being attempted for non-authorized access.
   def get_credential_authorization(credential)
     principal = @auth.get_principal_by_credential(credential)
-    [principal, @auth.check_permission(:can_use_dcc_chat, principal)] if principal
+    [principal, @auth.check_permission(USAGE_PERMISSION, principal)] if principal
   end
 
   def get_affiliated_connections(bot)
