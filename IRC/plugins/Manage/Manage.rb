@@ -28,7 +28,7 @@ by help contents, as if sender was in ##japanese and issued .help command"
     return if dispatch_message_by_command(msg, [:join, :part]) do
       check_and_complain(@plugin_manager.plugins[:Router], msg, :can_join_channels)
     end
-    dispatch_message_by_command(msg, [:raw, :kill, :raw_ctcp, :demonstrate]) do
+    dispatch_message_by_command(msg, [:raw, :kill, :raw_ctcp, :demonstrate, :dump]) do
       check_and_complain(@plugin_manager.plugins[:Router], msg, :can_do_everything)
     end
   end
@@ -59,6 +59,15 @@ by help contents, as if sender was in ##japanese and issued .help command"
 
   def cmd_kill(msg)
     msg.bot.stop
+  end
+
+  def cmd_dump(msg)
+    if msg.tail.casecmp('threads') == 0
+      Thread.list.each do |thread|
+        STDERR.puts "Thread-#{thread.object_id.to_s(36)}"
+        STDERR.puts thread.backtrace.join("\n    \\_ ")
+      end
+    end
   end
 
   def check_and_complain(checker, msg, permission)
