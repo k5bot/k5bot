@@ -26,6 +26,7 @@
       # rate limiting kicks in.
     :rate: 1 # Number of lines per second allowed to be send to server sustainably.
       # Not specifying this setting disables rate limiting.
+    #:reconnect_delay: 15 # seconds to wait before reconnecting, 15 by default.
     #:metadata: # ContextMetadata hash to attach to this bot, to be accessed by various plugins.
     #  :menu_size: 20
 - :DCC:

@@ -83,16 +83,30 @@ end
 
 plugin_manager = IRCHashPluginManager.new(config) # Add plugin manager
 
-plugin_manager.load_all_plugins  # Load plugins
+begin
+  puts 'Loading plugins...'
 
-bot = plugin_manager.plugins[:IRCBot]
+  plugin_manager.load_all_plugins  # Load plugins
 
-unless bot
-  puts "IRCBot plugin is not present in configuration file, exiting."
-  exit 2
-end
+  puts 'All plugins loaded. Press Enter to terminate program.'
 
-loop do
-  bot.start
-  sleep 15  # wait a bit before reconnecting
+  gets
+ensure
+  plugins = plugin_manager.plugins.keys
+  prev_size = plugins.size + 1
+  while plugins.size < prev_size
+    prev_size = plugins.size
+    plugins .each do |plugin|
+      begin
+        if plugin_manager.unload_plugin(plugin)
+          puts "Unloaded plugin #{plugin}"
+        end
+      rescue Exception => e
+        puts "Exception during unloading #{plugin}: #{e}"
+      end
+    end
+    plugins = plugin_manager.plugins.keys
+  end
+
+  puts "Plugins unloaded. #{' Failed to unload: ' + plugins.join(', ') + '.' unless plugins.empty?}"
 end

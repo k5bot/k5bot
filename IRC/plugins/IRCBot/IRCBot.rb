@@ -83,10 +83,16 @@ class IRCBot < IRCPlugin
     @watchdog = nil
 
     @last_failed_server = nil
+
+    @thread = nil
+
+    start
   end
 
   def beforeUnload
-    return "Can't unload before connection is killed" if @sock
+    stop(true)
+
+    @thread = nil
 
     @last_failed_server = nil
 
@@ -216,8 +222,32 @@ class IRCBot < IRCPlugin
   end
 
   def start
-    ContextMetadata.run_with(@config[:metadata]) do
-      start_in_context
+    return if @thread
+
+    @thread = Thread.new do
+      ContextMetadata.run_with(@config[:metadata]) do
+        @terminate = false
+
+        until @terminate do
+          start_in_context
+          # wait a bit before reconnecting
+          sleep(@config[:reconnect_delay] || 15) unless @terminate
+        end
+      end
+    end
+  end
+
+  def stop(permanently = false)
+    thread = @thread
+    return unless thread
+
+    if permanently
+      @terminate = true
+      stop_in_context rescue nil
+      thread.join unless Thread.current.eql?(thread)
+      @thread = nil
+    else
+      stop_in_context
     end
   end
 
@@ -250,8 +280,6 @@ class IRCBot < IRCPlugin
       log(:error, "Cannot connect: #{e}")
     rescue IOError => e
       log(:error, "IOError: #{e}")
-    rescue SignalException => e
-      raise e # Don't ignore signals
     rescue Exception => e
       log(:error, "Unexpected exception: #{e.inspect} #{e.backtrace.join(' ')}")
     ensure
@@ -261,7 +289,7 @@ class IRCBot < IRCPlugin
     end
   end
 
-  def stop
+  def stop_in_context
     if @sock
       log(:log, 'Forcibly closing socket')
       @sock.close
