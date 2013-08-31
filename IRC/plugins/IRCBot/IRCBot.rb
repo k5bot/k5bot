@@ -85,6 +85,10 @@ class IRCBot < IRCPlugin
   def beforeUnload
     return "Can't unload before connection is killed" if @sock
 
+    @last_failed_server = nil
+
+    @watchdog = nil
+
     @router = nil
 
     @first_listener = nil
