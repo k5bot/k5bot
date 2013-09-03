@@ -13,6 +13,7 @@
       # :service: NickServ # Service nick to identify to, NickServ by default.
       :invitation: "^This nickname is registered. Please choose a different nickname, or identify"
       :confirmation: "^You are now identified for"
+    #:mode: +is # irc user mode to set
     :channels:
     - "#channel_one"
     - "#channel_two"

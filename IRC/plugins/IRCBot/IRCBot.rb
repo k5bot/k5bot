@@ -35,6 +35,7 @@ class IRCBot < IRCPlugin
     load_helper_class(:IRCChannelListener)
     load_helper_class(:IRCLoginListener)
     load_helper_class(:IRCIdentifyListener)
+    load_helper_class(:IRCModeListener)
     load_helper_class(:IRCJoinListener)
     load_helper_class(:IRCFirstListener)
 
@@ -61,6 +62,7 @@ class IRCBot < IRCPlugin
     @channel_listener = IRCChannelListener.new
     @login_listener = IRCLoginListener.new(self, @config)
     @identify_listener = IRCIdentifyListener.new(self, @config[:identify])
+    @mode_listener = IRCModeListener.new(self, @config[:mode])
     @join_listener = IRCJoinListener.new(self, @config[:channels])
     @first_listener = IRCFirstListener.new
 
@@ -71,6 +73,7 @@ class IRCBot < IRCPlugin
         @channel_listener,
         @login_listener,
         @identify_listener,
+        @mode_listener,
         @join_listener,
         @first_listener,
     ]
@@ -93,6 +96,7 @@ class IRCBot < IRCPlugin
 
     @first_listener = nil
     @join_listener = nil
+    @mode_listener = nil
     @identify_listener = nil
     @login_listener = nil
     @channel_listener = nil
@@ -106,6 +110,7 @@ class IRCBot < IRCPlugin
 
     unload_helper_class(:IRCFirstListener)
     unload_helper_class(:IRCJoinListener)
+    unload_helper_class(:IRCModeListener)
     unload_helper_class(:IRCIdentifyListener)
     unload_helper_class(:IRCLoginListener)
     unload_helper_class(:IRCChannelListener)

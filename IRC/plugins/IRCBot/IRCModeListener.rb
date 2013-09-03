@@ -8,28 +8,28 @@ require 'set'
 
 require_relative '../../IRCListener'
 
-class IRCJoinListener
+class IRCModeListener
   include IRCListener
 
   def initialize(bot, config)
     @bot = bot
     @config = config
-    @joined = nil
+    @logged_in = nil
   end
 
+  #def login
   def on_connection(msg)
-    return if @joined
-    @joined = true
+    return if @logged_in
+    @logged_in = true
 
-    # temporary hack
-    @bot.post_login
+    @bot.send_raw "MODE #{@bot.user.nick} #{@config}" if @config
   end
 
   def on_disconnection(msg)
-    @joined = false
+    @logged_in = false
   end
 
-  LISTENER_PRIORITY = -25
+  LISTENER_PRIORITY = -27
 
   def listener_priority
     LISTENER_PRIORITY
