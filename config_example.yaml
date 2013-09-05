@@ -38,6 +38,20 @@
       :ssl_cert: <path to your ssl certificate file>
       #:ssl_key: <path to your ssl private key file>, by default same as ssl_cert
       #:ssl_key_passphrase: <passphrase to your private key, if it's encrypted>
+- :WebBot:
+    :announce: <your external ip or address here>
+    #:listen: 0.0.0.0 # interface to actually listen on, 0.0.0.0 by default.
+    :limit: 50 # number of simultaneously accepted connections, 10 by default.
+    #:metadata: # ContextMetadata hash to attach to this bot, to be accessed by various plugins.
+    #  :menu_size: 100
+    :chat: # if present, then DCC CHAT server will be started.
+      # you can override all the settings above here.
+      #:port: 8080 # port to listen on, 8080 by default
+    :schat: # if present, then DCC SSL CHAT server will be started.
+      #:port: 8443 # port to listen on, 8443 by default
+      :ssl_cert: <path to your ssl certificate file>
+      #:ssl_key: <path to your ssl private key file>, by default same as ssl_cert
+      #:ssl_key_passphrase: <passphrase to your private key, if it's encrypted>
 - :Help
 - :StorageYAML:
     :'data_directory': "~/.ircbot"

@@ -33,3 +33,5 @@ git 'https://github.com/albel727/rubyeb19.git' do
   gem 'eb', :group => :EPWING
 end
 
+# for WebBot plugin
+gem 'webrick', :group => :WebBot

@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>K5 Bot web interface</title>
+<link rel="stylesheet" type="text/css" href="index.css">
+<script type="text/javascript" src="jquery-1.10.2.min.js"></script>
+</head>
+<body>
+
+<div id="answer_log">
+  <div id="auth_box">
+    <div>
+      Hello! You're authorized as:<br />
+      <%=
+          client = servlet_request.user
+          client.principals.map {|x| '<span>' + x + '</span>'}.join('<br />')
+      %>
+    </div>
+    <div>
+      Credentials:<br />
+      <%= client.credentials.map {|x| '<span>' + x + '</span>'}.join('<br />') %>
+    </div>
+  </div>
+</div>
+
+<div id="query_input_container" class="ui-front">
+  <input type='text' id='query_input_box' autofocus='autofocus'/>
+</div>
+
+<script type="text/javascript">
+    var session_id = Math.floor(Math.random()*65536);
+
+    var history_array = [];
+    var history_position = history_array.length;
+    var history_current_line = '';
+
+    $(function() {
+        $("#query_input_box").focus();
+    });
+
+    function htmlForTextWithEmbeddedNewlines(text) {
+        var htmls = [];
+        var lines = text.split(/\n/);
+
+        var tmpDiv = jQuery(document.createElement('div'));
+        for (var i = 0 ; i < lines.length ; i++) {
+            htmls.push(tmpDiv.text(lines[i]).html());
+        }
+        return htmls.join("<br />");
+    }
+
+    function scrollTo(container, element) {
+        container.stop().animate({
+            scrollTop: container.scrollTop() + element.position().top
+        }, 200, 'linear');
+    }
+
+    function sendQuery(teh_query) {
+        if(!teh_query) {
+            return;
+        }
+
+        if((history_array.length <= 0) ||
+                (history_array[history_array.length - 1] != teh_query)) {
+            history_array.push(teh_query);
+        }
+        history_position = history_array.length;
+        history_current_line = '';
+
+        var $query_div = $( "<div class='query_box'/>" );
+        $query_div.text(teh_query);
+
+        var $answer_div = $( "<div class='answer_box'/>" );
+
+        var $group_div = $( "<div class='query_group_box loading'/>" );
+        $group_div.append($query_div);
+
+        var $answer_log = $('#answer_log');
+        $answer_log.append($group_div);
+
+        scrollTo($answer_log, $group_div);
+
+        var $request = $.ajax({
+            type: "POST",
+            url: "/api/query",
+            data: {
+                query: teh_query,
+                session: session_id
+            },
+            dataType: 'text'
+        });
+
+        $request.done(function( query_answer ) {
+            $group_div.removeClass('loading');
+            if(query_answer) {
+                $answer_div.html(htmlForTextWithEmbeddedNewlines(query_answer));
+                $group_div.append($answer_div);
+            }
+            scrollTo($answer_log, $group_div);
+        });
+
+        $request.fail(function() {
+            $group_div.removeClass('loading');
+            $group_div.addClass('loading_failed');
+        });
+    }
+
+    var $query_box = $("#query_input_box");
+
+    $query_box.keypress(function(ev) {
+        if (ev.which === 13) { //ENTER
+            var teh_query = $query_box.val();
+            $query_box.val("");
+            sendQuery(teh_query)
+        }
+    });
+
+    $query_box.keydown(function(ev) {
+        if (ev.which === 40) { //DOWN
+            if(history_position >= history_array.length) {
+                return;
+            }
+            history_position++;
+            if(history_position >= history_array.length) {
+                $query_box.val(history_current_line);
+            } else {
+                $query_box.val(history_array[history_position]);
+            }
+        } else if (ev.which === 38) { //UP
+            if(history_position >= history_array.length) {
+                history_position = history_array.length;
+                history_current_line = $query_box.val();
+            }
+            if(history_position <= 0) {
+                return;
+            }
+            history_position--;
+            $query_box.val(history_array[history_position]);
+        }
+    });
+
+</script>
+
+</body>
+</html>
