@@ -26,7 +26,23 @@ class IRCHashPluginManager < IRCPluginManager
 
   def load_all_plugins()
     reload_config()
-    do_load_plugins(@config)
+    plugins = @plugins.keys
+    prev_size = plugins.size - 1
+    while plugins.size > prev_size
+      prev_size = plugins.size
+      @config.keys.each do |plugin|
+        next if @plugins.include?(plugin)
+        begin
+          load_plugin(plugin)
+        rescue Exception => e
+          puts "Exception during loading #{plugin}: #{e}"
+          raise e
+        end
+      end
+      plugins = @plugins.keys
+    end
+
+    raise if plugins.size != @config.size
   end
 
   def load_plugin(name)
