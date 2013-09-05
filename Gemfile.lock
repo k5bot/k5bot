@@ -1,15 +1,15 @@
 GIT
-  remote: git://github.com/albel727/wolfram.git
+  remote: https://github.com/albel727/mecab-ruby-gem.git
+  revision: 8c34c5b06cdeef1530ab1996e148b3bf071d1519
+  specs:
+    mecab-ruby (0.996)
+
+GIT
+  remote: https://github.com/albel727/wolfram.git
   revision: 3267f9c789cd0f67d58986b02d88db252783c2c7
   specs:
     wolfram (0.2.1)
       nokogiri (>= 1.4.3)
-
-GIT
-  remote: git@github.com:albel727/mecab-ruby-gem.git
-  revision: b31cb171e5bac297636acb8f8a56bef3cf808584
-  specs:
-    mecab-ruby (0.995)
 
 GEM
   remote: https://rubygems.org/

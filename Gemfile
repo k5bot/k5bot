@@ -3,12 +3,12 @@ ruby '1.9.3'
 source "https://rubygems.org"
 
 # for WolframAlpha plugin
-git 'git://github.com/albel727/wolfram.git' do
+git 'https://github.com/albel727/wolfram.git' do
   gem 'wolfram', :group => :WolframAlpha
 end
 
 # for Mecab plugin
-git 'git@github.com:albel727/mecab-ruby-gem.git' do
+git 'https://github.com/albel727/mecab-ruby-gem.git' do
   gem 'mecab-ruby', :group => :Mecab
 end
 
