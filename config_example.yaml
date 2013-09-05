@@ -1,7 +1,9 @@
 # IRCBot config example
 ---
 - :IRCBot:
-    :server: irc.freenode.net
+    :server: irc.freenode.net # Server to connect to.
+      # Specifying an array with several alternative addresses is possible.
+      # In this case, they'll be tried in order, in case of connection failure.
     :port: 6667
     :serverpass:
     :username: bot
@@ -17,9 +19,13 @@
     :channels:
     - "#channel_one"
     - "#channel_two"
-    :watchdog: 240
-    :burst: 8
-    :rate: 1
+    :watchdog: 240 # Seconds of complete connection silence, after which bot
+      # should try reconnecting. Not recommended on servers that don't send ping.
+      # Not specifying this setting disables the feature.
+    :burst: 8 # Number of lines allowed to be sent to server at once, before
+      # rate limiting kicks in.
+    :rate: 1 # Number of lines per second allowed to be send to server sustainably.
+      # Not specifying this setting disables rate limiting.
     #:metadata: # ContextMetadata hash to attach to this bot, to be accessed by various plugins.
     #  :menu_size: 20
 - :DCC:
