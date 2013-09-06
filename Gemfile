@@ -28,4 +28,8 @@ gem 'ting', :group => :Pinyin
 # for Clock plugin
 gem 'tzinfo', :group => :Clock
 
+# for EPWING plugin
+git 'https://github.com/albel727/rubyeb19.git' do
+  gem 'eb', :group => :EPWING
+end
 

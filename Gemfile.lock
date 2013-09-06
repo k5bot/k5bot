@@ -5,6 +5,12 @@ GIT
     mecab-ruby (0.996)
 
 GIT
+  remote: https://github.com/albel727/rubyeb19.git
+  revision: 890ba75fa3f637f339cd694b2c0071fa62d35069
+  specs:
+    eb (2.6.0)
+
+GIT
   remote: https://github.com/albel727/wolfram.git
   revision: 3267f9c789cd0f67d58986b02d88db252783c2c7
   specs:
@@ -28,6 +34,7 @@ PLATFORMS
 
 DEPENDENCIES
   addressable
+  eb!
   json
   mecab-ruby!
   nokogiri
