@@ -130,7 +130,7 @@ class IRCPluginManager
 
             loaded[name] = config # Mark as loaded
           rescue Exception => e
-            puts "Cannot initialize plugin '#{name}': #{e}"
+            puts "Cannot initialize plugin '#{name}': #{e}\n\t#{e.backtrace.join("\n\t")}"
             overall = false
 
             # Remove the plugin, to avoid accidentally using it,
