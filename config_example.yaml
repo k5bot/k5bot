@@ -102,7 +102,8 @@
 - :Pinyin
 - :Menu
 # Menu plugin understands ContextMetadata value :menu_size: <number of menu entries per message>
-- :Mecab
+- :Mecab:
+    #:encoding: EUC-JP # encoding that mecab library speaks in, EUC-JP by default
 - :Converter
 - :Karma:
     :karma:

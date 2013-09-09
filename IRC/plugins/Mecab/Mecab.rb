@@ -65,9 +65,9 @@ class Mecab < IRCPlugin
 
   def process_with_mecab(text)
     begin
-      output = @tagger.parse(text)
+      output = @tagger.parse(text.encode(@config[:encoding] || 'EUC-JP'))
 
-      output.force_encoding('UTF-8').each_line do |line|
+      output.force_encoding(@config[:encoding] || 'EUC-JP').encode('UTF-8').each_line do |line|
         break if line.start_with?('EOS')
 
         # "なっ\tナッ\tなる\t動詞-自立\t五段・ラ行\t連用タ接続"
