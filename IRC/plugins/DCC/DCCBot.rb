@@ -5,7 +5,7 @@
 # Direct Client-to-Client chat worker
 
 class DCCBot
-  attr_reader :last_sent, :last_received, :start_time, :last_received_time
+  attr_reader :start_time, :last_received_time
   attr_accessor :caller_info, :credentials, :principals
 
   def initialize(socket, dcc_plugin, parent_bot)
@@ -13,8 +13,6 @@ class DCCBot
     @dcc_plugin = dcc_plugin
     @parent_bot = parent_bot
 
-    @last_sent = nil
-    @last_received = nil
     @start_time = @last_received_time = Time.now
 
     @caller_info = @credentials = @principals = nil
@@ -61,7 +59,6 @@ class DCCBot
     @watch_time = Time.now
 
     raw = encode raw
-    @last_received = raw
     @last_received_time = Time.now
 
     log(:in, raw)
@@ -86,8 +83,6 @@ class DCCBot
     #char-per-char correspondence replace, to make the returned count meaningful
     raw.gsub!(/[\r\n]/, ' ')
     raw.rstrip!
-
-    @last_sent = raw
 
     log(:out, raw)
 
