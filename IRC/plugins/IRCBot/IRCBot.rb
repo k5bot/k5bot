@@ -186,11 +186,12 @@ class IRCBot < IRCPlugin
     raw = truncate_for_irc_server(raw)
 
     @throttler.throttle do
-      @last_sent = raw
-
       log_hide = raw[:log_hide]
       raw = raw[:truncated]
+
       log(:out, log_hide || raw)
+
+      @last_sent = raw
 
       @sock.write "#{raw}\r\n"
     end
