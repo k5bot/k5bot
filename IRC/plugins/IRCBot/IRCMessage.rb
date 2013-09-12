@@ -132,12 +132,13 @@ class IRCMessage
     @replyTo ||= private? ? nick : @params.first
   end
 
-  def reply(text)
+  def reply(text, opts = {})
     return unless can_reply?
     return if !text
-    s = text.to_s
-    return if s.empty?
-    @bot.send "PRIVMSG #{replyTo} :#{s}"
+    text = text.to_s
+    return if text.empty?
+
+    @bot.send(opts.merge(:original=>"PRIVMSG #{replyTo} :#{text}"))
   end
 
   def notice_user(text)
