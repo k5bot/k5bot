@@ -146,6 +146,8 @@ class IRCBot < IRCPlugin
 
     truncated = raw.byteslice(0, byte_limit)
 
+    raise "Can't truncate" if opts[:dont_truncate] && (truncated.length != raw.length)
+
     #the above might have resulted in a malformed string
     #try to guess the necessary resulting length in chars, and
     #make a clean cut on a character boundary
