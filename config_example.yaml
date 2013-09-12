@@ -1,5 +1,6 @@
 # IRCBot config example
 ---
+- :Console # Add this if you want console interaction
 - :IRCBot:
     :server: irc.freenode.net # Server to connect to.
       # Specifying an array with several alternative addresses is possible.

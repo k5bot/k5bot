@@ -104,9 +104,13 @@ begin
 
   plugin_manager.load_all_plugins  # Load plugins
 
-  puts 'All plugins loaded. Press Enter to terminate program.'
+  if plugin_manager.plugins[:Console]
+    plugin_manager.plugins[:Console].serve
+  else
+    puts 'All plugins loaded. Press Ctrl-C to terminate program.'
 
-  gets
+    sleep
+  end
 ensure
   plugins = plugin_manager.plugins.keys
   prev_size = plugins.size + 1
