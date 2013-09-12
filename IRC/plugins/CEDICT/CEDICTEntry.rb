@@ -36,7 +36,7 @@ class CEDICTEntry
 
   def pinyin
     return @pinyin if @pinyin
-    pinyin = @raw[/^[\s]*[^\s]+[^\[\/]+[\s]*\[(.*)\]/, 1]
+    pinyin = @raw[/^[\s]*[^\s]+[^\[\/]+[\s]*\[(.*?)\]/, 1]
     @pinyin = if pinyin && !pinyin.empty?
                  pinyin
                else
