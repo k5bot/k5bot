@@ -23,7 +23,7 @@ class IRCBot < IRCPlugin
 
   Dependencies = [ :Router, :StorageYAML ]
 
-  attr_reader :last_sent, :last_received, :start_time, :user
+  attr_reader :last_sent, :start_time, :user
 
   def afterLoad
     load_helper_class(:IRCUser)
@@ -203,7 +203,6 @@ class IRCBot < IRCPlugin
     @watch_time = Time.now
 
     raw = encode raw
-    @last_received = raw
 
     log(:in, raw)
 
