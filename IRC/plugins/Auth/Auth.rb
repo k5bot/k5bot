@@ -20,10 +20,12 @@ class Auth < IRCPlugin
 
   COMMAND_REGISTER = :cred_reg
   COMMAND_UNREGISTER = :cred_unreg
+  COMMAND_ACCOUNT_INFO = :whoami
 
   Commands = {
       COMMAND_REGISTER => 'associates given credentials with the current IRC user.',
       COMMAND_UNREGISTER => 'disassociates given credentials from the current IRC user.',
+      COMMAND_ACCOUNT_INFO => 'shows identity and security-related info about caller.',
   }
 
   Dependencies = [ :StorageYAML, :Router ]
@@ -104,6 +106,8 @@ class Auth < IRCPlugin
         end
 
         store
+      when COMMAND_ACCOUNT_INFO
+        msg.reply("Prefix: #{msg.prefix}; UID: #{msg.user.uid}; Nick: #{msg.user.nick}")
     end
   end
 
