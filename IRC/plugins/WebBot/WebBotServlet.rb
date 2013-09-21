@@ -47,10 +47,9 @@ class WebBotServlet < WEBrick::HTTPServlet::AbstractServlet
 
     reply_array = []
     ContextMetadata.run_with(
-        :web_server_response => reply_array,
         :web_session => request.query['session'].to_s) do
       message = request.query['query'].to_s
-      receive(message)
+      receive(message, reply_array)
     end
 
     response.status = 200
@@ -58,7 +57,7 @@ class WebBotServlet < WEBrick::HTTPServlet::AbstractServlet
     response.body = reply_array.join("\n")
   end
 
-  def receive(raw)
+  def receive(raw, reply_array = [])
     @watch_time = Time.now
 
     raw = encode raw
@@ -71,6 +70,7 @@ class WebBotServlet < WEBrick::HTTPServlet::AbstractServlet
                          raw.chomp,
                          @user_auth.principals.first,
                          ContextMetadata.get_key(:web_session),
+                         reply_array,
           )
       )
     rescue Exception => e
@@ -78,9 +78,8 @@ class WebBotServlet < WEBrick::HTTPServlet::AbstractServlet
     end
   end
 
-  def web_send(raw)
-    response_array = ContextMetadata.get_key(:web_server_response)
-    return unless response_array.instance_of?(Array)
+  def web_send(msg, raw)
+    reply_array = msg.reply_array
 
     if raw.instance_of?(Hash)
       return raw if raw[:truncated] #already truncated
@@ -98,7 +97,7 @@ class WebBotServlet < WEBrick::HTTPServlet::AbstractServlet
     do_log(:out, raw)
 
     #@socket.write "#{raw}\r\n"
-    response_array << raw
+    reply_array << raw
   end
 
   # Stub to avoid hanging on unknown method

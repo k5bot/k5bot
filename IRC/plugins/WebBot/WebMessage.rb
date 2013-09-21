@@ -15,8 +15,9 @@ class WebMessage
               :bot_command, # The first word of the message if it starts with 'command_prefix'
               :message,
               :tail # The message with nick prefix and bot_command removed if it exists, otherwise the whole message
+  attr_reader :reply_array # Array of reply strings sent via this message.
 
-  def initialize(bot, raw, prefix, session)
+  def initialize(bot, raw, prefix, session, reply_array)
     @raw = raw
     @bot = bot
     @prefix = prefix
@@ -24,6 +25,7 @@ class WebMessage
 
     @command, @params, @user, @ctcp, @bot_command, @tail = nil
     @timestamp = Time.now
+    @reply_array = reply_array
     parse @raw
   end
 
@@ -108,7 +110,7 @@ class WebMessage
     text = text.to_s
     # return if text.empty? # Allow sending empty strings in Web
 
-    @bot.web_send(opts.merge(:original => text))
+    @bot.web_send(self, opts.merge(:original => text))
   end
 
   def can_reply?
@@ -120,7 +122,7 @@ class WebMessage
 
     s = text.to_s
 
-    @bot.web_send(s) # unless s.empty?
+    @bot.web_send(self, s) # unless s.empty?
   end
 
   def command_prefix
