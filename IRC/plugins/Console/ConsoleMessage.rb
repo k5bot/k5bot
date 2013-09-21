@@ -45,10 +45,6 @@ class ConsoleMessage
     true
   end
 
-  def replyTo
-    nil
-  end
-
   def parse(raw)
     return unless raw
     raw.strip!
