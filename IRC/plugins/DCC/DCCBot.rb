@@ -4,7 +4,11 @@
 
 # Direct Client-to-Client chat worker
 
+require_relative '../../Emitter'
+
 class DCCBot
+  include BotCore::Emitter
+
   attr_reader :start_time, :last_received_time
   attr_accessor :caller_info, :credentials, :principals
 

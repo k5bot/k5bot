@@ -4,9 +4,12 @@
 
 # Plugin for accepting input from console.
 
+require_relative '../../Emitter'
 require_relative '../../IRCPlugin'
 
 class Console < IRCPlugin
+  include BotCore::Emitter
+
   Description = 'Console interaction plugin'
   Dependencies = [ :Router ]
 

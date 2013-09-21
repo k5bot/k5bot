@@ -4,7 +4,11 @@
 
 # HTTP Servlet for serving main page and converting user input to WebMessage-s
 
+require_relative '../../Emitter'
+
 class WebBotServlet < WEBrick::HTTPServlet::AbstractServlet
+  include BotCore::Emitter
+
   attr_reader :server
   attr_accessor :user_auth
 

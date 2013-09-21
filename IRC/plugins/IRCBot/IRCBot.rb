@@ -8,6 +8,7 @@ require 'socket'
 require 'ostruct'
 
 require_relative '../../Timer'
+require_relative '../../Emitter'
 require_relative '../../Throttler'
 require_relative '../../IRCPlugin'
 require_relative '../../ContextMetadata'
@@ -18,6 +19,7 @@ require_relative 'IRCLoginListener'
 require_relative 'IRCFirstListener'
 
 class IRCBot < IRCPlugin
+  include BotCore::Emitter
 
   Description = 'Provides IRC connectivity.'
 
