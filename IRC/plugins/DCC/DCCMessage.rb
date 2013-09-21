@@ -4,7 +4,11 @@
 
 # DCCMessage describes message received from DCC connection
 
+require_relative '../../../IRC/Message'
+
 class DCCMessage
+  include BotCore::Message
+
   attr_reader :timestamp, # reception time
               :prefix, # user in irc nick!ident@host format, for backward compatibility.
               :bot,

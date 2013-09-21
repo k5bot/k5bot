@@ -4,7 +4,11 @@
 
 # WebMessage describes message received via HTTP(S) request
 
+require_relative '../../../IRC/Message'
+
 class WebMessage
+  include BotCore::Message
+
   attr_reader :timestamp, # reception time
               :prefix, # user in irc nick!ident@host format, for backward compatibility.
               :bot,

@@ -15,7 +15,11 @@
 
 require 'ostruct'
 
+require_relative '../../../IRC/Message'
+
 class IRCMessage
+  include BotCore::Message
+
   attr_reader :prefix,
               :command,
               :params,

@@ -4,7 +4,11 @@
 
 # ConsoleMessage describes message received from console
 
+require_relative '../../../IRC/Message'
+
 class ConsoleMessage
+  include BotCore::Message
+
   attr_reader :timestamp, # reception time
               :prefix, # abused for security crap
               :bot,
