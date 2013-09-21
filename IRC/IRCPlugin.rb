@@ -4,10 +4,10 @@
 
 # IRCPlugin is the superclass of all plugins
 
-require_relative 'IRCListener'
+require_relative 'Listener'
 
 class IRCPlugin
-  include IRCListener
+  include BotCore::Listener
 
   # Configuration options set for this plugin
   # This variable will always be a hash and never nil

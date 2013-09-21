@@ -6,10 +6,10 @@
 
 require 'set'
 
-require_relative '../../IRCListener'
+require_relative '../../Listener'
 
 class IRCModeListener
-  include IRCListener
+  include BotCore::Listener
 
   def initialize(bot, config)
     @bot = bot

@@ -4,10 +4,10 @@
 
 # IRCLoginListener is the listener that sends login-time USER command.
 
-require_relative '../../IRCListener'
+require_relative '../../Listener'
 
 class IRCLoginListener
-  include IRCListener
+  include BotCore::Listener
 
   def initialize(bot, config)
     @bot = bot

@@ -6,10 +6,10 @@
 
 require 'ostruct'
 
-require_relative '../../IRCListener'
+require_relative '../../Listener'
 
 class IRCIdentifyListener
-  include IRCListener
+  include BotCore::Listener
 
   def initialize(bot, config)
     @bot = bot

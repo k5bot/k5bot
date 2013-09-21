@@ -285,7 +285,7 @@ class Router < IRCPlugin
   end
 end
 
-module IRCListener
+module BotCore::Listener
   def listener_priority
     0
   end

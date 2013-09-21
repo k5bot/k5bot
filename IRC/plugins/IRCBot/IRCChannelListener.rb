@@ -4,10 +4,10 @@
 
 # IRCChannelListener keeps track of all joined channels.
 
-require_relative '../../IRCListener'
+require_relative '../../Listener'
 
 class IRCChannelListener
-  include IRCListener
+  include BotCore::Listener
 
   def initialize
     @channels = {}

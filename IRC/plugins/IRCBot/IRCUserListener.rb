@@ -6,12 +6,12 @@
 # updated by listening to user-related messages.
 # To find the user who sent a message, use IRCMessage#user.
 
-require_relative '../../IRCListener'
+require_relative '../../Listener'
 
 require_relative 'IRCUser'
 
 class IRCUserListener
-  include IRCListener
+  include BotCore::Listener
 
   def initialize(storage)
     @storage = storage
