@@ -6,7 +6,10 @@
 
 require 'singleton'
 
+require_relative '../../User'
+
 class ConsoleUser
+  include BotCore::User
   include Singleton
 
   def nick
