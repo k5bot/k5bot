@@ -30,7 +30,7 @@ class HelpExport < IRCPlugin
   end
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
     when :export_help_xml
       do_export_to_xml(msg)
     end

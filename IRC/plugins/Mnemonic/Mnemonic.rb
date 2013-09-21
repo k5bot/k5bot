@@ -13,7 +13,7 @@ class Mnemonic < IRCPlugin
 
   def on_privmsg(msg)
     m = nil
-    case msg.botcommand
+    case msg.bot_command
     when :m
       msg.reply m if (m = mnemonic msg.tail.split('').first)
     end

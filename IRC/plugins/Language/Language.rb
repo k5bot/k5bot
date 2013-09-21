@@ -54,7 +54,7 @@ class Language < IRCPlugin
 
   def on_privmsg(msg)
     return unless msg.tail
-    case msg.botcommand
+    case msg.bot_command
     when :kana
       msg.reply(romazi_to_kana msg.tail)
     when :romaja

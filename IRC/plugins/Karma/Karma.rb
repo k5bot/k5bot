@@ -51,7 +51,7 @@ class Karma < IRCPlugin
   end
 
   def on_privmsg(msg)
-    if msg.botcommand
+    if msg.bot_command
       respond_to_query(msg)
     elsif !msg.private?
       respond_to_change(msg)
@@ -59,7 +59,7 @@ class Karma < IRCPlugin
   end
 
   def respond_to_query(msg)
-    bot_command = msg.botcommand
+    bot_command = msg.bot_command
 
     sub_config = @config[bot_command]
     return unless sub_config

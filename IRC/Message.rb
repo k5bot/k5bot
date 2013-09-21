@@ -42,5 +42,10 @@ module BotCore
     def command_prefix_matcher; ni() end
 
     def context; ni() end
+
+    # Deprecated. Backward compatibility for bot_command.
+    def botcommand
+      bot_command
+    end
   end
 end

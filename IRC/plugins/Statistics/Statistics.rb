@@ -14,7 +14,7 @@ class Statistics < IRCPlugin
   }
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
     when :uptime
       msg.reply(uptimeString(msg.bot.start_time))
     when :version

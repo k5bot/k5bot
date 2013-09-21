@@ -141,7 +141,7 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
     word = msg.tail
     return unless word
 
-    botcommand = msg.botcommand
+    botcommand = msg.bot_command
     return unless botcommand
 
     m = botcommand.to_s.match(/(.+)([!$@#])$/)

@@ -25,7 +25,7 @@ class Git < IRCPlugin
   end
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
     when :pull
       versionBefore = @l.versionString
       gitPull

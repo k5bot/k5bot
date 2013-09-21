@@ -27,7 +27,7 @@ class IRCMessage
               :bot,
               :bot_command, # The first word of the message if it starts with 'command_prefix'
               :ctcp, # array of OpenStructs, representing CTCPs passed inside the message.
-              :tail # The message with nick prefix and botcommand removed if it exists, otherwise the whole message
+              :tail # The message with nick prefix and bot_command removed if it exists, otherwise the whole message
 
   def initialize(bot, raw)
     @prefix, @command, @params, @user, @ctcp, @bot_command, @tail, @is_private = nil
@@ -117,11 +117,6 @@ class IRCMessage
   def server
     return if @prefix =~ /[@!]/
     @server ||= @prefix
-  end
-
-  # Deprecated. Backward compatibility for bot_command.
-  def botcommand
-    @bot_command
   end
 
   # The channel name (e.g. '#channel')

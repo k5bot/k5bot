@@ -30,7 +30,7 @@ class Mecab < IRCPlugin
   end
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
     when :mecab
       text = msg.tail
       return unless text

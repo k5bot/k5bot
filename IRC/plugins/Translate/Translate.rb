@@ -171,7 +171,7 @@ class Translate < IRCPlugin
   end
 
   def on_privmsg(msg)
-    bot_command = msg.botcommand
+    bot_command = msg.bot_command
     if :langs == bot_command
       return msg.reply Translate.get_language_list_string()
     end

@@ -25,7 +25,7 @@ class Pinyin < IRCPlugin
   }
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
     when :pinyin
       pinyin = _pinyin(msg.tail)
       msg.reply pinyin if pinyin

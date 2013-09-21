@@ -75,7 +75,7 @@ and ISO-3166 country names (e.g. US, JP)",
   end
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
     when :time
       zones = (msg.tail || 'UTC JST').split
       time = Time.now

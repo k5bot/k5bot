@@ -96,7 +96,7 @@ class Router < IRCPlugin
   end
 
   def on_privmsg(msg)
-    return unless msg.botcommand == :acl
+    return unless msg.bot_command == :acl
     return unless check_is_op(msg.prefix)
     tail = msg.tail
 

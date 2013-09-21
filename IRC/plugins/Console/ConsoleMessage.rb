@@ -30,11 +30,6 @@ class ConsoleMessage
     :privmsg
   end
 
-  # Deprecated. Backward compatibility for bot_command.
-  def botcommand
-    @bot_command
-  end
-
   def channelname
     nil
   end

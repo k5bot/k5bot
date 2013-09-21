@@ -32,13 +32,13 @@ class MapDoc < IRCPlugin
   end
 
   def on_privmsg(msg)
-    if msg.botcommand
+    if msg.bot_command
       respond_to_query(msg)
     end
   end
 
   def respond_to_query(msg)
-    bot_command = msg.botcommand
+    bot_command = msg.bot_command
 
     return unless @catalog
     sub_catalog = @catalog[bot_command]

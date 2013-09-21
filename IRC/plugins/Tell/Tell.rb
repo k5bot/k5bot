@@ -39,7 +39,7 @@ class Tell < IRCPlugin
   end
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
     when :tell
       store_tell(msg)
     end

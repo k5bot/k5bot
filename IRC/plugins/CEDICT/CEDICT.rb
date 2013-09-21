@@ -37,7 +37,7 @@ class CEDICT < IRCPlugin
   end
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
     when :zh
       word = msg.tail
       return unless word

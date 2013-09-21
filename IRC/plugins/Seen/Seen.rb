@@ -43,7 +43,7 @@ uses .seen command on you. Example: .seenwhile drinking beer",
         :nick => msg.nick,
         :message => msg.message}) unless msg.private?
 
-    case msg.botcommand
+    case msg.bot_command
     when :seen
       sought_nick = msg.tail
 

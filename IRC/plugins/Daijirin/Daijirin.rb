@@ -41,7 +41,8 @@ See '.faq regexp'",
   end
 
   def on_privmsg(msg)
-    case msg.botcommand
+    bot_command = msg.bot_command
+    case bot_command
     when :dj
       word = msg.tail
       return unless word

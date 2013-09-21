@@ -73,7 +73,7 @@ class KANJIDIC < IRCPlugin
 
   def on_privmsg(msg)
     return unless msg.tail
-    case msg.botcommand
+    case msg.bot_command
     when :k
       radical_group = (@code_skip[msg.tail] || @stroke_count[msg.tail])
       if radical_group

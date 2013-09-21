@@ -85,7 +85,7 @@ connection number (e.g. 12345), 'current' (kills current connection), \
   end
 
   def on_privmsg(msg)
-    bot_command = msg.botcommand
+    bot_command = msg.bot_command
     case bot_command
     when :chat
       return unless @plain_chat_info

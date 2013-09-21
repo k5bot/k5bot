@@ -85,7 +85,7 @@ if it's the only given search term",
 
   def on_privmsg(msg)
     return unless msg.tail
-    bot_command = msg.botcommand
+    bot_command = msg.bot_command
     case bot_command
     when :k, :k?
       search_result = @code_skip[msg.tail]

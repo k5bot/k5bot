@@ -20,7 +20,7 @@ class Help < IRCPlugin
   end
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
     when :help
       if msg.tail
         describe_word(msg, msg.tail)

@@ -27,7 +27,7 @@ class Algorithms < IRCPlugin
   def on_privmsg(msg)
     text = msg.tail
     return unless text
-    case msg.botcommand
+    case msg.bot_command
     when :damerau
       opts = {:ignore_case => true, :allow_swaps => true}
       distance = calc_distance(text, opts)

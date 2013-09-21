@@ -37,7 +37,7 @@ class YEDICT < IRCPlugin
   end
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
     when :cn
       word = msg.tail
       return unless word

@@ -48,7 +48,7 @@ shows the list of entries starting from that position",
     self.evict_expired_menus!
     menu_state = @menu_states[msg.context]
     return unless menu_state
-    case msg.botcommand
+    case msg.bot_command
       when :n
         index = Menu.get_int(msg.tail)
         menu_state.show_descriptions!(index, msg)

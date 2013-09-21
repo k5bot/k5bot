@@ -42,7 +42,7 @@ class URL < IRCPlugin
   end
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
       when :short
         text = msg.tail
         url = get_uri_from_queue(msg.context, text)
