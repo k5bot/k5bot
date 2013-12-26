@@ -35,3 +35,7 @@ end
 
 # for WebBot plugin
 gem 'webrick', :group => :WebBot
+
+# for EDICT plugin
+gem 'sequel', :group => :EDICT
+gem 'sqlite3', :group => :EDICT
