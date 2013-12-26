@@ -12,7 +12,15 @@
 $VERBOSE = true
 
 require 'yaml'
+
+require 'rubygems'
+require 'bundler/setup'
+require 'sequel'
+
+require_relative '../../SequelHelpers'
 require_relative 'ENAMDICTEntry'
+
+include SequelHelpers
 
 class ENAMDICTConverter
   attr_reader :hash
@@ -20,8 +28,6 @@ class ENAMDICTConverter
   def initialize(enamdict_file)
     @enamdict_file = enamdict_file
     @hash = {}
-    @hash[:japanese] = {}
-    @hash[:readings] = {}
     @all_entries = []
     @hash[:all] = @all_entries
     @hash[:version] = ENAMDICTEntry::VERSION
@@ -33,14 +39,14 @@ class ENAMDICTConverter
 
   def read
     File.open(@enamdict_file, 'r', :encoding => 'EUC-JP') do |io|
-      io.each_line do |l|
+      io.each_line.each_with_index do |l, i|
+        print '.' if 0 == i%1000
+
         entry = ENAMDICTEntry.new(l.encode('UTF-8').strip)
 
         entry.parse
 
         @all_entries << entry
-        (@hash[:japanese][entry.japanese] ||= []) << entry
-        (@hash[:readings][hiragana(entry.reading)] ||= []) << entry
       end
     end
   end
@@ -75,9 +81,75 @@ def marshal_dict(dict)
   puts 'done.'
 
   print "Marshalling #{dict.upcase}..."
-  File.open("#{(File.dirname __FILE__)}/#{dict}.marshal", 'w') do |io|
-    Marshal.dump(ec.hash, io)
+
+  db = database_connect("sqlite://#{dict}.sqlite", :encoding => 'utf8')
+
+  db.drop_table? :enamdict_entry_to_english
+  db.drop_table? :enamdict_english
+  db.drop_table? :enamdict_entry
+  db.drop_table? :enamdict_version
+
+  db.create_table :enamdict_version do
+    primary_key :id
   end
+
+  db.create_table :enamdict_entry do
+    primary_key :id
+
+    String :japanese, :size => 127, :null => false
+    String :reading, :size => 127, :null => false
+    String :reading_norm, :size => 127, :null => false
+    TrueClass :simple_entry, :null => false
+
+    String :raw, :size => 4096, :null => false
+  end
+
+  db.create_table :enamdict_english do
+    primary_key :id
+    String :text, :size => 127, :null => false, :unique => true
+  end
+
+  db.create_table :enamdict_entry_to_english do
+    foreign_key :enamdict_entry_id, :enamdict_entry, :null => false
+    foreign_key :enamdict_english_id, :enamdict_english, :null => false
+  end
+
+  db.transaction do
+    id_map = {}
+
+    enamdict_version_dataset = db[:enamdict_version]
+
+    enamdict_version_dataset.insert(
+        :id => ec.hash[:version],
+    )
+
+    enamdict_entry_dataset = db[:enamdict_entry]
+
+    print '(entries)'
+
+    ec.hash[:all].each_with_index do |entry, i|
+      print '.' if 0 == i%1000
+
+      entry_id = enamdict_entry_dataset.insert(
+          :japanese => entry.japanese,
+          :reading => entry.reading,
+          :reading_norm => ec.hiragana(entry.reading),
+          :simple_entry => entry.simple_entry || false,
+          :raw => entry.raw,
+      )
+      id_map[entry] = entry_id
+    end
+  end
+
+  print '(indices)'
+
+  db.add_index(:enamdict_entry, :japanese)
+  print '.'
+  db.add_index(:enamdict_entry, :reading_norm)
+  print '.'
+
+  database_disconnect(db)
+
   puts 'done.'
 end
 

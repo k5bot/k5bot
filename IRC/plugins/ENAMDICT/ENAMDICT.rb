@@ -9,10 +9,17 @@
 #
 # http://www.csse.monash.edu.au/~jwb/edict.html
 
+require 'rubygems'
+require 'bundler/setup'
+require 'sequel'
+
 require_relative '../../IRCPlugin'
+require_relative '../../SequelHelpers'
 require_relative 'ENAMDICTEntry'
 
 class ENAMDICT < IRCPlugin
+  include SequelHelpers
+
   Description = 'An ENAMDICT plugin.'
   Commands = {
     :jn => 'looks up a Japanese word in ENAMDICT',
@@ -27,13 +34,18 @@ See '.faq regexp'",
     @l = @plugin_manager.plugins[:Language]
     @m = @plugin_manager.plugins[:Menu]
 
-    @hash_enamdict = load_dict('enamdict')
+    @db = database_connect("sqlite://#{(File.dirname __FILE__)}/enamdict.sqlite", :encoding => 'utf8')
+
+    @hash_enamdict = load_dict(@db)
   end
 
   def beforeUnload
     @m.evict_plugin_menus!(self.name)
 
     @hash_enamdict = nil
+
+    database_disconnect(@db)
+    @db = nil
 
     @m = nil
     @l = nil
@@ -49,7 +61,7 @@ See '.faq regexp'",
       word = msg.tail
       return unless word
       l_kana = @l.kana(word)
-      enamdict_lookup = lookup(l_kana, [@hash_enamdict[:japanese], @hash_enamdict[:readings]])
+      enamdict_lookup = lookup([l_kana], [:japanese, :reading_norm])
       reply_with_menu(msg, generate_menu(format_description_unambiguous(enamdict_lookup), "\"#{word}\" #{"(\"#{l_kana}\") " unless word.eql?(l_kana)}in ENAMDICT"))
     when :jnr
       word = msg.tail
@@ -113,15 +125,20 @@ See '.faq regexp'",
     )
   end
 
-  # Looks up a word in specified hash(es) and returns the result as an array of entries
-  def lookup(word, hashes)
-    lookup_result = []
-    hashes.each do |h|
-      entry_array = h[word]
-      lookup_result |= entry_array if entry_array
+  # Looks up all entries that have each given word in any
+  # of the specified columns and returns the result as an array of entries
+  def lookup(words, columns)
+    table = @hash_enamdict[:enamdict_entries]
+
+    condition = Sequel.&(*words.map do |word|
+      Sequel.or(columns.map { |column| [column, word] })
+    end)
+
+    dataset = table.where(condition).group_by(Sequel.qualify(:enamdict_entry, :id))
+
+    standard_order(dataset).select(:japanese, :reading, :simple_entry, :id).to_a.map do |entry|
+      ENAMDICTLazyEntry.new(table, entry[:id], entry)
     end
-    sort_result(lookup_result)
-    lookup_result
   end
 
   def lookup_complex_regexp(complex_regexp)
@@ -152,21 +169,46 @@ See '.faq regexp'",
     lookup_result
   end
 
-  def sort_result(lr)
-    lr.sort_by!{|e| e.sortKey} if lr
+  def standard_order(dataset)
+    dataset.order_by(Sequel.qualify(:enamdict_entry, :id))
   end
 
-  def load_dict(dict_name)
-    dict = File.open("#{(File.dirname __FILE__)}/#{dict_name}.marshal", 'r') do |io|
-      Marshal.load(io)
-    end
-    raise "The #{dict_name}.marshal file is outdated. Rerun convert.rb." unless dict[:version] == ENAMDICTEntry::VERSION
 
-    # Pre-parse all entries
-    dict[:all].each do |entry|
-      entry.parse
+  def load_dict(db)
+    enamdict_version = db[:enamdict_version]
+    enamdict_entries = db[:enamdict_entry]
+
+    versions = enamdict_version.to_a.map {|x| x[:id]}
+    unless versions.include?(ENAMDICTEntry::VERSION)
+      raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[ENAMDICTEntry::VERSION].inspect} of plugin. Rerun convert.rb."
     end
 
-    dict
+    regexpable = enamdict_entries.select(:japanese, :reading, :simple_entry, :id).to_a
+    regexpable = regexpable.map do |entry|
+      ENAMDICTLazyEntry.new(enamdict_entries, entry[:id], entry)
+    end
+
+    {
+        :enamdict_entries => enamdict_entries,
+        :all => regexpable,
+    }
+  end
+
+  class ENAMDICTLazyEntry
+    attr_reader :japanese, :reading, :simple_entry
+    lazy_dataset_field :raw, Sequel.qualify(:enamdict_entry, :id)
+
+    def initialize(dataset, id, pre_init)
+      @dataset = dataset
+      @id = id
+
+      @japanese = pre_init[:japanese]
+      @reading = pre_init[:reading]
+      @simple_entry = pre_init[:simple_entry]
+    end
+
+    def to_s
+      self.raw
+    end
   end
 end
