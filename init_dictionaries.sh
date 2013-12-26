@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
 
