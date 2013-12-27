@@ -4,10 +4,17 @@
 
 # CEDICT plugin
 
+require 'rubygems'
+require 'bundler/setup'
+require 'sequel'
+
 require_relative '../../IRCPlugin'
+require_relative '../../SequelHelpers'
 require_relative 'CEDICTEntry'
 
 class CEDICT < IRCPlugin
+  include SequelHelpers
+
   Description = 'A CEDICT plugin.'
   Commands = {
     :zh => 'looks up a Mandarin word in CEDICT',
@@ -21,7 +28,9 @@ class CEDICT < IRCPlugin
     @l = @plugin_manager.plugins[:Language]
     @m = @plugin_manager.plugins[:Menu]
 
-    @hash_cedict = load_dict('cedict')
+    @db = database_connect("sqlite://#{(File.dirname __FILE__)}/cedict.sqlite", :encoding => 'utf8')
+
+    @hash_cedict = load_dict(@db)
   end
 
   def beforeUnload
@@ -29,10 +38,14 @@ class CEDICT < IRCPlugin
 
     @hash_cedict = nil
 
+    database_disconnect(@db)
+    @db = nil
+
     @m = nil
     @l = nil
 
     unload_helper_class(:CEDICTEntry)
+
     nil
   end
 
@@ -41,13 +54,13 @@ class CEDICT < IRCPlugin
     when :zh
       word = msg.tail
       return unless word
-      cedict_lookup = lookup(word, [@hash_cedict[:mandarin_zh], @hash_cedict[:mandarin_tw], @hash_cedict[:pinyin]])
+      cedict_lookup = lookup([word], [:mandarin_zh, :mandarin_tw, :pinyin])
       reply_with_menu(msg, generate_menu(format_description_unambiguous(cedict_lookup), "\"#{word}\" in CEDICT"))
     when :zhen
       word = msg.tail
       return unless word
-      edict_lookup = keyword_lookup(split_into_keywords(word), @hash_cedict[:keywords])
-      reply_with_menu(msg, generate_menu(format_description_show_hanzi(edict_lookup), "\"#{word}\" in CEDICT"))
+      cedict_lookup = keyword_lookup(split_into_keywords(word))
+      reply_with_menu(msg, generate_menu(format_description_show_hanzi(cedict_lookup), "\"#{word}\" in CEDICT"))
     end
   end
 
@@ -114,43 +127,95 @@ class CEDICT < IRCPlugin
     )
   end
 
-  # Looks up a word in specified hash(es) and returns the result as an array of entries
-  def lookup(word, hashes)
-    lookup_result = []
-    hashes.each do |h|
-      entry_array = h[word]
-      lookup_result |= entry_array if entry_array
+  # Looks up all entries that have each given word in any
+  # of the specified columns and returns the result as an array of entries
+  def lookup(words, columns)
+    table = @hash_cedict[:cedict_entries]
+
+    condition = Sequel.&(*words.map do |word|
+      Sequel.or(columns.map { |column| [column, word] })
+    end)
+
+    dataset = table.where(condition).group_by(Sequel.qualify(:cedict_entry, :id))
+
+    standard_order(dataset).select(:mandarin_zh, :mandarin_tw, :pinyin, :id).to_a.map do |entry|
+      CEDICTLazyEntry.new(table, entry[:id], entry)
     end
-    sort_result(lookup_result)
-    lookup_result
   end
 
-  def keyword_lookup(words, hash)
-    lookup_result = nil
+  # Looks up all entries that contain all given words in english text
+  def keyword_lookup(words)
+    column = :text
 
-    words.each do |k|
-      return [] unless (entry_array = hash[k])
-      if lookup_result
-        lookup_result &= entry_array
-      else
-        lookup_result = Array.new(entry_array)
-      end
+    words = words.uniq
+
+    table = @hash_cedict[:cedict_entries]
+    cedict_english = @hash_cedict[:cedict_english]
+    cedict_english_join = @hash_cedict[:cedict_english_join]
+
+    condition = Sequel.|(*words.map do |word|
+      { Sequel.qualify(:cedict_english, column) => word.to_s }
+    end)
+
+    english_ids = cedict_english.where(condition).select(:id).to_a.map {|h| h.values}.flatten
+
+    return [] unless english_ids.size == words.size
+
+    dataset = cedict_english_join.where(Sequel.qualify(:cedict_entry_to_english, :cedict_english_id) => english_ids).group_and_count(Sequel.qualify(:cedict_entry_to_english, :cedict_entry_id)).join(:cedict_entry, :id => :cedict_entry_id).having(:count => english_ids.size)
+
+    dataset = dataset.select_append(
+        Sequel.qualify(:cedict_entry, :mandarin_zh),
+        Sequel.qualify(:cedict_entry, :mandarin_tw),
+        Sequel.qualify(:cedict_entry, :pinyin),
+        Sequel.qualify(:cedict_entry, :id),
+    )
+
+    standard_order(dataset).to_a.map do |entry|
+      CEDICTLazyEntry.new(table, entry[:id], entry)
     end
-    return [] unless lookup_result && !lookup_result.empty?
-    lookup_result
+  end
+
+  def standard_order(dataset)
+    dataset.order_by(Sequel.qualify(:cedict_entry, :id))
   end
 
   def split_into_keywords(word)
     CEDICTEntry.split_into_keywords(word).uniq
   end
 
-  def sort_result(lr)
-    lr.sort_by!{|e| e.sort_key} if lr
+  def load_dict(db)
+    cedict_version = db[:cedict_version]
+    cedict_entries = db[:cedict_entry]
+    cedict_english = db[:cedict_english]
+    cedict_english_join = db[:cedict_entry_to_english]
+
+    versions = cedict_version.to_a.map {|x| x[:id]}
+    unless versions.include?(CEDICTEntry::VERSION)
+      raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[CEDICTEntry::VERSION].inspect} of plugin. Rerun convert.rb."
+    end
+
+    {
+        :cedict_entries => cedict_entries,
+        :cedict_english => cedict_english,
+        :cedict_english_join => cedict_english_join,
+    }
   end
 
-  def load_dict(dict)
-    File.open("#{(File.dirname __FILE__)}/#{dict}.marshal", 'r') do |io|
-      Marshal.load(io)
+  class CEDICTLazyEntry
+    attr_reader :mandarin_zh, :mandarin_tw, :pinyin
+    lazy_dataset_field :raw, Sequel.qualify(:cedict_entry, :id)
+
+    def initialize(dataset, id, pre_init)
+      @dataset = dataset
+      @id = id
+
+      @mandarin_zh = pre_init[:mandarin_zh]
+      @mandarin_tw = pre_init[:mandarin_tw]
+      @pinyin = pre_init[:pinyin]
+    end
+
+    def to_s
+      self.raw
     end
   end
 end
