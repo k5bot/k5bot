@@ -2,6 +2,8 @@
 
 require_relative '../../IRCPlugin'
 
+require 'fileutils'
+
 class Kanastats < IRCPlugin
   Description = "Counts all chars used in channels the bot is connected to as well as private messages."
 
@@ -10,17 +12,22 @@ class Kanastats < IRCPlugin
   Commands = {
     :hirastats => "Returns hiragana usage statistics.",
     :katastats => "Returns katakana usage statistics.",
-    :charstats => "How often the specified char was used."
+    :charstats => "How often the specified char was publicly used.",
+    :wordstats => "How often the specified word was publicly used."
   }
 
   def afterLoad
     @storage = @plugin_manager.plugins[:StorageYAML]
     @stats = @storage.read('kanastats') || {}
+    dir = @config[:data_directory]
+    dir = dir || '~/.ircbot'
+    @data_directory = File.expand_path(dir).chomp('/')
   end
 
   def beforeUnload
     @storage = nil
     @stats = nil
+    @data_directory = nil
   end
 
   def store
@@ -35,9 +42,13 @@ class Kanastats < IRCPlugin
         output_kata(msg)
       when :charstats
         charstat(msg)
-      else
+      when :wordstats
+        wordstats(msg)
+      else if !msg.private?
         statify(msg.message)
+        log(msg.message)
         store
+      end
     end
   end
 
@@ -105,6 +116,28 @@ class Kanastats < IRCPlugin
       output_string << "' was used once."
     else
       output_string << "' was used " << @stats[c].to_s() << " times."
+    end
+    msg.reply output_string
+  end
+
+  def log(line)
+    return unless line
+    line << "\n"
+    file = "#{@data_directory}/public_logfile"
+    File.open(file, 'a') { |f| f.write(line) }
+  end
+
+  def wordstats(msg)
+    word = msg.tail
+    file = "#{@data_directory}/public_logfile"
+    count = File.open(file) {|f| f.each_line.map {|l| l.scan(word).size}.inject(0, :+)}
+    output_string = "The word '#{word}' "
+    if count == 0
+      output_string << "wasn't used so far."
+    elsif count == 1
+      output_string << "was used once."
+    else
+      output_string << "was used #{count} times."
     end
     msg.reply output_string
   end
