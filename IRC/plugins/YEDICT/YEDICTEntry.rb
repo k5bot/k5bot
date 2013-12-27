@@ -7,6 +7,8 @@
 require 'set'
 
 class YEDICTEntry
+  VERSION = 1
+
   attr_reader :raw, :simple_entry
   attr_accessor :sort_key
 
