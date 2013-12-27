@@ -5,29 +5,38 @@ require_relative '../../IRCPlugin'
 require 'fileutils'
 
 class Kanastats < IRCPlugin
-  Description = "Counts all chars used in channels the bot is connected to as well as private messages."
+  Description = "Counts all chars used in channels the bot is connected to \
+as well as private messages."
 
   Dependencies = [ :StorageYAML ]
 
   Commands = {
-    :hirastats => "Returns hiragana usage statistics.",
-    :katastats => "Returns katakana usage statistics.",
-    :charstats => "How often the specified char was publicly used.",
-    :wordstats => "How often the specified word was publicly used."
+    :hirastats => 'Returns hiragana usage statistics.',
+    :katastats => 'Returns katakana usage statistics.',
+    :charstats => 'How often the specified char was publicly used.',
+    :wordstats => 'How often the specified word was publicly used.',
   }
 
   def afterLoad
     @storage = @plugin_manager.plugins[:StorageYAML]
+
     @stats = @storage.read('kanastats') || {}
+
     dir = @config[:data_directory]
-    dir = dir || '~/.ircbot'
+    dir ||= @storage.config[:data_directory]
+    dir ||= '~/.ircbot'
+
     @data_directory = File.expand_path(dir).chomp('/')
+    @log_file = "#{@data_directory}/public_logfile"
   end
 
   def beforeUnload
-    @storage = nil
-    @stats = nil
+    @log_file = nil
     @data_directory = nil
+    @stats = nil
+    @storage = nil
+
+    nil
   end
 
   def store
@@ -35,7 +44,7 @@ class Kanastats < IRCPlugin
   end
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
       when :hirastats
         output_hira(msg)
       when :katastats
@@ -44,101 +53,94 @@ class Kanastats < IRCPlugin
         charstat(msg)
       when :wordstats
         wordstats(msg)
-      else if !msg.private?
-        statify(msg.message)
-        log(msg.message)
-        store
-      end
+      else
+        unless msg.private?
+          statify(msg.message)
+          log(msg.message)
+        end
     end
   end
 
   def statify(text)
-    text.split("").each do |c|
-      if !@stats[c]
-        @stats[c] = 0
-      end
+    return unless text
+    text.each_char do |c|
+      @stats[c] ||= 0
       @stats[c] += 1
     end
+    store
   end
 
+  ALL_HIRAGANA = 'あいうえおかきくけこさしすせそたちつてとなにぬねのまみむめもはひふへほやゆよらりるれろわゐゑをんばびぶべぼぱぴぷぺぽがぎぐげござじずぜぞだぢづでどゃゅょぁぃぅぇぉ'
+  ALL_KATAKANA = 'アイウエオカキクケコサシスセソタチツテトナニヌネノマミムメモハヒフヘホヤユヨラリルレロワヰヱヲンバビブベボパピプペポガギグゲゴザジズゼゾダヂヅデドャュョァィゥェォ'
+
   def output_hira(msg)
-    output_array = Array.new
-    "あいうえおかきくけこさしすせそたちつてとなにぬねのまみむめもはひふへほやゆよらりるれろわゐゑをんばびぶべぼぱぴぷぺぽがぎぐげござじずぜぞだぢづでどゃゅょぁぃぅぇぉ".split("").each do |c|
-      if !@stats[c]
-        @stats[c] = 0
-      end
-      output_array << "#{c} #{@stats[c].to_s()}"
-    end
-    until output_array.empty?
-      chunk_size = output_array.size
-      begin
-        output_string = "Hiragana stats: #{output_array[0..chunk_size-1].join(' ')}"
-        msg.reply( output_string, :dont_truncate => ( chunk_size > 1 ) )
-      rescue
-        chunk_size -= 1
-        retry if chunk_size > 0
-      end
-      output_array.slice!( 0, chunk_size )
+    output_array = ALL_HIRAGANA.each_char.map do |c|
+      "#{c} #{@stats[c] || 0}"
+    end.to_a
+
+    reply_untruncated(msg, output_array) do |chunk|
+      "Hiragana stats: #{chunk.join(' ')}"
     end
   end
 
   def output_kata(msg)
-    output_array = Array.new
-    "アイウエオカキクケコサシスセソタチツテトナニヌネノマミムメモハヒフヘホヤユヨラリルレロワヰヱヲンバビブベボパピプペポガギグゲゴザジズゼゾダヂヅデドャュョァィゥェォ".split("").each do |c|
-      if !@stats[c]
-        @stats[c] = 0
-      end
-      output_array << "#{c} #{@stats[c].to_s()}"
-    end
-    until output_array.empty?
-      chunk_size = output_array.size
-      begin
-        output_string = "Katakana stats: #{output_array[0..chunk_size-1].join(' ')}"
-        msg.reply( output_string, :dont_truncate => ( chunk_size > 1 ) )
-      rescue
-        chunk_size -= 1
-        retry if chunk_size > 0
-      end
-      output_array.slice!( 0, chunk_size )
+    output_array = ALL_KATAKANA.each_char.map do |c|
+      "#{c} #{@stats[c] || 0}"
+    end.to_a
+
+    reply_untruncated(msg, output_array) do |chunk|
+      "Katakana stats: #{chunk.join(' ')}"
     end
   end
 
   def charstat(msg)
-    output_string = "The char '"
-    c = msg.tail[0]
-    if !@stats[c]
-      @stats[c] = 0
-    end
-    output_string << c
-    if @stats[c] == 0
-      output_string << "' wasn't used so far."
-    elsif @stats[c] == 1
-      output_string << "' was used once."
-    else
-      output_string << "' was used " << @stats[c].to_s() << " times."
-    end
-    msg.reply output_string
+    word = msg.tail
+    return unless word
+
+    c = word[0]
+    count = @stats[c] || 0
+
+    msg.reply("The char '#{c}' #{used_text(count)}.")
   end
 
   def log(line)
     return unless line
-    line << "\n"
-    file = "#{@data_directory}/public_logfile"
-    File.open(file, 'a') { |f| f.write(line) }
+    File.open(@log_file, 'a') { |f| f.write(line + "\n") }
   end
 
   def wordstats(msg)
     word = msg.tail
-    file = "#{@data_directory}/public_logfile"
-    count = File.open(file) {|f| f.each_line.map {|l| l.scan(word).size}.inject(0, :+)}
-    output_string = "The word '#{word}' "
-    if count == 0
-      output_string << "wasn't used so far."
-    elsif count == 1
-      output_string << "was used once."
-    else
-      output_string << "was used #{count} times."
+    return unless word
+
+    count = File.open(@log_file) do |f|
+      f.each_line.map { |l| l.scan(word).size }.inject(0, :+)
     end
-    msg.reply output_string
+
+    msg.reply("The word '#{word}' #{used_text(count)}.")
+  end
+
+  def reply_untruncated(msg, output_array)
+    until output_array.empty?
+      chunk_size = output_array.size
+      begin
+        output_string = yield(output_array[0..chunk_size-1])
+        msg.reply(output_string, :dont_truncate => (chunk_size > 1))
+      rescue
+        chunk_size -= 1
+        retry if chunk_size > 0
+      end
+      output_array.slice!(0, chunk_size)
+    end
+  end
+
+  def used_text(count)
+    case count
+      when 0
+        "wasn't used so far"
+      when 1
+        'was used once'
+      else
+        "was used #{count} times"
+    end
   end
 end
