@@ -51,25 +51,45 @@ class Kanastats < IRCPlugin
   end
 
   def output_hira(msg)
-    output_string = "Hiragana stats:"
+    output_array = Array.new
     "あいうえおかきくけこさしすせそたちつてとなにぬねのまみむめもはひふへほやゆよらりるれろわゐゑをんばびぶべぼぱぴぷぺぽがぎぐげござじずぜぞだぢづでどゃゅょぁぃぅぇぉ".split("").each do |c|
       if !@stats[c]
         @stats[c] = 0
       end
-      output_string << ' ' << c << @stats[c].to_s()
+      output_array << "#{c} #{@stats[c].to_s()}"
     end
-    msg.reply output_string
+    until output_array.empty?
+      chunk_size = output_array.size
+      begin
+        output_string = "Hiragana stats: #{output_array[0..chunk_size-1].join(' ')}"
+        msg.reply( output_string, :dont_truncate => ( chunk_size > 1 ) )
+      rescue
+        chunk_size -= 1
+        retry if chunk_size > 0
+      end
+      output_array.slice!( 0, chunk_size )
+    end
   end
 
   def output_kata(msg)
-    output_string = "Katakana stats:"
+    output_array = Array.new
     "アイウエオカキクケコサシスセソタチツテトナニヌネノマミムメモハヒフヘホヤユヨラリルレロワヰヱヲンバビブベボパピプペポガギグゲゴザジズゼゾダヂヅデドャュョァィゥェォ".split("").each do |c|
       if !@stats[c]
         @stats[c] = 0
       end
-      output_string << ' ' << c << @stats[c].to_s()
+      output_array << "#{c} #{@stats[c].to_s()}"
     end
-    msg.reply output_string
+    until output_array.empty?
+      chunk_size = output_array.size
+      begin
+        output_string = "Katakana stats: #{output_array[0..chunk_size-1].join(' ')}"
+        msg.reply( output_string, :dont_truncate => ( chunk_size > 1 ) )
+      rescue
+        chunk_size -= 1
+        retry if chunk_size > 0
+      end
+      output_array.slice!( 0, chunk_size )
+    end
   end
 
   def charstat(msg)
