@@ -5,8 +5,8 @@ require_relative '../../IRCPlugin'
 require 'fileutils'
 
 class Kanastats < IRCPlugin
-  Description = "Counts all chars used in channels the bot is connected to \
-as well as private messages."
+  Description = "Statistics plugin logging all public conversation and \
+providing tools to analyze it."
 
   Dependencies = [ :StorageYAML ]
 
