@@ -79,30 +79,24 @@ class URL < IRCPlugin
     uris = uris.map do |uri|
       no_re = Regexp.quote(uri)
 
-      uri_extended = nil
-
       # Most ugly part: match for the extracted URI plus anything that
       # looks like it might have been part of it, but wasn't
       # approved of by URI.extract()
       # We also immediately remove the match, so that weird urls with
       # similar prefixes don't always match to the first of them.
-      text.sub!(/(#{no_re}[^\s,!\\\]\[>　'"]*)/u) do |match|
-        uri_extended = match
-        ''
-      end
+      left, right = text.split(/#{no_re}[^\s　,!>'"\]\[\\]*/u, 2)
 
-      unless uri_extended
-        raise "Bug! Couldn't find uri in the same text it was extracted from: #{uri}"
-      end
-
-      uri = uri_extended.to_s
+      uri = text[left.size..-right.size-1]
 
       # Try handling final ')' which may be just an artifact
       # from the URI having been enclosed in parentheses
       # that URI#extract didn't quite handle
-      if uri.end_with?(')') && text =~ /\([^)]*?#{no_re}/u
-        uri.gsub!(/\)$/u, '')
+      if uri.end_with?(')') && left =~ /\([^)]*$/u
+        uri = uri[0..-2]
+        right += ')'
       end
+
+      text = left + right
 
       uri
     end
