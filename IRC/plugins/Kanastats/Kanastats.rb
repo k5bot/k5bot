@@ -15,6 +15,7 @@ providing tools to analyze it."
     :katastats => 'Returns katakana usage statistics.',
     :charstats => 'How often the specified char was publicly used.',
     :wordstats => 'How often the specified word was publicly used.',
+    :logged    => 'Displays information about the log files.',
   }
 
   def afterLoad
@@ -53,6 +54,8 @@ providing tools to analyze it."
         charstat(msg)
       when :wordstats
         wordstats(msg)
+      when :logged
+        logged(msg)
       else
         unless msg.private?
           statify(msg.message)
@@ -142,5 +145,10 @@ providing tools to analyze it."
       else
         "was used #{count} times"
     end
+  end
+
+  def logged(msg)
+    count = File.foreach(@log_file).count
+    msg.reply "Kanastats online and fully operational. Currently #{count} lines and #{@stats.size} chars have been logged."
   end
 end
