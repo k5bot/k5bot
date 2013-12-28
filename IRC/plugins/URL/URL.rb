@@ -112,46 +112,53 @@ class URL < IRCPlugin
   ACCEPT_LANGUAGE="en, ja, *"
 
   def handle_uri(uri, msg)
+    text = nil
+
     fetch_by_uri(uri) do |result|
-      unless result.is_a?(Net::HTTPSuccess)
-        begin
+      text, _ = format_http_info(result)
+    end
+
+    msg.reply(text) if text
+  end
+
+  def format_http_info(result)
+    unless result.is_a?(Net::HTTPSuccess)
+      begin
         result.error!
-        rescue => e
-          msg.reply(e.to_s)
-          raise e
-        end
+      rescue => e
+        return [e.to_s, e]
       end
+    end
 
-      content_type = result.content_type
+    content_type = result.content_type
 
-      if content_type.eql?('text/html')
-        doc = html_to_nokogiri(result)
-        return unless doc
+    if content_type.eql?('text/html')
+      doc = html_to_nokogiri(result)
+      return [] unless doc
 
-        text_node = doc.css('title')[0]
-        if text_node
-          title = text_node.text.chomp
+      text_node = doc.css('title')[0]
+      return [] unless text_node
 
-          title.gsub!(/[ \t\n\f\r]+/, ' ')
-          title.strip!
+      title = text_node.text.chomp
 
-          msg.reply("Title: #{title}")
-        end
-      else
-        response = []
+      title.gsub!(/[ \t\n\f\r]+/, ' ')
+      title.strip!
 
-        response << "Type: #{content_type}" if content_type
+      ["Title: #{title}"]
+    else
+      response = []
 
-        content_length = result['content-length']
+      response << "Type: #{content_type}" if content_type
 
-        response << "Size: #{format_size(content_length.to_i)}" if content_length
+      content_length = result['content-length']
 
-        last_modified = result['last-modified']
+      response << "Size: #{format_size(content_length.to_i)}" if content_length
 
-        response << format_last_modified(last_modified) if last_modified
+      last_modified = result['last-modified']
 
-        msg.reply(response.join("; "))
-      end
+      response << format_last_modified(last_modified) if last_modified
+
+      [response.join('; ')]
     end
   end
 
@@ -249,11 +256,14 @@ class URL < IRCPlugin
       http.request(request) do |res|
         # handle redirection outside, after closing current connection
         unless res.is_a?(Net::HTTPRedirection)
-          yield res
-          # HACK: prevent body from loading upon exiting request,
-          # if it wasn't loaded already in yielded block.
-          # @see HTTP.reading_body.
-          res.instance_eval { @body_exist = false }
+          begin
+            yield res
+          ensure
+            # HACK: prevent body from loading upon exiting request,
+            # if it wasn't loaded already in yielded block.
+            # @see HTTP.reading_body.
+            res.instance_eval { @body_exist = false }
+          end
         end
       end
     end
