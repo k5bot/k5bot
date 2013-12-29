@@ -62,7 +62,7 @@ class DaijirinConverter
             next unless parent_entry
             entry = DaijirinEntry.new(lns, parent_entry)
 
-            next if entry.parse == :skip
+            next unless entry.parse
 
             # Add current entry as a child, since it was parsed successfully
             parent_entry.add_child!(entry)
@@ -70,7 +70,7 @@ class DaijirinConverter
             entry = DaijirinEntry.new(lns)
             parent_entry = entry
 
-            if entry.parse == :skip
+            unless entry.parse
               parent_entry = nil
               next
             end

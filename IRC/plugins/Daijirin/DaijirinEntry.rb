@@ -98,9 +98,9 @@ class DaijirinEntry
   end
 
   def parse
-    return @parsed if @parsed
+    return @parsed unless @parsed.nil?
     unless parse_first_line(raw[0])
-      @parsed = :skip
+      @parsed = false
       post_parse()
       return @parsed
     end
