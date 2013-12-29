@@ -98,12 +98,9 @@ class DaijirinEntry
   end
 
   def parse
-    return @parsed unless @parsed.nil?
-    unless parse_first_line(raw[0])
-      @parsed = false
-      post_parse()
-      return @parsed
-    end
+    return if @parsed
+
+    parse_first_line(raw[0])
 
     hierarchy = parse_rest_of_lines(raw[1..-1].join("\n"))
 
@@ -132,13 +129,17 @@ class DaijirinEntry
     @info = @info.map {|lg| compact_xrefs(lg)}.to_a
 
     post_parse()
+
     @parsed = true
   end
 
   def parse_first_line(s)
     s.strip!
 
-    return parse_first_line_parented(s) if @parent
+    if @parent
+      parse_first_line_parented(s)
+      return
+    end
 
     @kana, s = s.split(' ', 2)
     s = (s or "").strip
@@ -181,8 +182,6 @@ class DaijirinEntry
 
     # Sort parent entries by reading
     @sort_key_string = @kana
-
-    return true
   end
 
   def parse_first_line_parented(s)
@@ -212,8 +211,6 @@ class DaijirinEntry
     equalized.each do |variant|
       parse_braced_child_line(variant)
     end
-
-    return true
   end
 
   def parse_braced_child_line(s)
