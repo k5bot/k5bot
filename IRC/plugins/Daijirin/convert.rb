@@ -24,8 +24,8 @@ end
 class DaijirinConverter
   attr_reader :hash
 
-  def initialize(sourceFile)
-    @source_file = sourceFile
+  def initialize(source_file)
+    @source_file = source_file
     @hash = {}
     @hash[:kanji] = {}
     @hash[:kana] = {}
@@ -35,28 +35,38 @@ class DaijirinConverter
     @hash[:version] = DaijirinEntry::VERSION
 
     # Duplicated two lines from ../Language/Language.rb
-    @kata2hira = YAML.load_file("../Language/kata2hira.yaml") rescue nil
+    @kata2hira = YAML.load_file('../Language/kata2hira.yaml') rescue nil
     @katakana = @kata2hira.keys.sort_by{|x| -x.length}
   end
 
     def read
       puts @source_file
-      i = 0
 
-      parent_entry = nil
+      File.open(@source_file, 'r', :encoding => 'UTF-8') do |io|
 
-      File.open(@source_file, 'r') do |io|
-        lines = []
-        io.each_line do |l|
-          unless l[0..3] == '----'
-            lines << l.chomp
-            next
-          end
-          lns = lines
+        # Extract and group lines separated by line of minuses
+        entry_lines = Enumerator.new() do |y|
           lines = []
 
-          puts "------ #{i}"
-          i+=1
+          io.each_line do |l|
+            unless l.start_with?('----')
+              lines << l.chomp
+              next
+            end
+
+            y << lines
+
+            lines = []
+          end
+
+          # Push last accumulated if any
+          y << lines unless lines.empty?
+        end
+
+        parent_entry = nil
+
+        entry_lines.each_with_index do |lns, i|
+          print '.' if 0 == i%1000
 
           if lns[0][0..1] == '――'
             next unless parent_entry
