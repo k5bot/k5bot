@@ -93,9 +93,7 @@ class DaijirinConverter
         end
 
         if entry.english
-          entry.english.each do |x|
-            (@hash[:english][x.downcase.strip] ||= []) << entry
-          end
+          (@hash[:english][entry.english] ||= []) << entry
         end
 
         @all_entries << entry

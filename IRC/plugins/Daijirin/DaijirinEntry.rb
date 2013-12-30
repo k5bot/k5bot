@@ -161,6 +161,8 @@ class DaijirinEntry
     @kanji_for_display = @kanji_for_search
 
     @english = split_capture!(s,ENGLISH_MATCHER,'%e%')
+    raise "Unexpectedly, there's more than one english word in header" if @english.size > 1
+    @english = @english.first
 
 =begin # Those are not necessary yet.
     @accent = split_capture!(s,ACCENT_MATCHER,'%a%')
