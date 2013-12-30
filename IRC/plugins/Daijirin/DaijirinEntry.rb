@@ -28,7 +28,8 @@ class DaijirinEntry
     @parent = parent
     @children = nil
     @raw = raw
-    @kanji = nil
+    @kanji_for_search = nil
+    @kanji_for_display = nil
     @kana = nil
     @english = nil
 =begin # Those are not necessary yet.
@@ -44,20 +45,9 @@ class DaijirinEntry
     @parsed = nil
   end
 
-  def kanji_for_display
-    k = kanji_for_search
-    # Only output one meaningful kanji for child entries:
-    # either the first kanji form or the kana form..
-    return [k[1] || k[0]] if @parent
-    k
-  end
-
-  def kanji_for_search
-    @kanji
-  end
-
+  attr_reader :kanji_for_search
+  attr_reader :kanji_for_display
   attr_reader :kana
-  # Returns an array of the English translations and meta information.
   attr_reader :english
 =begin # Those are not necessary yet.
   attr_reader :old_kana
@@ -80,7 +70,8 @@ class DaijirinEntry
 
   def marshal_load(data)
     @raw = nil
-    @kanji = nil
+    @kanji_for_search = nil
+    @kanji_for_display = nil
     @kana = nil
     @english = nil
 =begin # Those are not necessary yet.
@@ -142,14 +133,14 @@ class DaijirinEntry
     end
 
     @kana, s = s.split(' ', 2)
-    s = (s or "").strip
+    s = (s || '').strip
 
     @kana = cleanup_markup(@kana)
 
-    @kanji = split_capture!(s,KANJI_MATCHER,'%k%')
+    @kanji_for_search = split_capture!(s,KANJI_MATCHER,'%k%')
 
     # Process entries like 【掛(か)る・懸(か)る】
-    @kanji = @kanji.collect do |k|
+    @kanji_for_search = @kanji_for_search.collect do |k|
       k.split('・').map do |x|
         x.strip!
         f = x.split(KANJI_OPTIONAL_MATCHER)
@@ -165,7 +156,9 @@ class DaijirinEntry
         end
       end.flatten!
     end
-    @kanji.flatten!
+    @kanji_for_search.flatten!
+
+    @kanji_for_display = @kanji_for_search
 
     @english = split_capture!(s,ENGLISH_MATCHER,'%e%')
 
@@ -178,7 +171,7 @@ class DaijirinEntry
     @old_kana = (s.match(OLD_KANA_MATCHER) or [nil])[0]
 =end
 
-    @reference = @kanji[0] ? @kanji[0] : @kana
+    @reference = @kanji_for_search[0] || @kana
 
     # Sort parent entries by reading
     @sort_key_string = @kana
@@ -206,7 +199,7 @@ class DaijirinEntry
     equalized = kanji_split_equivalence(s)
 
     # Prepare to gather children kanji
-    @kanji = []
+    @kanji_for_search = []
 
     equalized.each do |variant|
       parse_braced_child_line(variant)
@@ -228,14 +221,20 @@ class DaijirinEntry
 
     @reference = template_form
 
-    @kanji << @parent.kana + s
+    # This probably will contain kanji anyway,
+    # so we don't add it as own @kana.
+    @kanji_for_search << @parent.kana + s
 
-    (@parent.kanji_for_search || []).each do |k|
-      @kanji << k + s
+    @parent.kanji_for_search.each do |k|
+      @kanji_for_search << k + s
     end
 
     # For search purposes, let's add the template form too
-    @kanji << template_form
+    @kanji_for_search << template_form
+
+    # Only output one meaningful kanji for child entries:
+    # either the first kanji form or the kana form..
+    @kanji_for_display = [@kanji_for_search[1] || @kanji_for_search[0]]
 
     # Sort child entries by parent key + the rest
     @sort_key_string = @parent.sort_key_string + s
@@ -440,7 +439,7 @@ class DaijirinEntry
 
   def split_capture!(s, pattern, substitution)
     result = []
-    s.gsub!(pattern) do |m|
+    s.gsub!(pattern) do |_|
       result << $1.strip
       substitution
     end
