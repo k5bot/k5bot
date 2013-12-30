@@ -68,45 +68,39 @@ class DaijirinConverter
         entry_lines.each_with_index do |lns, i|
           print '.' if 0 == i%1000
 
-          if lns[0][0..1] == '――'
-            next unless parent_entry
+          if lns[0].start_with?('――')
+            raise 'Child entry found but no parent entry is known.' unless parent_entry
+
             entry = DaijirinEntry.new(lns, parent_entry)
 
-            next unless entry.parse
+            entry.parse
 
             # Add current entry as a child, since it was parsed successfully
             parent_entry.add_child!(entry)
           else
             entry = DaijirinEntry.new(lns)
+
+            entry.parse
+
             parent_entry = entry
-
-            unless entry.parse
-              parent_entry = nil
-              next
-            end
           end
-
-          entry_added = false
 
           entry.kanji_for_search.each do |x|
             (@hash[:kanji][x] ||= []) << entry
-            entry_added = true
           end
 
           if entry.kana
             hiragana = hiragana(entry.kana)
             (@hash[:kana][hiragana] ||= []) << entry
-            entry_added = true
           end
 
           if entry.english
             entry.english.each do |x|
               (@hash[:english][x.downcase.strip] ||= []) << entry
-              entry_added = true
             end
           end
 
-          @all_entries << entry if entry_added
+          @all_entries << entry
         end
       end
     end

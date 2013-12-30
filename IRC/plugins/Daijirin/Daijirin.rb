@@ -160,7 +160,7 @@ See '.faq regexp'",
 
     # Pre-parse all entries
     @hash[:all].each do |entry|
-      raise "Failed to parse entry #{entry}" unless true == entry.parse
+      entry.parse
     end
   end
 end
