@@ -40,7 +40,6 @@ class DaijirinEntry
     @old_kana = nil
 =end
     @reference = nil
-    @info = nil
     @sort_key = nil
     @parsed = nil
   end
@@ -53,12 +52,7 @@ class DaijirinEntry
   attr_reader :old_kana
   attr_reader :accent
 =end
-  attr_reader :info
   attr_reader :reference
-
-  def to_lines
-    info.flatten
-  end
 
   def add_child!(child)
     @children = (@children || []) << child
@@ -82,7 +76,6 @@ class DaijirinEntry
     @old_kana = nil
 =end
     @reference = nil
-    @info = nil
     @sort_key = nil
     @parsed = nil
     @sort_key, @raw, @parent, @children = data
@@ -91,33 +84,7 @@ class DaijirinEntry
   def parse
     return if @parsed
 
-    parse_first_line(raw[0])
-
-    hierarchy = parse_rest_of_lines(raw[1..-1].join("\n"))
-
-    if hierarchy.instance_of?(Array)
-      # There are no nested entries at all,
-      # so convert it into hierarchy of one header-less text-array.
-      hierarchy = {'' => hierarchy}
-    end
-
-    # Prepare to prepending the first line.
-    # Ensure that initial header-less text array is existent.
-    unless hierarchy['']
-      hierarchy = hierarchy.to_a
-      hierarchy.unshift(['',[]])
-      hierarchy = Hash[hierarchy]
-    end
-
-    # We actually add the first line all over again, so that
-    # it will be printed with the lines of first entry.
-    hierarchy[''].unshift(raw[0])
-
-    blocks = hierarchy_to_blocks(hierarchy)
-
-    @info = blocks_to_subentries(blocks)
-
-    @info = @info.map {|lg| compact_xrefs(lg)}.to_a
+    parse_first_line(@raw[0])
 
     @parsed = true
   end
@@ -305,135 +272,6 @@ class DaijirinEntry
       omit.join('')
     else
       s
-    end
-  end
-
-  HEADERS = [
-      /^(□[一二三四五六七八九十]+□)/,
-      /^(■[一二三四五六七八九十]+■)/,
-      /^(（[\d１２３４５６７８９０]+）)/,
-      /^([❶❷❸❹❺❻❼❽❾❿⓫⓬⓭⓮⓯⓰⓱⓲⓳⓴])/,
-  ]
-
-  REPLACEMENTS = {
-      '（ア）' => '㋐',
-      '（イ）' => '㋑',
-      '（ウ）' => '㋒',
-      '（エ）' => '㋓',
-      '（オ）' => '㋔',
-  }
-
-  REPLACEMENTS_REGEX = Regexp.new(REPLACEMENTS.keys.map {|key| Regexp.escape(key)}.join('|'))
-
-  def do_replacements(s)
-    s.gsub(REPLACEMENTS_REGEX) do |match|
-      REPLACEMENTS[match]
-    end
-  end
-
-  # Parses the rest of lines into tree of hashes with headers as keys
-  def parse_rest_of_lines(s)
-    best_pos = s.length
-    top_header = nil
-
-    HEADERS.each do |header|
-      pos = s =~ header
-      if pos && (pos < best_pos)
-        best_pos = pos
-        top_header = header
-      end
-    end
-
-    unless top_header
-      return s.lines.map {|l| do_replacements(l.rstrip)}.to_a
-    end
-
-    key_value_array = s.split(top_header, -1).to_a
-
-    # There is a preamble, that has no header.
-    if key_value_array[0].empty?
-      # If it's empty, just remove it.
-      key_value_array.shift
-    else
-      # Otherwise, add empty header to it.
-      key_value_array.unshift('')
-    end
-
-    #noinspection RubyHashKeysTypesInspection
-    intermediate = Hash[*key_value_array]
-
-    result = intermediate.map do |key, sub|
-      [key, parse_rest_of_lines(sub)]
-    end
-
-    Hash[result]
-  end
-
-  # Convert entry hierarchy into blocks in the form of
-  # [string of concatenated hierarchy headers, corresponding lines]
-  def hierarchy_to_blocks(info)
-    return [['', info]] if info.instance_of?(Array)
-
-    result = info.each_pair.map do |key, sub|
-      blocks = hierarchy_to_blocks(sub)
-
-      blocks.each do |prefix, _|
-        prefix << key
-      end
-
-      first_block_lines = blocks[0][1]
-      first_block_lines[0] = key + first_block_lines[0]
-
-      blocks
-    end
-
-    result.flatten(1)
-  end
-
-  # Groups prefixed blocks together
-  # into subentries (text that is output together).
-  # Everything from the beginning down to and including
-  # the first entry in the lowest-level list
-  # will be in the same subentry,
-  # thanks to key postfix checking.
-  def blocks_to_subentries(blocks)
-    prev_key = ''
-    result = []
-
-    accumulator = []
-    blocks.each do |key, lines|
-      unless key.end_with?(prev_key)
-        result << accumulator
-        accumulator = []
-      end
-      accumulator += lines
-      prev_key = key
-    end
-
-    result << accumulator unless accumulator.empty?
-
-    result
-  end
-
-  def compact_xrefs(lines_group)
-    replacement = nil
-
-    lines_group.map do |line|
-      if line.match(/^\s*[→⇔]/)
-        if replacement
-          replacement << ', '
-          replacement << line
-          nil
-        else
-          replacement = line.dup
-          replacement
-        end
-      else
-        replacement = nil
-        line
-      end
-    end.delete_if do |line|
-      line.nil?
     end
   end
 
