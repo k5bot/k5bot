@@ -228,19 +228,17 @@ class DaijirinEntry
 
     @reference = template_form
 
-    if @parent.kana
-      @kanji << "#{@parent.kana}#{s}"
-    end
+    @kanji << @parent.kana + s
 
     (@parent.kanji_for_search || []).each do |k|
-      @kanji << "#{k}#{s}"
+      @kanji << k + s
     end
 
     # For search purposes, let's add the template form too
     @kanji << template_form
 
     # Sort child entries by parent key + the rest
-    @sort_key_string = "#{@parent.sort_key_string}#{s}"
+    @sort_key_string = @parent.sort_key_string + s
   end
 
   KANJI_EQUIVALENCE_MATCHER=/=([^=\|>]+)\|([^=\|>]+)>/
