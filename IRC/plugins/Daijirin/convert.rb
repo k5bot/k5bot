@@ -39,71 +39,69 @@ class DaijirinConverter
     @katakana = @kata2hira.keys.sort_by{|x| -x.length}
   end
 
-    def read
-      puts @source_file
+  def read
+    File.open(@source_file, 'r', :encoding => 'UTF-8') do |io|
 
-      File.open(@source_file, 'r', :encoding => 'UTF-8') do |io|
+      # Extract and group lines separated by line of minuses
+      entry_lines = Enumerator.new() do |y|
+        lines = []
 
-        # Extract and group lines separated by line of minuses
-        entry_lines = Enumerator.new() do |y|
+        io.each_line do |l|
+          unless l.start_with?('----')
+            lines << l.chomp
+            next
+          end
+
+          y << lines
+
           lines = []
-
-          io.each_line do |l|
-            unless l.start_with?('----')
-              lines << l.chomp
-              next
-            end
-
-            y << lines
-
-            lines = []
-          end
-
-          # Push last accumulated if any
-          y << lines unless lines.empty?
         end
 
-        parent_entry = nil
+        # Push last accumulated if any
+        y << lines unless lines.empty?
+      end
 
-        entry_lines.each_with_index do |lns, i|
-          print '.' if 0 == i%1000
+      parent_entry = nil
 
-          if lns[0].start_with?('――')
-            raise 'Child entry found but no parent entry is known.' unless parent_entry
+      entry_lines.each_with_index do |lns, i|
+        print '.' if 0 == i%1000
 
-            entry = DaijirinEntry.new(lns, parent_entry)
+        if lns[0].start_with?('――')
+          raise 'Child entry found but no parent entry is known.' unless parent_entry
 
-            entry.parse
+          entry = DaijirinEntry.new(lns, parent_entry)
 
-            # Add current entry as a child, since it was parsed successfully
-            parent_entry.add_child!(entry)
-          else
-            entry = DaijirinEntry.new(lns)
+          entry.parse
 
-            entry.parse
+          # Add current entry as a child, since it was parsed successfully
+          parent_entry.add_child!(entry)
+        else
+          entry = DaijirinEntry.new(lns)
 
-            parent_entry = entry
-          end
+          entry.parse
 
-          entry.kanji_for_search.each do |x|
-            (@hash[:kanji][x] ||= []) << entry
-          end
-
-          if entry.kana
-            hiragana = hiragana(entry.kana)
-            (@hash[:kana][hiragana] ||= []) << entry
-          end
-
-          if entry.english
-            entry.english.each do |x|
-              (@hash[:english][x.downcase.strip] ||= []) << entry
-            end
-          end
-
-          @all_entries << entry
+          parent_entry = entry
         end
+
+        entry.kanji_for_search.each do |x|
+          (@hash[:kanji][x] ||= []) << entry
+        end
+
+        if entry.kana
+          hiragana = hiragana(entry.kana)
+          (@hash[:kana][hiragana] ||= []) << entry
+        end
+
+        if entry.english
+          entry.english.each do |x|
+            (@hash[:english][x.downcase.strip] ||= []) << entry
+          end
+        end
+
+        @all_entries << entry
       end
     end
+  end
 
   def sort
     count = 0
