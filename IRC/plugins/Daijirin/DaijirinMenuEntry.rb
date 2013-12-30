@@ -66,10 +66,7 @@ class DaijirinMenuEntry < MenuNode
   end
 
   def format_references(entry)
-    if entry.children
-      yield entry.children.map { |c| "→ #{c.reference}" }.join(', ')
-    elsif entry.parent
-      yield "→#{entry.parent.reference}"
-    end
+    refs = entry.references
+    yield(refs) if refs
   end
 end

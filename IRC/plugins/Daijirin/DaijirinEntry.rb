@@ -119,8 +119,6 @@ class DaijirinEntry
 
     @info = @info.map {|lg| compact_xrefs(lg)}.to_a
 
-    post_parse()
-
     @parsed = true
   end
 
@@ -469,9 +467,5 @@ class DaijirinEntry
     s.gsub!('-', '')
     s.gsub!('∘', '')
     s
-  end
-
-  def post_parse
-    @raw = nil # Memory optimization. Overridden in convert.rb
   end
 end

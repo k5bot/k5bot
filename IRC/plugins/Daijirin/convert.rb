@@ -12,14 +12,17 @@
 $VERBOSE = true
 
 require 'yaml'
+
+require 'rubygems'
+require 'bundler/setup'
+require 'sequel'
+
+require_relative '../../SequelHelpers'
 require_relative 'DaijirinEntry'
 
-class DaijirinEntry
-  def post_parse
-    # Do nothing. This is to prevent @raw cleanup after parsing,
-    # b/c we need to marshal it first.
-  end
-end
+include SequelHelpers
+
+RAW_SIZE = 8192
 
 class DaijirinConverter
   attr_reader :hash
@@ -28,8 +31,6 @@ class DaijirinConverter
     @source_file = source_file
     @hash = {}
     @hash[:kanji] = {}
-    @hash[:kana] = {}
-    @hash[:english] = {}
     @all_entries = []
     @hash[:all] = @all_entries
     @hash[:version] = DaijirinEntry::VERSION
@@ -71,69 +72,173 @@ class DaijirinConverter
 
           entry = DaijirinEntry.new(lns, parent_entry)
 
-          entry.parse
-
-          # Add current entry as a child, since it was parsed successfully
           parent_entry.add_child!(entry)
         else
           entry = DaijirinEntry.new(lns)
 
-          entry.parse
-
           parent_entry = entry
         end
 
+        entry.parse
+
+        @all_entries << entry
         entry.kanji_for_search.each do |x|
           (@hash[:kanji][x] ||= []) << entry
         end
-
+=begin
         if entry.kana
           hiragana = hiragana(entry.kana)
           (@hash[:kana][hiragana] ||= []) << entry
         end
-
         if entry.english
           (@hash[:english][entry.english] ||= []) << entry
         end
-
-        @all_entries << entry
+=end
       end
     end
   end
 
   def sort
     count = 0
-    @all_entries .sort_by!{|e| e.sort_key_string }
-    @all_entries .each do |e|
+    @all_entries.sort_by!{|e| e.sort_key_string }
+    @all_entries.each do |e|
       e.sort_key = count
-      # Take this opportunity to reorder all children,
-      # so that they'll be output nicely in reference lists.
-      e.children.sort_by!{|e| e.reference } if e.children
       count += 1
     end
   end
 
-  # Based on method from ../Language/Language.rb
+  # Duplicated method from ../Language/Language.rb
   def hiragana(katakana)
+    return katakana unless katakana =~ /[\u30A0-\u30FF\uFF61-\uFF9D\u31F0-\u31FF]/
     hiragana = katakana.dup
     @katakana.each{|k| hiragana.gsub!(k, @kata2hira[k])}
-
     hiragana
   end
 end
 
-ec = DaijirinConverter.new("#{(File.dirname __FILE__)}/daijirin")
+def marshal_dict(dict)
+  ec = DaijirinConverter.new("#{(File.dirname __FILE__)}/#{dict}")
 
-print "Indexing Daijirin..."
-ec.read
-puts "done."
+  print "Indexing #{dict.upcase}..."
+  ec.read
+  puts 'done.'
 
-print "Sorting Daijirin..."
-ec.sort
-puts "done."
+  print "Sorting #{dict.upcase}..."
+  ec.sort
+  puts 'done.'
 
-print "Marshalling hash..."
-File.open("#{(File.dirname __FILE__)}/daijirin.marshal", 'w') do |io|
-  Marshal.dump(ec.hash, io)
+  print "Marshalling #{dict.upcase}..."
+
+  db = database_connect("sqlite://#{dict}.sqlite", :encoding => 'utf8')
+
+  db.drop_table? :daijirin_entry_to_kanji
+  db.drop_table? :daijirin_kanji
+  db.drop_table? :daijirin_entry
+  db.drop_table? :daijirin_version
+
+  db.create_table :daijirin_version do
+    primary_key :id
+  end
+
+  db.create_table :daijirin_entry do
+    primary_key :id
+
+    String :kanji_for_display, :size => 127, :null => false
+    String :kana, :size => 127, :null => true
+    String :kana_norm, :size => 127, :null => true
+    String :english, :size => 127, :null => true
+    String :references, :size => 127, :null => true
+
+    String :raw, :size => RAW_SIZE, :null => false
+  end
+
+  db.create_table :daijirin_kanji do
+    primary_key :id
+    String :text, :size => 127, :null => false, :unique => true
+  end
+
+  db.create_table :daijirin_entry_to_kanji do
+    foreign_key :daijirin_entry_id, :daijirin_entry, :null => false
+    foreign_key :daijirin_kanji_id, :daijirin_kanji, :null => false
+  end
+
+  db.transaction do
+    id_map = {}
+
+    daijirin_version_dataset = db[:daijirin_version]
+
+    daijirin_version_dataset.insert(
+        :id => ec.hash[:version],
+    )
+
+    daijirin_entry_dataset = db[:daijirin_entry]
+
+    print '(entries)'
+
+    ec.hash[:all].each_with_index do |entry, i|
+      print '.' if 0 == i%1000
+
+      references = if entry.children
+                     entry.children.map { |c| '→ ' + c.reference }.sort.join(', ')
+                   elsif entry.parent
+                     '→' + entry.parent.reference
+                   end
+
+      entry_raw = entry.raw.join("\n")
+      raise "raw size exceeded, #{entry}" unless entry_raw.size < RAW_SIZE
+
+      entry_id = daijirin_entry_dataset.insert(
+          :kanji_for_display => entry.kanji_for_display.join(','),
+          :kana => entry.kana,
+          :kana_norm => (ec.hiragana(entry.kana) if entry.kana),
+          :english => entry.english,
+          :references => references,
+          :raw => entry_raw,
+      )
+      id_map[entry] = entry_id
+    end
+
+    daijirin_kanji_dataset = db[:daijirin_kanji]
+    daijirin_entry_to_kanji_dataset = db[:daijirin_entry_to_kanji]
+
+    to_import = []
+
+    print '(kanji collection)'
+
+    ec.hash[:kanji].each do |keyword, entries|
+      entry_kanji_id = daijirin_kanji_dataset.insert(
+          :text => keyword.to_s,
+      )
+
+      print '.' if 0 == entry_kanji_id%1000
+
+      entries.each do |e|
+        to_import << [id_map[e], entry_kanji_id]
+      end
+    end
+
+    to_import.sort!
+
+    print '(kanji import)'
+    daijirin_entry_to_kanji_dataset.import([:daijirin_entry_id, :daijirin_kanji_id], to_import)
+    print '.'
+  end
+
+  print '(indices)'
+
+  db.add_index(:daijirin_entry, :kana_norm)
+  print '.'
+  db.add_index(:daijirin_entry, :english)
+  print '.'
+
+  db.add_index(:daijirin_entry_to_kanji, :daijirin_entry_id)
+  print '.'
+  db.add_index(:daijirin_entry_to_kanji, :daijirin_kanji_id)
+  print '.'
+
+  database_disconnect(db)
+
+  puts 'done.'
 end
-puts "done."
+
+marshal_dict('daijirin')
