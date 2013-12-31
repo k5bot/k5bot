@@ -86,6 +86,26 @@ and ISO-3166 country names (e.g. US, JP)",
     when :utime
       time = Time.now
       msg.reply utime(time)
+    when :new_year
+      time = Time.now
+      msg.reply(new_year_celebrators(time))
+    end
+  end
+
+  def new_year_celebrators(time)
+    time = Time.at(time).utc # convert time to UTC, or strftime won't work properly
+
+    celebrating = TZInfo::Country.all.map do |country|
+      has_new_year = country.zones.any? do |zone|
+        '001 00'.eql?(zone.strftime('%j %H', time))
+      end
+      country.name if has_new_year
+    end.reject(&:nil?)
+
+    if celebrating.empty?
+      'No countries celebrate at the moment'
+    else
+      celebrating.sort.join(',')
     end
   end
 
