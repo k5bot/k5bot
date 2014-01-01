@@ -4,11 +4,18 @@
 
 # Daijirin plugin
 
+require 'rubygems'
+require 'bundler/setup'
+require 'sequel'
+
 require_relative '../../IRCPlugin'
+require_relative '../../SequelHelpers'
 require_relative 'DaijirinEntry'
 require_relative 'DaijirinMenuEntry'
 
 class Daijirin < IRCPlugin
+  include SequelHelpers
+
   Description = "A Daijirin plugin."
   Commands = {
     :dj => "looks up a Japanese word in Daijirin",
@@ -24,15 +31,22 @@ See '.faq regexp'",
 
     @l = @plugin_manager.plugins[:Language]
     @m = @plugin_manager.plugins[:Menu]
-    load_daijirin
+
+    @db = database_connect("sqlite://#{(File.dirname __FILE__)}/daijirin.sqlite", :encoding => 'utf8')
+
+    @hash = load_dict(@db)
   end
 
   def beforeUnload
     @m.evict_plugin_menus!(self.name)
 
-    @l = nil
-    @m = nil
     @hash = nil
+
+    database_disconnect(@db)
+    @db = nil
+
+    @m = nil
+    @l = nil
 
     unload_helper_class(:DaijirinMenuEntry)
     unload_helper_class(:DaijirinEntry)
@@ -48,11 +62,25 @@ See '.faq regexp'",
       return unless word
       l_kana = @l.kana(word)
       l_hiragana = @l.hiragana(word)
-      reply_with_menu(msg, generate_menu(format_description_unambiguous(lookup([l_kana]|[l_hiragana]|[word], [:kanji, :kana])), "\"#{word}\" #{"(\"#{l_kana}\") " unless word.eql?(l_kana)}in Daijirin"))
+      lookup = lookup(
+          [l_kana] | [l_hiragana] | [word],
+          [
+              Sequel.qualify(:daijirin_kanji, :text),
+              Sequel.qualify(:daijirin_entry, :kana_norm)
+          ],
+          @hash[:daijirin_entries].left_join(:daijirin_entry_to_kanji, :daijirin_entry_id => :id).left_join(:daijirin_kanji, :id => :daijirin_kanji_id)
+      )
+      reply_with_menu(msg, generate_menu(format_description_unambiguous(lookup), "\"#{word}\" #{"(\"#{l_kana}\") " unless word.eql?(l_kana)}in Daijirin"))
     when :de
       word = msg.tail
       return unless word
-      reply_with_menu(msg, generate_menu(format_description_unambiguous(lookup([word], [:english])), "\"#{word}\" in Daijirin"))
+      lookup = lookup(
+          [word],
+          [
+              Sequel.qualify(:daijirin_entry, :english)
+          ]
+      )
+      reply_with_menu(msg, generate_menu(format_description_unambiguous(lookup), "\"#{word}\" in Daijirin"))
     when :djr
       word = msg.tail
       return unless word
@@ -95,6 +123,7 @@ See '.faq regexp'",
                     else
                       "<invalid entry>"
                     end
+
       DaijirinMenuEntry.new(description, e)
     end
 
@@ -102,22 +131,30 @@ See '.faq regexp'",
   end
 
   def reply_with_menu(msg, result)
-    @m.put_new_menu(self.name,
-                    result,
-                    msg)
+    @m.put_new_menu(
+        self.name,
+        result,
+        msg
+    )
   end
 
-  # Looks up a word in specified hash(es) and returns the result as an array of entries
-  def lookup(words, hashes)
-    lookup_result = []
-    hashes.each do |h|
-      words.each do |word|
-        entry_array = @hash[h][word]
-        lookup_result |= entry_array if entry_array
-      end
+
+  # Looks up all entries that have each given word in any
+  # of the specified columns and returns the result as an array of entries
+  def lookup(words, columns, table = @hash[:daijirin_entries])
+    condition = Sequel.|(*words.map do |word|
+      Sequel.or(columns.map { |column| [column, word] })
+    end)
+
+    dataset  = table.where(condition)
+
+    standard_order(dataset).select(
+        Sequel.qualify(:daijirin_entry, :kanji_for_display),
+        Sequel.qualify(:daijirin_entry, :kana),
+        Sequel.qualify(:daijirin_entry, :id),
+    ).to_a.map do |entry|
+      DaijirinLazyEntry.new(table, entry[:id], entry)
     end
-    sort_result(lookup_result)
-    lookup_result
   end
 
   def lookup_complex_regexp(complex_regexp)
@@ -148,20 +185,56 @@ See '.faq regexp'",
     lookup_result
   end
 
-  def sort_result(lr)
-    lr.sort_by! { |e| e.sort_key } if lr
+  def standard_order(dataset)
+    dataset.order_by(Sequel.qualify(:daijirin_entry, :id)).group_by(Sequel.qualify(:daijirin_entry, :id))
   end
 
-  def load_daijirin
-    File.open("#{(File.dirname __FILE__)}/daijirin.marshal", 'r') do |io|
-      @hash = Marshal.load(io)
+  def load_dict(db)
+    daijirin_version = db[:daijirin_version]
+    daijirin_entries = db[:daijirin_entry]
+    daijirin_kanji = db[:daijirin_kanji]
+
+    versions = daijirin_version.to_a.map {|x| x[:id]}
+    unless versions.include?(DaijirinEntry::VERSION)
+      raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[DaijirinEntry::VERSION].inspect} of plugin. Rerun convert.rb."
     end
 
-    raise "The daijirin.marshal file is outdated. Rerun convert.rb." unless @hash[:version] == DaijirinEntry::VERSION
+    # Load all lazy entries for regexp search by kanji_for_search and kana fields
+    daijirin_kanji_join = daijirin_kanji.join(:daijirin_entry_to_kanji, :daijirin_kanji_id => :id)
 
-    # Pre-parse all entries
-    @hash[:all].each do |entry|
-      entry.parse
+    kanji_search = daijirin_kanji_join.select(:text, :daijirin_entry_id).to_a
+
+    kanji_search = kanji_search.each_with_object({}) do |row, h|
+      (h[row[:daijirin_entry_id]] ||= []) << row[:text]
+    end
+
+    regexpable = daijirin_entries.select(:kanji_for_display, :kana, :id).to_a
+    regexpable = regexpable.map do |entry|
+      entry[:kanji_for_search] = kanji_search[entry[:id]]
+      DaijirinLazyEntry.new(daijirin_entries, entry[:id], entry)
+    end
+
+    {
+        :daijirin_entries => daijirin_entries,
+        :daijirin_kanji_join => daijirin_kanji_join,
+        :all => regexpable,
+    }
+  end
+
+  class DaijirinLazyEntry
+    EMPTY_ARRAY = [].freeze
+
+    attr_reader :kanji_for_display, :kanji_for_search, :kana
+    lazy_dataset_field :references, Sequel.qualify(:daijirin_entry, :id)
+    lazy_dataset_field :raw, Sequel.qualify(:daijirin_entry, :id)
+
+    def initialize(dataset, id, pre_init)
+      @dataset = dataset
+      @id = id
+
+      @kanji_for_display = pre_init[:kanji_for_display]
+      @kanji_for_search = pre_init[:kanji_for_search] || EMPTY_ARRAY
+      @kana = pre_init[:kana]
     end
   end
 end
