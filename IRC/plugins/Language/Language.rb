@@ -236,7 +236,7 @@ class Language < IRCPlugin
                   # equivalent to specifying || operator with
                   # identical conditions on kanji and kana.
                   :union
-                when 2
+                when 2, 3
                   # when && operator is used, user wants only
                   # those entries, that simultaneously satisfied
                   # the condition on kanji and the condition on kana.

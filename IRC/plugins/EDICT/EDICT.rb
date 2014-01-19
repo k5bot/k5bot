@@ -168,7 +168,7 @@ See '.faq regexp'",
 
   def lookup_complex_regexp(complex_regexp)
     operation = complex_regexp.shift
-    regexps_kanji, regexps_kana = complex_regexp
+    regexps_kanji, regexps_kana, regexps_english = complex_regexp
 
     lookup_result = []
 
@@ -187,6 +187,10 @@ See '.faq regexp'",
         next unless regexps_kanji.all? { |regex| regex =~ word_kanji }
         word_kana = entry.reading
         next unless regexps_kana.all? { |regex| regex =~ word_kana }
+        if regexps_english
+          text_english = entry.raw.split('/', 2)[1] || ''
+          next unless regexps_english.all? { |regex| regex =~ text_english }
+        end
         lookup_result << [entry, !entry.simple_entry, true]
       end
     end
