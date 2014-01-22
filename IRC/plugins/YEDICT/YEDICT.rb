@@ -18,6 +18,7 @@ class YEDICT < IRCPlugin
   Description = 'A YEDICT plugin.'
   Commands = {
     :cn => 'looks up a Cantonese word in YEDICT',
+    :cnen => 'looks up an English word in YEDICT',
   }
   Dependencies = [ :Language, :Menu ]
 
@@ -55,6 +56,11 @@ class YEDICT < IRCPlugin
       return unless word
       yedict_lookup = lookup([word], [:cantonese, :jyutping])
       reply_with_menu(msg, generate_menu(format_description_unambiguous(yedict_lookup), "\"#{word}\" in YEDICT"))
+    when :cnen
+      word = msg.tail
+      return unless word
+      yedict_lookup = keyword_lookup(split_into_keywords(word))
+      reply_with_menu(msg, generate_menu(format_description_show_hanzi(yedict_lookup), "\"#{word}\" in YEDICT"))
     end
   end
 
