@@ -9,8 +9,11 @@ require 'set'
 class YEDICTEntry
   VERSION = 1
 
-  attr_reader :raw, :simple_entry
+  attr_reader :raw
   attr_accessor :sort_key
+
+  attr_reader :cantonese,
+              :jyutping
 
   def initialize(raw)
     @raw = raw
@@ -23,21 +26,12 @@ class YEDICTEntry
     @sort_key = nil
   end
 
-  def cantonese
-    return @cantonese if @cantonese
-    cantonese = @raw[/^([^\s]*)\s*[\s]+\s*[^\[]+\[[^\]]+[^\/]+.*/, 1]
-    @cantonese = cantonese && cantonese.strip
-  end
+  def parse
+    m = @raw.match(/^([^\s]+)[^\[]*\[([^\]]*)/)
+    raise "Match failed on #{@raw}" unless m
 
-  def jyutping
-    return @jyutping if @jyutping
-    jyutping = @raw[/^[^\s]*\s*[\s]+\s*[^\[]+\[([^\]]+)[^\/]+.*/, 1]
-    @jyutping = if jyutping && !jyutping.empty?
-                 jyutping
-               else
-                 @simple_entry = true
-                 cantonese
-               end
+    @cantonese = m[1].strip
+    @jyutping = m[2].strip
   end
 
   # Returns an array of the English translations and meta information.

@@ -37,6 +37,8 @@ class YEDICTConverter
 
         entry = YEDICTEntry.new(l.strip)
 
+        entry.parse
+
         @all_entries << entry
         entry.keywords.each do |k|
           (@hash[:keywords][k] ||= []) << entry
