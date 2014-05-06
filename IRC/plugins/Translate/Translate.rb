@@ -192,7 +192,7 @@ class Translate < IRCPlugin
     @l.containsJapanese?(text) ? from_ja : to_ja
   end
 
-  GOOGLE_BASE_URL = 'http://translate.google.com'
+  GOOGLE_BASE_URL = 'https://translate.google.com'
 
   def google_translate(text, lp)
     lp = auto_detect_ja_lp(text, %w(auto ja), %w(ja en)) unless lp
