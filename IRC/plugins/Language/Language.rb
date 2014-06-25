@@ -42,12 +42,15 @@ class Language < IRCPlugin
   HANGUL_S_COUNT = HANGUL_L_COUNT * HANGUL_N_COUNT # 11172
 
   def afterLoad
-    @rom2kana = YAML.load_file("#{plugin_root}/rom2kana.yaml") rescue nil
-    @rom = @rom2kana.keys.sort_by{|x| -x.length}
-    @kata2hira = YAML.load_file("#{plugin_root}/kata2hira.yaml") rescue nil
-    @katakana = @kata2hira.keys.sort_by{|x| -x.length}
-    @hira2kata = @kata2hira.invert
-    @hiragana = @hira2kata.keys.sort_by{|x| -x.length}
+    @rom2kana = Language::sort_hash(
+        YAML.load_file("#{plugin_root}/rom2kana.yaml")
+    ) {|k, _| -k.length}
+    @kata2hira = Language::sort_hash(
+        YAML.load_file("#{plugin_root}/kata2hira.yaml")
+    ) {|k, _| -k.length}
+    @hira2kata = Language::sort_hash(
+        @kata2hira.invert
+    ) {|k, _| -k.length}
 
     @unicode_blocks, @unicode_desc = load_unicode_blocks("#{plugin_root}/unicode_blocks.txt")
   end
@@ -64,26 +67,30 @@ class Language < IRCPlugin
 
   def kana(text)
     kana = text.dup.downcase
-    @rom.each{|r| kana.gsub!(r, @rom2kana[r])}
+    @rom2kana.each{|r, h| kana.gsub!(r, h)}
     kana
   end
 
   def romazi_to_kana(text)
     kana = text.dup
-    @rom.each do |r|
+    @rom2kana.each do |r, h|
       kana.gsub!(/#{Regexp.escape(r)}/i) do |k|
-        hira = @rom2kana[r].dup
-        @hiragana.each { |h| hira.gsub!(h, @hira2kata[h]) } unless k[0].eql?(r[0])
-        hira
+        k[0].eql?(r[0]) ? h : hiragana_to_katakana(h)
       end
     end
     kana
   end
 
+  def hiragana_to_katakana(hiragana)
+    katakana = hiragana.dup
+    @hira2kata.each { |h, k| katakana.gsub!(h, k) }
+    katakana
+  end
+
   def hiragana(katakana)
     return katakana unless containsKatakana?(katakana)
     hiragana = katakana.dup
-    @katakana.each{|k| hiragana.gsub!(k, @kata2hira[k])}
+    @kata2hira.each{|k, h| hiragana.gsub!(k, h)}
     hiragana
   end
 
@@ -326,5 +333,9 @@ class Language < IRCPlugin
     # otherwise, index of the first X from the start, such that X<=key
     # this
     i_min
+  end
+
+  def self.sort_hash(h, &b)
+    Hash[h.sort_by(&b)]
   end
 end
