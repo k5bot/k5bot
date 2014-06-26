@@ -5,6 +5,7 @@
 # Language plugin
 
 require 'yaml'
+require 'ostruct'
 require_relative '../../IRCPlugin'
 
 #noinspection RubyLiteralArrayInspection
@@ -52,6 +53,10 @@ class Language < IRCPlugin
         @kata2hira.invert
     ) {|k, _| -k.length}
 
+    @rom2kana = Language::hash_to_replacer(@rom2kana)
+    @kata2hira = Language::hash_to_replacer(@kata2hira)
+    @hira2kata = Language::hash_to_replacer(@hira2kata)
+
     @unicode_blocks, @unicode_desc = load_unicode_blocks("#{plugin_root}/unicode_blocks.txt")
   end
 
@@ -66,32 +71,30 @@ class Language < IRCPlugin
   end
 
   def kana(text)
-    kana = text.dup.downcase
-    @rom2kana.each{|r, h| kana.gsub!(r, h)}
-    kana
+    text.downcase.gsub(@rom2kana.regex) do |r|
+      @rom2kana.mapping[r]
+    end
   end
 
   def romazi_to_kana(text)
-    kana = text.dup
-    @rom2kana.each do |r, h|
-      kana.gsub!(/#{Regexp.escape(r)}/i) do |k|
-        k[0].eql?(r[0]) ? h : hiragana_to_katakana(h)
-      end
+    text.gsub(@rom2kana.iregex) do |k|
+      r = k.downcase
+      h = @rom2kana.mapping[r]
+      k[0].eql?(r[0]) ? h : hiragana_to_katakana(h)
     end
-    kana
   end
 
-  def hiragana_to_katakana(hiragana)
-    katakana = hiragana.dup
-    @hira2kata.each { |h, k| katakana.gsub!(h, k) }
-    katakana
+  def hiragana_to_katakana(text)
+    text.gsub(@hira2kata.regex) do |h|
+      @hira2kata.mapping[h]
+    end
   end
 
-  def hiragana(katakana)
-    return katakana unless containsKatakana?(katakana)
-    hiragana = katakana.dup
-    @kata2hira.each{|k, h| hiragana.gsub!(k, h)}
-    hiragana
+  def hiragana(text)
+    return text unless containsKatakana?(text)
+    text.gsub(@kata2hira.regex) do |k|
+      @kata2hira.mapping[k]
+    end
   end
 
   # This method is a slightly modified copy of the implementation found at:
@@ -337,5 +340,18 @@ class Language < IRCPlugin
 
   def self.sort_hash(h, &b)
     Hash[h.sort_by(&b)]
+  end
+
+  def self.array_to_regex(arr, *options)
+    regexp_join = arr.map { |x| Regexp.quote(x) }.join(')|(?:')
+    Regexp.new("(?:#{regexp_join})", *options)
+  end
+
+  def self.hash_to_replacer(h)
+    OpenStruct.new(
+        :mapping => h,
+        :regex => Language::array_to_regex(h.keys),
+        :iregex => Language::array_to_regex(h.keys, Regexp::IGNORECASE),
+    )
   end
 end
