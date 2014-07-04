@@ -123,6 +123,7 @@
       - "#{receiver} has no karma."
       :matchers:
       - :regexp: '#{receiver}\s*\+[\+1]'
+        :multi: 3
         :receiver_delta: 1
         :response:
         - "#{receiver}++!"
