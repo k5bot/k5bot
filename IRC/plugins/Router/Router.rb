@@ -32,6 +32,8 @@ class Router < IRCPlugin
           ALLOW_COMMAND => "removes existing ban rule or adds ban exception. #{PRIVATE_RESTRICTION_DISCLAIMER}",
           LIST_COMMAND => "shows currently effective access list. #{PRIVATE_RESTRICTION_DISCLAIMER}",
           TEST_COMMAND => "matches given 'nick!ident@host' against access lists. #{PRIVATE_RESTRICTION_DISCLAIMER}",
+          META_ADD_COMMAND => "adds to a given access list a given mask. #{PRIVATE_RESTRICTION_DISCLAIMER}",
+          META_DEL_COMMAND => "deletes from a given access list a given mask. #{PRIVATE_RESTRICTION_DISCLAIMER}",
           OP_COMMAND => "applies +o to calling user on current channel. #{RESTRICTION_DISCLAIMER}",
           DEOP_COMMAND => "applies -o to calling user on current channel. #{RESTRICTION_DISCLAIMER}",
       }
