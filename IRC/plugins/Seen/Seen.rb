@@ -35,13 +35,32 @@ uses .seen command on you. Example: .seenwhile drinking beer",
     @storage.write('seen', @seen)
   end
 
+  def on_ctcp_privmsg(msg)
+    # only remember public appearances
+    return if msg.private?
+
+    msg.ctcp.each do |ctcp|
+      next if ctcp.command != :ACTION
+
+      update_seen_info(msg.user, {
+          :time => msg.timestamp,
+          :channel => msg.channelname,
+          :nick => msg.nick,
+          :message => ctcp.raw,
+          :type => :act,
+      })
+    end
+  end
+
   def on_privmsg(msg)
     # only remember public appearances
     update_seen_info(msg.user, {
         :time => msg.timestamp,
         :channel => msg.channelname,
         :nick => msg.nick,
-        :message => msg.message}) unless msg.private?
+        :message => msg.message,
+        :type => :msg,
+    }) unless msg.private?
 
     case msg.bot_command
     when :seen
@@ -67,21 +86,38 @@ uses .seen command on you. Example: .seenwhile drinking beer",
         seen_data = get_seen_info(sought_user)
         if seen_data && seen_data[:time]
           as = format_ago_string(seen_data[:time])
+
           if seen_data[:channel] && msg.channelname
             in_this_channel = seen_data[:channel] == msg.channelname
             cs = in_this_channel ? 'in this channel' : 'in another channel'
-            m = in_this_channel && seen_data[:message] && ('saying: ' + truncate(seen_data[:message], 80))
+            m = in_this_channel && seen_data[:message] && truncate(seen_data[:message], 80)
           else
             cs = nil
             m = nil
           end
-          # If we have both seen-while text and user message, connect them with 'and'
-          m_tmp = [seen_data[:while], m].reject {|x| !x}.to_a.join(' and ')
-          # Don't add excess trailing dot, if we have user message coming last.
-          # Don't add leading space, if we have nothing else to type.
-          m = "#{' ' + m_tmp unless m_tmp.empty?}#{'.' unless m}"
 
-          msg.reply("#{sought_user.nick} was last seen #{as + ' ' if as}#{cs + ' ' if cs}".rstrip + m)
+          sw = seen_data[:while]
+
+          if m
+            case seen_data[:type]
+              when :act
+                # Ensure that whatever sentence comes before ends with '.'
+                m = '. ' + sought_user.nick + ' ' + m
+              else # :msg
+                m = ' saying: ' + m
+                # If we have both seen-while text and user message, connect them with 'and'
+                m = ' and' + m if sw
+            end
+          else
+            # Add trailing dot, if we have no user message coming last.
+            m = '.'
+          end
+
+          reply = [sought_user.nick, 'was last seen', as, cs, sw].select {|x| x}.join(' ')
+
+          reply += m
+
+          msg.reply(reply)
         else
           msg.reply("#{msg.nick}: I have not seen #{sought_user.nick}.")
         end
