@@ -39,3 +39,6 @@ gem 'webrick', :group => :WebBot
 # for EDICT plugin
 gem 'sequel', :group => :EDICT
 gem 'sqlite3', :group => :EDICT
+
+# for Googler plugin
+gem 'google-search', :group => :Googler

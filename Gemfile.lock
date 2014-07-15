@@ -22,6 +22,8 @@ GEM
   specs:
     addressable (2.3.5)
     atomic (1.1.14)
+    google-search (1.0.3)
+      json
     json (1.8.1)
     mini_portile (0.5.2)
     nokogiri (1.6.1)
@@ -42,6 +44,7 @@ PLATFORMS
 DEPENDENCIES
   addressable
   eb!
+  google-search
   json
   mecab-ruby!
   nokogiri
