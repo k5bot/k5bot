@@ -60,7 +60,7 @@ See '.faq regexp'",
     when :dj
       word = msg.tail
       return unless word
-      l_kana = @l.kana(word)
+      l_kana = @l.romaji_to_hiragana(word)
       l_hiragana = @l.hiragana(word)
       lookup = lookup(
           [l_kana] | [l_hiragana] | [word],

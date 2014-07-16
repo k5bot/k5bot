@@ -60,7 +60,7 @@ See '.faq regexp'",
     when :jn
       word = msg.tail
       return unless word
-      l_kana = @l.kana(word)
+      l_kana = @l.romaji_to_hiragana(word)
       enamdict_lookup = lookup([l_kana], [:japanese, :reading_norm])
       reply_with_menu(msg, generate_menu(format_description_unambiguous(enamdict_lookup), "\"#{word}\" #{"(\"#{l_kana}\") " unless word.eql?(l_kana)}in ENAMDICT"))
     when :jnr

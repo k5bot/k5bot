@@ -61,7 +61,7 @@ See '.faq regexp'",
     when :j
       word = msg.tail
       return unless word
-      l_kana = @l.kana(word)
+      l_kana = @l.romaji_to_hiragana(word)
       edict_lookup = lookup([l_kana], [:japanese, :reading_norm])
       reply_with_menu(msg, generate_menu(format_description_unambiguous(edict_lookup), "\"#{word}\" #{"(\"#{l_kana}\") " unless word.eql?(l_kana)}in EDICT"))
     when :e

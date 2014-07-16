@@ -58,7 +58,7 @@ class Conjugator < IRCPlugin
   end
 
   def get_entries_with_type(v, supported_types)
-    l_kana = @l.kana( v )
+    l_kana = @l.romaji_to_hiragana(v)
     edict_lookup = @edict.lookup( [l_kana], [ :japanese, :reading_norm ] )
 
     # Find entries that we can conjugate.

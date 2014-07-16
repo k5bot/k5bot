@@ -36,7 +36,7 @@ class WebScrape < IRCPlugin
       when :gogen
         word = msg.tail
         return unless word
-        lookup = do_gogen_search(@l.kana(word))
+        lookup = do_gogen_search(@l.romaji_to_hiragana(word))
         reply_with_menu(msg, generate_menu(lookup, "\"#{word}\" in GOGEN"))
     end
   end

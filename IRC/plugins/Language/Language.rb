@@ -70,7 +70,7 @@ class Language < IRCPlugin
     end
   end
 
-  def kana(text)
+  def romaji_to_hiragana(text)
     text.downcase.gsub(@rom2kana.regex) do |r|
       @rom2kana.mapping[r]
     end
