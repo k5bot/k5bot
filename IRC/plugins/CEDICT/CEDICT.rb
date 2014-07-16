@@ -132,7 +132,7 @@ class CEDICT < IRCPlugin
   def lookup(words, columns)
     table = @hash_cedict[:cedict_entries]
 
-    condition = Sequel.&(*words.map do |word|
+    condition = Sequel.|(*words.map do |word|
       Sequel.or(columns.map { |column| [column, word] })
     end)
 
