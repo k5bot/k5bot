@@ -62,7 +62,7 @@ See '.faq regexp'",
       word = msg.tail
       return unless word
       variants = @l.variants([word], *Language::JAPANESE_VARIANT_FILTERS)
-      lookup_result = lookup(variants, [:japanese, :reading_norm])
+      lookup_result = lookup(variants)
       reply_with_menu(
           msg,
           generate_menu(
@@ -145,9 +145,14 @@ See '.faq regexp'",
     )
   end
 
+  # Refined version of lookup_impl() suitable for public API use
+  def lookup(words)
+    lookup_impl(words, [:japanese, :reading_norm])
+  end
+
   # Looks up all entries that have each given word in any
   # of the specified columns and returns the result as an array of entries
-  def lookup(words, columns)
+  def lookup_impl(words, columns)
     table = @hash_edict[:edict_entries]
 
     condition = Sequel.|(*words.map do |word|
