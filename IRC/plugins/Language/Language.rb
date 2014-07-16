@@ -132,6 +132,14 @@ class Language < IRCPlugin
     word.tr(' ' + "\u0021"  + '-' + "\u007F", "\u3000" + "\uFF01"  + '-' + "\uFF7F")
   end
 
+  def uppercase(word)
+    word.upcase
+  end
+
+  def lowercase(word)
+    word.downcase
+  end
+
   def containsJapanese?(text)
     # 3040-309F hiragana
     # 30A0-30FF katakana
