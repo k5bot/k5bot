@@ -60,9 +60,19 @@ See '.faq regexp'",
     when :jn
       word = msg.tail
       return unless word
-      l_kana = @l.romaji_to_hiragana(word)
-      enamdict_lookup = lookup([l_kana], [:japanese, :reading_norm])
-      reply_with_menu(msg, generate_menu(format_description_unambiguous(enamdict_lookup), "\"#{word}\" #{"(\"#{l_kana}\") " unless word.eql?(l_kana)}in ENAMDICT"))
+      variants = @l.variants([word], *Language::JAPANESE_VARIANT_FILTERS)
+      lookup_result = lookup(variants, [:japanese, :reading_norm])
+      reply_with_menu(
+          msg,
+          generate_menu(
+              format_description_unambiguous(lookup_result),
+              [
+                  wrap(word, '"'),
+                  wrap((variants-[word]).map{|w| wrap(w, '"')}.join(', '), '(', ')'),
+                  'in ENAMDICT',
+              ].compact.join(' ')
+          )
+      )
     when :jnr
       word = msg.tail
       return unless word
@@ -74,6 +84,10 @@ See '.faq regexp'",
       end
       reply_with_menu(msg, generate_menu(lookup_complex_regexp(complex_regexp), "\"#{word}\" in ENAMDICT"))
     end
+  end
+
+  def wrap(o, prefix=nil, postfix=prefix)
+    "#{prefix}#{o}#{postfix}" unless o.nil? || o.empty?
   end
 
   def format_description_unambiguous(lookup_result)
