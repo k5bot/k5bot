@@ -61,14 +61,7 @@ See '.faq regexp'",
     when :j
       word = msg.tail
       return unless word
-      variants = @l.variants(
-          [word],
-          :romaji_to_hiragana,
-          :katakana_to_hiragana,
-          :halfwidth_ascii_to_fullwidth,
-          :uppercase,
-          :lowercase,
-      )
+      variants = @l.variants([word], *Language::JAPANESE_VARIANT_FILTERS)
       lookup_result = lookup(variants, [:japanese, :reading_norm])
       reply_with_menu(
           msg,

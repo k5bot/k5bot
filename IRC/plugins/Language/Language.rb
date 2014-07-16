@@ -18,6 +18,14 @@ class Language < IRCPlugin
     :romaja => 'converts given hangul to romaja',
   }
 
+  JAPANESE_VARIANT_FILTERS = [
+      :romaji_to_hiragana,
+      :katakana_to_hiragana,
+      :halfwidth_ascii_to_fullwidth,
+      :uppercase,
+      :lowercase,
+  ]
+
   JAMO_L_TABLE = [
     'g', 'gg', 'n', 'd', 'dd', 'r', 'm', 'b', 'bb',
     's', 'ss', '', 'j', 'jj', 'ch', 'k', 't', 'p', 'h'
