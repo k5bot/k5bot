@@ -60,17 +60,26 @@ See '.faq regexp'",
     when :dj
       word = msg.tail
       return unless word
-      l_kana = @l.romaji_to_hiragana(word)
-      l_hiragana = @l.katakana_to_hiragana(word)
-      lookup = lookup(
-          [l_kana] | [l_hiragana] | [word],
+      variants = @l.variants([word], *Language::JAPANESE_VARIANT_FILTERS)
+      lookup_result = lookup(
+          variants,
           [
               Sequel.qualify(:daijirin_kanji, :text),
               Sequel.qualify(:daijirin_entry, :kana_norm)
           ],
           @hash[:daijirin_entries].left_join(:daijirin_entry_to_kanji, :daijirin_entry_id => :id).left_join(:daijirin_kanji, :id => :daijirin_kanji_id)
       )
-      reply_with_menu(msg, generate_menu(format_description_unambiguous(lookup), "\"#{word}\" #{"(\"#{l_kana}\") " unless word.eql?(l_kana)}in Daijirin"))
+      reply_with_menu(
+          msg,
+          generate_menu(
+              format_description_unambiguous(lookup_result),
+              [
+                  wrap(word, '"'),
+                  wrap((variants-[word]).map{|w| wrap(w, '"')}.join(', '), '(', ')'),
+                  'in Daijirin',
+              ].compact.join(' ')
+          )
+      )
     when :de
       word = msg.tail
       return unless word
@@ -92,6 +101,10 @@ See '.faq regexp'",
       end
       reply_with_menu(msg, generate_menu(lookup_complex_regexp(complex_regexp), "\"#{word}\" in Daijirin"))
     end
+  end
+
+  def wrap(o, prefix=nil, postfix=prefix)
+    "#{prefix}#{o}#{postfix}" unless o.nil? || o.empty?
   end
 
   def format_description_unambiguous(lookup_result)
