@@ -225,7 +225,7 @@ if it's the only given search term",
     format_reading(out, order, :pinyin)
     format_reading(out, order, :korean_h) do |r_list|
       r_list.map do |hangul|
-        "#{hangul}(#{@l.from_hangul(hangul)[0]})"
+        "#{hangul}(#{@l.hangeul_to_romaja(hangul)[0]})"
       end.join(' ')
     end
     format_reading(out, order, :ja_on)

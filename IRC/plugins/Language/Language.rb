@@ -66,7 +66,7 @@ class Language < IRCPlugin
     when :kana
       msg.reply(romaji_to_kana msg.tail)
     when :romaja
-      msg.reply(from_hangul(msg.tail).join)
+      msg.reply(hangeul_to_romaja(msg.tail).join)
     end
   end
 
@@ -101,7 +101,7 @@ class Language < IRCPlugin
   # <a href="http://www.unicode.org/reports/tr15/tr15-29.html#Hangul">http://www.unicode.org/reports/tr15/tr15-29.html#Hangul</a>
   # @param [String] hangul symbols
   # @return array of names of the characters
-  def from_hangul(hangul)
+  def hangeul_to_romaja(hangul)
     hangul.unpack("U*").map do |codepoint|
       s_index = codepoint - HANGUL_S_BASE
 
