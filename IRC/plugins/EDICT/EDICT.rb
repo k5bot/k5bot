@@ -61,9 +61,26 @@ See '.faq regexp'",
     when :j
       word = msg.tail
       return unless word
-      l_kana = @l.romaji_to_hiragana(word)
-      edict_lookup = lookup([l_kana], [:japanese, :reading_norm])
-      reply_with_menu(msg, generate_menu(format_description_unambiguous(edict_lookup), "\"#{word}\" #{"(\"#{l_kana}\") " unless word.eql?(l_kana)}in EDICT"))
+      variants = @l.variants(
+          [word],
+          :romaji_to_hiragana,
+          :katakana_to_hiragana,
+          :halfwidth_ascii_to_fullwidth,
+          :uppercase,
+          :lowercase,
+      )
+      lookup_result = lookup(variants, [:japanese, :reading_norm])
+      reply_with_menu(
+          msg,
+          generate_menu(
+              format_description_unambiguous(lookup_result),
+              [
+                  wrap(word, '"'),
+                  wrap((variants-[word]).map{|w| wrap(w, '"')}.join(', '), '(', ')'),
+                  'in EDICT',
+              ].compact.join(' ')
+          )
+      )
     when :e
       word = msg.tail
       return unless word
@@ -80,6 +97,10 @@ See '.faq regexp'",
       end
       reply_with_menu(msg, generate_menu(lookup_complex_regexp(complex_regexp), "\"#{word}\" in EDICT"))
     end
+  end
+
+  def wrap(o, prefix=nil, postfix=prefix)
+    "#{prefix}#{o}#{postfix}" unless o.nil? || o.empty?
   end
 
   def format_description_unambiguous(lookup_result)
