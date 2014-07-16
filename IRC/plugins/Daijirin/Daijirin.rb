@@ -61,7 +61,7 @@ See '.faq regexp'",
       word = msg.tail
       return unless word
       l_kana = @l.romaji_to_hiragana(word)
-      l_hiragana = @l.hiragana(word)
+      l_hiragana = @l.katakana_to_hiragana(word)
       lookup = lookup(
           [l_kana] | [l_hiragana] | [word],
           [

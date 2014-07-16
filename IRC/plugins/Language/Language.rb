@@ -90,7 +90,7 @@ class Language < IRCPlugin
     end
   end
 
-  def hiragana(text)
+  def katakana_to_hiragana(text)
     return text unless containsKatakana?(text)
     text.gsub(@kata2hira.regex) do |k|
       @kata2hira.mapping[k]

@@ -48,10 +48,10 @@ class Hello < IRCPlugin
     end
 
     tail = nick_stripped.gsub(/[\s!?！？〜\.。]/, '').strip
-    tail_kana = @l.hiragana(@l.romaji_to_hiragana(tail))
+    tail_kana = @l.katakana_to_hiragana(@l.romaji_to_hiragana(tail))
 
     reply_index = Hello.find_index do |i|
-      @l.hiragana(i) == tail_kana
+      @l.katakana_to_hiragana(i) == tail_kana
     end
 
     if reply_index
