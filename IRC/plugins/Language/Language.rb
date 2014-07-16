@@ -64,7 +64,7 @@ class Language < IRCPlugin
     return unless msg.tail
     case msg.bot_command
     when :kana
-      msg.reply(romazi_to_kana msg.tail)
+      msg.reply(romaji_to_kana msg.tail)
     when :romaja
       msg.reply(from_hangul(msg.tail).join)
     end
@@ -76,7 +76,7 @@ class Language < IRCPlugin
     end
   end
 
-  def romazi_to_kana(text)
+  def romaji_to_kana(text)
     text.gsub(@rom2kana.iregex) do |k|
       r = k.downcase
       h = @rom2kana.mapping[r]
