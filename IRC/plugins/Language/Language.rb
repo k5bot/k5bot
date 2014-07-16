@@ -70,6 +70,19 @@ class Language < IRCPlugin
     end
   end
 
+  def variants(words, *filters)
+    words = words.uniq
+    return words if filters.empty?
+
+    filter, *rest = *filters
+    pskip = variants(words, *rest)
+    plast = pskip.map(&method(filter)) - pskip
+    pfirst = variants(words.map(&method(filter)), *rest) - pskip
+
+    # Keep most processed entries first
+    (pfirst - plast) + (plast - pfirst) + (pfirst & plast) + pskip
+  end
+
   def romaji_to_hiragana(text)
     text.downcase.gsub(@rom2kana.regex) do |r|
       @rom2kana.mapping[r]
