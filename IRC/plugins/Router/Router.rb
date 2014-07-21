@@ -272,7 +272,7 @@ class Router < IRCPlugin
   end
 
   def filter_message_per_listener(listener, message)
-    return nil unless message.command == :privmsg # Only filter messages
+    return nil unless message.can_reply? # Only filter messages
 
     filter_hash = @config[:channels]
     return nil unless filter_hash # Filtering only if enabled in config
