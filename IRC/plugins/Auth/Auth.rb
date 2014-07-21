@@ -12,12 +12,6 @@ require_relative '../../IRCPlugin'
 class Auth < IRCPlugin
   Description = 'Auth plugin provides functions for authentication and authorization'
 
-  USAGE_PERMISSION = :can_register_credentials
-
-  ACCESS_TIMESTAMP_KEY = :t
-  ACCESS_PRINCIPAL_KEY = :p
-  ACCESS_FORMER_PRINCIPAL_KEY = :w
-
   COMMAND_REGISTER = :cred_reg
   COMMAND_UNREGISTER = :cred_unreg
   COMMAND_ACCOUNT_INFO = :whoami
@@ -147,4 +141,10 @@ class Auth < IRCPlugin
   def store
     @storage.write('dcc_access', @credentials_storage)
   end
+
+  USAGE_PERMISSION = :can_register_credentials
+
+  ACCESS_TIMESTAMP_KEY = :t
+  ACCESS_PRINCIPAL_KEY = :p
+  ACCESS_FORMER_PRINCIPAL_KEY = :w
 end
