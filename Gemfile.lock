@@ -24,6 +24,7 @@ GEM
     atomic (1.1.14)
     google-search (1.0.3)
       json
+    htmlentities (4.3.2)
     json (1.8.1)
     mini_portile (0.5.2)
     nokogiri (1.6.1)
@@ -45,6 +46,7 @@ DEPENDENCIES
   addressable
   eb!
   google-search
+  htmlentities
   json
   mecab-ruby!
   nokogiri

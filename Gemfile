@@ -42,3 +42,4 @@ gem 'sqlite3', :group => :EDICT
 
 # for Googler plugin
 gem 'google-search', :group => :Googler
+gem 'htmlentities', :group => :Googler
