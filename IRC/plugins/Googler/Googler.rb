@@ -9,6 +9,7 @@ require_relative '../../IRCPlugin'
 require 'rubygems'
 require 'bundler/setup'
 require 'google-search'
+require 'htmlentities'
 
 class Googler < IRCPlugin
   Description = 'Provides access to various Google services'
@@ -21,11 +22,13 @@ class Googler < IRCPlugin
 
   def afterLoad
     @m = @plugin_manager.plugins[:Menu]
+    @html_decoder = HTMLEntities.new
   end
 
   def beforeUnload
     @m.evict_plugin_menus!(self.name)
 
+    @html_decoder = nil
     @m = nil
 
     nil
@@ -37,14 +40,14 @@ class Googler < IRCPlugin
         word = msg.tail
         return unless word
         lookup = find_item(word, 8).map do |item|
-          [item.title, item.uri]
+          [@html_decoder.decode(item.title), item.uri]
         end
         reply_with_menu(msg, generate_menu(lookup, "\"#{word}\" in Google"))
       when :g
         word = msg.tail
         return unless word
         lookup = find_item(word, 1).map do |item|
-          [item.title, item.uri]
+          [@html_decoder.decode(item.title), item.uri]
         end
         if lookup.empty?
           msg.reply("No hits for \"#{word}\" in Google")
