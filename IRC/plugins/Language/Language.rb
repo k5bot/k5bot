@@ -211,18 +211,24 @@ class Language < IRCPlugin
     end
   end
 
-  def self.parse_complex_regexp(word)
-    regexp_half_width!(word)
+  def self.parse_complex_regexp_raw(word)
+    word = regexp_half_width(word)
 
     # replace & with @, where it doesn't conflict
     # with && used in character groups.
     word = regexp_custom_ampersand(word)
 
-    # && operator allows specifying conditions for
-    # kanji && kana separately.
+    # split into larger groups by && operator.
     differing_conditions = word.split(/@@/).map {|s| s.strip }
 
-    operation = case differing_conditions.size
+    # parse sub-expressions
+    differing_conditions.map {|w| parse_chained_regexps(w)}
+  end
+
+  def self.parse_complex_regexp(word)
+    regs = parse_complex_regexp_raw(word)
+
+    operation = case regs.size
                 when 1
                   # when && operator is not used, it is assumed, that
                   # user wants all matches whether it was kanji or kana.
@@ -239,8 +245,6 @@ class Language < IRCPlugin
                   raise "Only one && operator is allowed"
                 end
 
-    # parse sub-expressions
-    regs = differing_conditions.map {|w| parse_chained_regexps(w)}
     # duplicate condition on kana from condition on kanji, if not present
     regs << regs[0] if regs.size<2
 
@@ -253,8 +257,8 @@ class Language < IRCPlugin
   private
 
   # Replace full-width special symbols with their regular equivalents.
-  def self.regexp_half_width!(word)
-    word.tr!('　＆｜「」（）。＊＾＄', ' &|[]().*^$')
+  def self.regexp_half_width(word)
+    word.tr('　＆｜「」（）。＊＾＄', ' &|[]().*^$')
   end
 
   # Replace & not inside [] with @
