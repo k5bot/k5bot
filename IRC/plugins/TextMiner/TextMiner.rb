@@ -91,34 +91,43 @@ Optionally accepts a number(can be negative) for relative jumping.",
         msg.reply("Last example from #{hit_file.name}, #{line_no+1}/#{hit_file.lines_num}")
 
       when :vnhits, :vnhitsr
-        query = if word
+        queries =
+                if word
                   if :vnhits.eql?(msg.bot_command)
                     # Find occurrences of all words in given space-separated list
-                    ContainsAnyQuery.new(word.split)
+                    word.split.uniq.map{|w| ContainsAnyQuery.new([w])}
                   else
-                    RegexpAllQuery.new(Language.parse_complex_regexp_raw(word).flatten, word)
+                    [RegexpAllQuery.new(Language.parse_complex_regexp_raw(word).flatten, word)]
                   end
                 else
                   # If given no arguments, assume the user wanted info for
                   # what he queried last with .example/regexample.
-                  nav && nav.query
+                  nav ? [nav.query] : []
                 end
 
-        return unless query
+        return if queries.empty?
 
-        ensure_searches([msg.context, :vnhits], [:occurrence], query)
-        result = @occurrence_searches[query]
+        ensure_searches([msg.context, :vnhits], [:occurrence], *queries)
 
-        if result.empty?
-          msg.reply("Not found \"#{query}\" in TextMiner")
+        counts = queries.each_with_object({}) do |query, h|
+          result = @occurrence_searches[query]
+
+          result.hit_files.zip(result.occurrence_counts).each do |file, cnt|
+            h[file] ||= 0
+            h[file] += cnt
+          end
+        end
+
+        counts = counts.sort_by{|_, s| -s}.map{|f, s| [f.name, s]}
+        occurrences_total = counts.map{|_, s| s}.inject(0, :+)
+
+        unless occurrences_total > 0
+          msg.reply("Not found \"#{queries.join(' ')}\" in TextMiner")
           return
         end
 
-        counts = result.hit_files.map(&:name).zip(result.occurrence_counts)
-        counts = counts.sort_by{|_, s| -s}
-
-        last_line = "#{result.occurrences_total} total, \
-appears in #{result.hit_files.size}/#{@files.size} scripts)"
+        last_line = "#{occurrences_total} total, \
+appears in #{counts.size}/#{@files.size} scripts)"
 
         reply_untruncated(msg, counts, MAX_VNHITS_LINES) do |chunk, remainder|
           line = chunk.map{|n, s| "#{n}: #{s}"}.join(', ')
