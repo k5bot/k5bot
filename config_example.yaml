@@ -187,3 +187,5 @@
 - :WebScrape
 - :HelpExport:
     :xml: 'help_export.xml' # file name to write XML help to
+- :TextMiner:
+    :data_directory: "~/my_text_files/"
