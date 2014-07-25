@@ -95,7 +95,7 @@ Optionally accepts a number(can be negative) for relative jumping.",
                 if word
                   if :vnhits.eql?(msg.bot_command)
                     # Find occurrences of all words in given space-separated list
-                    word.split.uniq.map{|w| ContainsAnyQuery.new([w])}
+                    word.split.uniq.map{|w| ContainsQuery.new(w)}
                   else
                     [RegexpAllQuery.new(Language.parse_complex_regexp_raw(word).flatten, word)]
                   end
@@ -144,7 +144,7 @@ appears in #{counts.size}/#{@files.size} scripts)"
       when :example, :exampler, :regexample
         query = if word
                   if :example.eql?(msg.bot_command)
-                    ContainsAnyQuery.new([word])
+                    ContainsQuery.new(word)
                   else
                     RegexpAllQuery.new(Language.parse_complex_regexp_raw(word).flatten, word)
                   end
@@ -153,7 +153,7 @@ appears in #{counts.size}/#{@files.size} scripts)"
                   # the next line of what he queried last, assuming
                   # the query type (plaintext/regexp) matches.
                   if :example.eql?(msg.bot_command)
-                    nav.query.is_a?(ContainsAnyQuery)
+                    nav.query.is_a?(ContainsQuery)
                   else
                     nav.query.is_a?(RegexpAllQuery)
                   end && nav.query
@@ -185,7 +185,7 @@ appears in #{counts.size}/#{@files.size} scripts)"
 
       when :wordfight, :wordcount
         return unless word
-        queries = word.split.uniq.map {|w| ContainsAnyQuery.new([w])}
+        queries = word.split.uniq.map {|w| ContainsQuery.new(w)}
         ensure_searches([msg.context, :wordcount], [:occurrence], *queries)
         results = queries.map {|q| @occurrence_searches[q]}
         results = results.map {|r| [r.occurrences_total, r.query]}
@@ -497,36 +497,35 @@ appears in #{counts.size}/#{@files.size} scripts)"
     end
   end
 
-  class ContainsAnyQuery
-    attr_reader :words, :words_equ
+  class ContainsQuery
+    attr_reader :word
 
-    def initialize(words, str_rep = nil)
-      @words = words
-      @words_equ = Set.new(words)
-      # Cache regexps for faster occurrence search with String.scan()
-      @regexps = @words.map{|w| Regexp.new(Regexp.quote(w))}
+    def initialize(word, str_rep = nil)
+      @word = word
+      # Cache regexp for faster occurrence search with String.scan()
+      @regexp = Regexp.new(Regexp.quote(word))
       @str_rep = str_rep
     end
 
     def ===(s)
-      @words.any?{|w| s.include?(w)}
+      s.include?(@word)
     end
 
     def count_occurrences(s)
-      @regexps.map {|w| s.scan(w).size}.inject(0, :+)
+      s.scan(@regexp).size
     end
 
     def to_s
-      @str_rep || @words.join(' ')
+      @str_rep || @word
     end
 
     # Equality methods for good in-hash behavior
     def eql?(o)
-      o.class == self.class && o.words_equ == @words_equ
+      o.class == self.class && o.word == @word
     end
     alias_method(:==, :eql?)
     def hash
-      @words_equ.hash
+      @word.hash
     end
   end
 
