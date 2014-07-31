@@ -27,9 +27,13 @@ Optionally accepts a number(can be negative) for relative jumping.",
       :vnhitsr => 'Same as .vnhits, but accepts a regexp.',
       :wordcount => 'Shows usage counts in all files for given words.',
       :wordfight => 'Same as .wordcount, but also sorted by frequency.',
+      :wordcountr => "Same as .wordcount, but for everything matching given regexp. \
+If the regexp contains round-braced groups, only text matching these groups is returned.",
+      :wordfightr => 'Same as .wordcountr, but also sorted by frequency.',
   }
 
   MAX_VNHITS_LINES = 2
+  MAX_WORDCOUNT_LINES = 2
 
   def afterLoad
     dir = @config[:data_directory]
@@ -185,27 +189,50 @@ appears in #{counts.size}/#{@files.size} scripts)"
         reply += " (Hits: #{nav.lines_total})" if first_browsing
         msg.reply(reply)
 
-      when :wordfight, :wordcount
+      when :wordfight, :wordfightr, :wordcount, :wordcountr
         return unless word
-        queries = word.split.uniq.map {|w| ContainsQuery.new(w)}
-        ensure_searches([msg.context, :wordcount], [:occurrence], *queries)
-        results = queries.map {|q| @occurrence_searches[q]}
-        results = results.map {|r| [r.occurrences_total, r.query]}
-
-        if :wordfight.eql?(msg.bot_command)
-          # Sort and chunk into equivalence classes by occurrence count
-          results = results.sort_by {|s, _| -s}.chunk {|s, _| s}.map(&:last)
-          reply = results.map do |equiv|
-            equiv.map do |s, w|
-              "#{w} (#{s})"
-            end.join(' = ')
-          end.join(' > ')
+        if [:wordfight, :wordcount].include?(msg.bot_command)
+          queries = word.split.uniq.map {|w| ContainsQuery.new(w)}
+          ensure_searches([msg.context, :wordcount], [:occurrence], *queries)
+          results = queries.map {|q| @occurrence_searches[q]}
+          results = results.map {|r| [r.query, r.occurrences_total]}
         else
-          reply = results.map do |s, w|
-            "#{w} (#{s})"
-          end.join(', ')
+          query = RegexpAllQuery.new(Language.parse_complex_regexp_raw(word).flatten, word)
+          ensure_searches([msg.context, :wordcount], [:occurrence_map], query)
+          results = @occurrence_map_searches[query].occurrence_total_map.to_a
+
+          if results.empty?
+            msg.reply("Not found \"#{query}\" in TextMiner")
+            return
+          end
         end
-        msg.reply(reply)
+
+        if [:wordfight, :wordfightr].include?(msg.bot_command)
+          # Sort and chunk into equivalence classes by occurrence count
+          results = results.sort_by {|_, s| -s}
+          reply_untruncated(msg, results, MAX_WORDCOUNT_LINES) do |chunk, remainder|
+            chunk = chunk.chunk {|_, s| s}.map(&:last)
+            line = chunk.map do |equiv|
+              equiv.map do |w, s|
+                "#{w} (#{s})"
+              end.join(' = ')
+            end.join(' > ')
+            if remainder && !remainder.empty?
+              line += " (also #{remainder.map { |_, s| s }.inject(0, :+)} in #{remainder.size} omitted)"
+            end
+            line
+          end
+        else
+          reply_untruncated(msg, results, MAX_WORDCOUNT_LINES) do |chunk, remainder|
+            line = chunk.map do |w, s|
+              "#{w} (#{s})"
+            end.join(', ')
+            if remainder && !remainder.empty?
+              line += " (also #{remainder.map { |_, s| s }.inject(0, :+)} in #{remainder.size} omitted)"
+            end
+            line
+          end
+        end
     end
   end
 
