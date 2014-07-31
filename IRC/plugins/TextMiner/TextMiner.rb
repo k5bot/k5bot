@@ -48,11 +48,13 @@ Optionally accepts a number(can be negative) for relative jumping.",
     @cache_tracking = {}
     @line_searches = {}
     @occurrence_searches = {}
+    @occurrence_map_searches = {}
     @navigations = {}
   end
 
   def beforeUnload
     @navigations = nil
+    @occurrence_map_searches = nil
     @occurrence_searches = nil
     @line_searches = nil
     @cache_tracking = nil
@@ -217,15 +219,18 @@ appears in #{counts.size}/#{@files.size} scripts)"
     # Register the queries as not eligible for purging.
     @cache_tracking[cache_key] = queries
 
-    # If we need to count occurrences, opt in for filling line indices too.
+    # Extend queries for caching reasons. E.g.
+    # if we need to count occurrences, opt in for filling line indices too.
     # Since we're not using SQL, it's not going to be much slower
     # than finding occurrences already is, but will help for related queries.
+    query_type |= [:occurrence] if query_type.include?(:occurrence_map)
     query_type |= [:line] if query_type.include?(:occurrence)
 
     query_groups = queries.group_by do |query|
       qt = query_type.dup
       qt.delete(:line) if @line_searches.include?(query)
       qt.delete(:occurrence) if @occurrence_searches.include?(query)
+      qt.delete(:occurrence_map) if @occurrence_map_searches.include?(query)
       qt
     end
 
@@ -249,38 +254,66 @@ appears in #{counts.size}/#{@files.size} scripts)"
                              OccurrencesSearchResult.new(query)
                            end
                          end
+    occurrence_map_results = if query_type.include?(:occurrence_map)
+                               queries.map do |query|
+                                 OccurrenceMapsSearchResult.new(query)
+                               end
+                             end
 
     @files.each do |hit_file|
-      found_lines, found_occurences = if query_type.include?(:occurrence)
-                                        if query_type.include?(:line)
-                                          hit_file.find_lines_with_occurrences(queries)
-                                        else
-                                          [[], hit_file.find_occurrences(queries)]
-                                        end
-                                      else
-                                        [hit_file.find_lines(queries), []]
-                                      end
+      found_lines = found_occurrences = found_occurrence_maps = nil
+
+      if occurrence_map_results
+        if line_results
+          found_lines, found_occurrence_maps = hit_file.find_lines_with_occ_maps(queries)
+        else
+          found_occurrence_maps = hit_file.find_occurrences(queries)
+        end
+      end
+
+      if occurrence_results
+        if found_occurrence_maps
+          found_occurrences = found_occurrence_maps.map do |occ_map|
+            occ_map.values.inject(0, :+)
+          end
+        elsif line_results && !found_lines
+          found_lines, found_occurrences = hit_file.find_lines_with_occurrences(queries)
+        else
+          found_occurrences = hit_file.find_occurrences(queries)
+        end
+      end
+
+      if line_results && !found_lines
+        found_lines = hit_file.find_lines(queries)
+      end
 
       line_results.zip(found_lines) do |result, line_indices|
         result.add_indices(hit_file, line_indices)
-      end if query_type.include?(:line)
-      occurrence_results.zip(found_occurences) do |result, full_count|
+      end if line_results
+      occurrence_results.zip(found_occurrences) do |result, full_count|
         result.add_counts(hit_file, full_count)
-      end if query_type.include?(:occurrence)
+      end if occurrence_results
+      occurrence_map_results.zip(found_occurrence_maps) do |result, occ_map|
+        result.add_map(hit_file, occ_map)
+      end if occurrence_map_results
     end
 
     line_results.each do |result|
       @line_searches[result.query] ||= result
-    end if query_type.include?(:line)
+    end if line_results
     occurrence_results.each do |result|
       @occurrence_searches[result.query] ||= result
-    end if query_type.include?(:occurrence)
+    end if occurrence_results
+    occurrence_map_results.each do |result|
+      @occurrence_map_searches[result.query] ||= result
+    end if occurrence_map_results
   end
 
   def purge_unused_cache!
     used_queries = Set.new(@cache_tracking.values.flatten(1))
     @line_searches.keep_if {|k,_| used_queries.include?(k) }
     @occurrence_searches.keep_if {|k,_| used_queries.include?(k) }
+    @occurrence_map_searches.keep_if {|k,_| used_queries.include?(k) }
   end
 
   #TODO: implement navigation expiration
@@ -358,6 +391,16 @@ appears in #{counts.size}/#{@files.size} scripts)"
       lookup_counts
     end
 
+    def find_occurrence_maps(queries)
+      lookup_maps = Array.new(queries.size) { Hash.new(0) }
+      @lines.each do |l|
+        queries.each_with_index do |query, arr_idx|
+          query.count_occurrences_map(l, lookup_maps[arr_idx])
+        end
+      end
+      lookup_maps
+    end
+
     def find_lines_with_occurrences(queries)
       lookup = Array.new(queries.size) { [] }
       lookup_counts = Array.new(queries.size) { 0 }
@@ -371,6 +414,18 @@ appears in #{counts.size}/#{@files.size} scripts)"
         end
       end
       [lookup, lookup_counts]
+    end
+
+    def find_lines_with_occ_maps(queries)
+      lookup = Array.new(queries.size) { [] }
+      lookup_maps = Array.new(queries.size) { Hash.new(0) }
+      @lines.each_with_index do |l, line_idx|
+        queries.each_with_index do |query, arr_idx|
+          match_count = query.count_occurrences_map(l, lookup_maps[arr_idx])
+          lookup[arr_idx] << line_idx if match_count > 0
+        end
+      end
+      [lookup, lookup_maps]
     end
   end
 
@@ -421,6 +476,33 @@ appears in #{counts.size}/#{@files.size} scripts)"
       @hit_files << hit_file
       @occurrence_counts << full_count
       @occurrences_total += full_count
+    end
+  end
+
+  class OccurrenceMapsSearchResult
+    attr_reader :query,
+                :hit_files,
+                :occurrence_maps,
+                :occurrence_total_map
+
+    def initialize(query)
+      @query = query
+      @hit_files = []
+      @occurrence_maps = []
+      @occurrence_total_map = {}
+    end
+
+    def empty?
+      @occurrence_maps.empty?
+    end
+
+    def add_map(hit_file, occurence_map)
+      return if occurence_map.empty?
+      @hit_files << hit_file
+      @occurrence_maps << occurence_map
+      @occurrence_total_map.merge!(occurence_map) do |key, old_val, new_val|
+        old_val + new_val
+      end
     end
   end
 
@@ -515,6 +597,12 @@ appears in #{counts.size}/#{@files.size} scripts)"
       s.scan(@regexp).size
     end
 
+    def count_occurrences_map(s, h)
+      cnt = count_occurrences(s)
+      h[@word] += cnt
+      cnt
+    end
+
     def to_s
       @str_rep || @word
     end
@@ -550,6 +638,21 @@ appears in #{counts.size}/#{@files.size} scripts)"
 
     def count_occurrences(s)
       @aux_regexps.all?{|w| w.match(s)} ? s.scan(@main_regexp).size : 0
+    end
+
+    def count_occurrences_map(s, h)
+      return 0 unless @aux_regexps.all? { |w| w.match(s) }
+      scanned = s.scan(@main_regexp)
+      if scanned.first.instance_of?(Array)
+        scanned.each do |a|
+          h[a.join('_')] += 1
+        end
+      else
+        scanned.each do |w|
+          h[w] += 1
+        end
+      end
+      scanned.size
     end
 
     def to_s
