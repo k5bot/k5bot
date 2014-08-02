@@ -210,7 +210,7 @@ class IRCBot < IRCPlugin
   end
 
   def receive(raw)
-    @watch_time = Time.now
+    @watchdog.push_back if @watchdog
 
     raw = encode raw
 
@@ -300,19 +300,13 @@ class IRCBot < IRCPlugin
 
   def start_watchdog
     return if @watchdog
-    if @config[:watchdog]
-      @watch_time = Time.now
-      @watchdog = Timer.new(30) do
-        interval = @config[:watchdog]
-        elapsed = Time.now - @watch_time
-        if elapsed > interval
-          log(:error, "Watchdog interval (#{interval}) elapsed, restarting bot")
-          stop
-        end
-      end
-    else
-      @watchdog = nil
-    end
+    interval = @config[:watchdog]
+    @watchdog = if interval
+                  Timer.new(interval) do
+                    log(:error, "Watchdog interval (#{interval}) elapsed, restarting bot")
+                    stop
+                  end
+                end
   end
 
   def stop_watchdog
