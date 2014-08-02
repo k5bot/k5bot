@@ -10,6 +10,7 @@ class Timer
     extend MonitorMixin
     @handler = handler
     @interval = interval
+    @deadline = nil
     @run = nil
     start
   end
@@ -18,16 +19,16 @@ class Timer
     return if @run
     @run = true
     @th = Thread.new do
-      t = Time.now + @interval
+      push_back
       while run?
-        to_sleep = [t - Time.now, 1].min
+        to_sleep = synchronize do
+          [@deadline - Time.now, 1].min
+        end
         if to_sleep > 0
           sleep(to_sleep) rescue nil
-        else
-          if run?
-            @handler.call(nil) rescue nil
-            t += @interval
-          end
+        elsif run?
+          @handler.call(self) rescue nil
+          push_back
         end
       end
     end
@@ -37,7 +38,17 @@ class Timer
     synchronize do
       @run = false
     end
-    @th.join
+    begin
+      @th.join unless Thread.current.eql?(@th)
+    rescue Interrupt
+      # ignored
+    end
+  end
+
+  def push_back
+    synchronize do
+      @deadline = Time.now + @interval
+    end
   end
 
   private
