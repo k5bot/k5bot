@@ -1,6 +1,24 @@
 # IRCBot config example
 ---
 - :Console # Add this if you want console interaction
+- :Connectix:
+    :freenode:
+      :tcp:
+      - host: chat.eu.freenode.net # try the nearest roster first
+        port: 7000
+      - host: irc.freenode.net # for fallback if the above fails
+        port: 7000
+      #:alias: # adds connection from another group.
+      #  :uses: connection_name
+      :fallback: # picks children connections in order, until success, then starts over.
+      #:random: # picks children connections at random.
+      :ssl: # wraps children connection with ssl.
+        #:ssl_cert: <path to your ssl certificate file>
+        #:ssl_key: <path to your ssl private key file>, by default same as ssl_cert
+        #:ssl_key_passphrase: <passphrase to your private key, if it's encrypted>
+      :watchdog: # resets connection if nothing is read from it for specified time.
+                 # Not recommended on irc servers that don't send ping.
+        :timeout: 600 # timeout in seconds.
 - :IRCBot:
     :server: irc.freenode.net # Server to connect to.
       # Specifying an array with several alternative addresses is possible.
