@@ -7,7 +7,6 @@
 require 'socket'
 require 'ostruct'
 
-require_relative '../../Timer'
 require_relative '../../Emitter'
 require_relative '../../Throttler'
 require_relative '../../IRCPlugin'
@@ -23,9 +22,12 @@ class IRCBot < IRCPlugin
 
   Description = 'Provides IRC connectivity.'
 
-  Dependencies = [ :Router, :StorageYAML ]
+  Dependencies = [ :Connectix, :Router, :StorageYAML ]
 
   attr_reader :last_sent, :start_time, :user
+
+  DEFAULT_SERVER = 'localhost'
+  DEFAULT_PORT = 6667
 
   def afterLoad
     load_helper_class(:IRCUser)
@@ -42,8 +44,6 @@ class IRCBot < IRCPlugin
     load_helper_class(:IRCFirstListener)
 
     @config = {
-      :server => 'localhost',
-      :port => 6667,
       :serverpass => nil,
       :username => 'bot',
       :nickname => 'bot',
@@ -53,6 +53,8 @@ class IRCBot < IRCPlugin
     }.merge!(@config)
 
     @config.freeze  # Don't want anything modifying this
+
+    raise ':connector: key is not specified in config' unless @config[:connector]
 
     @throttler = Throttler.new(@config[:burst] || 0, @config[:rate] || 0)
 
@@ -80,11 +82,8 @@ class IRCBot < IRCPlugin
         @first_listener,
     ]
 
+    @connectix = @plugin_manager.plugins[:Connectix]
     @router = @plugin_manager.plugins[:Router] # Get router
-
-    @watchdog = nil
-
-    @last_failed_server = nil
 
     @thread = nil
 
@@ -96,11 +95,8 @@ class IRCBot < IRCPlugin
 
     @thread = nil
 
-    @last_failed_server = nil
-
-    @watchdog = nil
-
     @router = nil
+    @connectix = nil
 
     @first_listener = nil
     @join_listener = nil
@@ -210,8 +206,6 @@ class IRCBot < IRCPlugin
   end
 
   def receive(raw)
-    @watchdog.push_back if @watchdog
-
     raw = encode raw
 
     log(:in, raw)
@@ -255,21 +249,13 @@ class IRCBot < IRCPlugin
 
   def start_in_context
     @start_time = Time.now
+    @sock = nil
     begin
-      start_watchdog()
-
-      server = @config[:server]
-      if server.instance_of? Array
-        # Try to connect to the given servers in order
-        @last_failed_server = if @last_failed_server
-                                (@last_failed_server + 1) % server.length
-                              else
-                                0
-                              end
-        server = server[@last_failed_server]
-      end
-
-      @sock = TCPSocket.open server, @config[:port]
+      @sock = @connectix.connectix_open(
+          @config[:connector],
+          Connectix::ConnectorTCP::DEFAULT_HOST_KEY => DEFAULT_SERVER,
+          Connectix::ConnectorTCP::DEFAULT_PORT_KEY => DEFAULT_PORT,
+      )
       dispatch(OpenStruct.new({:command => :connection}))
       until @sock.eof? do # Throws Errno::ECONNRESET
         receive @sock.gets
@@ -286,7 +272,7 @@ class IRCBot < IRCPlugin
       log(:error, "Unexpected exception: #{e.inspect} #{e.backtrace.join(' ')}")
     ensure
       dispatch(OpenStruct.new({:command => :disconnection}))
-      stop_watchdog()
+      @sock.close rescue nil
       @sock = nil
     end
   end
@@ -296,23 +282,6 @@ class IRCBot < IRCPlugin
       log(:log, 'Forcibly closing socket')
       @sock.close
     end
-  end
-
-  def start_watchdog
-    return if @watchdog
-    interval = @config[:watchdog]
-    @watchdog = if interval
-                  Timer.new(interval) do
-                    log(:error, "Watchdog interval (#{interval}) elapsed, restarting bot")
-                    stop
-                  end
-                end
-  end
-
-  def stop_watchdog
-    return unless @watchdog
-    @watchdog.stop
-    @watchdog = nil
   end
 
   def join_channels(channels)
@@ -340,10 +309,8 @@ class IRCBot < IRCPlugin
   end
 
   def post_login
-    # Successful connection.
-    # Further reconnection attempts will try and start from
-    # the beginning of the server list.
-    @last_failed_server = nil
+    # Hint Connectix about successful connection, if applicable.
+    @sock.connectix_logical_success if @sock.respond_to?(:connectix_logical_success)
 
     #refresh our user info once,
     #so that truncate_for_irc_client()

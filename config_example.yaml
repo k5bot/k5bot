@@ -20,10 +20,7 @@
                  # Not recommended on irc servers that don't send ping.
         :timeout: 600 # timeout in seconds.
 - :IRCBot:
-    :server: irc.freenode.net # Server to connect to.
-      # Specifying an array with several alternative addresses is possible.
-      # In this case, they'll be tried in order, in case of connection failure.
-    :port: 6667
+    :connector: freenode # Connector name from Connectix plugin
     :serverpass:
     :username: bot
     :nickname: bot
@@ -38,9 +35,6 @@
     :channels:
     - "#channel_one"
     - "#channel_two"
-    :watchdog: 240 # Seconds of complete connection silence, after which bot
-      # should try reconnecting. Not recommended on servers that don't send ping.
-      # Not specifying this setting disables the feature.
     :burst: 8 # Number of lines allowed to be sent to server at once, before
       # rate limiting kicks in.
     :rate: 1 # Number of lines per second allowed to be send to server sustainably.
