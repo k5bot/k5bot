@@ -39,7 +39,7 @@ class IRCPluginManager
 
     error = notify_listeners(:before_unload, unloading)
     if error
-      puts "A PluginManager listener refuses unloading of plugins: #{error}"
+      log(:error, "A PluginManager listener refuses unloading of plugins: #{error}")
       return false
     end
 
@@ -55,15 +55,17 @@ class IRCPluginManager
       end
 
       unless dependants.empty?
-        puts "Cannot unload plugin '#{name}', the following plugins depend on it: #{dependants.join(', ')}"
+        log(:error, "Cannot unload plugin '#{name}', the following plugins depend on it: #{dependants.join(', ')}")
         return false
       end
 
+      log(:log, "Unloading #{name}...")
       error = do_before_unloading(p)
       if error
-        puts "'#{name}' refuses to unload: #{error}"
+        log(:error, "'#{name}' refuses to unload: #{error}")
         return false
       end
+      log(:log, "Unloaded #{name}.")
 
       unloaded[name] = config # Mark as unloaded
 
@@ -71,7 +73,7 @@ class IRCPluginManager
 
       unload_plugin_class(name)
     rescue Exception => e
-      puts "Cannot unload plugin '#{name}': #{e}\n\t#{e.backtrace.join("\n\t")}"
+      log(:error, "Cannot unload plugin '#{name}': #{e}\n\t#{e.backtrace.join("\n\t")}")
       return false
     ensure
       notify_listeners(:after_unload, unloaded)
@@ -110,7 +112,7 @@ class IRCPluginManager
 
     error = notify_listeners(:before_load, loading)
     if error
-      puts "A PluginManager listener refuses accepting plugins: #{error}"
+      log(:error, "A PluginManager listener refuses accepting plugins: #{error}")
       return false
     end
 
@@ -124,13 +126,13 @@ class IRCPluginManager
       loading.each do |name, config|
         if (plugin = @plugins[name])
           begin
-            print "Initializing plugin #{name}..."
+            log(:log, "Initializing plugin #{name}...")
             do_after_loading(plugin)
-            puts "done."
+            log(:log, "Initialized plugin #{name}.")
 
             loaded[name] = config # Mark as loaded
           rescue Exception => e
-            puts "Cannot initialize plugin '#{name}': #{e}\n\t#{e.backtrace.join("\n\t")}"
+            log(:error, "Cannot initialize plugin '#{name}': #{e}\n\t#{e.backtrace.join("\n\t")}")
             overall = false
 
             # Remove the plugin, to avoid accidentally using it,
@@ -156,7 +158,7 @@ class IRCPluginManager
       requested = plugin_file_name(name)
       filename = Dir.glob(requested, File::FNM_CASEFOLD).first
       unless requested.eql? filename
-        puts "Cannot find plugin '#{name.to_s}'."
+        log(:error, "Cannot find plugin '#{name.to_s}'.")
         return false
       end
 
@@ -172,11 +174,11 @@ class IRCPluginManager
         end
       end
 
-      print "Loading #{name}..."
+      log(:log, "Loading #{name}...")
       @plugins[name.to_sym] = pluginClass.new(self, (config || {}).freeze)
-      puts "done."
+      log(:log, "Loaded #{name}.")
     rescue Exception => e
-      puts "Cannot load plugin '#{name}': #{e}"
+      log(:error, "Cannot load plugin '#{name}': #{e}")
       unload_plugin_class(name, true)
       return false
     end
@@ -192,7 +194,7 @@ class IRCPluginManager
       Object.send(:remove_const, name.to_sym)
     rescue Exception => e
       if fail_silently
-        puts(e)
+        log(:error, e)
       else
         raise e
       end
@@ -219,5 +221,10 @@ class IRCPluginManager
     end
 
     nil
+  end
+
+  LOG_MODE_PREFIX = {:log => '=', :in => '>', :out => '<', :error => '!'}
+  def log(mode, text)
+    puts "#{LOG_MODE_PREFIX[mode]}#{self.class.name}: #{Time.now}: #{text}"
   end
 end

@@ -35,7 +35,7 @@ class IRCHashPluginManager < IRCPluginManager
         begin
           load_plugin(plugin)
         rescue Exception => e
-          puts "Exception during loading #{plugin}: #{e}"
+          log(:error, "Exception during loading #{plugin}: #{e}")
           raise e
         end
       end
@@ -49,7 +49,7 @@ class IRCHashPluginManager < IRCPluginManager
     begin
       reload_config()
     rescue Exception => e
-      puts "Config loading error: #{e}\n\t#{e.backtrace.join("\n\t")}"
+      log(:error, "Config loading error: #{e}\n\t#{e.backtrace.join("\n\t")}")
       return false
     end
     super
@@ -118,9 +118,7 @@ ensure
     prev_size = plugins.size
     plugins .each do |plugin|
       begin
-        if plugin_manager.unload_plugin(plugin)
-          puts "Unloaded plugin #{plugin}"
-        end
+        plugin_manager.unload_plugin(plugin)
       rescue Exception => e
         puts "Exception during unloading #{plugin}: #{e}"
       end
