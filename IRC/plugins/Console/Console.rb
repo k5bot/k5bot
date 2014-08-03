@@ -65,6 +65,8 @@ class Console < IRCPlugin
       while @stream_in && (raw = @stream_in.gets) do
         self.receive(raw)
       end
+    rescue Interrupt
+      log(:log, 'Caught interrupt')
     ensure
       log(:log, 'Stopping console interaction')
     end
