@@ -23,6 +23,8 @@ class Hello < IRCPlugin
 どうも
 )
 
+  TIMEOUT = 600
+
   def afterLoad
     @l = plugin_manager.plugins[:Language]
 
@@ -49,9 +51,11 @@ class Hello < IRCPlugin
     end
 
     if response
-      unless @forbidden_to_reply[channel_name]
+      last_time = @forbidden_to_reply[channel_name]
+      current_time = Time.now.to_i
+      if !last_time || (last_time + TIMEOUT) < current_time
         msg.reply(response)
-        @forbidden_to_reply[channel_name] = true
+        @forbidden_to_reply[channel_name] = current_time
       end
     else
       @forbidden_to_reply.delete(channel_name)
