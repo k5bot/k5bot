@@ -5,23 +5,23 @@
 # Hello plugin
 
 class Hello < IRCPlugin
-  Description = "Says hello."
+  Description = 'Says hello.'
   Dependencies = [ :Language ]
 
-  Hello = [
-    'おはよう',
-    'おはようございます',
-    'こんにちは',
-    'こんばんは',
-    'さようなら',
-    'おやすみ',
-    'おやすみなさい',
-    'もしもし',
-    'やっほー',
-    'ハロー',
-    'ごきげんよう',
-    'どうも',
-  ]
+  GREETINGS = %w(
+おはよう
+おはようございます
+こんにちは
+こんばんは
+さようなら
+おやすみ
+おやすみなさい
+もしもし
+やっほー
+ハロー
+ごきげんよう
+どうも
+)
 
   def afterLoad
     @l = plugin_manager.plugins[:Language]
@@ -41,16 +41,16 @@ class Hello < IRCPlugin
 
     channel_name = msg.channelname
 
-    tail = tail.gsub(/[\s!?！？〜\.。]/, '').strip
+    tail = tail.gsub(/[\s!?！？〜\.。]/, '')
     tail_kana = @l.katakana_to_hiragana(@l.romaji_to_hiragana(tail))
 
-    reply_index = Hello.find_index do |i|
-      @l.katakana_to_hiragana(i) == tail_kana
+    response = GREETINGS.find do |greeting|
+      @l.katakana_to_hiragana(greeting) == tail_kana
     end
 
-    if reply_index
+    if response
       unless @forbidden_to_reply[channel_name]
-        msg.reply(self.class::Hello[reply_index])
+        msg.reply(response)
         @forbidden_to_reply[channel_name] = true
       end
     else
