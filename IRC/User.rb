@@ -6,10 +6,10 @@
 
 module BotCore
   module User
-    def self.ni(); raise 'Not Implemented' end
+    def _ni; raise 'Not Implemented' end
 
-    def nick; ni() end
+    def nick; _ni end
 
-    def uid; ni() end
+    def uid; _ni end
   end
 end

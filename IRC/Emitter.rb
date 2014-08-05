@@ -6,21 +6,21 @@
 
 module BotCore
   module Emitter
-    def self.ni(); raise 'Not Implemented' end
+    def _ni; raise 'Not Implemented' end
 
     # If Emitter during its operation might be visible to listeners
     # as a message user, this must be the user it will be visible as.
-    def user; ni() end
+    def user; _ni end
 
     # Should return the same as msg.user,
     # as long as msg was originated from this Emitter.
-    def find_user_by_msg(msg); ni() end
+    def find_user_by_msg(msg); _ni end
 
-    def find_user_by_nick(nick); ni() end
+    def find_user_by_nick(nick); _ni end
 
-    def find_user_by_uid(uid); ni() end
+    def find_user_by_uid(uid); _ni end
 
     # Optional. Invocation stops emitter operation.
-    def stop; ni() end
+    def stop; _ni end
   end
 end

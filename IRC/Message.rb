@@ -6,42 +6,42 @@
 
 module BotCore
   module Message
-    def self.ni(); raise 'Not Implemented' end
+    def _ni; raise 'Not Implemented' end
 
-    def timestamp; ni() end # reception time
-    def prefix; ni() end # abused for security crap
-    def bot; ni() end
-    def bot_command; ni() end # The first word of the message if it starts with 'command_prefix'
-    def message; ni() end
-    def tail; ni() end # The message with nick prefix and bot_command removed if it exists, otherwise the whole message
+    def timestamp; _ni end # reception time
+    def prefix; _ni end # abused for security crap
+    def bot; _ni end
+    def bot_command; _ni end # The first word of the message if it starts with 'command_prefix'
+    def message; _ni end
+    def tail; _ni end # The message with nick prefix and bot_command removed if it exists, otherwise the whole message
 
-    def command; ni() end # Message type.
+    def command; _ni end # Message type.
 
-    def channelname; ni() end # Leaked from IRCMessage. To be removed eventually.
+    def channelname; _ni end # Leaked from IRCMessage. To be removed eventually.
 
-    def private?; ni() end
+    def private?; _ni end
 
     # Principals of the message originator
-    def principals; ni() end
+    def principals; _ni end
 
     # Credentials of the message originator
-    def credentials; ni() end
+    def credentials; _ni end
 
-    def user; ni() end
+    def user; _ni end
 
-    def nick; ni() end
+    def nick; _ni end
 
-    def reply(text, opts = {}) ni() end
+    def reply(text, opts = {}) _ni end
 
-    def can_reply?; ni() end
+    def can_reply?; _ni end
 
-    def notice_user(text); ni() end
+    def notice_user(text); _ni end
 
-    def command_prefix; ni() end
+    def command_prefix; _ni end
 
-    def command_prefix_matcher; ni() end
+    def command_prefix_matcher; _ni end
 
-    def context; ni() end
+    def context; _ni end
 
     # Deprecated. Backward compatibility for bot_command.
     def botcommand
