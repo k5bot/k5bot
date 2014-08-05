@@ -73,17 +73,45 @@ class IRCMessage
     end
 
     if @command == :privmsg
-      m = message && message.match(/^\s*(#{@bot.user.nick}\s*[:>,]?\s*)?#{command_prefix_matcher}([\p{ASCII}\uFF01-\uFF5E&&[^\p{Z}]]+)\p{Z}*(.*)\s*/i)
+      m = if message
+            # Try to find "[bot_nick:].command tail"
+            /
+^
+\s*
+(?<dedicated>#{@bot.user.nick}\s*[:>,]?\s*)?
+#{command_prefix_matcher}
+(?<command>[\p{ASCII}\uFF01-\uFF5E&&[^\p{Z}]]+)
+\p{Z}*
+(?<tail>.*)
+$
+            /ix.match(message) ||
+            # If failed, try to find "bot_nick: tail"
+            /
+^
+\s*
+(?<dedicated>#{@bot.user.nick}\s*[:>,]?\s*)
+(?<tail>.*)
+$
+             /ix.match(message)
+
+            # This is done to always strip bot_nick,
+            # if it is present, even if command isn't.
+          end
 
       if m
-        # If bot nick is mentioned, consider this message dedicated
-        @is_dedicated = !!m[1]
+        # Turn MatchData into a hash of named group captures.
+        # This is so that we don't error out on m[:command]
+        # when it's not present.
+        m = Hash[m.names.map(&:to_sym).zip(m.captures)]
 
-        bc = m[2]
+        # If bot nick is mentioned, consider this message dedicated
+        @is_dedicated = !!m[:dedicated]
+
+        bc = m[:command]
         @bot_command = bc.tr("\uFF01-\uFF5E", "\u{21}-\u{7E}").downcase.to_sym if bc
       end
 
-      tail = (m && m[3]) || message
+      tail = m ? m[:tail] : message
       @tail = tail.empty? ? nil : tail
     end
   end
