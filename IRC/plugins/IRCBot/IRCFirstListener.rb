@@ -35,7 +35,11 @@ class IRCFirstListener
     queries.each do |ctcp|
       case ctcp.command
         when :PING
-          msg.notice_user(IRCMessage.make_ctcp_message(:PING, ctcp.arguments))
+          msg.reply(
+              IRCMessage.make_ctcp_message(:PING, ctcp.arguments),
+              :notice => true,
+              :force_private => true,
+          )
           result = true # stop further message propagation
       end
     end
