@@ -86,6 +86,7 @@ class Karma < IRCPlugin
   end
 
   def respond_to_change(msg)
+    text = msg.tail || ''
     @config.each do |bot_command, sub_config|
       sub_config[:matchers].each do |matcher|
 
@@ -93,7 +94,7 @@ class Karma < IRCPlugin
           matches_allowed = matcher[:multi] || 1
           replies = []
 
-          msg.message.scan(matcher[:regexp]) do
+          text.scan(matcher[:regexp]) do
             # Gather actual MatchData instead of simply Strings.
             match = $~
 
