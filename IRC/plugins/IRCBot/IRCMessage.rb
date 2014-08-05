@@ -151,14 +151,6 @@ class IRCMessage
     @bot.send(opts.merge(:original=>"#{cmd} #{replyTo(opts[:force_private])} :#{text}"))
   end
 
-  def notice_user(text)
-    return if !text
-    s = text.to_s
-    return if s.empty?
-    return unless can_reply?
-    @bot.send "NOTICE #{nick} :#{s}"
-  end
-
   def can_reply?
     @command == :privmsg || @command == :ctcp_privmsg
   end

@@ -35,8 +35,6 @@ module BotCore
 
     def can_reply?; _ni end
 
-    def notice_user(text); _ni end
-
     def command_prefix; _ni end
 
     def command_prefix_matcher; _ni end

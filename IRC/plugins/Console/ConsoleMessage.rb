@@ -103,14 +103,6 @@ class ConsoleMessage
     true
   end
 
-  def notice_user(text)
-    return if !text
-
-    s = text.to_s
-
-    @bot.console_send(s) # unless s.empty?
-  end
-
   def command_prefix
     '.'
   end
