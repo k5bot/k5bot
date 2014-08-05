@@ -281,9 +281,20 @@ class Router < IRCPlugin
     return nil unless allowed_channels # Don't filter plugins not in list
     # Private messages to our bot can be filtered by special :private symbol
     channel_name = message.channelname || :private
-    result = allowed_channels[channel_name]
     # policy for not mentioned channels can be defined by special :otherwise symbol
-    !(result != nil ? result : allowed_channels[:otherwise])
+    key = allowed_channels.include?(channel_name) ? channel_name : :otherwise
+    policy = allowed_channels[key]
+    case policy
+      when nil, false
+        # filter out
+        true
+      when /^dedicated$/i
+        # filter unless it's specifically dedicated to us
+        !message.dedicated?
+      else
+        # don't filter out
+        false
+    end
   end
 end
 

@@ -86,6 +86,9 @@
         :private: false
         :otherwise: false
         "##japanese": true
+      :Hello:
+        "##japanese": dedicated
+        :otherwise: true
 - :Clock
 - :Example:
     :foo: baz
