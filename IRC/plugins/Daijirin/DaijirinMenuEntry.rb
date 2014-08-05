@@ -46,7 +46,7 @@ class DaijirinMenuEntry < MenuNode
     info.each_with_index do |subentry, i|
       if i > @to_show
         subentry.each do |line|
-          msg.notice_user(line)
+          msg.reply(line, :notice => true, :force_private => true)
         end
       elsif i == @to_show
         subentry.each do |line|
@@ -65,7 +65,9 @@ class DaijirinMenuEntry < MenuNode
       format_references(entry) { |ref| msg.reply(ref) }
     else
       # Same as above, but for calling user only
-      format_references(entry) { |ref| msg.notice_user(ref) }
+      format_references(entry) do |ref|
+        msg.reply(ref, :notice => true, :force_private => true)
+      end
     end
   end
 
