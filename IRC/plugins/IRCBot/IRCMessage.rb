@@ -147,7 +147,8 @@ class IRCMessage
     text = text.to_s
     return if text.empty?
 
-    @bot.send(opts.merge(:original=>"PRIVMSG #{replyTo(opts[:force_private])} :#{text}"))
+    cmd = opts[:notice] ? 'NOTICE' : 'PRIVMSG'
+    @bot.send(opts.merge(:original=>"#{cmd} #{replyTo(opts[:force_private])} :#{text}"))
   end
 
   def notice_user(text)
