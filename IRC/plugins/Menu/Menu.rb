@@ -55,7 +55,7 @@ shows the list of entries starting from that position",
       when :u
         menu_state.move_up!(msg)
       else
-        index = Menu.get_int(msg.message)
+        index = Menu.get_int(msg.tail)
         return unless index
         menu_state.move_down_to!(menu_state.get_child(index), msg)
     end
