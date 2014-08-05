@@ -19,6 +19,7 @@ module BotCore
 
     def channelname; _ni end # Leaked from IRCMessage. To be removed eventually.
 
+    # true if nobody else in the context was able to see the message.
     def private?; _ni end
 
     # Principals of the message originator

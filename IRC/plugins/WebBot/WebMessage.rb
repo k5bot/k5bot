@@ -26,7 +26,7 @@ class WebMessage
     @command, @params, @user, @ctcp, @bot_command, @tail = nil
     @timestamp = Time.now
     @reply_array = reply_array
-    parse @raw
+    parse(@raw)
   end
 
   def command
@@ -106,7 +106,7 @@ class WebMessage
 
   def reply(text, opts = {})
     return unless can_reply?
-    return if !text
+    return unless text
     text = text.to_s
     # return if text.empty? # Allow sending empty strings in Web
 

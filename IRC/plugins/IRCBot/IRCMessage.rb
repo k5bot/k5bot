@@ -30,23 +30,27 @@ class IRCMessage
               :tail # The message with nick prefix and bot_command removed if it exists, otherwise the whole message
 
   def initialize(bot, raw)
-    @prefix, @command, @params, @user, @ctcp, @bot_command, @tail, @is_private = nil
-    @timestamp = Time.now
+    @raw = raw
     @bot = bot
-    parse @raw = raw
+    @prefix = @command = @params = nil
+    @bot_command = @ctcp = @tail = nil
+    @user = nil
+    @is_private = nil
+    @timestamp = Time.now
+    parse(@raw)
   end
 
   def parse(raw)
     return unless raw
     raw.strip!
     msg_parts = raw.to_s.split(/[ 　]/)
-    @prefix = msg_parts.shift[1..-1] if msg_parts.first.start_with? ':'
+    @prefix = msg_parts.shift[1..-1] if msg_parts.first.start_with?(':')
     @command = msg_parts.shift.downcase.to_sym
     @params = []
-    @params << msg_parts.shift while msg_parts.first and !msg_parts.first.start_with? ':'
+    @params << msg_parts.shift while msg_parts.first and !msg_parts.first.start_with?(':')
     msg_parts.first.slice!(0) if msg_parts.first
     @params.delete_if{|param| param.empty?}
-    @params << msg_parts.join(' ') if !msg_parts.empty?
+    @params << msg_parts.join(' ') unless msg_parts.empty?
 
     if @command == :privmsg || @command == :notice
       @is_private = @params.first.eql?(@bot.user.nick)
@@ -137,18 +141,16 @@ class IRCMessage
     @is_private
   end
 
-  def replyTo(*force_private)
-    @replyTo ||= (private? || force_private.first) ? nick : @params.first
-  end
-
   def reply(text, opts = {})
     return unless can_reply?
-    return if !text
+    return unless text
     text = text.to_s
     return if text.empty?
 
     cmd = opts[:notice] ? 'NOTICE' : 'PRIVMSG'
-    @bot.send(opts.merge(:original=>"#{cmd} #{replyTo(opts[:force_private])} :#{text}"))
+    reply_to = (private? || opts[:force_private]) ? nick : @params.first
+
+    @bot.send(opts.merge(:original=>"#{cmd} #{reply_to} :#{text}"))
   end
 
   def can_reply?
@@ -191,10 +193,10 @@ class IRCMessage
   end
 
   def self.ctcp_quote(str)
-    str.gsub("\0", '\0').gsub("\1", '\1').gsub("\n", '\n').gsub("\r", '\r').gsub(" ", '\@').gsub("\\", '\\\\')
+    str.gsub("\0", '\0').gsub("\1", '\1').gsub("\n", '\n').gsub("\r", '\r').gsub(' ', '\@').gsub("\\", '\\\\')
   end
 
   def self.ctcp_unquote(str)
-    str.gsub('\0', "\0").gsub('\1', "\1").gsub('\n', "\n").gsub('\r', "\r").gsub('\@', " ").gsub('\\\\', "\\")
+    str.gsub('\0', "\0").gsub('\1', "\1").gsub('\n', "\n").gsub('\r', "\r").gsub('\@', ' ').gsub('\\\\', "\\")
   end
 end
