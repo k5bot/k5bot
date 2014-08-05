@@ -22,7 +22,7 @@ class IRCFirstListener
     true # stop further message propagation
   end
 
-  def on_263
+  def on_263(msg)
     msg.bot.send_raw(msg.bot.last_sent)
 
     true # stop further message propagation
