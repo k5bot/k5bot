@@ -21,6 +21,9 @@ module BotCore
 
     # true if nobody else in the context was able to see the message.
     def private?; _ni end
+    # true if this message was specifically designated to be for the bot,
+    # e.g by mentioning bot's nick in irc, etc.
+    def dedicated?; private? end
 
     # Principals of the message originator
     def principals; _ni end

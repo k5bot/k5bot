@@ -35,7 +35,7 @@ class IRCMessage
     @prefix = @command = @params = nil
     @bot_command = @ctcp = @tail = nil
     @user = nil
-    @is_private = nil
+    @is_private = @is_dedicated = nil
     @timestamp = Time.now
     parse(@raw)
   end
@@ -76,6 +76,9 @@ class IRCMessage
       m = message && message.match(/^\s*(#{@bot.user.nick}\s*[:>,]?\s*)?#{command_prefix_matcher}([\p{ASCII}\uFF01-\uFF5E&&[^\p{Z}]]+)\p{Z}*(.*)\s*/i)
 
       if m
+        # If bot nick is mentioned, consider this message dedicated
+        @is_dedicated = !!m[1]
+
         bc = m[2]
         @bot_command = bc.tr("\uFF01-\uFF5E", "\u{21}-\u{7E}").downcase.to_sym if bc
       end
@@ -139,6 +142,10 @@ class IRCMessage
 
   def private?
     @is_private
+  end
+
+  def dedicated?
+    @is_private || @is_dedicated
   end
 
   def reply(text, opts = {})
