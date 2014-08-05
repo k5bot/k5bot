@@ -36,18 +36,12 @@ class Hello < IRCPlugin
   end
 
   def on_privmsg(msg)
-    raw_message = msg.message
-    nick_stripped = raw_message.gsub(/^\s*#{msg.bot.user.nick}\s*[:>,]?\s+/, '')
+    tail = msg.tail
+    return unless tail
 
     channel_name = msg.channelname
 
-    # Respond only to "bot_nick: greeting", if 'channel_name: true' is specified in config.
-    if config[channel_name] && raw_message.eql?(nick_stripped)
-      @forbidden_to_reply.delete(channel_name)
-      return
-    end
-
-    tail = nick_stripped.gsub(/[\s!?！？〜\.。]/, '').strip
+    tail = tail.gsub(/[\s!?！？〜\.。]/, '').strip
     tail_kana = @l.katakana_to_hiragana(@l.romaji_to_hiragana(tail))
 
     reply_index = Hello.find_index do |i|
