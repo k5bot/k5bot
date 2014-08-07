@@ -1,3 +1,7 @@
+**_WARNING! This is a very unstable development repo,
+with git rebase often used on its history. Be careful with your pulls
+ and merges. Use at your own risk._**
+
 K5 bot
 ================================
 
