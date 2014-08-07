@@ -15,7 +15,7 @@ class Googler < IRCPlugin
   Description = 'Provides access to various Google services'
   Commands = {
       :g => 'searches Google and returns the first result',
-      :g! => 'searches Google and returns results as a menu',
+      :g? => 'searches Google and returns results as a menu',
   }
 
   Dependencies = [:Menu]
@@ -36,7 +36,7 @@ class Googler < IRCPlugin
 
   def on_privmsg(msg)
     case msg.bot_command
-      when :g!
+      when :g?
         word = msg.tail
         return unless word
         lookup = find_item(word, 8).map do |item|
