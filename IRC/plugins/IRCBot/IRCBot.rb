@@ -256,13 +256,18 @@ class IRCBot < IRCPlugin
           Connectix::ConnectorTCP::DEFAULT_HOST_KEY => DEFAULT_SERVER,
           Connectix::ConnectorTCP::DEFAULT_PORT_KEY => DEFAULT_PORT,
       )
-      dispatch(OpenStruct.new({:command => :connection}))
-      until @sock.eof? do # Throws Errno::ECONNRESET
-        receive @sock.gets
-        # improve latency a bit, by flushing output stream,
-        # which was probably written into during the process
-        # of handling received data
-        @sock.flush
+      return if @terminate
+      begin
+        dispatch(OpenStruct.new({:command => :connection}))
+        until @sock.eof? do # Throws Errno::ECONNRESET
+          receive @sock.gets
+          # improve latency a bit, by flushing output stream,
+          # which was probably written into during the process
+          # of handling received data
+          @sock.flush
+        end
+      ensure
+        dispatch(OpenStruct.new({:command => :disconnection}))
       end
     rescue SocketError, Errno::ECONNRESET, Errno::EHOSTUNREACH => e
       log(:error, "Cannot connect: #{e}")
@@ -271,7 +276,6 @@ class IRCBot < IRCPlugin
     rescue Exception => e
       log(:error, "Unexpected exception: #{e.inspect} #{e.backtrace.join(' ')}")
     ensure
-      dispatch(OpenStruct.new({:command => :disconnection}))
       @sock.close rescue nil
       @sock = nil
     end
