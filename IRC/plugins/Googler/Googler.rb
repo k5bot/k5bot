@@ -79,6 +79,7 @@ class Googler < IRCPlugin
     search = Google::Search::Web.new
     search.query = query
     search.size = Google::Search.size_for(:small) < size ? :large : :small
+    search.language = :ja
 
     Enumerator.new do |yielder|
       search.each do |result|
