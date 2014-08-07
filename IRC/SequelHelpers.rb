@@ -25,6 +25,7 @@ module Sequel
       # by setting missing variables in Database's default_dataset
       ds = old_dataset_method(*args)
       ds.instance_variable_set(:@columns, nil)
+      ds.instance_variable_set(:@skip_symbol_cache, nil)
       ds.row_proc = nil
       ds
     end
