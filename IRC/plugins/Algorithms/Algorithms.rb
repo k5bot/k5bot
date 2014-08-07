@@ -5,7 +5,7 @@
 # Clock plugin tells the time
 
 require_relative '../../IRCPlugin'
-require_relative 'damerau_levenshtein'
+require_relative 'DamerauLevenshtein'
 
 class Algorithms < IRCPlugin
   Description = "The Algorithms plugin contains various geeky functions and algorithms."
@@ -15,11 +15,11 @@ class Algorithms < IRCPlugin
   }
 
   def afterLoad
-    load_helper_class(:damerau_levenshtein)
+    load_helper_class(:DamerauLevenshtein)
   end
 
   def beforeUnload
-    unload_helper_class(:damerau_levenshtein)
+    unload_helper_class(:DamerauLevenshtein)
 
     nil
   end
