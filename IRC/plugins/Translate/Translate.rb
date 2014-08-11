@@ -40,6 +40,7 @@ class Translate < IRCPlugin
   EXCITE_SUPPORTED = make_lang_service_format_map([], {:en => 'EN', :ja => 'JA'})
   KNOWN_SERVICES = {
       :Google => {:prefix=>'g', :languages=>GOOGLE_SUPPORTED, :translator=>:google_translate},
+      :'Google \'Did You Mean?\'' => {:prefix=>'gg', :languages=>GOOGLE_SUPPORTED, :translator=>:google_dym_translate, :single_language => true},
       :Honyaku => {:prefix=>'h', :languages=>HONYAKU_SUPPORTED, :translator=>:honyaku_translate},
       :Excite => {:prefix=>'x', :languages=>EXCITE_SUPPORTED, :translator=>:excite_translate},
   }
@@ -97,6 +98,7 @@ class Translate < IRCPlugin
 
   def self.fill_guess_commands(commands, translation_map)
     KNOWN_SERVICES.each do |service, service_record|
+      next if service_record[:single_language]
       prefix = service_record[:prefix]
 
       dsc = "attempts to guess desired translation direction for specified text and translates it using #{service}"
@@ -107,8 +109,37 @@ class Translate < IRCPlugin
     end
   end
 
+  def self.fill_one_lang_commands(commands, translation_map)
+    KNOWN_SERVICES.each do |service, service_record|
+      next unless service_record[:single_language]
+      prefix = service_record[:prefix]
+      possibles = service_record[:languages]
+
+      used_abbreviations = {}
+
+      possibles.keys.each do |l_from|
+        abbreviation_from, _ = get_language_info(l_from)
+        lp = possibles[l_from]
+        next unless lp
+        lp = [lp]
+
+        cmd = "#{prefix}#{abbreviation_from}".to_sym
+
+        translation_map[cmd] = [service, lp]
+
+        # Gather all accepted abbreviations, to list them in help
+        used_abbreviations[abbreviation_from] = l_from
+      end
+
+      # Generate generic help for prefixed template form
+      dsc = "\"#{prefix}<lang>\" translates specified text using #{service}. Possible values for <lang> are: #{used_abbreviations.keys.join(', ')}"
+      commands["#{prefix}_".to_sym] = dsc
+    end
+  end
+
   def self.fill_explicit_commands(commands, short_commands, translation_map)
     KNOWN_SERVICES.each do |service, service_record|
+      next if service_record[:single_language]
       prefix = service_record[:prefix]
       possibles = service_record[:languages]
 
@@ -157,6 +188,9 @@ class Translate < IRCPlugin
 
     long_commands = {}
     short_commands = {}
+
+    fill_one_lang_commands(long_commands, translation_map)
+
     fill_explicit_commands(long_commands, short_commands, translation_map)
 
     commands.merge! long_commands
@@ -168,6 +202,8 @@ class Translate < IRCPlugin
   TRANSLATION_MAP, Commands = generate_commands
 
   def afterLoad
+    load_helper_class(:QuirkedJSON)
+
     @l = @plugin_manager.plugins[:Language]
   end
 
@@ -194,6 +230,7 @@ class Translate < IRCPlugin
   end
 
   GOOGLE_BASE_URL = 'https://translate.google.com'
+  GOOGLE_JSON_URL = 'https://translate.google.com/translate_a/single'
 
   def google_translate(text, lp)
     lp = auto_detect_ja_lp(text, %w(auto ja), %w(ja en)) unless lp
@@ -209,6 +246,65 @@ class Translate < IRCPlugin
     filtered = fix_encoding(result.body, doc.encoding)
     doc = Nokogiri::HTML filtered
     doc.css('span[id="result_box"] span').text.chomp
+  end
+
+  # Exploiting "did you mean" field for various corrections and
+  # romaji -> japanese transcription
+  def google_dym_translate(text, lp)
+    lp = %w(ja) unless lp
+    # Choose some second language.
+    # Same language prevents DYM from working apparently,
+    # so always choose english, except when it's english.
+    lp << 'en'.eql?(lp.first) ? 'ja' : 'en'
+
+    ret = google_get_json(text, lp, %w(qc))
+
+    return unless ret
+
+    # Example:
+    # [,,,,,,,[,"お前ら なんぞ 信じられっかよ",[6]]]
+    if ret
+      json = QuirkedJSON.new(ret).parse
+      spelling_correction = json[7]
+      spelling_correction[1] if spelling_correction
+    end
+  end
+
+  def google_get_json(text, lp, dt)
+    l_from, l_to = lp
+    params = [
+        [:client, 't'],
+        [:sl, l_from],
+        [:hl, l_to],
+        [:tl, l_to],
+        # Apparently those are query type values. observed values are:
+        # 't','at','bd','ex','ld','md','qc','rw','rm','ss','sw',
+        # 'qc' seems to mean spelling correction.
+        *dt.map {|val| [:dt, val]},
+        [:ie, 'UTF-8'],
+        [:oe, 'UTF-8'],
+        [:ssel, 0],
+        [:tsel, 0],
+        [:q, text],
+    ]
+
+    uri = URI.parse(GOOGLE_JSON_URL)
+    uri.query = URI.encode_www_form(params)
+
+    Net::HTTP.start(uri.hostname, uri.port,
+                    :use_ssl => uri.scheme == 'https') do |http|
+      res = http.request_get(uri,
+                             {
+                                 'user-agent' => HONYAKU_USER_AGENT,
+                                 'referer' => GOOGLE_BASE_URL,
+                             }
+      )
+      unless (Net::HTTPSuccess === res) && res.body && !res.body.empty?
+        next
+      end
+
+      res.body
+    end
   end
 
   def fix_encoding(str, encoding)
