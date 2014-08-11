@@ -235,17 +235,41 @@ class Translate < IRCPlugin
   def google_translate(text, lp)
     lp = auto_detect_ja_lp(text, %w(auto ja), %w(ja en)) unless lp
 
-    l_from, l_to = lp
-    result = Net::HTTP.post_form(
-        URI.parse(GOOGLE_BASE_URL),
-        {'sl' => l_from, 'tl' => l_to, 'text' => text})
-    return if [Net::HTTPSuccess, Net::HTTPRedirection].include? result
-    # Fix encoding error, which can be seen e.g. with .g_c 戦
-    # Parse once to detect encoding from html
-    doc = Nokogiri::HTML result.body
-    filtered = fix_encoding(result.body, doc.encoding)
-    doc = Nokogiri::HTML filtered
-    doc.css('span[id="result_box"] span').text.chomp
+    ret = google_get_json(text, lp, %w(t qc))
+
+    return unless ret
+
+    # Example:
+    # [[["fool", "dummkopf"]], <...snip...>]
+    if ret
+      json = QuirkedJSON.new(ret).parse
+      translation = json[0]
+      translation = translation[0] if translation
+      translation = translation[0] if translation
+      if translation && translation.downcase.gsub(/\s+/, '').eql?(text.downcase.gsub(/\s+/, ''))
+        translation = nil
+      end
+      translation = translation + ' ' if translation
+
+      detected_language = json[2]
+      if detected_language
+        detected_language = if 'auto'.eql?(lp.first)
+                              unless %w(ja en).include?(detected_language)
+                                "[lang: #{detected_language}]"
+                              end
+                            end
+      end
+
+      if translation
+        spelling_correction = nil
+      else
+        spelling_correction = json[7]
+        spelling_correction = spelling_correction[1] if spelling_correction
+        spelling_correction = "[did you mean: #{spelling_correction}]" if spelling_correction
+      end
+
+      [translation, detected_language, spelling_correction].compact.join
+    end
   end
 
   # Exploiting "did you mean" field for various corrections and
