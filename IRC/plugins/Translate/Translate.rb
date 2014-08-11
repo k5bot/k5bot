@@ -11,7 +11,7 @@ require 'net/http'
 require 'json'
 
 class Translate < IRCPlugin
-  Description = "Uses translation engines to translate between languages."
+  Description = 'Uses translation engines to translate between languages.'
   Dependencies = [ :Language ]
 
   def self.to_lang_key(x)
@@ -50,27 +50,27 @@ class Translate < IRCPlugin
   # [Shortcut form for commands, Language description for help]
   LANGUAGE_INFO = {
       :auto => ['_', 'Auto-detected language'],
-      :en => ['en', 'English'],
-      :ja => ['ja', 'Japanese'],
+      :en => %w(en English),
+      :ja => %w(ja Japanese),
       :zh => ['zh', 'Simplified Chinese'],
       :tw => ['tw', 'Traditional Chinese'],
-      :ko => ['ko', 'Korean'],
-      :fr => ['fr', 'French'],
-      :pt => ['pt', 'Portuguese'],
-      :de => ['de', 'German'],
-      :it => ['it', 'Italian'],
-      :es => ['es', 'Spanish'],
-      :no => ['no', 'Norwegian'],
-      :ru => ['ru', 'Russian'],
-      :fi => ['fi', 'Finnish'],
-      :hu => ['hu', 'Hungarian'],
-      :sv => ['sv', 'Swedish'],
-      :da => ['da', 'Danish'],
-      :pl => ['pl', 'Polish'],
-      :lt => ['lt', 'Lithuanian'],
-      :nl => ['nl', 'Dutch'],
-      :sw => ['sw', 'Swahili'],
-      :ar => ['ar', 'Arabic'],
+      :ko => %w(ko Korean),
+      :fr => %w(fr French),
+      :pt => %w(pt Portuguese),
+      :de => %w(de German),
+      :it => %w(it Italian),
+      :es => %w(es Spanish),
+      :no => %w(no Norwegian),
+      :ru => %w(ru Russian),
+      :fi => %w(fi Finnish),
+      :hu => %w(hu Hungarian),
+      :sv => %w(sv Swedish),
+      :da => %w(da Danish),
+      :pl => %w(pl Polish),
+      :lt => %w(lt Lithuanian),
+      :nl => %w(nl Dutch),
+      :sw => %w(sw Swahili),
+      :ar => %w(ar Arabic),
   }
 
   def self.get_language_info(lang)
@@ -79,8 +79,8 @@ class Translate < IRCPlugin
     result
   end
 
-  def self.get_language_list_string()
-    LANGUAGE_INFO.map { |_, info| "#{info[1]} (#{info[0]})" }.sort.join(", ")
+  def self.get_language_list_string
+    LANGUAGE_INFO.map { |_, info| "#{info[1]} (#{info[0]})" }.sort.join(', ')
   end
 
   def self.fill_default_guess_command(commands, translation_map)
@@ -147,9 +147,9 @@ class Translate < IRCPlugin
     end
   end
 
-  def self.generate_commands()
+  def self.generate_commands
     translation_map = {}
-    commands = {:langs => "shows languages supported by this plugin (note that not all of them are available for all translation engines)"}
+    commands = {:langs => 'shows languages supported by this plugin (note that not all of them are available for all translation engines)'}
 
     fill_default_guess_command(commands, translation_map)
 
@@ -165,7 +165,7 @@ class Translate < IRCPlugin
     return [translation_map, commands]
   end
 
-  TRANSLATION_MAP, Commands = generate_commands()
+  TRANSLATION_MAP, Commands = generate_commands
 
   def afterLoad
     @l = @plugin_manager.plugins[:Language]
@@ -174,7 +174,7 @@ class Translate < IRCPlugin
   def on_privmsg(msg)
     bot_command = msg.bot_command
     if :langs == bot_command
-      return msg.reply Translate.get_language_list_string()
+      return msg.reply(Translate.get_language_list_string)
     end
 
     text = msg.tail
@@ -218,9 +218,9 @@ class Translate < IRCPlugin
     end.join
   end
 
-  HONYAKU_INIT_URL="http://honyaku.yahoo.co.jp/transtext/"
-  HONYAKU_BASE_URL="http://honyaku.yahoo.co.jp/TranslationText"
-  HONYAKU_USER_AGENT="Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET"
+  HONYAKU_INIT_URL='http://honyaku.yahoo.co.jp/transtext/'
+  HONYAKU_BASE_URL='http://honyaku.yahoo.co.jp/TranslationText'
+  HONYAKU_USER_AGENT='Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET'
 
   def honyaku_translate(text, lp)
     lp = auto_detect_ja_lp(text, %w(en ja), %w(ja en)) unless lp
@@ -230,18 +230,18 @@ class Translate < IRCPlugin
     json = JSON.parse(ret.body)
 
     if  json != nil and
-        json.include?("ResultSet") and
-        json["ResultSet"].include?("ResultText") and
-        json["ResultSet"]["ResultText"].include?("Results")
+        json.include?('ResultSet') and
+        json['ResultSet'].include?('ResultText') and
+        json['ResultSet']['ResultText'].include?('Results')
 
-      results = json["ResultSet"]["ResultText"]["Results"]
+      results = json['ResultSet']['ResultText']['Results']
 
 #      results.each do |result|
 #        trans_text << "#{result["key"]}: #{result["TranslateText"]}\n"
 #        trans_text << "#{result["key"]}: -> #{result["TranslatedText"]}\n"
 #      end
 
-      results.map { |result| result["TranslatedText"] }.join(' ')
+      results.map { |result| result['TranslatedText'] }.join(' ')
     else
       puts "failed... received data: #{ret.body}"
       nil
@@ -259,7 +259,7 @@ class Translate < IRCPlugin
     uri = URI.parse(HONYAKU_INIT_URL)
     http_obj.start(uri.host, uri.port) do |http|
       request = Net::HTTP::Get.new(uri.path)
-      request["user-agent"] = HONYAKU_USER_AGENT
+      request['user-agent'] = HONYAKU_USER_AGENT
       res = http.request(request)
       if res.body == nil || res.body.empty?
         next
@@ -277,17 +277,17 @@ class Translate < IRCPlugin
     uri = URI.parse(HONYAKU_BASE_URL)
     http_obj.start(uri.host, uri.port) do |http|
       request = Net::HTTP::Post.new(uri.path)
-      request["user-agent"]       = HONYAKU_USER_AGENT
-      request["referer"]          = HONYAKU_INIT_URL
-      request["x-requested-with"] = "XMLHttpRequest"
-      request["Accept-Language"]  = "ja"
-      request["Accept"]           = "application/json, text/javascript, */*"
+      request['user-agent']       = HONYAKU_USER_AGENT
+      request['referer']          = HONYAKU_INIT_URL
+      request['x-requested-with'] = 'XMLHttpRequest'
+      request['Accept-Language']  = 'ja'
+      request['Accept']           = 'application/json, text/javascript, */*'
       body = {
           :ieid      => l_from,
           :oeid      => l_to,
           :results   => 1000,
           :formality => 0,
-          :output    => "json",
+          :output    => 'json',
           :p         => str,
           :_crumb    => crumb,
       }
