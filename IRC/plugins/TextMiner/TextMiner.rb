@@ -3,6 +3,7 @@
 require 'set'
 
 require_relative '../../IRCPlugin'
+require_relative '../../LayoutableText'
 
 class TextMiner < IRCPlugin
   Description = "TextMiner plugin provides access, search, \
@@ -135,18 +136,7 @@ If the regexp contains round-braced groups, only text matching these groups is r
         last_line = "#{occurrences_total} total, \
 appears in #{counts.size}/#{@files.size} scripts)"
 
-        reply_untruncated(msg, counts, MAX_VNHITS_LINES) do |chunk, remainder|
-          line = chunk.map{|n, s| "#{n}: #{s}"}.join(', ')
-          if remainder
-            line += ' ('
-            unless remainder.empty?
-              line += "#{remainder.map { |_, s| s }.inject(0, :+)} in the rest, "
-            end
-            line += last_line
-          end
-          line
-        end
-
+        msg.reply(WordHitsLayouter.new(last_line, counts, MAX_VNHITS_LINES))
       when :example, :exampler, :regexample
         query = if word
                   if :example.eql?(msg.bot_command)
@@ -208,30 +198,9 @@ appears in #{counts.size}/#{@files.size} scripts)"
         end
 
         if [:wordfight, :wordfightr].include?(msg.bot_command)
-          # Sort and chunk into equivalence classes by occurrence count
-          results = results.sort_by {|_, s| -s}
-          reply_untruncated(msg, results, MAX_WORDCOUNT_LINES) do |chunk, remainder|
-            chunk = chunk.chunk {|_, s| s}.map(&:last)
-            line = chunk.map do |equiv|
-              equiv.map do |w, s|
-                "#{w} (#{s})"
-              end.join(' = ')
-            end.join(' > ')
-            if remainder && !remainder.empty?
-              line += " (also #{remainder.map { |_, s| s }.inject(0, :+)} in #{remainder.size} omitted)"
-            end
-            line
-          end
+          msg.reply(WordFightLayouter.new(results, MAX_WORDCOUNT_LINES))
         else
-          reply_untruncated(msg, results, MAX_WORDCOUNT_LINES) do |chunk, remainder|
-            line = chunk.map do |w, s|
-              "#{w} (#{s})"
-            end.join(', ')
-            if remainder && !remainder.empty?
-              line += " (also #{remainder.map { |_, s| s }.inject(0, :+)} in #{remainder.size} omitted)"
-            end
-            line
-          end
+          msg.reply(WordCountLayouter.new(results, MAX_WORDCOUNT_LINES))
         end
     end
   end
@@ -347,32 +316,6 @@ appears in #{counts.size}/#{@files.size} scripts)"
   #def purge_expired_nav!
   #  @navigations.reject! { |_, v| v.is_expired? }
   #end
-
-  def reply_untruncated(msg, output_array, max_lines = nil)
-    until output_array.empty? || (max_lines && max_lines <= 0)
-      max_lines -= 1
-      chunk_size = output_array.size
-      begin
-        # Remainder contains:
-        # 1) nil, if this is not the last iteration before stopping
-        # 2) [], if this is the last iteration but we didn't exceed max_lines
-        # and hence printed everything we were given
-        # 3) array elements that were chosen to be not printed, b/c now is the last
-        # iteration and we can't print any more lines due to max_lines restriction.
-        remainder = if (max_lines && max_lines <= 0) || (chunk_size == output_array.size)
-          output_array.slice(chunk_size..-1)
-        end
-
-        output_string = yield(output_array[0..chunk_size-1], remainder)
-
-        msg.reply(output_string, :dont_truncate => (chunk_size > 1))
-      rescue
-        chunk_size -= 1
-        retry if chunk_size > 0
-      end
-      output_array.slice!(0, chunk_size)
-    end
-  end
 
   class MinedText
     attr_reader :name
@@ -695,6 +638,73 @@ appears in #{counts.size}/#{@files.size} scripts)"
     alias_method(:==, :eql?)
     def hash
       @main_regexp.hash + @aux_regexps_equ.hash
+    end
+  end
+
+  class WordFightLayouter < LayoutableText::Arrayed
+    def initialize(arr, *args)
+      # Sort by occurrence count.
+      super(arr.sort_by {|_, s| -s}, *args)
+    end
+
+    protected
+    def format_chunk(arr, chunk_size, is_last_line)
+      chunk = arr.slice(0, chunk_size)
+      # Chunk into equivalence classes by occurrence count.
+      chunk = chunk.chunk {|_, s| s}.map(&:last)
+      line = chunk.map do |equiv|
+        equiv.map do |w, s|
+          "#{w} (#{s})"
+        end.join(' = ')
+      end.join(' > ')
+
+      if is_last_line
+        remainder = arr.slice(chunk_size..-1)
+        unless remainder.empty?
+          line += " (also #{remainder.map { |_, s| s }.inject(0, :+)} in #{remainder.size} omitted)"
+        end
+      end
+      line
+    end
+  end
+
+  class WordCountLayouter < LayoutableText::Arrayed
+    protected
+    def format_chunk(arr, chunk_size, is_last_line)
+      chunk = arr.slice(0, chunk_size)
+      line = chunk.map do |w, s|
+        "#{w} (#{s})"
+      end.join(', ')
+
+      if is_last_line
+        remainder = arr.slice(chunk_size..-1)
+        unless remainder.empty?
+          line += " (also #{remainder.map { |_, s| s }.inject(0, :+)} in #{remainder.size} omitted)"
+        end
+      end
+      line
+    end
+  end
+
+  class WordHitsLayouter < LayoutableText::Arrayed
+    def initialize(last_line, *args)
+      super(*args)
+      @last_line = last_line
+    end
+
+    protected
+    def format_chunk(arr, chunk_size, is_last_line)
+      chunk = arr.slice(0, chunk_size)
+      line = chunk.map{|n, s| "#{n}: #{s}"}.join(', ')
+      if is_last_line
+        remainder = arr.slice(chunk_size..-1)
+        line += ' ('
+        unless remainder.empty?
+          line += "#{remainder.map { |_, s| s }.inject(0, :+)} in the rest, "
+        end
+        line += @last_line
+      end
+      line
     end
   end
 end
