@@ -10,6 +10,7 @@ require 'ostruct'
 require_relative '../../Emitter'
 require_relative '../../Throttler'
 require_relative '../../IRCPlugin'
+require_relative '../../LayoutableText'
 require_relative '../../ContextMetadata'
 
 require_relative 'IRCUser'
@@ -128,41 +129,35 @@ class IRCBot < IRCPlugin
     nil
   end
 
-  #truncates truncates a string, so that it contains no more than byte_limit bytes
-  #returns hash with key :truncated, containing resulting string.
-  #hash is used to avoid double truncation and for future truncation customization.
-  def truncate_for_irc(raw, byte_limit)
-    if raw.instance_of?(Hash)
-      return raw if raw[:truncated] #already truncated
-      opts = raw
-      raw = raw[:original]
-    else
-      opts = {:original => raw}
-    end
-    raw = encode raw.dup
+  # Lays out strings from given LayoutableText, so that every line contains
+  # no more than byte_limit bytes. Returns opts hash with key :truncated
+  # mapped to the array of resulting lines.
+  def truncate_for_irc(opts, byte_limit)
+    layoutable_text = opts[:original]
 
-    #char-per-char correspondence replace, to make the returned count meaningful
-    raw.gsub!(/[\r\n]/, ' ')
-    raw.strip!
+    layout = layoutable_text.layout_calculate do |line, minimum_size: false, **_|
+      line = encode(line.dup)
 
-    #raw = raw[0, 512] # Trim to max 512 characters
-    #the above is wrong. characters can be of different size in bytes.
+      # char-per-char replace
+      line.gsub!(/[\r\n]/, ' ')
+      # whitespace elimination
+      line.strip!
 
-    truncated = raw.byteslice(0, byte_limit)
-
-    raise "Can't truncate" if opts[:dont_truncate] && (truncated.length != raw.length)
-
-    #the above might have resulted in a malformed string
-    #try to guess the necessary resulting length in chars, and
-    #make a clean cut on a character boundary
-    i = truncated.length
-    loop do
-      truncated = raw[0, i]
-      break if truncated.bytesize <= byte_limit
-      i-=1
+      # Accept line if it fits in the byte limit. Also accept if if it doesn't
+      # fit, but is still the smallest line that our layouter can produce.
+      # Except if our caller insisted on not truncating lines, in which case
+      # layouter will raise an exception due to not finding a satisfactory layout.
+      line if (line.bytesize <= byte_limit) || (minimum_size && !opts[:dont_truncate])
     end
 
-    opts.merge(:truncated => truncated)
+    layout = layout.map do |line|
+      line = line.byteslice(0, byte_limit)
+      # The above might have resulted in a malformed string.
+      # Make a clean cut on a character boundary.
+      line[0, line.size]
+    end
+
+    opts.merge(:truncated => layout)
   end
 
   # Truncates a string, so that it contains no more than 510 bytes.
@@ -183,26 +178,34 @@ class IRCBot < IRCPlugin
     truncate_for_irc(raw, limit)
   end
 
-  def irc_send(raw)
-    send_raw(truncate_for_irc_client(raw))
+  def irc_send(text, opts = {})
+    do_send_raw(truncate_for_irc_client(opts.merge(:original => text)))
   end
 
-  #returns number of characters written from given string
-  def send_raw(raw)
-    raw = truncate_for_irc_server(raw)
-
-    @throttler.throttle do
-      log_hide = raw[:log_hide]
-      raw = raw[:truncated]
-
-      log(:out, log_hide || raw)
-
-      @last_sent = raw
-
-      @sock.write "#{raw}\r\n"
+  def send_raw(opts)
+    unless opts.is_a?(Hash)
+      opts = {:original => opts}
     end
+    text = opts[:original]
+    unless text.is_a?(LayoutableText)
+      return unless text
+      text = text.to_s
+      return if text.empty?
+      opts[:original] = LayoutableText::SingleString.new(text)
+    end
+    do_send_raw(truncate_for_irc_server(opts))
+  end
 
-    raw.length
+  def do_send_raw(opts)
+    log_hide = opts[:log_hide]
+    layout = opts[:truncated]
+    layout.each do |raw|
+      @throttler.throttle do
+        log(:out, log_hide || raw)
+        @last_sent = raw
+        @sock.write "#{raw}\r\n"
+      end
+    end
   end
 
   def receive(raw)
@@ -289,11 +292,21 @@ class IRCBot < IRCPlugin
   end
 
   def join_channels(channels)
-    irc_send("JOIN #{channels*','}") if channels
+    send_raw(
+        LayoutableText::Prefixed.new(
+            'JOIN ',
+            LayoutableText::SimpleJoined.new(',', channels)
+        )
+    ) if channels
   end
 
   def part_channels(channels)
-    irc_send("PART #{channels*','}") if channels
+    send_raw(
+        LayoutableText::Prefixed.new(
+            'PART ',
+            LayoutableText::SimpleJoined.new(',', channels)
+        )
+    ) if channels
   end
 
   def find_user_by_nick(nick)

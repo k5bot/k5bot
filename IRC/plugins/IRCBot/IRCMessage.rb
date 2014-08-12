@@ -16,6 +16,7 @@
 require 'ostruct'
 
 require_relative '../../../IRC/Message'
+require_relative '../../../IRC/LayoutableText'
 
 class IRCMessage
   include BotCore::Message
@@ -180,14 +181,18 @@ $
 
   def reply(text, opts = {})
     return unless can_reply?
-    return unless text
-    text = text.to_s
-    return if text.empty?
+    unless text.is_a?(LayoutableText)
+      return unless text
+      text = text.to_s
+      return if text.empty?
+      text = LayoutableText::SingleString.new(text)
+    end
 
     cmd = opts[:notice] ? 'NOTICE' : 'PRIVMSG'
     reply_to = (private? || opts[:force_private]) ? nick : @params.first
 
-    @bot.irc_send(opts.merge(:original=>"#{cmd} #{reply_to} :#{text}"))
+    text = LayoutableText::Prefixed.new("#{cmd} #{reply_to} :", text)
+    @bot.irc_send(text, opts)
   end
 
   def can_reply?
