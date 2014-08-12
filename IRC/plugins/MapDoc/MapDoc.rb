@@ -5,6 +5,7 @@
 # MapDoc plugin presents 'mapdoc' YAML file with hash in it as browsable dictionary
 
 require_relative '../../IRCPlugin'
+require_relative '../../LayoutableText'
 
 class MapDoc < IRCPlugin
   Description = 'Provides access to simple associative array of text.'
@@ -88,42 +89,34 @@ class MapDoc < IRCPlugin
     end
 
     if sub_catalog.is_a?(Hash)
-      print_catalog_keys([bot_command] + full_ref, sub_catalog, msg)
-      reply = format_see_also(case_ambiguous, full_ref)
+      msg.reply(layout_catalog_keys([bot_command] + full_ref, sub_catalog))
     else
-      reply = "#{([bot_command] + full_ref).join(' ')}: #{sub_catalog.to_s}"
-      see_also = format_see_also(case_ambiguous, full_ref)
-      reply += ' ' + see_also if see_also
+      msg.reply(layout_catalog_text([bot_command] + full_ref, sub_catalog))
     end
-
-    msg.reply(reply)
+    see_also = format_see_also(case_ambiguous, [bot_command] + full_ref)
+    msg.reply(see_also) if see_also
   end
 
-  def print_catalog_keys(full_ref, sub_catalog, msg)
+  def layout_catalog_text(full_ref, sub_catalog)
+    LayoutableText::Prefixed.new(
+        "#{full_ref.join(' ')}: ",
+        LayoutableText::SimpleJoined.new(' ', sub_catalog.to_s.split(' '))
+    )
+  end
+
+  def layout_catalog_keys(full_ref, sub_catalog)
     all_keys = sub_catalog.keys.select { |x| !x.nil? }
 
-    until all_keys.empty?
-      chunk_size = all_keys.size
-
-      begin
-        text = "#{full_ref.join(' ')} contains: #{all_keys[0..chunk_size-1].join(', ')}"
-        # make msg.reply throw exception if the text doesn't fit
-        msg.reply(text, :dont_truncate => (chunk_size > 1))
-      rescue Exception => _
-        # sending without truncation failed
-        chunk_size-=1
-        # retry with smaller menu size
-        retry if chunk_size > 0
-      end
-
-      all_keys.slice!(0, chunk_size)
-    end
+    LayoutableText::Prefixed.new(
+        "#{full_ref.join(' ')} contains: ",
+        LayoutableText::SimpleJoined.new(', ', all_keys)
+    )
   end
 
   def format_see_also(case_ambiguous, full_ref)
     return if case_ambiguous.empty?
     reply = "See also: #{case_ambiguous.join(', ')}"
-    full_ref.pop # drop last matched key
+    full_ref = full_ref.slice(0..-2) # drop last matched key
     reply += " in '#{full_ref.join(' ')}'" unless full_ref.empty?
     reply + '.'
   end
