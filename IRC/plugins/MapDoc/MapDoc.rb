@@ -7,7 +7,7 @@
 require_relative '../../IRCPlugin'
 
 class MapDoc < IRCPlugin
-  Description = "Provides access to simple associative array of text."
+  Description = 'Provides access to simple associative array of text.'
 
   Dependencies = [ :StorageYAML ]
 
@@ -125,8 +125,6 @@ class MapDoc < IRCPlugin
     reply = "See also: #{case_ambiguous.join(', ')}"
     full_ref.pop # drop last matched key
     reply += " in '#{full_ref.join(' ')}'" unless full_ref.empty?
-    reply += '.'
-
-    reply
+    reply + '.'
   end
 end
