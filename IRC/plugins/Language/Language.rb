@@ -354,25 +354,8 @@ class Language < IRCPlugin
   end
 
   def self.binary_search(arr, key)
-    i_min = 0
-    i_max = arr.size - 1
-
-    while i_min < i_max
-      i_mid = (i_min + i_max + 1) / 2
-
-      cmp = arr[i_mid] <=> key
-
-      if cmp > 0
-        i_max = i_mid - 1
-      else
-        i_min = i_mid
-      end
-    end
-
-    # 0 if array is empty,
-    # otherwise, index of the first X from the start, such that X<=key
-    # this
-    i_min
+    # index of the first X from the start, such that X<=key
+    ((0...arr.size).bsearch {|i| arr[i] > key } || arr.size) - 1
   end
 
   def self.sort_hash(h, &b)
