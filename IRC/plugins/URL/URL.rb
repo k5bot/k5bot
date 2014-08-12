@@ -16,9 +16,10 @@ require 'time'
 require 'json'
 
 class URL < IRCPlugin
-  Description = "Implements URL preview"
+  Description = 'Implements URL preview'
   Commands = {
-      :short => "shortens a previously seen URL with goo.gl. This command can accept either index (1 is the most recent one) or substring of the desired URL",
+      :short => "shortens a previously seen URL with goo.gl. This command can \
+accept either index (1 is the most recent one) or substring of the desired URL",
   }
 
   def initialize(manager, config)
@@ -32,7 +33,7 @@ class URL < IRCPlugin
   def afterLoad
     @channel_queues = {}
     @url_cache = {}
-    @url_counter = Counter.new()
+    @url_counter = Counter.new
   end
 
   def beforeUnload
@@ -48,7 +49,9 @@ class URL < IRCPlugin
         url = get_uri_from_queue(msg.context, text)
         if url
           short_url = shorten_url(url)
-          msg.reply("Short URL: #{short_url} for URL: #{url.abbreviate(100)}") if short_url
+          if short_url
+            msg.reply("Short URL: #{short_url} for URL: #{abbreviate(url, 100)}")
+          end
         end
       when nil # Don't react to url-s in commands
         scan_for_uri(msg.tail, msg)
@@ -73,7 +76,7 @@ class URL < IRCPlugin
       # Silently skip anything not starting with that,
       # b/c URI.extract() tends to accept anything with colon in it
       # (e.g. "nick:"), which then causes URI.parse() to fail with InvalidURIError
-      !uri.start_with?("http://", "https://")
+      !uri.start_with?('http://', 'https://')
     end
 
     uris = uris.map do |uri|
@@ -108,8 +111,8 @@ class URL < IRCPlugin
     end
   end
 
-  USER_AGENT="Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET"
-  ACCEPT_LANGUAGE="en, ja, *"
+  USER_AGENT='Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET'
+  ACCEPT_LANGUAGE='en, ja, *'
 
   def handle_uri(uri, msg)
     text = nil
@@ -198,13 +201,13 @@ class URL < IRCPlugin
   end
 
   def format_size(size)
-    return sprintf("%.2fB", size) if size < 1024
+    return sprintf('%.2fB', size) if size < 1024
     size /= 1024.0
-    return sprintf("%.2fKiB", size) if size < 1024
+    return sprintf('%.2fKiB', size) if size < 1024
     size /= 1024.0
-    return sprintf("%.2fMiB", size) if size < 1024
+    return sprintf('%.2fMiB', size) if size < 1024
     size /= 1024.0
-    sprintf("%.2fGiB", size)
+    sprintf('%.2fGiB', size)
   end
 
   def format_last_modified(last_modified)
@@ -240,15 +243,17 @@ class URL < IRCPlugin
 
   # TODO: maybe use open-uri lib.
   def fetch_by_uri(uri, limit = 10, timeout = [5, 3], redirects = [], &block)
-    throw ArgumentError, "Must be given receiving block" unless block_given?
+    throw ArgumentError, 'Must be given receiving block' unless block_given?
 
     uri = Addressable::URI.parse(uri) unless uri.is_a? Addressable::URI
 
-    request = Net::HTTP::Get.new(uri.request_uri,
-                                 {
-                                     'User-Agent' => USER_AGENT,
-                                     'Accept-Language' => ACCEPT_LANGUAGE
-                                 })
+    request = Net::HTTP::Get.new(
+        uri.request_uri,
+        {
+            'User-Agent' => USER_AGENT,
+            'Accept-Language' => ACCEPT_LANGUAGE
+        },
+    )
 
     http = get_http_by_uri(uri, timeout)
 
@@ -317,7 +322,7 @@ class URL < IRCPlugin
     end.join
   end
 
-  SHORTENER_SERVICE_URL="https://www.googleapis.com/urlshortener/v1/url"
+  SHORTENER_SERVICE_URL='https://www.googleapis.com/urlshortener/v1/url'
   SHORTENER_QUEUE_SIZE=10
 
   def put_uris_to_queue(queue_id, uris)
@@ -362,23 +367,21 @@ class URL < IRCPlugin
 
     res = http.start do
       request = Net::HTTP::Post.new(uri.path)
-      request["user-agent"] = USER_AGENT
-      request["Accept"] = "application/json"
+      request['user-agent'] = USER_AGENT
+      request['Accept'] = 'application/json'
       request.body={:longUrl => url}.to_json
-      request.content_type="application/json"
+      request.content_type='application/json'
 
       http.request(request)
     end
 
     json = JSON.parse(res.body)
 
-    json["id"] if json
+    json['id'] if json
   end
-end
 
-class String
-  def abbreviate(len)
-    return "#{self[0..len-4]}..." if self.size > len
-    self
+  def abbreviate(str, len)
+    return "#{str[0..len-4]}..." if str.size > len
+    str
   end
 end
