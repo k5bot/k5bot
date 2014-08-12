@@ -7,6 +7,7 @@
 require 'ostruct'
 
 require_relative '../../IRCPlugin'
+require_relative '../../LayoutableText'
 
 class Help < IRCPlugin
   Description = 'The help plugin displays help.'
@@ -26,26 +27,17 @@ class Help < IRCPlugin
         describe_word(msg, msg.tail)
       else
         all_cmds = all_commands(msg.command_prefix)
-        until all_cmds.empty?
-          chunk_size = all_cmds.size
-
-          begin
-            text = "Commands: #{all_cmds[0..chunk_size-1].join(' ')}"
-            # make msg.reply throw exception if the text doesn't fit
-            msg.reply(text, :dont_truncate => (chunk_size > 1))
-          rescue
-            # sending without truncation failed
-            chunk_size-=1
-            # retry with smaller menu size
-            retry if chunk_size > 0
-          end
-
-          all_cmds.slice!(0, chunk_size)
-        end
+        msg.reply(LayoutableText::Prefixed.new(
+                      'Commands: ',
+                      LayoutableText::SimpleJoined.new(' ', all_cmds)
+                  ))
       end
     when :plugins
-      p = @pm.plugins.keys.sort*', '
-      msg.reply "Loaded plugins: #{p}" if p && !p.empty?
+      all_plugins = @pm.plugins.keys.sort
+      msg.reply(LayoutableText::Prefixed.new(
+                    'Loaded plugins: ',
+                    LayoutableText::SimpleJoined.new(', ', all_plugins)
+                ))
     end
   end
 
