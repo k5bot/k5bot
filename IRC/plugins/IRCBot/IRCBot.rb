@@ -183,7 +183,7 @@ class IRCBot < IRCPlugin
     truncate_for_irc(raw, limit)
   end
 
-  def send(raw)
+  def irc_send(raw)
     send_raw(truncate_for_irc_client(raw))
   end
 
@@ -289,11 +289,11 @@ class IRCBot < IRCPlugin
   end
 
   def join_channels(channels)
-    send "JOIN #{channels*','}" if channels
+    irc_send("JOIN #{channels*','}") if channels
   end
 
   def part_channels(channels)
-    send "PART #{channels*','}" if channels
+    irc_send("PART #{channels*','}") if channels
   end
 
   def find_user_by_nick(nick)

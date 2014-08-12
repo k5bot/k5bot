@@ -187,7 +187,7 @@ $
     cmd = opts[:notice] ? 'NOTICE' : 'PRIVMSG'
     reply_to = (private? || opts[:force_private]) ? nick : @params.first
 
-    @bot.send(opts.merge(:original=>"#{cmd} #{reply_to} :#{text}"))
+    @bot.irc_send(opts.merge(:original=>"#{cmd} #{reply_to} :#{text}"))
   end
 
   def can_reply?
