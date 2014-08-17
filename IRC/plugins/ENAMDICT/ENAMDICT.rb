@@ -139,7 +139,7 @@ See '.faq regexp'",
     )
   end
 
-  # Looks up all entries that have each given word in any
+  # Looks up all entries that have any given word in any
   # of the specified columns and returns the result as an array of entries
   def lookup(words, columns)
     table = @hash_enamdict[:enamdict_entries]
