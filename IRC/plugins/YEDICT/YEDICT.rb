@@ -145,6 +145,8 @@ class YEDICT < IRCPlugin
 
   # Looks up all entries that contain all given words in english text
   def keyword_lookup(words)
+    return [] if words.empty?
+
     column = :text
 
     table = @hash_yedict[:yedict_entries]
