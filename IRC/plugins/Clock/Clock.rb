@@ -7,6 +7,7 @@
 require 'rubygems'
 require 'bundler/setup'
 require 'tzinfo'
+require 'iso_country_codes'
 
 require_relative '../../IRCPlugin'
 
@@ -17,7 +18,8 @@ class Clock < IRCPlugin
 Optionally accepts space-separated list of timezone identifiers (e.g. Asia/Tokyo), \
 or simply their parts after / and without spaces (e.g. 'NewYork'), \
 timezone abbreviations (e.g. UTC, JST), \
-and ISO-3166 country names (e.g. US, JP)",
+ISO-3166 country codes (e.g. US, JP), \
+and (single-word parts of) country names.",
       :jtime => 'tells the current time in Japan only',
       :utime => 'tells the current time in UTC only'
   }
@@ -134,6 +136,14 @@ and ISO-3166 country names (e.g. US, JP)",
       # Maybe it's a part of identifier after first slash, e.g. 'NewYork'?
       unless zones
         zones = @zone_by_city[normalize_zone_identifier(search_term)]
+      end
+      # Maybe it's a part of some country's name?
+      unless zones
+        countries = IsoCountryCodes.search_by_name(search_term) rescue []
+        if countries.size == 1
+          zones = TZInfo::Country.get(countries.first.alpha2.upcase).zones rescue nil
+          presorted = true if zones
+        end
       end
 
       if zones
