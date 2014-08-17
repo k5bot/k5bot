@@ -150,7 +150,7 @@ See '.faq regexp'",
     lookup_impl(words, [:japanese, :reading_norm])
   end
 
-  # Looks up all entries that have each given word in any
+  # Looks up all entries that have any given word in any
   # of the specified columns and returns the result as an array of entries
   def lookup_impl(words, columns)
     table = @hash_edict[:edict_entries]
