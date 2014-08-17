@@ -200,6 +200,8 @@ See '.faq regexp'",
 
   # Looks up all entries that contain all given words in english text
   def keyword_lookup(words)
+    return [] if words.empty?
+
     column = :text
 
     words = words.uniq
