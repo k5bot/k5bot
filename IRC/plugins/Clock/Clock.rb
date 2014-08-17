@@ -124,7 +124,7 @@ and ISO-3166 country names (e.g. US, JP)",
       unless zones
         zones = TZInfo::Country.get(search_term.upcase).zones rescue nil
         # Country.get() returns array ordered by relevancy descending.
-        presorted = true
+        presorted = true if zones
       end
       # Maybe it's a zone identifier, e.g. 'America/New_York'?
       unless zones
