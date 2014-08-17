@@ -12,7 +12,7 @@ require 'iso_country_codes'
 require_relative '../../IRCPlugin'
 
 class Clock < IRCPlugin
-  Description = "The Clock plugin tells the time."
+  Description = 'The Clock plugin tells the time.'
   Commands = {
       :time => "tells the current time. \
 Optionally accepts space-separated list of timezone identifiers (e.g. Asia/Tokyo), \
@@ -65,8 +65,8 @@ and (single-word parts of) country names.",
 
       # The part after first slash.
       identifier.match(/^[^\/]+\/(.+)$/) do |m|
-        @zone_by_city.merge!(m[1] => [zone]) do |key, old_val, new_val|
-          old_val |= new_val
+        @zone_by_city.merge!(m[1] => [zone]) do |_, old_val, new_val|
+          old_val | new_val
         end
       end
     end
