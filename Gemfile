@@ -27,6 +27,7 @@ gem 'ting', :group => :Pinyin
 
 # for Clock plugin
 gem 'tzinfo', :group => :Clock
+gem 'iso_country_codes', :group => :Clock
 
 # for EPWING plugin
 git 'https://github.com/albel727/rubyeb19.git' do
