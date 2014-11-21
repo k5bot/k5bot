@@ -25,8 +25,9 @@ include SequelHelpers
 class EDICTConverter
   attr_reader :hash
 
-  def initialize(edict_file)
+  def initialize(edict_file, word_freq_file)
     @edict_file = edict_file
+    @word_freq_file = word_freq_file
     @hash = {}
     @hash[:keywords] = {}
     @all_entries = []
@@ -39,6 +40,13 @@ class EDICTConverter
   end
 
   def read
+    usages_count = Hash[File.open(@word_freq_file, 'r', :encoding => 'UTF-8') do |io|
+      io.each_line.map do |l|
+        freq, word, _ = l.strip.split("\t", 3)
+        [word, freq.to_i]
+      end
+    end] rescue {}
+
     File.open(@edict_file, 'r', :encoding => 'EUC-JP') do |io|
       io.each_line.each_with_index do |l, i|
         print '.' if 0 == i%1000
@@ -46,6 +54,7 @@ class EDICTConverter
         entry = EDICTEntry.new(l.encode('UTF-8').strip)
 
         entry.parse
+        entry.usages_count = usages_count[entry.japanese] || 0
 
         @all_entries << entry
         entry.keywords.each do |k|
@@ -56,11 +65,18 @@ class EDICTConverter
   end
 
   def sort
-    count = 0
-    @all_entries.sort_by!{|e| [ (e.common? ? -1 : 1), (!e.xrated? ? -1 : 1), (!e.vulgar? ? -1 : 1), e.reading.size, e.reading, e.keywords.size, e.japanese.length]}
-    @all_entries.each do |e|
+    @all_entries.sort_by! do |e|
+      [
+          -e.usages_count,
+          (e.common? ? -1 : 1), (!e.xrated? ? -1 : 1), (!e.vulgar? ? -1 : 1),
+          e.reading.size,
+          e.reading,
+          e.keywords.size,
+          e.japanese.length,
+      ]
+    end
+    @all_entries.each_with_index do |e, count|
       e.sortKey = count
-      count += 1
     end
   end
 
@@ -74,7 +90,10 @@ class EDICTConverter
 end
 
 def marshal_dict(dict)
-  ec = EDICTConverter.new("#{(File.dirname __FILE__)}/#{dict}")
+  ec = EDICTConverter.new(
+      "#{(File.dirname __FILE__)}/#{dict}",
+      "#{(File.dirname __FILE__)}/word_freq_report.txt",
+  )
 
   print "Indexing #{dict.upcase}..."
   ec.read
@@ -105,6 +124,7 @@ def marshal_dict(dict)
     String :reading_norm, :size => 127, :null => false
     TrueClass :simple_entry, :null => false
 
+    Integer :usages_count, :null => false
     TrueClass :common, :null => false
     TrueClass :x_rated, :null => false
     TrueClass :vulgar, :null => false
@@ -143,6 +163,7 @@ def marshal_dict(dict)
           :reading => entry.reading,
           :reading_norm => ec.hiragana(entry.reading),
           :simple_entry => entry.simple_entry || false,
+          :usages_count => entry.usages_count,
           :common => entry.common?,
           :x_rated => entry.xrated?,
           :vulgar => entry.vulgar?,
