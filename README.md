@@ -33,6 +33,6 @@ Copyright and contact
 --------------------------------
 Copyright (C) 2011-2013 Johan Sageryd <j@1616.se>  
 Copyright (C) 2012 James Kay <twey@twey.co.uk>  
-Copyright (C) 2012-2013 Alexander Belykh <albel727@ngs.ru>  
-Copyright (C) 2012-2013 三泉植豆  
-Copyright (C) 2013 Thuruk <d.staudigl@gmx.at>
+Copyright (C) 2012-2015 Alexander Belykh <albel727@ngs.ru>  
+Copyright (C) 2012-2014 三泉植豆  
+Copyright (C) 2013-2014 Thuruk <d.staudigl@gmx.at>
