@@ -193,7 +193,8 @@
 - :Manage
 - :Algorithms
 - :Googler
-- :URL
+- :URL:
+    #:google_api_key: 'blahblahblah' # Optional Google API key for url shortener
 - :Unicode
 - :WolframAlpha:
     :id: "<api-id-here>"

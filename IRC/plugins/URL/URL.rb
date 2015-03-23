@@ -363,10 +363,15 @@ accept either index (1 is the most recent one) or substring of the desired URL",
     # Call shortener API
     uri = Addressable::URI.parse(SHORTENER_SERVICE_URL)
 
+    # Append Google API key if provided
+    if @config[:google_api_key]
+      uri.query_values = (uri.query_values || {}).merge(key: @config[:google_api_key].to_s)
+    end
+
     http = get_http_by_uri(uri)
 
     res = http.start do
-      request = Net::HTTP::Post.new(uri.path)
+      request = Net::HTTP::Post.new(uri.omit(:scheme, :authority))
       request['user-agent'] = USER_AGENT
       request['Accept'] = 'application/json'
       request.body={:longUrl => url}.to_json
