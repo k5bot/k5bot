@@ -107,7 +107,7 @@ and (single-word parts of) country names.",
     if celebrating.empty?
       'No countries celebrate at the moment'
     else
-      celebrating.sort.join(',')
+      LayoutableText::SimpleJoined.new(', ', celebrating.sort)
     end
   end
 
