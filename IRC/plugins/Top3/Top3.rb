@@ -65,10 +65,10 @@ class Top3 < IRCPlugin
       end      
       out=""
       out=msg.user.name+"'s CJK count is: " + current_useer.to_s
-      if place != 0
-        out=out+", currently ranked #" + rank.to_s + " of " + place.to_s
-      else
+      if rank == 0
         out=" this person has not typed any Japanese this month :("
+      else
+        out=out+", currently ranked #" + rank.to_s + " of " + place.to_s
       end
       msg.reply  out
     else
