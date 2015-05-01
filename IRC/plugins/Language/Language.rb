@@ -5,6 +5,7 @@
 # Language plugin
 
 require 'yaml'
+require 'ostruct'
 require_relative '../../IRCPlugin'
 
 #noinspection RubyLiteralArrayInspection
@@ -13,8 +14,17 @@ class Language < IRCPlugin
 
   Description = "Provides language-related functionality."
   Commands = {
-    :kana => 'converts specified romazi to kana. Use lower-case for hiragana, upper-case for katakana'
+    :kana => 'converts specified romazi to kana. Use lower-case for hiragana, upper-case for katakana',
+    :romaja => 'converts given hangul to romaja',
   }
+
+  JAPANESE_VARIANT_FILTERS = [
+      :romaji_to_hiragana,
+      :katakana_to_hiragana,
+      :halfwidth_ascii_to_fullwidth,
+      :uppercase,
+      :lowercase,
+  ]
 
   JAMO_L_TABLE = [
     'g', 'gg', 'n', 'd', 'dd', 'r', 'm', 'b', 'bb',
@@ -41,54 +51,78 @@ class Language < IRCPlugin
   HANGUL_S_COUNT = HANGUL_L_COUNT * HANGUL_N_COUNT # 11172
 
   def afterLoad
-    @rom2kana = YAML.load_file("#{plugin_root}/rom2kana.yaml") rescue nil
-    @rom = @rom2kana.keys.sort_by{|x| -x.length}
-    @kata2hira = YAML.load_file("#{plugin_root}/kata2hira.yaml") rescue nil
-    @katakana = @kata2hira.keys.sort_by{|x| -x.length}
-    @hira2kata = @kata2hira.invert
-    @hiragana = @hira2kata.keys.sort_by{|x| -x.length}
+    @rom2kana = Language::sort_hash(
+        YAML.load_file("#{plugin_root}/rom2kana.yaml")
+    ) {|k, _| -k.length}
+    @kata2hira = Language::sort_hash(
+        YAML.load_file("#{plugin_root}/kata2hira.yaml")
+    ) {|k, _| -k.length}
+    @hira2kata = Language::sort_hash(
+        @kata2hira.invert
+    ) {|k, _| -k.length}
+
+    @rom2kana = Language::hash_to_replacer(@rom2kana)
+    @kata2hira = Language::hash_to_replacer(@kata2hira)
+    @hira2kata = Language::hash_to_replacer(@hira2kata)
 
     @unicode_blocks, @unicode_desc = load_unicode_blocks("#{plugin_root}/unicode_blocks.txt")
   end
 
   def on_privmsg(msg)
     return unless msg.tail
-    case msg.botcommand
+    case msg.bot_command
     when :kana
-      msg.reply(romazi_to_kana msg.tail)
+      msg.reply(romaji_to_kana msg.tail)
+    when :romaja
+      msg.reply(hangeul_to_romaja(msg.tail).join)
     end
   end
 
-  def kana(text)
-    kana = text.dup.downcase
-    @rom.each{|r| kana.gsub!(r, @rom2kana[r])}
-    kana
+  def variants(words, *filters)
+    words = words.uniq
+    return words if filters.empty?
+
+    filter, *rest = *filters
+    pskip = variants(words, *rest)
+    plast = pskip.map(&method(filter)) - pskip
+    pfirst = variants(words.map(&method(filter)), *rest) - pskip
+
+    # Keep most processed entries first
+    (pfirst - plast) + (plast - pfirst) + (pfirst & plast) + pskip
   end
 
-  def romazi_to_kana(text)
-    kana = text.dup
-    @rom.each do |r|
-      kana.gsub!(/#{Regexp.escape(r)}/i) do |k|
-        hira = @rom2kana[r].dup
-        @hiragana.each { |h| hira.gsub!(h, @hira2kata[h]) } unless k[0].eql?(r[0])
-        hira
-      end
+  def romaji_to_hiragana(text)
+    text.downcase.gsub(@rom2kana.regex) do |r|
+      @rom2kana.mapping[r]
     end
-    kana
   end
 
-  def hiragana(katakana)
-    return katakana unless containsKatakana?(katakana)
-    hiragana = katakana.dup
-    @katakana.each{|k| hiragana.gsub!(k, @kata2hira[k])}
-    hiragana
+  def romaji_to_kana(text)
+    text.gsub(@rom2kana.iregex) do |k|
+      r = k.downcase
+      h = @rom2kana.mapping[r]
+      k[0].eql?(r[0]) ? h : hiragana_to_katakana(h)
+    end
+  end
+
+  def hiragana_to_katakana(text)
+    text.gsub(@hira2kata.regex) do |h|
+      @hira2kata.mapping[h]
+    end
+  end
+
+  def katakana_to_hiragana(text)
+    return text unless containsKatakana?(text)
+    text.gsub(@kata2hira.regex) do |k|
+      @kata2hira.mapping[k]
+    end
   end
 
   # This method is a slightly modified copy of the implementation found at:
   # <a href="http://www.unicode.org/reports/tr15/tr15-29.html#Hangul">http://www.unicode.org/reports/tr15/tr15-29.html#Hangul</a>
   # @param [String] hangul symbols
   # @return array of names of the characters
-  def from_hangul(hangul)
+  def hangeul_to_romaja(hangul)
     hangul.unpack("U*").map do |codepoint|
       s_index = codepoint - HANGUL_S_BASE
 
@@ -100,6 +134,18 @@ class Language < IRCPlugin
 
       JAMO_L_TABLE[l_index] + JAMO_V_TABLE[v_index] + JAMO_T_TABLE[t_index]
     end
+  end
+
+  def halfwidth_ascii_to_fullwidth(word)
+    word.tr(' ' + "\u0021"  + '-' + "\u007F", "\u3000" + "\uFF01"  + '-' + "\uFF7F")
+  end
+
+  def uppercase(word)
+    word.upcase
+  end
+
+  def lowercase(word)
+    word.downcase
   end
 
   def containsJapanese?(text)
@@ -165,18 +211,24 @@ class Language < IRCPlugin
     end
   end
 
-  def self.parse_complex_regexp(word)
-    regexp_half_width!(word)
+  def self.parse_complex_regexp_raw(word)
+    word = regexp_half_width(word)
 
     # replace & with @, where it doesn't conflict
     # with && used in character groups.
     word = regexp_custom_ampersand(word)
 
-    # && operator allows specifying conditions for
-    # kanji && kana separately.
+    # split into larger groups by && operator.
     differing_conditions = word.split(/@@/).map {|s| s.strip }
 
-    operation = case differing_conditions.size
+    # parse sub-expressions
+    differing_conditions.map {|w| parse_chained_regexps(w)}
+  end
+
+  def self.parse_complex_regexp(word)
+    regs = parse_complex_regexp_raw(word)
+
+    operation = case regs.size
                 when 1
                   # when && operator is not used, it is assumed, that
                   # user wants all matches whether it was kanji or kana.
@@ -184,7 +236,7 @@ class Language < IRCPlugin
                   # equivalent to specifying || operator with
                   # identical conditions on kanji and kana.
                   :union
-                when 2
+                when 2, 3
                   # when && operator is used, user wants only
                   # those entries, that simultaneously satisfied
                   # the condition on kanji and the condition on kana.
@@ -193,8 +245,6 @@ class Language < IRCPlugin
                   raise "Only one && operator is allowed"
                 end
 
-    # parse sub-expressions
-    regs = differing_conditions.map {|w| parse_chained_regexps(w)}
     # duplicate condition on kana from condition on kanji, if not present
     regs << regs[0] if regs.size<2
 
@@ -207,8 +257,8 @@ class Language < IRCPlugin
   private
 
   # Replace full-width special symbols with their regular equivalents.
-  def self.regexp_half_width!(word)
-    word.tr!('　＆｜「」（）。＊＾＄', ' &|[]().*^$')
+  def self.regexp_half_width(word)
+    word.tr('　＆｜「」（）。＊＾＄', ' &|[]().*^$')
   end
 
   # Replace & not inside [] with @
@@ -238,6 +288,8 @@ class Language < IRCPlugin
     end
   end
 
+  HIRAGANA_CHAR_GROUP_MATCHER = /\\kh/
+  KATAKANA_CHAR_GROUP_MATCHER = /\\kk/
   KANA_CHAR_GROUP_MATCHER = /\\k/
   NON_KANA_CHAR_GROUP_MATCHER = /\\K/
 
@@ -247,10 +299,14 @@ class Language < IRCPlugin
   # 31F0-31FF katakana phonetic extensions
   #
   # Source: http://www.unicode.org/charts/
+  HIRAGANA_CHAR_GROUP = '[\u3040-\u309F]'
+  KATAKANA_CHAR_GROUP = '[\u30A0-\u30FF\uFF61-\uFF9D\u31F0-\u31FF]'
   KANA_CHAR_GROUP = '[\u3040-\u30FF\uFF61-\uFF9D\u31F0-\u31FF]'
   NON_KANA_CHAR_GROUP = '[^\u3040-\u30FF\uFF61-\uFF9D\u31F0-\u31FF]'
 
   def self.parse_sub_regexp(word)
+    word.gsub!(HIRAGANA_CHAR_GROUP_MATCHER, HIRAGANA_CHAR_GROUP)
+    word.gsub!(KATAKANA_CHAR_GROUP_MATCHER, KATAKANA_CHAR_GROUP)
     word.gsub!(KANA_CHAR_GROUP_MATCHER, KANA_CHAR_GROUP)
     word.gsub!(NON_KANA_CHAR_GROUP_MATCHER, NON_KANA_CHAR_GROUP)
     Regexp.new(word, Regexp::EXTENDED)
@@ -298,24 +354,24 @@ class Language < IRCPlugin
   end
 
   def self.binary_search(arr, key)
-    i_min = 0
-    i_max = arr.size - 1
+    # index of the first X from the start, such that X<=key
+    ((0...arr.size).bsearch {|i| arr[i] > key } || arr.size) - 1
+  end
 
-    while i_min < i_max
-      i_mid = (i_min + i_max + 1) / 2
+  def self.sort_hash(h, &b)
+    Hash[h.sort_by(&b)]
+  end
 
-      cmp = arr[i_mid] <=> key
+  def self.array_to_regex(arr, *options)
+    regexp_join = arr.map { |x| Regexp.quote(x) }.join(')|(?:')
+    Regexp.new("(?:#{regexp_join})", *options)
+  end
 
-      if cmp > 0
-        i_max = i_mid - 1
-      else
-        i_min = i_mid
-      end
-    end
-
-    # 0 if array is empty,
-    # otherwise, index of the first X from the start, such that X<=key
-    # this
-    i_min
+  def self.hash_to_replacer(h)
+    OpenStruct.new(
+        :mapping => h,
+        :regex => Language::array_to_regex(h.keys),
+        :iregex => Language::array_to_regex(h.keys, Regexp::IGNORECASE),
+    )
   end
 end

@@ -4,13 +4,16 @@
 
 # Help plugin displays help
 
+require 'ostruct'
+
 require_relative '../../IRCPlugin'
+require_relative '../../LayoutableText'
 
 class Help < IRCPlugin
-  Description = "The help plugin displays help."
+  Description = 'The help plugin displays help.'
   Commands = {
-    :help => "lists available commands or shows information about specified command or plugin",
-    :plugins => "lists the loaded plugins"
+    :help => 'lists available commands or shows information about specified command or plugin',
+    :plugins => 'lists the loaded plugins',
   }
 
   def afterLoad
@@ -18,22 +21,45 @@ class Help < IRCPlugin
   end
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
     when :help
       if msg.tail
         describe_word(msg, msg.tail)
       else
-        msg.reply "Available commands: #{all_commands(msg.command_prefix)}"
+        all_cmds = all_commands(msg.command_prefix)
+        msg.reply(LayoutableText::Prefixed.new(
+                      'Commands: ',
+                      LayoutableText::SimpleJoined.new(' ', all_cmds)
+                  ))
       end
     when :plugins
-      p = @pm.plugins.keys.sort*', '
-      msg.reply "Loaded plugins: #{p}" if p && !p.empty?
+      all_plugins = @pm.plugins.keys.sort
+      msg.reply(LayoutableText::Prefixed.new(
+                    'Loaded plugins: ',
+                    LayoutableText::SimpleJoined.new(', ', all_plugins)
+                ))
+    end
+  end
+
+  # Used externally
+  def get_all_plugin_documentation
+    @pm.plugins.each_pair.map do |name, plugin|
+      OpenStruct.new({
+                         :name => name,
+                         :description => plugin.description || {},
+                         :commands => plugin.commands || {},
+                         :dependencies => plugin.dependencies || [],
+                     })
     end
   end
 
   private
   def all_commands(prefix)
-    @pm.plugins.values.reject { |p| !p.commands }.collect {|p| '[' + p.commands.keys.collect {|c| "#{prefix}#{c.to_s}" } * ' ' + ']' } * ' '
+    @pm.plugins.values.reject do |p|
+      !p.commands
+    end.collect do |p|
+      '[' + p.commands.keys.collect { |c| "#{prefix}#{c.to_s}" } * ' ' + ']'
+    end
   end
 
   def describe_word(msg, term)

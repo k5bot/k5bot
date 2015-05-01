@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
 
@@ -17,6 +17,12 @@ popd
 
 # EDICT
 pushd "${root}/IRC/plugins/EDICT" && \
+./download.sh && \
+./convert.rb
+popd
+
+# ENAMDICT
+pushd "${root}/IRC/plugins/ENAMDICT" && \
 ./download.sh && \
 ./convert.rb
 popd

@@ -15,7 +15,12 @@
 
 require 'ostruct'
 
+require_relative '../../../IRC/Message'
+require_relative '../../../IRC/LayoutableText'
+
 class IRCMessage
+  include BotCore::Message
+
   attr_reader :prefix,
               :command,
               :params,
@@ -23,26 +28,30 @@ class IRCMessage
               :bot,
               :bot_command, # The first word of the message if it starts with 'command_prefix'
               :ctcp, # array of OpenStructs, representing CTCPs passed inside the message.
-              :tail # The message with nick prefix and botcommand removed if it exists, otherwise the whole message
+              :tail # The message with nick prefix and bot_command removed if it exists, otherwise the whole message
 
   def initialize(bot, raw)
-    @prefix, @command, @params, @user, @ctcp, @bot_command, @tail, @is_private = nil
-    @timestamp = Time.now
+    @raw = raw
     @bot = bot
-    parse @raw = raw
+    @prefix = @command = @params = nil
+    @bot_command = @ctcp = @tail = nil
+    @user = nil
+    @is_private = @is_dedicated = nil
+    @timestamp = Time.now
+    parse(@raw)
   end
 
   def parse(raw)
     return unless raw
     raw.strip!
     msg_parts = raw.to_s.split(/[ 　]/)
-    @prefix = msg_parts.shift[1..-1] if msg_parts.first.start_with? ':'
+    @prefix = msg_parts.shift[1..-1] if msg_parts.first.start_with?(':')
     @command = msg_parts.shift.downcase.to_sym
     @params = []
-    @params << msg_parts.shift while msg_parts.first and !msg_parts.first.start_with? ':'
+    @params << msg_parts.shift while msg_parts.first and !msg_parts.first.start_with?(':')
     msg_parts.first.slice!(0) if msg_parts.first
     @params.delete_if{|param| param.empty?}
-    @params << msg_parts.join(' ') if !msg_parts.empty?
+    @params << msg_parts.join(' ') unless msg_parts.empty?
 
     if @command == :privmsg || @command == :notice
       @is_private = @params.first.eql?(@bot.user.nick)
@@ -65,20 +74,63 @@ class IRCMessage
     end
 
     if @command == :privmsg
-      m = message && message.match(/^\s*(#{@bot.user.nick}\s*[:>,]?\s*)?#{command_prefix_matcher}([\p{ASCII}\uFF01-\uFF5E&&[^\p{Z}]]+)\p{Z}*(.*)\s*/i)
+      m = if message
+            # Try to find "[bot_nick:].command tail"
+            /
+^
+\s*
+(?<dedicated>#{@bot.user.nick}\s*[:>,]?\s*)?
+#{command_prefix_matcher}
+(?<command>[\p{ASCII}\uFF01-\uFF5E&&[^\p{Z}]]+)
+\p{Z}*
+(?<tail>.*)
+$
+            /ix.match(message) ||
+            # If failed, try to find "bot_nick: tail"
+            /
+^
+\s*
+(?<dedicated>#{@bot.user.nick}\s*[:>,]?\s*)
+(?<tail>.*)
+$
+             /ix.match(message)
+
+            # This is done to always strip bot_nick,
+            # if it is present, even if command isn't.
+          end
 
       if m
-        bc = m[2]
+        # Turn MatchData into a hash of named group captures.
+        # This is so that we don't error out on m[:command]
+        # when it's not present.
+        m = Hash[m.names.map(&:to_sym).zip(m.captures)]
+
+        # If bot nick is mentioned, consider this message dedicated
+        @is_dedicated = !!m[:dedicated]
+
+        bc = m[:command]
         @bot_command = bc.tr("\uFF01-\uFF5E", "\u{21}-\u{7E}").downcase.to_sym if bc
       end
 
-      tail = (m && m[3]) || message
+      tail = m ? m[:tail] : message
       @tail = tail.empty? ? nil : tail
+
+      @bot_command ||= :j if @is_private && !/^[\d０１２３４５６７８９\p{Z}]+$/.match(tail)
     end
   end
 
   def to_s
     @raw.dup
+  end
+
+  # Principals of the message originator
+  def principals
+    [@prefix]
+  end
+
+  # Credentials of the message originator
+  def credentials
+    []
   end
 
   def user
@@ -105,11 +157,6 @@ class IRCMessage
     @server ||= @prefix
   end
 
-  # Deprecated. Backward compatibility for bot_command.
-  def botcommand
-    @bot_command
-  end
-
   # The channel name (e.g. '#channel')
   def channelname
     @params[-2] if @params[-2] && @params[-2][/^#/]
@@ -128,24 +175,24 @@ class IRCMessage
     @is_private
   end
 
-  def replyTo
-    @replyTo ||= private? ? nick : @params.first
+  def dedicated?
+    @is_private || @is_dedicated
   end
 
-  def reply(text)
+  def reply(text, opts = {})
     return unless can_reply?
-    return if !text
-    s = text.to_s
-    return if s.empty?
-    @bot.send "PRIVMSG #{replyTo} :#{s}"
-  end
+    unless text.is_a?(LayoutableText)
+      return unless text
+      text = text.to_s
+      return if text.empty?
+      text = LayoutableText::SingleString.new(text)
+    end
 
-  def notice_user(text)
-    return if !text
-    s = text.to_s
-    return if s.empty?
-    return unless can_reply?
-    @bot.send "NOTICE #{nick} :#{s}"
+    cmd = opts[:notice] ? 'NOTICE' : 'PRIVMSG'
+    reply_to = (private? || opts[:force_private]) ? nick : @params.first
+
+    text = LayoutableText::Prefixed.new("#{cmd} #{reply_to} :", text)
+    @bot.irc_send(text, opts)
   end
 
   def can_reply?
@@ -158,6 +205,15 @@ class IRCMessage
 
   def command_prefix_matcher
     /[.．｡。]/.to_s
+  end
+
+  # Object that identifies the medium through which this message has passed.
+  # This is useful to identify the group of people who may also have seen it,
+  # and who will (or rather sensibly should) see our replies.
+  def context
+    # if public message, all the people in the channel saw it.
+    # if private message, only the user in question did.
+    [bot, private? ? user : channelname]
   end
 
   def self.make_ctcp_message(command, arguments)
@@ -179,10 +235,10 @@ class IRCMessage
   end
 
   def self.ctcp_quote(str)
-    str.gsub("\0", '\0').gsub("\1", '\1').gsub("\n", '\n').gsub("\r", '\r').gsub(" ", '\@').gsub("\\", '\\\\')
+    str.gsub("\0", '\0').gsub("\1", '\1').gsub("\n", '\n').gsub("\r", '\r').gsub(' ', '\@').gsub("\\", '\\\\')
   end
 
   def self.ctcp_unquote(str)
-    str.gsub('\0', "\0").gsub('\1', "\1").gsub('\n', "\n").gsub('\r', "\r").gsub('\@', " ").gsub('\\\\', "\\")
+    str.gsub('\0', "\0").gsub('\1', "\1").gsub('\n', "\n").gsub('\r', "\r").gsub('\@', ' ').gsub('\\\\', "\\")
   end
 end

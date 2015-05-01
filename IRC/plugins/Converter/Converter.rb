@@ -15,7 +15,7 @@ class Converter < IRCPlugin
 
   def on_privmsg(msg)
     return unless msg.tail
-    case msg.botcommand
+    case msg.bot_command
     when :celsius
       msg.reply celsius(msg.tail)
     when :fahrenheit

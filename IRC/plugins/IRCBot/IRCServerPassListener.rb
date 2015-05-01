@@ -4,10 +4,10 @@
 
 # IRCServerPassListener is the listener that sends login-time PASS command
 
-require_relative '../../IRCListener'
+require_relative '../../Listener'
 
 class IRCServerPassListener
-  include IRCListener
+  include BotCore::Listener
 
   def initialize(bot, server_pass)
     @bot = bot
@@ -33,7 +33,7 @@ class IRCServerPassListener
     @password_sent = nil
   end
 
-  LISTENER_PRIORITY = -32
+  LISTENER_PRIORITY = -48
 
   def listener_priority
     LISTENER_PRIORITY

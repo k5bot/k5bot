@@ -7,17 +7,19 @@
 require 'rubygems'
 require 'bundler/setup'
 require 'tzinfo'
+require 'iso_country_codes'
 
 require_relative '../../IRCPlugin'
 
 class Clock < IRCPlugin
-  Description = "The Clock plugin tells the time."
+  Description = 'The Clock plugin tells the time.'
   Commands = {
       :time => "tells the current time. \
 Optionally accepts space-separated list of timezone identifiers (e.g. Asia/Tokyo), \
 or simply their parts after / and without spaces (e.g. 'NewYork'), \
 timezone abbreviations (e.g. UTC, JST), \
-and ISO-3166 country names (e.g. US, JP)",
+ISO-3166 country codes (e.g. US, JP), \
+and (single-word parts of) country names.",
       :jtime => 'tells the current time in Japan only',
       :utime => 'tells the current time in UTC only'
   }
@@ -63,8 +65,8 @@ and ISO-3166 country names (e.g. US, JP)",
 
       # The part after first slash.
       identifier.match(/^[^\/]+\/(.+)$/) do |m|
-        @zone_by_city.merge!(m[1] => [zone]) do |key, old_val, new_val|
-          old_val |= new_val
+        @zone_by_city.merge!(m[1] => [zone]) do |_, old_val, new_val|
+          old_val | new_val
         end
       end
     end
@@ -75,7 +77,7 @@ and ISO-3166 country names (e.g. US, JP)",
   end
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
     when :time
       zones = (msg.tail || 'UTC JST').split
       time = Time.now
@@ -86,6 +88,26 @@ and ISO-3166 country names (e.g. US, JP)",
     when :utime
       time = Time.now
       msg.reply utime(time)
+    when :new_year
+      time = Time.now
+      msg.reply(new_year_celebrators(time))
+    end
+  end
+
+  def new_year_celebrators(time)
+    time = Time.at(time).utc # convert time to UTC, or strftime won't work properly
+
+    celebrating = TZInfo::Country.all.map do |country|
+      has_new_year = country.zones.any? do |zone|
+        '001 00'.eql?(zone.strftime('%j %H', time))
+      end
+      country.name if has_new_year
+    end.reject(&:nil?)
+
+    if celebrating.empty?
+      'No countries celebrate at the moment'
+    else
+      LayoutableText::SimpleJoined.new(', ', celebrating.sort)
     end
   end
 
@@ -104,7 +126,7 @@ and ISO-3166 country names (e.g. US, JP)",
       unless zones
         zones = TZInfo::Country.get(search_term.upcase).zones rescue nil
         # Country.get() returns array ordered by relevancy descending.
-        presorted = true
+        presorted = true if zones
       end
       # Maybe it's a zone identifier, e.g. 'America/New_York'?
       unless zones
@@ -114,6 +136,14 @@ and ISO-3166 country names (e.g. US, JP)",
       # Maybe it's a part of identifier after first slash, e.g. 'NewYork'?
       unless zones
         zones = @zone_by_city[normalize_zone_identifier(search_term)]
+      end
+      # Maybe it's a part of some country's name?
+      unless zones
+        countries = IsoCountryCodes.search_by_name(search_term) rescue []
+        if countries.size == 1
+          zones = TZInfo::Country.get(countries.first.alpha2.upcase).zones rescue nil
+          presorted = true if zones
+        end
       end
 
       if zones

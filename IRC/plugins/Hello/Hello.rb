@@ -5,23 +5,25 @@
 # Hello plugin
 
 class Hello < IRCPlugin
-  Description = "Says hello."
+  Description = 'Says hello.'
   Dependencies = [ :Language ]
 
-  Hello = [
-    'おはよう',
-    'おはようございます',
-    'こんにちは',
-    'こんばんは',
-    'さようなら',
-    'おやすみ',
-    'おやすみなさい',
-    'もしもし',
-    'やっほー',
-    'ハロー',
-    'ごきげんよう',
-    'どうも',
-  ]
+  GREETINGS = %w(
+おはよう
+おはようございます
+こんにちは
+こんばんは
+さようなら
+おやすみ
+おやすみなさい
+もしもし
+やっほー
+ハロー
+ごきげんよう
+どうも
+)
+
+  TIMEOUT = 600
 
   def afterLoad
     @l = plugin_manager.plugins[:Language]
@@ -36,28 +38,24 @@ class Hello < IRCPlugin
   end
 
   def on_privmsg(msg)
-    raw_message = msg.message
-    nick_stripped = raw_message.gsub(/^\s*#{msg.bot.user.nick}\s*[:>,]?\s+/, '')
+    tail = msg.tail
+    return unless tail
 
     channel_name = msg.channelname
 
-    # Respond only to "bot_nick: greeting", if 'channel_name: true' is specified in config.
-    if config[channel_name] && raw_message.eql?(nick_stripped)
-      @forbidden_to_reply.delete(channel_name)
-      return
+    tail = tail.gsub(/[\s!?！？〜\.。]/, '')
+    tail_kana = @l.katakana_to_hiragana(@l.romaji_to_hiragana(tail))
+
+    response = GREETINGS.find do |greeting|
+      @l.katakana_to_hiragana(greeting) == tail_kana
     end
 
-    tail = nick_stripped.gsub(/[\s!?！？〜\.。]/, '').strip
-    tail_kana = @l.hiragana(@l.kana(tail))
-
-    reply_index = Hello.find_index do |i|
-      @l.hiragana(i) == tail_kana
-    end
-
-    if reply_index
-      unless @forbidden_to_reply[channel_name]
-        msg.reply(self.class::Hello[reply_index])
-        @forbidden_to_reply[channel_name] = true
+    if response
+      last_time = @forbidden_to_reply[channel_name]
+      current_time = Time.now.to_i
+      if !last_time || (last_time + TIMEOUT) < current_time
+        msg.reply(response)
+        @forbidden_to_reply[channel_name] = current_time
       end
     else
       @forbidden_to_reply.delete(channel_name)

@@ -1,3 +1,7 @@
+**_WARNING! This is a very unstable development repo,
+with git rebase often used on its history. Be careful with your pulls
+ and merges. Use at your own risk._**
+
 K5 bot
 ================================
 
@@ -5,9 +9,10 @@ This is an IRC bot implemented in Ruby.
 
 Usage
 --------------------------------
-1. Copy `config_example.yaml` to `config.yaml` and set proper configuration.
-2. Optional: run `./init_dictionaries.sh` to grab and initialise third-party dictionaries.
-3. `./bot.rb`
+1. `bundle install`
+2. Copy `config_example.yaml` to `config.yaml` and set proper configuration.
+3. Optional: run `./init_dictionaries.sh` to grab and initialise third-party dictionaries.
+4. `./bot.rb`
 
 License
 --------------------------------
@@ -28,6 +33,6 @@ Copyright and contact
 --------------------------------
 Copyright (C) 2011-2013 Johan Sageryd <j@1616.se>  
 Copyright (C) 2012 James Kay <twey@twey.co.uk>  
-Copyright (C) 2012-2013 Alexander Belykh <albel727@ngs.ru>  
-Copyright (C) 2012-2013 三泉植豆  
-Copyright (C) 2013 Thuruk <d.staudigl@gmx.at>
+Copyright (C) 2012-2015 Alexander Belykh <albel727@ngs.ru>  
+Copyright (C) 2012-2014 三泉植豆  
+Copyright (C) 2013-2014 Thuruk <d.staudigl@gmx.at>

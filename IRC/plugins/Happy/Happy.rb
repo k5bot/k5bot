@@ -7,9 +7,9 @@
 require_relative '../../IRCPlugin'
 
 class Happy < IRCPlugin
-  Description = ":D"
+  Description = ':D'
 
-  Happy = [
+  PATTERNS = [
     ':)',
     ':D',
     'D:',
@@ -45,7 +45,13 @@ class Happy < IRCPlugin
     '\o'
   ]
 
+  PATTERN_REGEXP = /^\s*(#{PATTERNS.map { |s| Regexp.quote(s) }.join('|')})+\s*$/
+
   def on_privmsg(msg)
-    msg.reply(self.class::Happy.sample) if msg.message =~ /^\s*(#{msg.bot.user.nick}\s*[:>,]?\s*)?(#{self.class::Happy.map { |s| Regexp.quote(s) }.join('|')})+\s*$/
+    tail = msg.tail
+    return unless tail && !msg.bot_command
+    if tail =~ PATTERN_REGEXP
+      msg.reply(PATTERNS.sample)
+    end
   end
 end

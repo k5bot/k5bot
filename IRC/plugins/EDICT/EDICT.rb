@@ -9,19 +9,23 @@
 #
 # http://www.csse.monash.edu.au/~jwb/edict.html
 
+require 'rubygems'
+require 'bundler/setup'
+require 'sequel'
+
 require_relative '../../IRCPlugin'
+require_relative '../../SequelHelpers'
 require_relative 'EDICTEntry'
 
 class EDICT < IRCPlugin
+  include SequelHelpers
+
   Description = 'An EDICT plugin.'
   Commands = {
     :j => 'looks up a Japanese word in EDICT',
     :e => 'looks up an English word in EDICT',
-    :jr => "searches Japanese words matching given regexp in EDICT. In addition to standard regexp operators (e.g. ^,$,*), special operators & and && are supported. \
-Operator & is a way to match several regexps (e.g. 'A & B & C' will only match words, that contain all of A, B and C letters, in any order). \
-Operator && is a way to specify separate conditions on kanji and reading (e.g. '物 && もつ').  Classes: \\k (kana), \\K (non-kana)",
-    :jn => 'looks up a Japanese word in ENAMDICT',
-    :jmark => 'shows the description of an EDICT/ENAMDICT marker',
+    :jr => "searches Japanese words matching given regexp in EDICT. \
+See '.faq regexp'",
   }
   Dependencies = [ :Language, :Menu ]
 
@@ -31,15 +35,18 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
     @l = @plugin_manager.plugins[:Language]
     @m = @plugin_manager.plugins[:Menu]
 
-    @hash_edict = load_dict("edict")
-    @hash_enamdict = load_dict("enamdict")
+    @db = database_connect("sqlite://#{(File.dirname __FILE__)}/edict.sqlite", :encoding => 'utf8')
+
+    @hash_edict = load_dict(@db)
   end
 
   def beforeUnload
     @m.evict_plugin_menus!(self.name)
 
-    @hash_enamdict = nil
     @hash_edict = nil
+
+    database_disconnect(@db)
+    @db = nil
 
     @m = nil
     @l = nil
@@ -50,24 +57,28 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
   end
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
     when :j
       word = msg.tail
       return unless word
-      l_kana = @l.kana(word)
-      edict_lookup = lookup(l_kana, [@hash_edict[:japanese], @hash_edict[:readings]])
-      reply_with_menu(msg, generate_menu(format_description_unambiguous(edict_lookup), "\"#{word}\" #{"(\"#{l_kana}\") " unless word.eql?(l_kana)}in EDICT"))
+      variants = @l.variants([word], *Language::JAPANESE_VARIANT_FILTERS)
+      lookup_result = lookup(variants)
+      reply_with_menu(
+          msg,
+          generate_menu(
+              format_description_unambiguous(lookup_result),
+              [
+                  wrap(word, '"'),
+                  wrap((variants-[word]).map{|w| wrap(w, '"')}.join(', '), '(', ')'),
+                  'in EDICT',
+              ].compact.join(' ')
+          )
+      )
     when :e
       word = msg.tail
       return unless word
-      edict_lookup = keyword_lookup(split_into_keywords(word), @hash_edict[:keywords])
+      edict_lookup = keyword_lookup(split_into_keywords(word))
       reply_with_menu(msg, generate_menu(format_description_show_all(edict_lookup), "\"#{word}\" in EDICT"))
-    when :jn
-      word = msg.tail
-      return unless word
-      l_kana = @l.kana(word)
-      enamdict_lookup = lookup(l_kana, [@hash_enamdict[:japanese], @hash_enamdict[:readings]])
-      reply_with_menu(msg, generate_menu(format_description_unambiguous(enamdict_lookup), "\"#{word}\" #{"(\"#{l_kana}\") " unless word.eql?(l_kana)}in ENAMDICT"))
     when :jr
       word = msg.tail
       return unless word
@@ -78,20 +89,11 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
         return
       end
       reply_with_menu(msg, generate_menu(lookup_complex_regexp(complex_regexp), "\"#{word}\" in EDICT"))
-    when :jmark
-      word = msg.tail
-      return unless word
-      reply = find_marker(word, ALL_TAGS)
-      msg.reply(reply)
     end
   end
 
-  def find_marker(word, dict)
-    result = dict[word]
-    fuzzy = dict.keys.find_all { |w| (word != w) && (0 == w.casecmp(word)) }
-    reply = !result ? "Marker '#{word}' not found." : result.each_pair.map {|name, description| "#{name} marker '#{word}': #{description}." }.join(' ')
-    reply += " See also: #{fuzzy.join(', ')}." unless fuzzy.empty?
-    reply
+  def wrap(o, prefix=nil, postfix=prefix)
+    "#{prefix}#{o}#{postfix}" unless o.nil? || o.empty?
   end
 
   def format_description_unambiguous(lookup_result)
@@ -143,20 +145,30 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
     )
   end
 
-  # Looks up a word in specified hash(es) and returns the result as an array of entries
-  def lookup(word, hashes)
-    lookup_result = []
-    hashes.each do |h|
-      entry_array = h[word]
-      lookup_result |= entry_array if entry_array
+  # Refined version of lookup_impl() suitable for public API use
+  def lookup(words)
+    lookup_impl(words, [:japanese, :reading_norm])
+  end
+
+  # Looks up all entries that have any given word in any
+  # of the specified columns and returns the result as an array of entries
+  def lookup_impl(words, columns)
+    table = @hash_edict[:edict_entries]
+
+    condition = Sequel.|(*words.map do |word|
+      Sequel.or(columns.map { |column| [column, word] })
+    end)
+
+    dataset = table.where(condition).group_by(Sequel.qualify(:edict_entry, :id))
+
+    standard_order(dataset).select(:japanese, :reading, :simple_entry, :id).to_a.map do |entry|
+      EDICTLazyEntry.new(table, entry[:id], entry)
     end
-    sort_result(lookup_result)
-    lookup_result
   end
 
   def lookup_complex_regexp(complex_regexp)
     operation = complex_regexp.shift
-    regexps_kanji, regexps_kana = complex_regexp
+    regexps_kanji, regexps_kana, regexps_english = complex_regexp
 
     lookup_result = []
 
@@ -175,6 +187,10 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
         next unless regexps_kanji.all? { |regex| regex =~ word_kanji }
         word_kana = entry.reading
         next unless regexps_kana.all? { |regex| regex =~ word_kana }
+        if regexps_english
+          text_english = entry.raw.split('/', 2)[1] || ''
+          next unless regexps_english.all? { |regex| regex =~ text_english }
+        end
         lookup_result << [entry, !entry.simple_entry, true]
       end
     end
@@ -182,235 +198,87 @@ Operator && is a way to specify separate conditions on kanji and reading (e.g. '
     lookup_result
   end
 
-  # Looks up keywords in the keyword hash.
-  # Specified argument is a string of one or more keywords.
-  # Returns the intersection of the results for each keyword.
-  def keyword_lookup(words, hash)
-    lookup_result = nil
+  # Looks up all entries that contain all given words in english text
+  def keyword_lookup(words)
+    return [] if words.empty?
 
-    words.each do |k|
-      return [] unless (entry_array = hash[k])
-      if lookup_result
-        lookup_result &= entry_array
-      else
-        lookup_result = Array.new(entry_array)
-      end
+    column = :text
+
+    words = words.uniq
+
+    table = @hash_edict[:edict_entries]
+    edict_english = @hash_edict[:edict_english]
+    edict_english_join = @hash_edict[:edict_english_join]
+
+    condition = Sequel.|(*words.map do |word|
+      { Sequel.qualify(:edict_english, column) => word.to_s }
+    end)
+
+    english_ids = edict_english.where(condition).select(:id).to_a.map {|h| h.values}.flatten
+
+    return [] unless english_ids.size == words.size
+
+    dataset = edict_english_join.where(Sequel.qualify(:edict_entry_to_english, :edict_english_id) => english_ids).group_and_count(Sequel.qualify(:edict_entry_to_english, :edict_entry_id)).join(:edict_entry, :id => :edict_entry_id).having(:count => english_ids.size)
+
+    dataset = dataset.select_append(
+        Sequel.qualify(:edict_entry, :japanese),
+        Sequel.qualify(:edict_entry, :reading),
+        Sequel.qualify(:edict_entry, :simple_entry),
+        Sequel.qualify(:edict_entry, :id),
+    )
+
+    standard_order(dataset).to_a.map do |entry|
+      EDICTLazyEntry.new(table, entry[:id], entry)
     end
-    return [] unless lookup_result && !lookup_result.empty?
-    sort_result(lookup_result)
-    lookup_result
+  end
+
+  def standard_order(dataset)
+    dataset.order_by(Sequel.qualify(:edict_entry, :id))
   end
 
   def split_into_keywords(word)
     EDICTEntry.split_into_keywords(word).uniq
   end
 
-  def sort_result(lr)
-    lr.sort_by!{|e| e.sortKey} if lr
-  end
+  def load_dict(db)
+    edict_version = db[:edict_version]
+    edict_entries = db[:edict_entry]
+    edict_english = db[:edict_english]
+    edict_english_join = db[:edict_entry_to_english]
 
-  def load_dict(dict_name)
-    dict = File.open("#{(File.dirname __FILE__)}/#{dict_name}.marshal", 'r') do |io|
-      Marshal.load(io)
-    end
-    raise "The #{dict_name}.marshal file is outdated. Rerun convert.rb." unless dict[:version] == EDICTEntry::VERSION
-
-    # Pre-parse all entries
-    dict[:all].each do |entry|
-      entry.parse
+    versions = edict_version.to_a.map {|x| x[:id]}
+    unless versions.include?(EDICTEntry::VERSION)
+      raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[EDICTEntry::VERSION].inspect} of plugin. Rerun convert.rb."
     end
 
-    dict
+    regexpable = edict_entries.select(:japanese, :reading, :simple_entry, :id).to_a
+    regexpable = regexpable.map do |entry|
+      EDICTLazyEntry.new(edict_entries, entry[:id], entry)
+    end
+
+    {
+        :edict_entries => edict_entries,
+        :edict_english => edict_english,
+        :edict_english_join => edict_english_join,
+        :all => regexpable,
+    }
   end
 
-  #noinspection RubyStringKeysInHashInspection,SpellCheckingInspection
-  EDICT_TAGS = {
-# Part of Speech Marking
-'adj-i'=>'adjective (keiyoushi)',
-'adj-na'=>'adjectival nouns or quasi-adjectives (keiyodoshi)',
-'adj-no'=>"nouns which may take the genitive case particle `no'",
-'adj-pn'=>'pre-noun adjectival (rentaishi)',
-'adj-t'=>"`taru' adjective",
-'adj-f'=>'noun or verb acting prenominally (other than the above)',
-'adj'=>'former adjective classification (being removed)',
-'adv'=>'adverb (fukushi)',
-'adv-n'=>'adverbial noun',
-'adv-to'=>"adverb taking the `to' particle",
-'aux'=>'auxiliary',
-'aux-v'=>'auxiliary verb',
-'aux-adj'=>'auxiliary adjective',
-'conj'=>'conjunction',
-'ctr'=>'counter',
-'exp'=>'Expressions (phrases, clauses, etc.)',
-'int'=>'interjection (kandoushi)',
-'iv'=>'irregular verb',
-'n'=>'noun (common) (futsuumeishi)',
-'n-adv'=>'adverbial noun (fukushitekimeishi)',
-'n-pref'=>'noun, used as a prefix',
-'n-suf'=>'noun, used as a suffix',
-'n-t'=>'noun (temporal) (jisoumeishi)',
-'num'=>'numeric',
-'pn'=>'pronoun',
-'pref'=>'prefix',
-'prt'=>'particle',
-'suf'=>'suffix',
-'v1'=>'Ichidan verb',
-'v2a-s'=>"Nidan verb with 'u' ending (archaic)",
-'v4h'=>"Yodan verb with `hu/fu' ending (archaic)",
-'v4r'=>"Yodan verb with `ru' ending (archaic)",
-'v5'=>'Godan verb (not completely classified)',
-'v5aru'=>'Godan verb - -aru special class',
-'v5b'=>"Godan verb with `bu' ending",
-'v5g'=>"Godan verb with `gu' ending",
-'v5k'=>"Godan verb with `ku' ending",
-'v5k-s'=>'Godan verb - iku/yuku special class',
-'v5m'=>"Godan verb with `mu' ending",
-'v5n'=>"Godan verb with `nu' ending",
-'v5r'=>"Godan verb with `ru' ending",
-'v5r-i'=>"Godan verb with `ru' ending (irregular verb)",
-'v5s'=>"Godan verb with `su' ending",
-'v5t'=>"Godan verb with `tsu' ending",
-'v5u'=>"Godan verb with `u' ending",
-'v5u-s'=>"Godan verb with `u' ending (special class)",
-'v5uru'=>'Godan verb - uru old class verb (old form of Eru)',
-'v5z'=>"Godan verb with `zu' ending",
-'vz'=>'Ichidan verb - zuru verb - (alternative form of -jiru verbs)',
-'vi'=>'intransitive verb',
-'vk'=>'kuru verb - special class',
-'vn'=>'irregular nu verb',
-'vs'=>'noun or participle which takes the aux. verb suru',
-'vs-c'=>'su verb - precursor to the modern suru',
-'vs-i'=>'suru verb - irregular',
-'vs-s'=>'suru verb - special class',
-'vt'=>'transitive verb',
-# Field of Application
-'Buddh'=>'Buddhist term',
-'MA'=>'martial arts term',
-'comp'=>'computer terminology',
-'food'=>'food term',
-'geom'=>'geometry term',
-'gram'=>'grammatical term',
-'ling'=>'linguistics terminology',
-'math'=>'mathematics',
-'mil'=>'military',
-'physics'=>'physics terminology',
-# Miscellaneous Markings
-'X'=>'rude or X-rated term',
-'abbr'=>'abbreviation',
-'arch'=>'archaism',
-'ateji'=>'ateji (phonetic) reading',
-'chn'=>"children's language",
-'col'=>'colloquialism',
-'derog'=>'derogatory term',
-'eK'=>'exclusively kanji',
-'ek'=>'exclusively kana',
-'fam'=>'familiar language',
-'fem'=>'female term or language',
-'gikun'=>'gikun (meaning) reading',
-'hon'=>'honorific or respectful (sonkeigo) language',
-'hum'=>'humble (kenjougo) language',
-'ik'=>'word containing irregular kana usage',
-'iK'=>'word containing irregular kanji usage',
-'id'=>'idiomatic expression',
-'io'=>'irregular okurigana usage',
-'m-sl'=>'manga slang',
-'male'=>'male term or language',
-'male-sl'=>'male slang',
-'oK'=>'word containing out-dated kanji',
-'obs'=>'obsolete term',
-'obsc'=>'obscure term',
-'ok'=>'out-dated or obsolete kana usage',
-'on-mim'=>'onomatopoeic or mimetic word',
-'poet'=>'poetical term',
-'pol'=>'polite (teineigo) language',
-'rare'=>"rare (now replaced by 'obsc')",
-'sens'=>'sensitive word',
-'sl'=>'slang',
-'uK'=>'word usually written using kanji alone',
-'uk'=>'word usually written using kana alone',
-'vulg'=>'vulgar expression or word',
-# Word Priority Marking
-'P'=>'common word',
-# Gairaigo and Regional Words
-'kyb'=>'Kyoto-ben',
-'osb'=>'Osaka-ben',
-'ksb'=>'Kansai-ben',
-'ktb'=>'Kantou-ben',
-'tsb'=>'Tosa-ben',
-'thb'=>'Touhoku-ben',
-'tsug'=>'Tsugaru-ben',
-'kyu'=>'Kyuushuu-ben',
-'rkb'=>'Ryuukyuu-ben',
-'hob'=>'Hokkaido-ben',
-'nab'=>'Nagano-ben',
-# Rest of Gairaigo
-'afr'=>'Afrikaans',
-'ain'=>'Ainu',
-'alg'=>'Algonquian',
-'ara'=>'Arabic',
-'bnt'=>'Bantu',
-'bur'=>'Burmese',
-'chi'=>'Chinese',
-'dan'=>'Danish',
-'dut'=>'Dutch',
-'eng'=>'English',
-'epo'=>'Esperanto',
-'est'=>'Estonian',
-'fil'=>'Filipino',
-'fin'=>'Finnish',
-'fre'=>'French',
-'ger'=>'German',
-'grc'=>'Ancient Greek',
-'gre'=>'Modern Greek',
-'haw'=>'Hawaiian',
-'heb'=>'Hebrew',
-'hin'=>'Hindi',
-'hun'=>'Hungarian',
-'ind'=>'Indonesian',
-'ita'=>'Italian',
-'khm'=>'Central Khmer',
-'kor'=>'Korean',
-'lat'=>'Latin',
-'may'=>'Malay',
-'mnc'=>'Manchu',
-'mon'=>'Mongolian',
-'nor'=>'Norwegian',
-'per'=>'Persian',
-# 'pol'=>'Polish', # Conflicts with pol == polite language
-'por'=>'Portuguese',
-'rus'=>'Russian',
-'san'=>'Sanskrit',
-'som'=>'Somali',
-'spa'=>'Spanish',
-'swe'=>'Swedish',
-'tah'=>'Tahitian',
-'tha'=>'Thai',
-'tib'=>'Tibetan',
-'tur'=>'Turkish',
-'vie'=>'Vietnamese',
-'wasei'=>'Japanese-made English, English words coined in Japan (Wasei-Eigo)',
-}
+  class EDICTLazyEntry
+    attr_reader :japanese, :reading, :simple_entry
+    lazy_dataset_field :raw, Sequel.qualify(:edict_entry, :id)
 
-  #noinspection RubyStringKeysInHashInspection,SpellCheckingInspection
-  ENAMDICT_TAGS = {
-'s'=>'surname',
-'p'=>'place-name',
-'u'=>'person name, either given or surname, as-yet unclassified',
-'g'=>'given name, as-yet not classified by sex',
-'f'=>'female given name',
-'m'=>'male given name',
-'h'=>'full (family plus given) name of a particular person',
-'pr'=>'product name',
-'co'=>'company name',
-'st'=>'stations',
-}
+    def initialize(dataset, id, pre_init)
+      @dataset = dataset
+      @id = id
 
-  #noinspection RubyHashKeysTypesInspection
-  def self.to_named_hash(name, hash)
-    Hash[hash.each_pair.map { |k, v| [k, {name=>v}] }]
+      @japanese = pre_init[:japanese]
+      @reading = pre_init[:reading]
+      @simple_entry = pre_init[:simple_entry]
+    end
+
+    def to_s
+      self.raw
+    end
   end
-
-  ALL_TAGS = EDICT.to_named_hash('EDICT', EDICT_TAGS).merge!(EDICT.to_named_hash('ENAMDICT', ENAMDICT_TAGS)) {|_, ov, nv| ov.merge(nv) }
-
-  # raise ArgumentError, "Bug! Marker '#{k}', exists in both EDICT(#{ov}) and ENAMDICT(#{nv})."
 end

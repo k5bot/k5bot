@@ -6,10 +6,10 @@
 
 require 'set'
 
-require_relative '../../IRCListener'
+require_relative '../../Listener'
 
 class IRCCapsListener
-  include IRCListener
+  include BotCore::Listener
 
   attr_reader :server_capabilities
 

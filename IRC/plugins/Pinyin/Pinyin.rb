@@ -11,10 +11,6 @@ require 'bundler/setup'
 require 'ting'
 require 'ruby-pinyin'
 
-# Hack: remove Pinyin = Ting compatibility alias, defined in ting,
-# because it conflicts with our class name.
-Object.send(:remove_const, 'Pinyin')
-
 class Pinyin < IRCPlugin
   Description = "Hanzi conversion plugin."
   Commands = {
@@ -25,7 +21,7 @@ class Pinyin < IRCPlugin
   }
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
     when :pinyin
       pinyin = _pinyin(msg.tail)
       msg.reply pinyin if pinyin

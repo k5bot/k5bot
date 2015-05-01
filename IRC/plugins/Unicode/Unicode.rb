@@ -42,7 +42,7 @@ class Unicode < IRCPlugin
   end
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
     when :us
       user, us = stats_by_msg(msg)
       msg.reply("Stats for #{user.nick}. #{format_unicode_stats(us)}") if us

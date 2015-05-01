@@ -1,8 +1,26 @@
 # IRCBot config example
 ---
+- :Console # Add this if you want console interaction
+- :Connectix:
+    :freenode:
+      :tcp:
+      - host: chat.eu.freenode.net # try the nearest roster first
+        port: 7000
+      - host: irc.freenode.net # for fallback if the above fails
+        port: 7000
+      #:alias: # adds connection from another group.
+      #  :uses: connection_name
+      :fallback: # picks children connections in order, until success, then starts over.
+      #:random: # picks children connections at random.
+      :ssl: # wraps children connection with ssl.
+        #:ssl_cert: <path to your ssl certificate file>
+        #:ssl_key: <path to your ssl private key file>, by default same as ssl_cert
+        #:ssl_key_passphrase: <passphrase to your private key, if it's encrypted>
+      :watchdog: # resets connection if nothing is read from it for specified time.
+                 # Not recommended on irc servers that don't send ping.
+        :timeout: 600 # timeout in seconds.
 - :IRCBot:
-    :server: irc.freenode.net
-    :port: 6667
+    :connector: freenode # Connector name from Connectix plugin
     :serverpass:
     :username: bot
     :nickname: bot
@@ -13,21 +31,64 @@
       # :service: NickServ # Service nick to identify to, NickServ by default.
       :invitation: "^This nickname is registered. Please choose a different nickname, or identify"
       :confirmation: "^You are now identified for"
+    #:mode: +is # irc user mode to set
     :channels:
     - "#channel_one"
     - "#channel_two"
-    :watchdog: 240
-    :burst: 8
-    :rate: 1
+    :burst: 8 # Number of lines allowed to be sent to server at once, before
+      # rate limiting kicks in.
+    :rate: 1 # Number of lines per second allowed to be send to server sustainably.
+      # Not specifying this setting disables rate limiting.
+    #:reconnect_delay: 15 # seconds to wait before reconnecting, 15 by default.
+    #:metadata: # ContextMetadata hash to attach to this bot, to be accessed by various plugins.
+    #  :menu_size: 20
+- :DCC:
+    :announce: <your external ip here>
+    #:listen: 0.0.0.0 # interface to actually listen on, 0.0.0.0 by default.
+    #:port: 55554 # port to listen on, will be chosen randomly by default
+    :limit: 50 # number of simultaneously accepted connections, 10 by default.
+    :hard_limit: 4 # number of connections per user. when exceeded,
+      # older connections from the same user will be killed. unlimited by default.
+    :soft_limit: 2 # number of connections per user. when exceeded,
+      # user will be shown a warning. unlimited by default.
+    #:metadata: # ContextMetadata hash to attach to this bot, to be accessed by various plugins.
+    #  :menu_size: 60
+    :chat: # if present, then DCC CHAT server will be started.
+      # you can override all the settings above here.
+    :schat: # if present, then DCC SSL CHAT server will be started.
+      :ssl_cert: <path to your ssl certificate file>
+      #:ssl_key: <path to your ssl private key file>, by default same as ssl_cert
+      #:ssl_key_passphrase: <passphrase to your private key, if it's encrypted>
+- :WebBot:
+    :announce: <your external ip or address here>
+    #:listen: 0.0.0.0 # interface to actually listen on, 0.0.0.0 by default.
+    :limit: 50 # number of simultaneously accepted connections, 10 by default.
+    #:metadata: # ContextMetadata hash to attach to this bot, to be accessed by various plugins.
+    #  :menu_size: 100
+    :chat: # if present, then DCC CHAT server will be started.
+      # you can override all the settings above here.
+      #:port: 8080 # port to listen on, 8080 by default
+    :schat: # if present, then DCC SSL CHAT server will be started.
+      #:port: 8443 # port to listen on, 8443 by default
+      :ssl_cert: <path to your ssl certificate file>
+      #:ssl_key: <path to your ssl private key file>, by default same as ssl_cert
+      #:ssl_key_passphrase: <passphrase to your private key, if it's encrypted>
 - :Help
 - :StorageYAML:
     :'data_directory': "~/.ircbot"
-- :ChannelPool
+- :Auth:
+    :salt: <type some random stuff here to protect privacy of your users>
 - :Router:
-    :LP:
-      :private: false
-      :otherwise: false
-      "##japanese": true
+    :owners: # list of hostmasks that will have unlimited access no matter what
+      - "*@unaffiliated/albel727"
+    :channels: # hash of plugin names, which will be filtered per-channel
+      :LP:
+        :private: false
+        :otherwise: false
+        "##japanese": true
+      :Hello:
+        "##japanese": dedicated
+        :otherwise: true
 - :Clock
 - :Example:
     :foo: baz
@@ -39,6 +100,7 @@
 - :Language
 # The following plugins
 #- :EDICT
+#- :ENAMDICT
 #- :KANJIDIC
 #- :KANJIDIC2
 #- :Daijirin
@@ -46,9 +108,25 @@
 #- :YEDICT
 # need dictionary files that are not distributed with this project.
 # See the plugin directories for more information.
+- :EPWING: # This plugin also requires dictionaries in EPWING format
+    :daijirin: # dictionary name, see options depending on it below.
+      #:command: bot command to assign, same as dictionary name by default.
+      :path: <path to directory containing CATALOGS file>
+      #:subbook: 0 # subbook index in the given book, 0 by default.
+      #:appendix: <path to directory containing appendix>
+      #  appendix may be necessary to override stop code. see EB library help.
+      #:title: how it will be called in help, subbook title by default.
+      #:gaiji: name of file with gaiji mappings in StorageYAML's data_directory,
+      #        "gaiji_<dictionary name>" by default.
+      #:help: #hash to insert into command help, e.g.:
+      #  :usage: <blah blah>, this will be accessible from '.help daijirin usage'
+    #:kojien: # another dictionary name
+    # ... same options as above, etc ...
 - :Pinyin
 - :Menu
-- :Mecab
+# Menu plugin understands ContextMetadata value :menu_size: <number of menu entries per message>
+- :Mecab:
+    #:encoding: EUC-JP # encoding that mecab library speaks in, EUC-JP by default
 - :Converter
 - :Karma:
     :karma:
@@ -60,6 +138,7 @@
       - "#{receiver} has no karma."
       :matchers:
       - :regexp: '#{receiver}\s*\+[\+1]'
+        :multi: 3
         :receiver_delta: 1
         :response:
         - "#{receiver}++!"
@@ -110,13 +189,18 @@
 - :Git
 - :Dotdotdot
 - :Happy
-- :Hello:
-    "##japanese": true
+- :Hello
 - :Manage
 - :Algorithms
-- :URL
+- :Googler
+- :URL:
+    #:google_api_key: 'blahblahblah' # Optional Google API key for url shortener
 - :Unicode
 - :WolframAlpha:
     :id: "<api-id-here>"
 - :MapDoc
 - :WebScrape
+- :HelpExport:
+    :xml: 'help_export.xml' # file name to write XML help to
+- :TextMiner:
+    :data_directory: "~/my_text_files/"

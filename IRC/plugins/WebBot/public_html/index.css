@@ -1,0 +1,66 @@
+body, html {
+    height: 90%;
+    background: olivedrab;
+}
+
+#auth_box {
+    padding: 0.5em;
+    margin: 0.5em;
+    background: white;
+    border-radius: 0.5em;
+}
+
+#auth_box span {
+    padding-left: 1em;
+    font-family: monospace;
+}
+
+#answer_log {
+    width: 100%;
+    max-height: 100%;
+    overflow-y: scroll;
+    border: black solid thin;
+    background: darkseagreen;
+}
+
+.query_group_box {
+    padding: 0.1em;
+    margin: 0.5em;
+    background: mediumseagreen;
+    border-radius: 1em;
+}
+
+.query_box {
+    padding: 0.5em;
+    margin: 0.5em;
+    background: white;
+    border-radius: 0.5em;
+
+    white-space: pre-wrap;      /* CSS3 */
+    word-wrap: break-word;      /* IE */
+}
+
+.answer_box {
+    padding: 0.5em;
+    margin: 0.5em;
+    background: white;
+    border-radius: 0.5em;
+
+    white-space: pre-wrap;      /* CSS3 */
+    word-wrap: break-word;      /* IE */
+}
+
+.loading {
+    background: gold;
+}
+
+.loading_failed {
+    background: darkorange;
+}
+
+#query_input_box {
+    width: 100%;
+    border: black solid thin;
+    margin-top: 0.5em;
+    font-size: 100%;
+}

@@ -86,7 +86,7 @@ class NumberSpell < IRCPlugin
   }
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
     when :ns
       ns = spell msg.tail
       msg.reply ns if ns

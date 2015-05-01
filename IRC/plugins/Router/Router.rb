@@ -14,10 +14,11 @@ class Router < IRCPlugin
   TEST_COMMAND = :test
   OP_COMMAND = :op
   DEOP_COMMAND = :deop
-  OP_ADD_COMMAND = :add_op!
-  OP_DEL_COMMAND = :del_op!
 
-  Description = "Provides inter-plugin message delivery and filtering."
+  META_ADD_COMMAND = :add
+  META_DEL_COMMAND = :del
+
+  Description = 'Provides inter-plugin message delivery and filtering.'
 
   Dependencies = [:StorageYAML]
 
@@ -26,11 +27,13 @@ class Router < IRCPlugin
 
   Commands = {
       :acl => {
-          nil => "Bot access list and routing commands",
+          nil => 'Bot access list and routing commands',
           DENY_COMMAND => "denies access to the bot to any user, whose 'nick!ident@host' matches given mask. #{PRIVATE_RESTRICTION_DISCLAIMER}",
           ALLOW_COMMAND => "removes existing ban rule or adds ban exception. #{PRIVATE_RESTRICTION_DISCLAIMER}",
           LIST_COMMAND => "shows currently effective access list. #{PRIVATE_RESTRICTION_DISCLAIMER}",
           TEST_COMMAND => "matches given 'nick!ident@host' against access lists. #{PRIVATE_RESTRICTION_DISCLAIMER}",
+          META_ADD_COMMAND => "adds to a given access list a given mask. #{PRIVATE_RESTRICTION_DISCLAIMER}",
+          META_DEL_COMMAND => "deletes from a given access list a given mask. #{PRIVATE_RESTRICTION_DISCLAIMER}",
           OP_COMMAND => "applies +o to calling user on current channel. #{RESTRICTION_DISCLAIMER}",
           DEOP_COMMAND => "applies -o to calling user on current channel. #{RESTRICTION_DISCLAIMER}",
       }
@@ -40,17 +43,12 @@ class Router < IRCPlugin
     @storage = @plugin_manager.plugins[:StorageYAML]
 
     @rules = @storage.read('router') || {}
-    @rules[:ops] ||= []
-    @rules[:bans] ||= []
-    @rules[:excludes] ||= []
 
     parse_rules()
   end
 
   def beforeUnload
-    @excludes = nil
-    @bans = nil
-    @ops = nil
+    @compiled_rules = nil
 
     @rules = nil
 
@@ -67,7 +65,7 @@ class Router < IRCPlugin
       Regexp.quote(match)
     end
     # Replace runs of * with .*
-    regexp.gsub!(/\*+/) do |match|
+    regexp.gsub!(/\*+/) do |_|
       '.*'
     end
 
@@ -79,11 +77,20 @@ class Router < IRCPlugin
     Regexp.new("^(?:#{regexp_join})$") if arr
   end
 
-  def parse_rules()
-    @ops = to_regex(@rules[:ops])
-    @bans = to_regex(@rules[:bans])
-    # ops are always excluded, to avoid accidental self-bans.
-    @excludes = to_regex(@rules[:excludes] | @rules[:ops])
+  def compile_rules(rules)
+    result = rules.each_pair.map do |list_name, user_masks|
+      [list_name, to_regex(user_masks)]
+    end
+
+    #noinspection RubyHashKeysTypesInspection
+    Hash[result]
+  end
+
+  def parse_rules
+    rules = @rules.merge({:can_do_everything => @config[:owners] || []}) do |_, old_v, new_v|
+      old_v | new_v
+    end
+    @compiled_rules = compile_rules(rules)
   end
 
   def store_rules
@@ -91,8 +98,8 @@ class Router < IRCPlugin
   end
 
   def on_privmsg(msg)
-    return unless msg.botcommand == :acl
-    return unless check_is_op(msg)
+    return unless msg.bot_command == :acl
+    return unless check_is_op(msg.prefix)
     tail = msg.tail
 
     return unless tail
@@ -120,9 +127,9 @@ class Router < IRCPlugin
     return unless msg.private?
 
     if command == LIST_COMMAND
-      msg.reply("Ops: #{@rules[:ops].join(' | ')}")
-      msg.reply("Bans: #{@rules[:bans].join(' | ')}")
-      msg.reply("Exludes: #{@rules[:excludes].join(' | ')}")
+      @rules.each_pair.sort.map do |list_name, user_masks|
+        msg.reply("#{list_name.to_s.capitalize}: #{user_masks.join(' | ')}")
+      end
       return
     end
 
@@ -130,31 +137,48 @@ class Router < IRCPlugin
 
     case command
     when DENY_COMMAND
-      @rules[:bans] |= [tail]
-      if @rules[:excludes].delete(tail)
+      add_to_list(:bans, tail)
+
+      if remove_from_list(:excludes, tail)
         msg.reply("Found ban exclusion rule for #{tail}. Removed it and added ban rule instead. To unban, use #{msg.command_prefix}acl #{ALLOW_COMMAND} #{tail}")
       else
         msg.reply("Added ban rule for #{tail}. To unban, use #{msg.command_prefix}acl #{ALLOW_COMMAND} #{tail}")
       end
     when ALLOW_COMMAND
-      if @rules[:bans].delete(tail)
+      if remove_from_list(:bans, tail)
         msg.reply("Found ban rule for #{tail}. Removed it without adding an exclusion rule. Repeat this command to add an exclusion rule.")
       else
-        @rules[:excludes] |= [tail]
-        msg.reply("Didn't found ban rule for #{tail}. Added an exclusion rule. To remove it, use #{msg.command_prefix}acl #{DENY_COMMAND} #{tail}")
+        add_to_list(:excludes, tail)
+        msg.reply("Didn't find ban rule for #{tail}. Added an exclusion rule. To remove it, use #{msg.command_prefix}acl #{DENY_COMMAND} #{tail}")
       end
-    when OP_ADD_COMMAND
-      @rules[:ops] |= [tail]
-      msg.reply("Added #{tail} to ops.")
-    when OP_DEL_COMMAND
-      return unless tail
-      if @rules[:ops].delete(tail)
-        msg.reply("Deopped #{tail}.")
+    when META_ADD_COMMAND
+      list_name, user_mask = tail.split(/\s+/, 2)
+      return unless user_mask
+      list_name = normalize(list_name)
+      unless can_alter_list(list_name, msg.prefix)
+        msg.reply("I'm sorry, Dave. I'm afraid, you can't alter #{list_name} list.")
+        return
+      end
+      add_to_list(list_name, user_mask)
+      msg.reply("Added #{user_mask} into #{list_name} list. To remove, use #{msg.command_prefix}acl #{META_DEL_COMMAND} #{list_name} #{user_mask}")
+    when META_DEL_COMMAND
+      list_name, user_mask = tail.split(/\s+/, 2)
+      return unless user_mask
+      list_name = normalize(list_name)
+      unless can_alter_list(list_name, msg.prefix)
+        msg.reply("I'm sorry, Dave. I'm afraid, you can't alter #{list_name} list.")
+        return
+      end
+      if remove_from_list(list_name, user_mask)
+        msg.reply("Removed #{user_mask} from #{list_name} list. To re-add, use #{msg.command_prefix}acl #{META_ADD_COMMAND} #{list_name} #{user_mask}")
       else
-        msg.reply("There's no #{tail} among ops.")
+        msg.reply("Didn't find #{user_mask} in #{list_name}.")
       end
     when TEST_COMMAND
-      msg.reply("Ops: #{!!check_is_op(tail)}; Bans: #{!!check_is_banned(tail)}; Exludes: #{!!check_is_excluded(tail)}")
+      reply = @rules.keys.map do |ln|
+        "#{ln.to_s.capitalize}: #{!!check_is_in_list(ln, tail)}"
+      end.join('; ')
+      msg.reply(reply)
       return
     else
       return
@@ -184,48 +208,97 @@ class Router < IRCPlugin
     end
   end
 
+  # externally used generic-purpose permission checking API
+  def check_permission(permission, credential)
+    !!check_is_in_list(normalize(permission), credential)
+  end
+
+  protected
+
+  def normalize(list_name)
+    list_name.to_s.downcase
+  end
+
   def message_listeners(additional_listeners)
     additional_listeners + @plugin_manager.plugins.values
   end
 
-  def check_is_banned(message)
-    message = message.prefix unless message.instance_of?(String)
-    @bans && @bans.match(message)
+  def check_is_in_list(list_name, credential)
+    list = @compiled_rules[list_name.to_sym]
+    list && credential && list.match(credential)
   end
 
-  def check_is_op(message)
-    message = message.prefix unless message.instance_of?(String)
-    @ops && @ops.match(message)
+  def can_alter_list(list_name, prefix)
+    check_is_in_list("can_alter_#{list_name}", prefix) ||
+        check_is_in_list(:can_do_everything, prefix)
   end
 
-  def check_is_excluded(message)
-    message = message.prefix unless message.instance_of?(String)
-    @excludes && @excludes.match(message)
+  def add_to_list(list_name, mask)
+    list_name = list_name.to_sym
+    @rules[list_name] ||= []
+    @rules[list_name] |= [mask]
+  end
+
+  def remove_from_list(list_name, mask)
+    list_name = list_name.to_sym
+    rules_list = @rules[list_name]
+
+    if rules_list && !rules_list.empty?
+      rules_list.delete(mask)
+    else
+      @rules.delete(list_name)
+      nil
+    end
+  end
+
+  def check_is_banned(credential)
+    check_is_in_list(:bans, credential)
+  end
+
+  def check_is_op(credential)
+    check_is_in_list(:ops, credential) ||
+      check_is_in_list(:can_do_everything, credential)
+  end
+
+  def check_is_excluded(credential)
+    check_is_in_list(:excludes, credential)
   end
 
   def filter_message_global(message)
     return nil unless message.can_reply?  # Only filter messages
-    # Ban by mask, if not in ban exclusion list.
-    check_is_banned(message) && !check_is_excluded(message)
+    # Ban by mask, if not in ban exclusion list and not an op.
+    prefix = message.prefix
+    check_is_banned(prefix) && !(check_is_excluded(prefix) || check_is_op(prefix))
   end
 
   def filter_message_per_listener(listener, message)
-    return nil unless message.command == :privmsg # Only filter messages
+    return nil unless message.can_reply? # Only filter messages
 
-    filter_hash = @config
+    filter_hash = @config[:channels]
     return nil unless filter_hash # Filtering only if enabled in config
     return nil unless listener.is_a?(IRCPlugin) # Filtering only works for plugins
     allowed_channels = filter_hash[listener.name.to_sym]
     return nil unless allowed_channels # Don't filter plugins not in list
     # Private messages to our bot can be filtered by special :private symbol
     channel_name = message.channelname || :private
-    result = allowed_channels[channel_name]
     # policy for not mentioned channels can be defined by special :otherwise symbol
-    !(result != nil ? result : allowed_channels[:otherwise])
+    key = allowed_channels.include?(channel_name) ? channel_name : :otherwise
+    policy = allowed_channels[key]
+    case policy
+      when nil, false
+        # filter out
+        true
+      when /^dedicated$/i
+        # filter unless it's specifically dedicated to us
+        !message.dedicated?
+      else
+        # don't filter out
+        false
+    end
   end
 end
 
-module IRCListener
+module BotCore::Listener
   def listener_priority
     0
   end

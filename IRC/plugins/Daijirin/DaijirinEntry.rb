@@ -28,7 +28,8 @@ class DaijirinEntry
     @parent = parent
     @children = nil
     @raw = raw
-    @kanji = nil
+    @kanji_for_search = nil
+    @kanji_for_display = nil
     @kana = nil
     @english = nil
 =begin # Those are not necessary yet.
@@ -39,36 +40,19 @@ class DaijirinEntry
     @old_kana = nil
 =end
     @reference = nil
-    @info = nil
     @sort_key = nil
     @parsed = nil
   end
 
-  def kanji_for_display
-    k = kanji_for_search
-    # Only output one meaningful kanji for child entries:
-    # either the first kanji form or the kana form..
-    return [k[1] || k[0]] if @parent
-    k
-  end
-
-  def kanji_for_search
-    @kanji
-  end
-
+  attr_reader :kanji_for_search
+  attr_reader :kanji_for_display
   attr_reader :kana
-  # Returns an array of the English translations and meta information.
   attr_reader :english
 =begin # Those are not necessary yet.
   attr_reader :old_kana
   attr_reader :accent
 =end
-  attr_reader :info
   attr_reader :reference
-
-  def to_lines
-    info.flatten
-  end
 
   def add_child!(child)
     @children = (@children || []) << child
@@ -80,7 +64,8 @@ class DaijirinEntry
 
   def marshal_load(data)
     @raw = nil
-    @kanji = nil
+    @kanji_for_search = nil
+    @kanji_for_display = nil
     @kana = nil
     @english = nil
 =begin # Those are not necessary yet.
@@ -91,64 +76,36 @@ class DaijirinEntry
     @old_kana = nil
 =end
     @reference = nil
-    @info = nil
     @sort_key = nil
     @parsed = nil
     @sort_key, @raw, @parent, @children = data
   end
 
   def parse
-    return @parsed if @parsed
-    unless parse_first_line(raw[0])
-      @parsed = :skip
-      post_parse()
-      return @parsed
-    end
+    return if @parsed
 
-    hierarchy = parse_rest_of_lines(raw[1..-1].join("\n"))
+    parse_first_line(@raw[0])
 
-    if hierarchy.instance_of?(Array)
-      # There are no nested entries at all,
-      # so convert it into hierarchy of one header-less text-array.
-      hierarchy = {'' => hierarchy}
-    end
-
-    # Prepare to prepending the first line.
-    # Ensure that initial header-less text array is existent.
-    unless hierarchy['']
-      hierarchy = hierarchy.to_a
-      hierarchy.unshift(['',[]])
-      hierarchy = Hash[hierarchy]
-    end
-
-    # We actually add the first line all over again, so that
-    # it will be printed with the lines of first entry.
-    hierarchy[''].unshift(raw[0])
-
-    blocks = hierarchy_to_blocks(hierarchy)
-
-    @info = blocks_to_subentries(blocks)
-
-    @info = @info.map {|lg| compact_xrefs(lg)}.to_a
-
-    post_parse()
     @parsed = true
   end
 
   def parse_first_line(s)
     s.strip!
 
-    return parse_first_line_parented(s) if @parent
+    if @parent
+      parse_first_line_parented(s)
+      return
+    end
 
     @kana, s = s.split(' ', 2)
-    s = (s or "").strip
+    s = (s || '').strip
 
     @kana = cleanup_markup(@kana)
 
-    @kanji = split_capture!(s,KANJI_MATCHER,'%k%')
+    @kanji_for_search = split_capture!(s,KANJI_MATCHER,'%k%')
 
     # Process entries like 【掛(か)る・懸(か)る】
-    @kanji = @kanji.collect do |k|
+    @kanji_for_search = @kanji_for_search.collect do |k|
       k.split('・').map do |x|
         x.strip!
         f = x.split(KANJI_OPTIONAL_MATCHER)
@@ -164,9 +121,13 @@ class DaijirinEntry
         end
       end.flatten!
     end
-    @kanji.flatten!
+    @kanji_for_search.flatten!
+
+    @kanji_for_display = @kanji_for_search
 
     @english = split_capture!(s,ENGLISH_MATCHER,'%e%')
+    raise "Unexpectedly, there's more than one english word in header" if @english.size > 1
+    @english = @english.first
 
 =begin # Those are not necessary yet.
     @accent = split_capture!(s,ACCENT_MATCHER,'%a%')
@@ -177,12 +138,10 @@ class DaijirinEntry
     @old_kana = (s.match(OLD_KANA_MATCHER) or [nil])[0]
 =end
 
-    @reference = @kanji[0] ? @kanji[0] : @kana
+    @reference = @kanji_for_search[0] || @kana
 
     # Sort parent entries by reading
     @sort_key_string = @kana
-
-    return true
   end
 
   def parse_first_line_parented(s)
@@ -207,13 +166,11 @@ class DaijirinEntry
     equalized = kanji_split_equivalence(s)
 
     # Prepare to gather children kanji
-    @kanji = []
+    @kanji_for_search = []
 
     equalized.each do |variant|
       parse_braced_child_line(variant)
     end
-
-    return true
   end
 
   def parse_braced_child_line(s)
@@ -231,19 +188,23 @@ class DaijirinEntry
 
     @reference = template_form
 
-    if @parent.kana
-      @kanji << "#{@parent.kana}#{s}"
-    end
+    # This probably will contain kanji anyway,
+    # so we don't add it as own @kana.
+    @kanji_for_search << @parent.kana + s
 
-    (@parent.kanji_for_search || []).each do |k|
-      @kanji << "#{k}#{s}"
+    @parent.kanji_for_search.each do |k|
+      @kanji_for_search << k + s
     end
 
     # For search purposes, let's add the template form too
-    @kanji << template_form
+    @kanji_for_search << template_form
+
+    # Only output one meaningful kanji for child entries:
+    # either the first kanji form or the kana form..
+    @kanji_for_display = [@kanji_for_search[1] || @kanji_for_search[0]]
 
     # Sort child entries by parent key + the rest
-    @sort_key_string = "#{@parent.sort_key_string}#{s}"
+    @sort_key_string = @parent.sort_key_string + s
   end
 
   KANJI_EQUIVALENCE_MATCHER=/=([^=\|>]+)\|([^=\|>]+)>/
@@ -314,138 +275,9 @@ class DaijirinEntry
     end
   end
 
-  HEADERS = [
-      /^(□[一二三四五六七八九十]+□)/,
-      /^(■[一二三四五六七八九十]+■)/,
-      /^(（[\d１２３４５６７８９０]+）)/,
-      /^([❶❷❸❹❺❻❼❽❾❿⓫⓬⓭⓮⓯⓰⓱⓲⓳⓴])/,
-  ]
-
-  REPLACEMENTS = {
-      '（ア）' => '㋐',
-      '（イ）' => '㋑',
-      '（ウ）' => '㋒',
-      '（エ）' => '㋓',
-      '（オ）' => '㋔',
-  }
-
-  REPLACEMENTS_REGEX = Regexp.new(REPLACEMENTS.keys.map {|key| Regexp.escape(key)}.join('|'))
-
-  def do_replacements(s)
-    s.gsub(REPLACEMENTS_REGEX) do |match|
-      REPLACEMENTS[match]
-    end
-  end
-
-  # Parses the rest of lines into tree of hashes with headers as keys
-  def parse_rest_of_lines(s)
-    best_pos = s.length
-    top_header = nil
-
-    HEADERS.each do |header|
-      pos = s =~ header
-      if pos && (pos < best_pos)
-        best_pos = pos
-        top_header = header
-      end
-    end
-
-    unless top_header
-      return s.lines.map {|l| do_replacements(l.rstrip)}.to_a
-    end
-
-    key_value_array = s.split(top_header, -1).to_a
-
-    # There is a preamble, that has no header.
-    if key_value_array[0].empty?
-      # If it's empty, just remove it.
-      key_value_array.shift
-    else
-      # Otherwise, add empty header to it.
-      key_value_array.unshift('')
-    end
-
-    #noinspection RubyHashKeysTypesInspection
-    intermediate = Hash[*key_value_array]
-
-    result = intermediate.map do |key, sub|
-      [key, parse_rest_of_lines(sub)]
-    end
-
-    Hash[result]
-  end
-
-  # Convert entry hierarchy into blocks in the form of
-  # [string of concatenated hierarchy headers, corresponding lines]
-  def hierarchy_to_blocks(info)
-    return [['', info]] if info.instance_of?(Array)
-
-    result = info.each_pair.map do |key, sub|
-      blocks = hierarchy_to_blocks(sub)
-
-      blocks.each do |prefix, _|
-        prefix << key
-      end
-
-      first_block_lines = blocks[0][1]
-      first_block_lines[0] = key + first_block_lines[0]
-
-      blocks
-    end
-
-    result.flatten(1)
-  end
-
-  # Groups prefixed blocks together
-  # into subentries (text that is output together).
-  # Everything from the beginning down to and including
-  # the first entry in the lowest-level list
-  # will be in the same subentry,
-  # thanks to key postfix checking.
-  def blocks_to_subentries(blocks)
-    prev_key = ''
-    result = []
-
-    accumulator = []
-    blocks.each do |key, lines|
-      unless key.end_with?(prev_key)
-        result << accumulator
-        accumulator = []
-      end
-      accumulator += lines
-      prev_key = key
-    end
-
-    result << accumulator unless accumulator.empty?
-
-    result
-  end
-
-  def compact_xrefs(lines_group)
-    replacement = nil
-
-    lines_group.map do |line|
-      if line.match(/^\s*[→⇔]/)
-        if replacement
-          replacement << ', '
-          replacement << line
-          nil
-        else
-          replacement = line.dup
-          replacement
-        end
-      else
-        replacement = nil
-        line
-      end
-    end.delete_if do |line|
-      line.nil?
-    end
-  end
-
   def split_capture!(s, pattern, substitution)
     result = []
-    s.gsub!(pattern) do |m|
+    s.gsub!(pattern) do |_|
       result << $1.strip
       substitution
     end
@@ -473,9 +305,5 @@ class DaijirinEntry
     s.gsub!('-', '')
     s.gsub!('∘', '')
     s
-  end
-
-  def post_parse
-    @raw = nil # Memory optimization. Overridden in convert.rb
   end
 end

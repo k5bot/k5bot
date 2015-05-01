@@ -7,6 +7,8 @@
 require 'set'
 
 class CEDICTEntry
+  VERSION = 1
+
   attr_reader :raw, :simple_entry
   attr_accessor :sort_key
 
@@ -36,7 +38,7 @@ class CEDICTEntry
 
   def pinyin
     return @pinyin if @pinyin
-    pinyin = @raw[/^[\s]*[^\s]+[^\[\/]+[\s]*\[(.*)\]/, 1]
+    pinyin = @raw[/^[\s]*[^\s]+[^\[\/]+[\s]*\[(.*?)\]/, 1]
     @pinyin = if pinyin && !pinyin.empty?
                  pinyin
                else

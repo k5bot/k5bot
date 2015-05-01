@@ -6,10 +6,10 @@
 
 require 'set'
 
-require_relative '../../IRCListener'
+require_relative '../../Listener'
 
 class IRCJoinListener
-  include IRCListener
+  include BotCore::Listener
 
   def initialize(bot, config)
     @bot = bot
@@ -29,7 +29,7 @@ class IRCJoinListener
     @joined = false
   end
 
-  LISTENER_PRIORITY = -30
+  LISTENER_PRIORITY = -25
 
   def listener_priority
     LISTENER_PRIORITY

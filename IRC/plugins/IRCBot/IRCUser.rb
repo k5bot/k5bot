@@ -4,7 +4,11 @@
 
 # IRCUser describes an IRC user
 
+require_relative '../../User'
+
 class IRCUser
+  include BotCore::User
+
   attr_reader :name
   attr_accessor :realname, :host, :nick
 

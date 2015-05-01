@@ -1,16 +1,29 @@
 require_relative '../../IRCPlugin'
 
 class Memory < IRCPlugin
-  Description = "Bot memory usage."
+  Description = 'Monitors memory usage.'
   Commands = {
-    :memory => "returns bot memory usage"
+    :free => 'reports memory info'
   }
 
   def on_privmsg(msg)
     case msg.botcommand
-      when :memory
-        pid, size = `ps ax -o pid,rss | grep -E "^[[:space:]]*#{$$}"`.strip.split.map(&:to_i)
-        msg.reply "Bot currently uses #{'%.2f' % (size / 1024)} MiB of memory!"
+      when :free
+        d = File.open('/proc/meminfo') do |f|
+          Hash[f.each_line.map do |l|
+            key, value = l.split()
+            [key.downcase.delete(':').to_sym, value.to_i]
+          end]
+        end
+
+        # Thanks to CalimeroTeknik for this memory calculation formula
+        mused = d[:memtotal] - d[:memfree] - d[:cached] - d[:buffers] + d[:shmem] + d[:slab] + d[:kernelstack] + d[:pagetables]
+        mtotal = d[:memtotal]
+
+        stotal = d[:swaptotal]
+        sused = stotal - d[:swapfree]
+
+        msg.reply "Memory usage: #{'%.2f' % (mused / 1024)} of #{'%.2f' % (mtotal / 1024)} MiB \/\/ SWAP usage: #{'%.2f' % (sused / 1024)} of #{'%.2f' % (stotal / 1024)} MiB"
     end
   end
 end

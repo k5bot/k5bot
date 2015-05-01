@@ -6,6 +6,8 @@
 
 require 'yaml'
 require_relative '../../IRCPlugin'
+require_relative '../../ContextMetadata'
+
 require_relative 'MenuState'
 require_relative 'MenuNode'
 require_relative 'MenuNodeSimple'
@@ -44,33 +46,36 @@ shows the list of entries starting from that position",
 
   def on_privmsg(msg)
     self.evict_expired_menus!
-    menu_state = @menu_states[msg.replyTo]
+    menu_state = @menu_states[msg.context]
     return unless menu_state
-    case msg.botcommand
+    case msg.bot_command
       when :n
         index = Menu.get_int(msg.tail)
         menu_state.show_descriptions!(index, msg)
       when :u
         menu_state.move_up!(msg)
       else
-        index = Menu.get_int(msg.message)
+        index = Menu.get_int(msg.tail)
         return unless index
         menu_state.move_down_to!(menu_state.get_child(index), msg)
     end
   end
 
-  def put_new_menu(plugin, root_node, msg, menu_size = 12, expire_duration = 1920)
+  def put_new_menu(plugin, root_node, msg, menu_size = nil, expire_duration = 1920)
+    unless menu_size
+      menu_size = ContextMetadata.get_key(:menu_size) || 12
+    end
     menu_state = MenuState.new(plugin, menu_size, expire_duration)
     put_new_menu_ex(menu_state, root_node, msg)
   end
 
   def put_new_menu_ex(menu_state, root_node, msg)
     menu_state.move_down_to!(root_node, msg)
-    @menu_states[msg.replyTo] = menu_state
+    @menu_states[msg.context] = menu_state
   end
 
   def delete_menu(plugin, msg)
-    @menu_states.delete(msg.replyTo)
+    @menu_states.delete(msg.context)
   end
 
   def evict_plugin_menus!(plugin)

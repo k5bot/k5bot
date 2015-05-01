@@ -5,10 +5,10 @@
 # IRCFirstListener is the first listener that is called and handles
 # messages that are important for things to function properly.
 
-require_relative '../../IRCListener'
+require_relative '../../Listener'
 
 class IRCFirstListener
-  include IRCListener
+  include BotCore::Listener
 
   # This method is overridden, so that command-methods can
   # pass back their own return values.
@@ -22,7 +22,7 @@ class IRCFirstListener
     true # stop further message propagation
   end
 
-  def on_263
+  def on_263(msg)
     msg.bot.send_raw(msg.bot.last_sent)
 
     true # stop further message propagation
@@ -35,7 +35,11 @@ class IRCFirstListener
     queries.each do |ctcp|
       case ctcp.command
         when :PING
-          msg.notice_user(IRCMessage.make_ctcp_message(:PING, ctcp.arguments))
+          msg.reply(
+              IRCMessage.make_ctcp_message(:PING, ctcp.arguments),
+              :notice => true,
+              :force_private => true,
+          )
           result = true # stop further message propagation
       end
     end

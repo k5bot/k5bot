@@ -26,14 +26,30 @@ class IRCHashPluginManager < IRCPluginManager
 
   def load_all_plugins()
     reload_config()
-    do_load_plugins(@config)
+    plugins = @plugins.keys
+    prev_size = plugins.size - 1
+    while plugins.size > prev_size
+      prev_size = plugins.size
+      @config.keys.each do |plugin|
+        next if @plugins.include?(plugin)
+        begin
+          load_plugin(plugin)
+        rescue Exception => e
+          log(:error, "Exception during loading #{plugin}: #{e}")
+          raise e
+        end
+      end
+      plugins = @plugins.keys
+    end
+
+    raise if plugins.size != @config.size
   end
 
   def load_plugin(name)
     begin
       reload_config()
     rescue Exception => e
-      puts "Config loading error: #{e}\n\t#{e.backtrace.join("\n\t")}"
+      log(:error, "Config loading error: #{e}\n\t#{e.backtrace.join("\n\t")}")
       return false
     end
     super
@@ -83,16 +99,32 @@ end
 
 plugin_manager = IRCHashPluginManager.new(config) # Add plugin manager
 
-plugin_manager.load_all_plugins  # Load plugins
+begin
+  puts 'Loading plugins...'
 
-bot = plugin_manager.plugins[:IRCBot]
+  plugin_manager.load_all_plugins  # Load plugins
 
-unless bot
-  puts "IRCBot plugin is not present in configuration file, exiting."
-  exit 2
-end
+  if plugin_manager.plugins[:Console]
+    plugin_manager.plugins[:Console].serve
+  else
+    puts 'All plugins loaded. Press Ctrl-C to terminate program.'
 
-loop do
-  bot.start
-  sleep 15  # wait a bit before reconnecting
+    sleep
+  end
+ensure
+  plugins = plugin_manager.plugins.keys
+  prev_size = plugins.size + 1
+  while plugins.size < prev_size
+    prev_size = plugins.size
+    plugins .each do |plugin|
+      begin
+        plugin_manager.unload_plugin(plugin)
+      rescue Exception => e
+        puts "Exception during unloading #{plugin}: #{e}"
+      end
+    end
+    plugins = plugin_manager.plugins.keys
+  end
+
+  puts "Plugins unloaded. #{' Failed to unload: ' + plugins.join(', ') + '.' unless plugins.empty?}"
 end

@@ -5,7 +5,7 @@
 # Clock plugin tells the time
 
 require_relative '../../IRCPlugin'
-require_relative 'damerau_levenshtein'
+require_relative 'DamerauLevenshtein'
 
 class Algorithms < IRCPlugin
   Description = "The Algorithms plugin contains various geeky functions and algorithms."
@@ -15,11 +15,11 @@ class Algorithms < IRCPlugin
   }
 
   def afterLoad
-    load_helper_class(:damerau_levenshtein)
+    load_helper_class(:DamerauLevenshtein)
   end
 
   def beforeUnload
-    unload_helper_class(:damerau_levenshtein)
+    unload_helper_class(:DamerauLevenshtein)
 
     nil
   end
@@ -27,7 +27,7 @@ class Algorithms < IRCPlugin
   def on_privmsg(msg)
     text = msg.tail
     return unless text
-    case msg.botcommand
+    case msg.bot_command
     when :damerau
       opts = {:ignore_case => true, :allow_swaps => true}
       distance = calc_distance(text, opts)

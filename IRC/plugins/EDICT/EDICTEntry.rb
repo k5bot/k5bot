@@ -10,6 +10,7 @@ class EDICTEntry
   VERSION = 2
 
   attr_reader :raw
+  attr_accessor :usages_count
   attr_accessor :sortKey
 
   attr_reader :japanese,
@@ -24,6 +25,7 @@ class EDICTEntry
     @japanese = nil
     @reading = nil
     @simple_entry = nil
+    @usages_count = nil
     @english = nil
     @info = nil
     @keywords = nil
@@ -85,7 +87,7 @@ class EDICTEntry
   end
 
   def marshal_dump
-    [@sortKey, @raw]
+    [@sortKey, @usages_count, @raw]
   end
 
   def marshal_load(data)
@@ -95,6 +97,6 @@ class EDICTEntry
     @english = nil
     @info = nil
     @keywords = nil
-    @sortKey, @raw = data
+    @sortKey, @usages_count, @raw = data
   end
 end

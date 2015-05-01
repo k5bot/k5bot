@@ -13,7 +13,7 @@ class Dice < IRCPlugin
   }
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
     when :roll
       die1 = roll
       die2 = roll

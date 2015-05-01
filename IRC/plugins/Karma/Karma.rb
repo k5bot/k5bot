@@ -31,8 +31,12 @@ class Karma < IRCPlugin
     end
   end
 
-  def store(command)
+  def transaction(command)
+    sub_store = @karma[command].dup
+    result = yield sub_store
+    @karma[command] = sub_store
     @storage.write(@config[command][:file], @karma[command])
+    result
   end
 
   def commands
@@ -51,7 +55,7 @@ class Karma < IRCPlugin
   end
 
   def on_privmsg(msg)
-    if msg.botcommand
+    if msg.bot_command
       respond_to_query(msg)
     elsif !msg.private?
       respond_to_change(msg)
@@ -59,7 +63,7 @@ class Karma < IRCPlugin
   end
 
   def respond_to_query(msg)
-    bot_command = msg.botcommand
+    bot_command = msg.bot_command
 
     sub_config = @config[bot_command]
     return unless sub_config
@@ -82,47 +86,68 @@ class Karma < IRCPlugin
   end
 
   def respond_to_change(msg)
+    text = msg.tail || ''
     @config.each do |bot_command, sub_config|
-      sub_store = @karma[bot_command]
-
       sub_config[:matchers].each do |matcher|
-        match = matcher[:regexp].match(msg.message)
-        next unless match
 
-        sender_user = msg.user
+        success = transaction(bot_command) do |sub_store|
+          matches_allowed = matcher[:multi] || 1
+          replies = []
 
-        if matcher[:receiver_delta]
-          # if this kind of karma has receiver, his nick
-          # must be matched by the first group of regexp
-          receiver_nick = match[1]
-          next unless receiver_nick
+          text.scan(matcher[:regexp]) do
+            # Gather actual MatchData instead of simply Strings.
+            match = $~
 
-          receiver_user = msg.bot.find_user_by_nick(receiver_nick)
-          # Disallow sender and receiver to be the same
-          next unless receiver_user != sender_user
+            sender_user = msg.user
 
-          receiver_points = change_user_points(sub_store, receiver_user, matcher[:receiver_delta])
+            receiver_nick = nil
+            receiver_points = nil
+            sender_points = nil
 
-          break unless receiver_points # Failed to update receiver points, stop
-        else
-          receiver_nick = nil
-          receiver_points = nil
+            if matcher[:receiver_delta]
+              # if this kind of karma has receiver, his nick
+              # must be matched by the first group of regexp
+              receiver_nick = match[1]
+              next unless receiver_nick
+
+              receiver_user = msg.bot.find_user_by_nick(receiver_nick)
+              # Disallow sender and receiver to be the same
+              next unless receiver_user != sender_user
+
+              receiver_points = change_user_points(sub_store, receiver_user, matcher[:receiver_delta])
+
+              # Failed to update receiver points, stop
+              next unless receiver_points
+            end
+
+            if matcher[:sender_delta]
+              sender_points = change_user_points(sub_store, sender_user, matcher[:sender_delta])
+              raise "Bug! Failed to update #{bot_command} points for #{msg.nick}" unless sender_points
+            end
+
+            reply_format = random_choice(matcher[:response])
+            reply_msg = template(reply_format, msg.nick, sender_points, receiver_nick, receiver_points)
+
+            replies << reply_msg
+
+            # Limit the number of successful matches to check
+            break unless replies.size < matches_allowed
+          end
+
+          # None of the matches were actually successful,
+          # rollback transaction and try next matcher.
+          break if replies.empty?
+
+          replies.each do |reply_msg|
+            msg.reply(reply_msg) if reply_msg
+          end
+
+          # Mark the transaction success
+          true
         end
 
-        if matcher[:sender_delta]
-          sender_points = change_user_points(sub_store, sender_user, matcher[:sender_delta])
-          raise "Bug! Failed to update #{bot_command} points for #{msg.nick}" unless sender_points
-        else
-          sender_points = nil
-        end
-
-        store(bot_command)
-
-        reply_format = random_choice(matcher[:response])
-        reply_msg = template(reply_format, msg.nick, sender_points, receiver_nick, receiver_points)
-        msg.reply(reply_msg) if reply_msg
-
-        break # Don't process further matchers for this kind of karma
+        # Don't process further matchers for this kind of karma
+        break if success
       end
     end
   end

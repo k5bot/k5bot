@@ -11,7 +11,7 @@ require 'net/http'
 require 'json'
 
 class Translate < IRCPlugin
-  Description = "Uses translation engines to translate between languages."
+  Description = 'Uses translation engines to translate between languages.'
   Dependencies = [ :Language ]
 
   def self.to_lang_key(x)
@@ -35,11 +35,12 @@ class Translate < IRCPlugin
     [possibles[l_from], possibles[l_to]]
   end
 
-  GOOGLE_SUPPORTED = make_lang_service_format_map(%w(auto en ja ko fr pt de it es no ru fi hu sv da pl lt nl sw), {:zh => 'zh-CN', :tw => 'zh-TW'})
+  GOOGLE_SUPPORTED = make_lang_service_format_map(%w(auto en ja ko fr pt de it es no ru fi hu sv da pl lt nl sw ar), {:zh => 'zh-CN', :tw => 'zh-TW'})
   HONYAKU_SUPPORTED = make_lang_service_format_map(%w(en ja ko fr pt zh de it es))
   EXCITE_SUPPORTED = make_lang_service_format_map([], {:en => 'EN', :ja => 'JA'})
   KNOWN_SERVICES = {
       :Google => {:prefix=>'g', :languages=>GOOGLE_SUPPORTED, :translator=>:google_translate},
+      :'Google \'Did You Mean?\'' => {:prefix=>'gg', :languages=>GOOGLE_SUPPORTED, :translator=>:google_dym_translate, :single_language => true},
       :Honyaku => {:prefix=>'h', :languages=>HONYAKU_SUPPORTED, :translator=>:honyaku_translate},
       :Excite => {:prefix=>'x', :languages=>EXCITE_SUPPORTED, :translator=>:excite_translate},
   }
@@ -50,26 +51,27 @@ class Translate < IRCPlugin
   # [Shortcut form for commands, Language description for help]
   LANGUAGE_INFO = {
       :auto => ['_', 'Auto-detected language'],
-      :en => ['en', 'English'],
-      :ja => ['ja', 'Japanese'],
+      :en => %w(en English),
+      :ja => %w(ja Japanese),
       :zh => ['zh', 'Simplified Chinese'],
       :tw => ['tw', 'Traditional Chinese'],
-      :ko => ['ko', 'Korean'],
-      :fr => ['fr', 'French'],
-      :pt => ['pt', 'Portuguese'],
-      :de => ['de', 'German'],
-      :it => ['it', 'Italian'],
-      :es => ['es', 'Spanish'],
-      :no => ['no', 'Norwegian'],
-      :ru => ['ru', 'Russian'],
-      :fi => ['fi', 'Finnish'],
-      :hu => ['hu', 'Hungarian'],
-      :sv => ['sv', 'Swedish'],
-      :da => ['da', 'Danish'],
-      :pl => ['pl', 'Polish'],
-      :lt => ['lt', 'Lithuanian'],
-      :nl => ['nl', 'Dutch'],
-      :sw => ['sw', 'Swahili'],
+      :ko => %w(ko Korean),
+      :fr => %w(fr French),
+      :pt => %w(pt Portuguese),
+      :de => %w(de German),
+      :it => %w(it Italian),
+      :es => %w(es Spanish),
+      :no => %w(no Norwegian),
+      :ru => %w(ru Russian),
+      :fi => %w(fi Finnish),
+      :hu => %w(hu Hungarian),
+      :sv => %w(sv Swedish),
+      :da => %w(da Danish),
+      :pl => %w(pl Polish),
+      :lt => %w(lt Lithuanian),
+      :nl => %w(nl Dutch),
+      :sw => %w(sw Swahili),
+      :ar => %w(ar Arabic),
   }
 
   def self.get_language_info(lang)
@@ -78,8 +80,8 @@ class Translate < IRCPlugin
     result
   end
 
-  def self.get_language_list_string()
-    LANGUAGE_INFO.map { |_, info| "#{info[1]} (#{info[0]})" }.sort.join(", ")
+  def self.get_language_list_string
+    LANGUAGE_INFO.map { |_, info| "#{info[1]} (#{info[0]})" }.sort.join(', ')
   end
 
   def self.fill_default_guess_command(commands, translation_map)
@@ -96,6 +98,7 @@ class Translate < IRCPlugin
 
   def self.fill_guess_commands(commands, translation_map)
     KNOWN_SERVICES.each do |service, service_record|
+      next if service_record[:single_language]
       prefix = service_record[:prefix]
 
       dsc = "attempts to guess desired translation direction for specified text and translates it using #{service}"
@@ -106,8 +109,37 @@ class Translate < IRCPlugin
     end
   end
 
+  def self.fill_one_lang_commands(commands, translation_map)
+    KNOWN_SERVICES.each do |service, service_record|
+      next unless service_record[:single_language]
+      prefix = service_record[:prefix]
+      possibles = service_record[:languages]
+
+      used_abbreviations = {}
+
+      possibles.keys.each do |l_from|
+        abbreviation_from, _ = get_language_info(l_from)
+        lp = possibles[l_from]
+        next unless lp
+        lp = [lp]
+
+        cmd = "#{prefix}#{abbreviation_from}".to_sym
+
+        translation_map[cmd] = [service, lp]
+
+        # Gather all accepted abbreviations, to list them in help
+        used_abbreviations[abbreviation_from] = l_from
+      end
+
+      # Generate generic help for prefixed template form
+      dsc = "\"#{prefix}<lang>\" translates specified text using #{service}. Possible values for <lang> are: #{used_abbreviations.keys.join(', ')}"
+      commands["#{prefix}_".to_sym] = dsc
+    end
+  end
+
   def self.fill_explicit_commands(commands, short_commands, translation_map)
     KNOWN_SERVICES.each do |service, service_record|
+      next if service_record[:single_language]
       prefix = service_record[:prefix]
       possibles = service_record[:languages]
 
@@ -146,9 +178,9 @@ class Translate < IRCPlugin
     end
   end
 
-  def self.generate_commands()
+  def self.generate_commands
     translation_map = {}
-    commands = {:langs => "shows languages supported by this plugin (note that not all of them are available for all translation engines)"}
+    commands = {:langs => 'shows languages supported by this plugin (note that not all of them are available for all translation engines)'}
 
     fill_default_guess_command(commands, translation_map)
 
@@ -156,6 +188,9 @@ class Translate < IRCPlugin
 
     long_commands = {}
     short_commands = {}
+
+    fill_one_lang_commands(long_commands, translation_map)
+
     fill_explicit_commands(long_commands, short_commands, translation_map)
 
     commands.merge! long_commands
@@ -164,16 +199,18 @@ class Translate < IRCPlugin
     return [translation_map, commands]
   end
 
-  TRANSLATION_MAP, Commands = generate_commands()
+  TRANSLATION_MAP, Commands = generate_commands
 
   def afterLoad
+    load_helper_class(:QuirkedJSON)
+
     @l = @plugin_manager.plugins[:Language]
   end
 
   def on_privmsg(msg)
-    bot_command = msg.botcommand
+    bot_command = msg.bot_command
     if :langs == bot_command
-      return msg.reply Translate.get_language_list_string()
+      return msg.reply(Translate.get_language_list_string)
     end
 
     text = msg.tail
@@ -192,22 +229,106 @@ class Translate < IRCPlugin
     @l.containsJapanese?(text) ? from_ja : to_ja
   end
 
-  GOOGLE_BASE_URL = 'http://translate.google.com'
+  GOOGLE_BASE_URL = 'https://translate.google.com'
+  GOOGLE_JSON_URL = 'https://translate.google.com/translate_a/single'
 
   def google_translate(text, lp)
     lp = auto_detect_ja_lp(text, %w(auto ja), %w(ja en)) unless lp
 
+    ret = google_get_json(text, lp, %w(t qc))
+
+    return unless ret
+
+    # Example:
+    # [[["fool", "dummkopf"]], <...snip...>]
+    if ret
+      json = QuirkedJSON.new(ret).parse
+      translation = json[0]
+      translation = translation[0] if translation
+      translation = translation[0] if translation
+      if translation && translation.downcase.gsub(/\s+/, '').eql?(text.downcase.gsub(/\s+/, ''))
+        translation = nil
+      end
+      translation = translation + ' ' if translation
+
+      detected_language = json[2]
+      if detected_language
+        detected_language = if 'auto'.eql?(lp.first)
+                              unless %w(ja en).include?(detected_language)
+                                "[lang: #{detected_language}]"
+                              end
+                            end
+      end
+
+      if translation
+        spelling_correction = nil
+      else
+        spelling_correction = json[7]
+        spelling_correction = spelling_correction[1] if spelling_correction
+        spelling_correction = "[did you mean: #{spelling_correction}]" if spelling_correction
+      end
+
+      [translation, detected_language, spelling_correction].compact.join
+    end
+  end
+
+  # Exploiting "did you mean" field for various corrections and
+  # romaji -> japanese transcription
+  def google_dym_translate(text, lp)
+    lp = %w(ja) unless lp
+    # Choose some second language.
+    # Same language prevents DYM from working apparently,
+    # so always choose english, except when it's english.
+    lp << 'en'.eql?(lp.first) ? 'ja' : 'en'
+
+    ret = google_get_json(text, lp, %w(qc))
+
+    return unless ret
+
+    # Example:
+    # [,,,,,,,[,"お前ら なんぞ 信じられっかよ",[6]]]
+    if ret
+      json = QuirkedJSON.new(ret).parse
+      spelling_correction = json[7]
+      spelling_correction[1] if spelling_correction
+    end
+  end
+
+  def google_get_json(text, lp, dt)
     l_from, l_to = lp
-    result = Net::HTTP.post_form(
-        URI.parse(GOOGLE_BASE_URL),
-        {'sl' => l_from, 'tl' => l_to, 'text' => text})
-    return if [Net::HTTPSuccess, Net::HTTPRedirection].include? result
-    # Fix encoding error, which can be seen e.g. with .g_c 戦
-    # Parse once to detect encoding from html
-    doc = Nokogiri::HTML result.body
-    filtered = fix_encoding(result.body, doc.encoding)
-    doc = Nokogiri::HTML filtered
-    doc.css('span[id="result_box"] span').text.chomp
+    params = [
+        [:client, 't'],
+        [:sl, l_from],
+        [:hl, l_to],
+        [:tl, l_to],
+        # Apparently those are query type values. observed values are:
+        # 't','at','bd','ex','ld','md','qc','rw','rm','ss','sw',
+        # 'qc' seems to mean spelling correction.
+        *dt.map {|val| [:dt, val]},
+        [:ie, 'UTF-8'],
+        [:oe, 'UTF-8'],
+        [:ssel, 0],
+        [:tsel, 0],
+        [:q, text],
+    ]
+
+    uri = URI.parse(GOOGLE_JSON_URL)
+    uri.query = URI.encode_www_form(params)
+
+    Net::HTTP.start(uri.hostname, uri.port,
+                    :use_ssl => uri.scheme == 'https') do |http|
+      res = http.request_get(uri,
+                             {
+                                 'user-agent' => HONYAKU_USER_AGENT,
+                                 'referer' => GOOGLE_BASE_URL,
+                             }
+      )
+      unless (Net::HTTPSuccess === res) && res.body && !res.body.empty?
+        next
+      end
+
+      res.body
+    end
   end
 
   def fix_encoding(str, encoding)
@@ -217,9 +338,9 @@ class Translate < IRCPlugin
     end.join
   end
 
-  HONYAKU_INIT_URL="http://honyaku.yahoo.co.jp/transtext/"
-  HONYAKU_BASE_URL="http://honyaku.yahoo.co.jp/TranslationText"
-  HONYAKU_USER_AGENT="Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET"
+  HONYAKU_INIT_URL='http://honyaku.yahoo.co.jp/transtext/'
+  HONYAKU_BASE_URL='http://honyaku.yahoo.co.jp/TranslationText'
+  HONYAKU_USER_AGENT='Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET'
 
   def honyaku_translate(text, lp)
     lp = auto_detect_ja_lp(text, %w(en ja), %w(ja en)) unless lp
@@ -229,18 +350,18 @@ class Translate < IRCPlugin
     json = JSON.parse(ret.body)
 
     if  json != nil and
-        json.include?("ResultSet") and
-        json["ResultSet"].include?("ResultText") and
-        json["ResultSet"]["ResultText"].include?("Results")
+        json.include?('ResultSet') and
+        json['ResultSet'].include?('ResultText') and
+        json['ResultSet']['ResultText'].include?('Results')
 
-      results = json["ResultSet"]["ResultText"]["Results"]
+      results = json['ResultSet']['ResultText']['Results']
 
 #      results.each do |result|
 #        trans_text << "#{result["key"]}: #{result["TranslateText"]}\n"
 #        trans_text << "#{result["key"]}: -> #{result["TranslatedText"]}\n"
 #      end
 
-      results.map { |result| result["TranslatedText"] }.join(' ')
+      results.map { |result| result['TranslatedText'] }.join(' ')
     else
       puts "failed... received data: #{ret.body}"
       nil
@@ -258,7 +379,7 @@ class Translate < IRCPlugin
     uri = URI.parse(HONYAKU_INIT_URL)
     http_obj.start(uri.host, uri.port) do |http|
       request = Net::HTTP::Get.new(uri.path)
-      request["user-agent"] = HONYAKU_USER_AGENT
+      request['user-agent'] = HONYAKU_USER_AGENT
       res = http.request(request)
       if res.body == nil || res.body.empty?
         next
@@ -276,17 +397,17 @@ class Translate < IRCPlugin
     uri = URI.parse(HONYAKU_BASE_URL)
     http_obj.start(uri.host, uri.port) do |http|
       request = Net::HTTP::Post.new(uri.path)
-      request["user-agent"]       = HONYAKU_USER_AGENT
-      request["referer"]          = HONYAKU_INIT_URL
-      request["x-requested-with"] = "XMLHttpRequest"
-      request["Accept-Language"]  = "ja"
-      request["Accept"]           = "application/json, text/javascript, */*"
+      request['user-agent']       = HONYAKU_USER_AGENT
+      request['referer']          = HONYAKU_INIT_URL
+      request['x-requested-with'] = 'XMLHttpRequest'
+      request['Accept-Language']  = 'ja'
+      request['Accept']           = 'application/json, text/javascript, */*'
       body = {
           :ieid      => l_from,
           :oeid      => l_to,
           :results   => 1000,
           :formality => 0,
-          :output    => "json",
+          :output    => 'json',
           :p         => str,
           :_crumb    => crumb,
       }

@@ -16,9 +16,10 @@ require 'time'
 require 'json'
 
 class URL < IRCPlugin
-  Description = "Implements URL preview"
+  Description = 'Implements URL preview'
   Commands = {
-      :short => "shortens a previously seen URL with goo.gl. This command can accept either index (1 is the most recent one) or substring of the desired URL",
+      :short => "shortens a previously seen URL with goo.gl. This command can \
+accept either index (1 is the most recent one) or substring of the desired URL",
   }
 
   def initialize(manager, config)
@@ -32,7 +33,7 @@ class URL < IRCPlugin
   def afterLoad
     @channel_queues = {}
     @url_cache = {}
-    @url_counter = Counter.new()
+    @url_counter = Counter.new
   end
 
   def beforeUnload
@@ -42,13 +43,15 @@ class URL < IRCPlugin
   end
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
       when :short
         text = msg.tail
-        url = get_uri_from_queue(msg.replyTo, text)
+        url = get_uri_from_queue(msg.context, text)
         if url
           short_url = shorten_url(url)
-          msg.reply("Short URL: #{short_url} for URL: #{url.abbreviate(100)}") if short_url
+          if short_url
+            msg.reply("Short URL: #{short_url} for URL: #{abbreviate(url, 100)}")
+          end
         end
       when nil # Don't react to url-s in commands
         scan_for_uri(msg.tail, msg)
@@ -64,6 +67,8 @@ class URL < IRCPlugin
 
   def scan_for_uri(text, msg)
     return unless text
+    # We'll be modifying text in place, so copy it beforehand.
+    text = text.dup
 
     uris = URI.extract(text)
 
@@ -71,7 +76,7 @@ class URL < IRCPlugin
       # Silently skip anything not starting with that,
       # b/c URI.extract() tends to accept anything with colon in it
       # (e.g. "nick:"), which then causes URI.parse() to fail with InvalidURIError
-      !uri.start_with?("http://", "https://")
+      !uri.start_with?('http://', 'https://')
     end
 
     uris = uris.map do |uri|
@@ -80,74 +85,83 @@ class URL < IRCPlugin
       # Most ugly part: match for the extracted URI plus anything that
       # looks like it might have been part of it, but wasn't
       # approved of by URI.extract()
-      match = /(#{no_re}[^\s,!\\\]\[>　'"]*)/u.match(text)
-      unless match[0]
-        raise "Bug! Couldn't find uri in the same text it was extracted from: #{uri}"
-      end
+      # We also immediately remove the match, so that weird urls with
+      # similar prefixes don't always match to the first of them.
+      left, right = text.split(/#{no_re}[^\s　,!>'"\]\[\\]*/u, 2)
 
-      uri = match[0].to_s
+      uri = text[left.size..-right.size-1]
 
       # Try handling final ')' which may be just an artifact
       # from the URI having been enclosed in parentheses
       # that URI#extract didn't quite handle
-      if uri.end_with?(')') && text =~ /\([^)]*?#{no_re}/u
-        uri.gsub!(/\)$/u, '')
+      if uri.end_with?(')') && left =~ /\([^)]*$/u
+        uri = uri[0..-2]
+        right += ')'
       end
+
+      text = left + right
 
       uri
     end
 
-    put_uris_to_queue(msg.replyTo, uris)
+    put_uris_to_queue(msg.context, uris)
 
     uris.each do |uri|
       handle_uri(uri, msg)
     end
   end
 
-  USER_AGENT="Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET"
-  ACCEPT_LANGUAGE="en, ja, *"
+  USER_AGENT='Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET'
+  ACCEPT_LANGUAGE='en, ja, *'
 
   def handle_uri(uri, msg)
+    text = nil
+
     fetch_by_uri(uri) do |result|
-      unless result.is_a?(Net::HTTPSuccess)
-        begin
+      text, _ = format_http_info(result)
+    end
+
+    msg.reply(text) if text
+  end
+
+  def format_http_info(result)
+    unless result.is_a?(Net::HTTPSuccess)
+      begin
         result.error!
-        rescue => e
-          msg.reply(e.to_s)
-          raise e
-        end
+      rescue => e
+        return [e.to_s, e]
       end
+    end
 
-      content_type = result.content_type
+    content_type = result.content_type
 
-      if content_type.eql?('text/html')
-        doc = html_to_nokogiri(result)
-        return unless doc
+    if content_type.eql?('text/html')
+      doc = html_to_nokogiri(result)
+      return [] unless doc
 
-        text_node = doc.css('title')[0]
-        if text_node
-          title = text_node.text.chomp
+      text_node = doc.css('title')[0]
+      return [] unless text_node
 
-          title.gsub!(/[ \t\n\f\r]+/, ' ')
-          title.strip!
+      title = text_node.text.chomp
 
-          msg.reply("Title: #{title}")
-        end
-      else
-        response = []
+      title.gsub!(/[ \t\n\f\r]+/, ' ')
+      title.strip!
 
-        response << "Type: #{content_type}" if content_type
+      ["Title: #{title}"]
+    else
+      response = []
 
-        content_length = result['content-length']
+      response << "Type: #{content_type}" if content_type
 
-        response << "Size: #{format_size(content_length.to_i)}" if content_length
+      content_length = result['content-length']
 
-        last_modified = result['last-modified']
+      response << "Size: #{format_size(content_length.to_i)}" if content_length
 
-        response << format_last_modified(last_modified) if last_modified
+      last_modified = result['last-modified']
 
-        msg.reply(response.join("; "))
-      end
+      response << format_last_modified(last_modified) if last_modified
+
+      [response.join('; ')]
     end
   end
 
@@ -187,13 +201,13 @@ class URL < IRCPlugin
   end
 
   def format_size(size)
-    return sprintf("%.2fB", size) if size < 1024
+    return sprintf('%.2fB', size) if size < 1024
     size /= 1024.0
-    return sprintf("%.2fKiB", size) if size < 1024
+    return sprintf('%.2fKiB', size) if size < 1024
     size /= 1024.0
-    return sprintf("%.2fMiB", size) if size < 1024
+    return sprintf('%.2fMiB', size) if size < 1024
     size /= 1024.0
-    sprintf("%.2fGiB", size)
+    sprintf('%.2fGiB', size)
   end
 
   def format_last_modified(last_modified)
@@ -229,15 +243,17 @@ class URL < IRCPlugin
 
   # TODO: maybe use open-uri lib.
   def fetch_by_uri(uri, limit = 10, timeout = [5, 3], redirects = [], &block)
-    throw ArgumentError, "Must be given receiving block" unless block_given?
+    throw ArgumentError, 'Must be given receiving block' unless block_given?
 
     uri = Addressable::URI.parse(uri) unless uri.is_a? Addressable::URI
 
-    request = Net::HTTP::Get.new(uri.request_uri,
-                                 {
-                                     'User-Agent' => USER_AGENT,
-                                     'Accept-Language' => ACCEPT_LANGUAGE
-                                 })
+    request = Net::HTTP::Get.new(
+        uri.request_uri,
+        {
+            'User-Agent' => USER_AGENT,
+            'Accept-Language' => ACCEPT_LANGUAGE
+        },
+    )
 
     http = get_http_by_uri(uri, timeout)
 
@@ -245,11 +261,14 @@ class URL < IRCPlugin
       http.request(request) do |res|
         # handle redirection outside, after closing current connection
         unless res.is_a?(Net::HTTPRedirection)
-          yield res
-          # HACK: prevent body from loading upon exiting request,
-          # if it wasn't loaded already in yielded block.
-          # @see HTTP.reading_body.
-          res.instance_eval { @body_exist = false }
+          begin
+            yield res
+          ensure
+            # HACK: prevent body from loading upon exiting request,
+            # if it wasn't loaded already in yielded block.
+            # @see HTTP.reading_body.
+            res.instance_eval { @body_exist = false }
+          end
         end
       end
     end
@@ -303,7 +322,7 @@ class URL < IRCPlugin
     end.join
   end
 
-  SHORTENER_SERVICE_URL="https://www.googleapis.com/urlshortener/v1/url"
+  SHORTENER_SERVICE_URL='https://www.googleapis.com/urlshortener/v1/url'
   SHORTENER_QUEUE_SIZE=10
 
   def put_uris_to_queue(queue_id, uris)
@@ -344,27 +363,30 @@ class URL < IRCPlugin
     # Call shortener API
     uri = Addressable::URI.parse(SHORTENER_SERVICE_URL)
 
+    # Append Google API key if provided
+    if @config[:google_api_key]
+      uri.query_values = (uri.query_values || {}).merge(key: @config[:google_api_key].to_s)
+    end
+
     http = get_http_by_uri(uri)
 
     res = http.start do
-      request = Net::HTTP::Post.new(uri.path)
-      request["user-agent"] = USER_AGENT
-      request["Accept"] = "application/json"
+      request = Net::HTTP::Post.new(uri.omit(:scheme, :authority))
+      request['user-agent'] = USER_AGENT
+      request['Accept'] = 'application/json'
       request.body={:longUrl => url}.to_json
-      request.content_type="application/json"
+      request.content_type='application/json'
 
       http.request(request)
     end
 
     json = JSON.parse(res.body)
 
-    json["id"] if json
+    json['id'] if json
   end
-end
 
-class String
-  def abbreviate(len)
-    return "#{self[0..len-4]}..." if self.size > len
-    self
+  def abbreviate(str, len)
+    return "#{str[0..len-4]}..." if str.size > len
+    str
   end
 end

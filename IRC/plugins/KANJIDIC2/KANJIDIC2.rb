@@ -85,7 +85,7 @@ if it's the only given search term",
 
   def on_privmsg(msg)
     return unless msg.tail
-    bot_command = msg.botcommand
+    bot_command = msg.bot_command
     case bot_command
     when :k, :k?
       search_result = @code_skip[msg.tail]
@@ -225,7 +225,7 @@ if it's the only given search term",
     format_reading(out, order, :pinyin)
     format_reading(out, order, :korean_h) do |r_list|
       r_list.map do |hangul|
-        "#{hangul}(#{@l.from_hangul(hangul)[0]})"
+        "#{hangul}(#{@l.hangeul_to_romaja(hangul)[0]})"
       end.join(' ')
     end
     format_reading(out, order, :ja_on)

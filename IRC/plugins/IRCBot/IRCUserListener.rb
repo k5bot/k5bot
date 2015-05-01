@@ -6,20 +6,37 @@
 # updated by listening to user-related messages.
 # To find the user who sent a message, use IRCMessage#user.
 
-require_relative '../../IRCListener'
+require_relative '../../Listener'
 
 require_relative 'IRCUser'
 
 class IRCUserListener
-  include IRCListener
+  include BotCore::Listener
 
   def initialize(storage)
     @storage = storage
+    @users = @nicks = nil
+  end
+
+  def on_connection(msg)
+    return if @users
 
     @users = @storage.read('users') || {}
 
     @nicks = {}
     @users.values.each { |u| @nicks[normalize(u.nick)] = u }
+  end
+
+  def on_disconnection(msg)
+    @nicks = nil
+
+    @users = nil
+  end
+
+  LISTENER_PRIORITY = -40
+
+  def listener_priority
+    LISTENER_PRIORITY
   end
 
   def request_whois(bot, nick)

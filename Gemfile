@@ -1,4 +1,4 @@
-ruby '1.9.3'
+ruby '2.0.0'
 
 source "https://rubygems.org"
 
@@ -27,5 +27,20 @@ gem 'ting', :group => :Pinyin
 
 # for Clock plugin
 gem 'tzinfo', :group => :Clock
+gem 'iso_country_codes', :group => :Clock
 
+# for EPWING plugin
+git 'https://github.com/albel727/rubyeb19.git' do
+  gem 'eb', :group => :EPWING
+end
 
+# for WebBot plugin
+gem 'webrick', :group => :WebBot
+
+# for EDICT plugin
+gem 'sequel', :group => :EDICT
+gem 'sqlite3', :group => :EDICT
+
+# for Googler plugin
+gem 'google-search', :group => :Googler
+gem 'htmlentities', :group => :Googler
