@@ -263,7 +263,7 @@ appears in #{counts.size}/#{@files.size} scripts)"
         if line_results
           found_lines, found_occurrence_maps = hit_file.find_lines_with_occ_maps(queries)
         else
-          found_occurrence_maps = hit_file.find_occurrences(queries)
+          found_occurrence_maps = hit_file.find_occurrence_maps(queries)
         end
       end
 
