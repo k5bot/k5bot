@@ -1,5 +1,7 @@
 # IRCBot config example
 ---
+- :I18N:
+    :locale: en-GB
 - :Console # Add this if you want console interaction
 - :Connectix:
     :freenode:

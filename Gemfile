@@ -17,6 +17,7 @@ gem 'nokogiri', :group => [:KANJIDIC2, :Translate, :URL]
 
 # for URL plugin
 gem 'addressable', :group => :URL
+gem 'i18n', :group => :URL
 
 # for Translate, URL plugins
 gem 'json', :group => [:Translate, :URL]

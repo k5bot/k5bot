@@ -8,6 +8,10 @@ $VERBOSE = true
 
 $stdout.sync = true
 
+require 'rubygems'
+require 'bundler/setup'
+require 'i18n'
+require 'i18n/backend/fallbacks'
 require 'yaml'
 
 require_relative 'IRC/IRCPluginManager'
@@ -25,7 +29,6 @@ class IRCHashPluginManager < IRCPluginManager
   end
 
   def load_all_plugins()
-    reload_config()
     plugins = @plugins.keys
     prev_size = plugins.size - 1
     while plugins.size > prev_size
@@ -100,6 +103,18 @@ end
 plugin_manager = IRCHashPluginManager.new(config) # Add plugin manager
 
 begin
+  config = plugin_manager.reload_config
+
+  # Setup I18n
+  i18n_config = config[:I18N] || {}
+
+  I18n.enforce_available_locales = true
+  I18n::Backend::Simple.send(:include, I18n::Backend::Fallbacks)
+  I18n.fallbacks = I18n::Locale::Fallbacks.new(:'en-GB')
+  I18n.load_path = Dir[File.join(File.dirname(__FILE__), 'locales', '*.yml')]
+  I18n.default_locale = i18n_config[:locale] || :'en-GB'
+  I18n.backend.load_translations
+
   puts 'Loading plugins...'
 
   plugin_manager.load_all_plugins  # Load plugins

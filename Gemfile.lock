@@ -24,6 +24,7 @@ GEM
     google-search (1.0.3)
       json
     htmlentities (4.3.2)
+    i18n (0.6.11)
     iso_country_codes (0.4.4)
     json (1.8.1)
     mini_portile (0.6.0)
@@ -48,6 +49,7 @@ DEPENDENCIES
   eb!
   google-search
   htmlentities
+  i18n
   iso_country_codes
   json
   mecab-ruby!
