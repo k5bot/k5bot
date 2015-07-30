@@ -151,11 +151,11 @@ accept either index (1 is the most recent one) or substring of the desired URL",
     else
       response = []
 
-      response << "Type: #{content_type}" if content_type
+      response << I18n::t('ircbot.url.type', type: content_type) if content_type
 
       content_length = result['content-length']
 
-      response << "Size: #{format_size(content_length.to_i)}" if content_length
+      response << I18n::t('ircbot.url.size', size: format_size(content_length.to_i)) if content_length
 
       last_modified = result['last-modified']
 
@@ -211,15 +211,22 @@ accept either index (1 is the most recent one) or substring of the desired URL",
   end
 
   def format_last_modified(last_modified)
-    elapsed = Time.now - Time.parse(last_modified)
+    last_modified = Time.parse(last_modified)
+    elapsed = Time.now - last_modified
+
+    last_modified = I18n.localize(
+        last_modified,
+        :format => '%a, %d %B %Y %H:%M:%S %z',
+    )
+
     if elapsed < 0
-      "Updated by time traveller in: #{last_modified}"
+      I18n::t('ircbot.url.in_future', time: last_modified)
     else
-      "Updated: #{format_time_offset(elapsed)} ago (#{last_modified})"
+      format_time_offset(elapsed, last_modified)
     end
   end
 
-  def format_time_offset(time_in_sec)
+  def format_time_offset(time_in_sec, last_modified)
     time_in_sec = time_in_sec.abs
 
     seconds = (time_in_sec % 60).to_i
@@ -231,13 +238,13 @@ accept either index (1 is the most recent one) or substring of the desired URL",
     days = time_in_sec.to_i
 
     if days > 0
-      "#{days}d #{hours}h #{minutes}m #{seconds}s"
+      I18n::t('ircbot.url.ago_d_h_m_s', time: last_modified, days: days, hours: hours, minutes: minutes, seconds: seconds)
     elsif hours > 0
-      "#{hours}h #{minutes}m #{seconds}s"
+      I18n::t('ircbot.url.ago_h_m_s', time: last_modified, hours: hours, minutes: minutes, seconds: seconds)
     elsif minutes > 0
-      "#{minutes}m #{seconds}s"
+      I18n::t('ircbot.url.ago_m_s', time: last_modified, minutes: minutes, seconds: seconds)
     else
-      "#{seconds}s"
+      I18n::t('ircbot.url.ago_s', time: last_modified, seconds: seconds)
     end
   end
 
