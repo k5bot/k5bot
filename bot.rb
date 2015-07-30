@@ -23,12 +23,12 @@ class IRCHashPluginManager < IRCPluginManager
     @config = nil
   end
 
-  def reload_config()
+  def reload_config
     config_map = YAML.load_file(@config_name)
     @config = normalize_config(config_map)
   end
 
-  def load_all_plugins()
+  def load_all_plugins
     plugins = @plugins.keys
     prev_size = plugins.size - 1
     while plugins.size > prev_size
@@ -50,7 +50,7 @@ class IRCHashPluginManager < IRCPluginManager
 
   def load_plugin(name)
     begin
-      reload_config()
+      reload_config
     rescue Exception => e
       log(:error, "Config loading error: #{e}\n\t#{e.backtrace.join("\n\t")}")
       return false
@@ -89,14 +89,14 @@ class IRCHashPluginManager < IRCPluginManager
   end
 end
 
-config = if File.exists?(ARGV.first || "") then
+config = if ARGV.first && File.exists?(ARGV.first)
            ARGV.shift
          else
-           File.exists?("config.yaml") ? "config.yaml" : nil
+           File.exists?('config.yaml') ? 'config.yaml' : nil
          end
 
 if config == nil
-  puts "Configuration file not found."
+  puts 'Configuration file not found.'
   exit 1
 end
 
