@@ -1,0 +1,11 @@
+---
+ru:
+  ircbot:
+    url:
+      type: "Тип: %{type}"
+      size: "Размер: %{size}"
+      in_future: "Обновлено путешественником во времени в: %{time}"
+      ago_s: "Обновлен: %{seconds}с назад (%{time})"
+      ago_m_s: "Обновлен: %{minutes}м %{seconds}с назад (%{time})"
+      ago_h_m_s: "Обновлен: %{hours}ч %{minutes}м %{seconds}с назад (%{time})"
+      ago_d_h_m_s: "Обновлен: %{days}д %{hours}ч %{minutes}м %{seconds}с назад (%{time})"

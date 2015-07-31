@@ -1,0 +1,11 @@
+---
+en-GB:
+  ircbot:
+    url:
+      type: "Type: %{type}"
+      size: "Size: %{size}"
+      in_future: "Updated by time traveller in: %{time}"
+      ago_s: "Updated: %{seconds}s ago (%{time})"
+      ago_m_s: "Updated: %{minutes}m %{seconds}s ago (%{time})"
+      ago_h_m_s: "Updated: %{hours}h %{minutes}m %{seconds}s ago (%{time})"
+      ago_d_h_m_s: "Updated: %{days}d %{hours}h %{minutes}m %{seconds}s ago (%{time})"
