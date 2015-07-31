@@ -20,6 +20,7 @@ class I18N < IRCPlugin
   def on_privmsg(msg)
     case msg.bot_command
       when :i18n_reload
+        I18n.load_path = Dir[File.join(File.dirname(__FILE__), 'locales', '*.yml')]
         I18n.backend.load_translations
         msg.reply("Reloaded translations. Available locales: #{format_available_locales}")
       when :i18n_set
