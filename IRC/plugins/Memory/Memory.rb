@@ -9,11 +9,14 @@ class Memory < IRCPlugin
   def on_privmsg(msg)
     case msg.botcommand
       when :free
-        d = File.open('/proc/meminfo') do |f|
-          Hash[f.each_line.map do |l|
+        d = Hash.new(0)
+
+        File.open('/proc/meminfo') do |f|
+          f.each_line.map do |l|
             key, value = l.split()
-            [key.downcase.delete(':').to_sym, value.to_i]
-          end]
+            tmp = [key.downcase.delete(':').to_sym, value.to_i]
+            d[tmp[0]] = tmp[1]
+          end
         end
 
         # Thanks to CalimeroTeknik for this memory calculation formula
