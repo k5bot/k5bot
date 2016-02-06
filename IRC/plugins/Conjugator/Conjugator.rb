@@ -10,7 +10,8 @@ require_relative '../../IRCPlugin'
 class Conjugator < IRCPlugin
   Description = 'Conjugates japanese verbs and adjectives.'
   Commands = {
-      :conjugate => "Specify verb or adjective in dictionary form and desired form (e.g. \".conjugate 見る negative\")."
+      :conjugate => "Specify verb or adjective in dictionary form and desired form (e.g. \".conjugate negative 見る\"). Supported forms: negative, past, te-form, polite, passive, potential, causative, imperative, conditional, provisional, volitional",
+      :inflections => "Displays a list of supported inflections (e.g. \".inflections 見る\"). Only works in /msg to avoid spam."
   }
   Dependencies = [ :EDICT, :Language ]
 
@@ -32,6 +33,11 @@ class Conjugator < IRCPlugin
         args = msg.tail.split
         return unless args.size == 2
         msg.reply(conjugate(*args))
+      when :inflections
+        args = msg.tail.split
+        return unless args.size == 1
+        return unless msg.private?
+        msg.reply(inflections(args[0]))
     end
   end
 
@@ -39,6 +45,29 @@ class Conjugator < IRCPlugin
   SEARCH_REPLACEMENTS = {
       'いい' => '良い',
   }
+
+  def inflections( v )
+    v = SEARCH_REPLACEMENTS[v] || v
+
+    replies = Array.new
+    c_type = ''
+
+    CONJUGATION_LIST.each do |f|
+      conjugation_form = f.downcase.to_sym
+      type_map = CONJUGATION_TABLE[conjugation_form]
+
+      if type_map
+        entry, conjugation_type = (get_entries_with_type(v, type_map.keys).first || [])
+
+        if conjugation_type
+          c_type = conjugation_type
+          replies << ( CONJUGATION_MESSAGES_SHORT[conjugation_form].call(entry.japanese, conjugation_type) + apply_conjugation(entry.japanese, type_map[conjugation_type]) + '.' )
+        end
+      end
+    end
+    return unless replies.any?
+    return "List for #{v} (#{c_type}): " + replies.join(' ')
+  end
 
   def conjugate( f, v )
     v = SEARCH_REPLACEMENTS[v] || v
@@ -51,7 +80,7 @@ class Conjugator < IRCPlugin
 
     entry, conjugation_type = (get_entries_with_type(v, type_map.keys).first || [])
 
-    return "Can't determine conjugation type of " + v unless conjugation_type
+    return "Can't determine conjugation type of " + v + ", doesn't conjugate to " + f + " or isn't supported yet." unless conjugation_type
 
     CONJUGATION_MESSAGES[conjugation_form].call(entry.japanese, conjugation_type) +
         apply_conjugation(entry.japanese, type_map[conjugation_type]) + '.'
@@ -81,18 +110,54 @@ class Conjugator < IRCPlugin
     end.join(' or ')
   end
 
+  CONJUGATION_LIST = [
+      'negative',
+      'past',
+      'te-form',
+      'polite',
+      'passive',
+      'potential',
+      'causative',
+      'imperative',
+      'conditional',
+      'provisional',
+      'volitional',
+  ]
+
   CONJUGATION_MESSAGES = {
       :'negative' => lambda {|v, c| "The negative of #{v} (#{c}) is " },
       :'past' => lambda {|v, c| "The past tense of #{v} (#{c}) is " },
       :'te-form' => lambda {|v, c| "The te-form of #{v} (#{c}) is " },
       :'polite' => lambda {|v, c| "The polite form of #{v} (#{c}) is " },
+      :'passive' => lambda {|v, c| "The passive of #{v} (#{c}) is " },
+      :'potential' => lambda {|v, c| "The potential form of #{v} (#{c}) is " },
+      :'causative' => lambda {|v, c| "The causative of #{v} (#{c}) is " },
+      :'imperative' => lambda {|v, c| "The imperative of #{v} (#{c}) is " },
+      :'conditional' => lambda {|v, c| "The conditional form of #{v} (#{c}) is " },
+      :'provisional' => lambda {|v, c| "The provisional form of #{v} (#{c}) is " },
+      :'volitional' => lambda {|v, c| "The volitional form of #{v} (#{c}) is " },
+  }
+
+  CONJUGATION_MESSAGES_SHORT = {
+      :'negative' => lambda {|v, c| "The negative is " },
+      :'past' => lambda {|v, c| "The past tense is " },
+      :'te-form' => lambda {|v, c| "The te-form is " },
+      :'polite' => lambda {|v, c| "The polite form is " },
+      :'passive' => lambda {|v, c| "The passive is " },
+      :'potential' => lambda {|v, c| "The potential form is " },
+      :'causative' => lambda {|v, c| "The causative is " },
+      :'imperative' => lambda {|v, c| "The imperative is " },
+      :'conditional' => lambda {|v, c| "The conditional form is " },
+      :'provisional' => lambda {|v, c| "The provisional form is " },
+      :'volitional' => lambda {|v, c| "The volitional form is " },
   }
 
   CONJUGATION_TABLE = {
       :'negative' => {
           :'v1' => [[1, 'ない']],
+          :'v1-s' => [[1, 'ない']],
           :'adj-i' => [[1, 'くない']],
-          :'adj-na' => [[1, 'ではない'], [1, 'じゃない']],
+          :'adj-na' => [[0, 'ではない'], [0, 'じゃない']],
           :'vs-i' => [[2, 'しない'], [2, 'せない'], [2, 'さない']],
           :'vz' => [[2, 'じない'], [2, 'ぜない']],
           :'vk' => [[2, 'こない']],
@@ -113,8 +178,9 @@ class Conjugator < IRCPlugin
       },
       :'past' => {
           :'v1' => [[1, 'た']],
+          :'v1-s' => [[1, 'た']],
           :'adj-i' => [[1, 'かった']],
-          :'adj-na' => [[1, 'だった']],
+          :'adj-na' => [[0, 'だった']],
           :'vs-i' => [[2, 'した']],
           :'vz' => [[2, 'じた']],
           :'vk' => [[2, 'きた']],
@@ -135,8 +201,9 @@ class Conjugator < IRCPlugin
       },
       :'te-form' => {
           :'v1' => [[1, 'て']],
+          :'v1-s' => [[1, 'て']],
           :'adj-i' => [[1, 'くて']],
-          :'adj-na' => [[1, 'で']],
+          :'adj-na' => [[0, 'で']],
           :'vs-i' => [[2, 'して']],
           :'vz' => [[2, 'じて']],
           :'vk' => [[2, 'きて']],
@@ -157,8 +224,9 @@ class Conjugator < IRCPlugin
       },
       :'polite' => {
           :'v1' => [[1, 'ます']],
+          :'v1-s' => [[1, 'ます']],
           :'adj-i' => [[0, 'です']],
-          :'adj-na' => [[1, 'です']],
+          :'adj-na' => [[0, 'です']],
           :'vs-i' => [[2, 'します']],
           :'vz' => [[2, 'じます']],
           :'vk' => [[2, 'きます']],
@@ -176,6 +244,167 @@ class Conjugator < IRCPlugin
           :'v5aru' => [[1, 'います']],
           :'v5u-s' => [[1, 'います']],
           :'vs-s' => [[2, 'します']],
+      },
+      :'passive' => {
+          :'v1' => [[1, 'られる']],
+          :'v1-s' => [[1, 'られる']],
+          #:'adj-i' => [],
+          #:'adj-na' => [],
+          :'vs-i' => [[2, 'される']],
+          :'vz' => [[2, 'ざれる']],
+          :'vk' => [[2, 'こられる']],
+          :'v5g' => [[1, 'がれる']],
+          :'v5u' => [[1, 'われる']],
+          :'v5k' => [[1, 'かれる']],
+          :'v5k-s' => [[1, 'かれる']],
+          :'v5s' => [[1, 'される']],
+          :'v5t' => [[1, 'たれる']],
+          :'v5n' => [[1, 'なれる']],
+          :'v5b' => [[1, 'ばれる']],
+          :'v5m' => [[1, 'まれる']],
+          :'v5r' => [[1, 'られる']],
+          :'v5r-i' => [[1, 'られる']],
+          :'v5aru' => [[1, 'られる']],
+          :'v5u-s' => [[1, 'われる']],
+          :'vs-s' => [[2, 'される']],
+      },
+      :'potential' => {
+          :'v1' => [[1, 'られる'], [1, 'れる']],
+          :'v1-s' => [[1, 'られる'], [1, 'れる']],
+          #:'adj-i' => [],
+          #:'adj-na' => [],
+          :'vs-i' => [[2, 'できる'], [2, 'せられる'], [2, 'せる']],
+          :'vz' => [[2, 'ぜられる'], [2, 'ぜる']],
+          :'vk' => [[2, 'こられる'], [2, 'これる']],
+          :'v5g' => [[1, 'げる']],
+          :'v5u' => [[1, 'える']],
+          :'v5k' => [[1, 'ける']],
+          :'v5k-s' => [[1, 'ける']],
+          :'v5s' => [[1, 'せる']],
+          :'v5t' => [[1, 'てる']],
+          :'v5n' => [[1, 'ねる']],
+          :'v5b' => [[1, 'べる']],
+          :'v5m' => [[1, 'める']],
+          :'v5r' => [[1, 'れる']],
+          :'v5r-i' => [[1, 'りうる'], [1, 'りえる']],
+          :'v5aru' => [[1, 'りうる'], [1, 'りえる']],
+          :'v5u-s' => [[1, 'える']],
+          :'vs-s' => [[2, 'しうる'], [2, 'しえる']],
+      },
+      :'causative' => {
+          :'v1' => [[1, 'させる']],
+          :'v1-s' => [[1, 'させる'], [1, 'さす']],
+          #:'adj-i' => [],
+          #:'adj-na' => [],
+          :'vs-i' => [[2, 'させる']],
+          :'vz' => [[2, 'ざせる']],
+          :'vk' => [[2, 'こさせる']],
+          :'v5g' => [[1, 'がせる']],
+          :'v5u' => [[1, 'わせる']],
+          :'v5k' => [[1, 'かせる']],
+          :'v5k-s' => [[1, 'かせる']],
+          :'v5s' => [[1, 'させる']],
+          :'v5t' => [[1, 'たせる']],
+          :'v5n' => [[1, 'なせる']],
+          :'v5b' => [[1, 'ばせる']],
+          :'v5m' => [[1, 'ませる']],
+          :'v5r' => [[1, 'らせる']],
+          :'v5r-i' => [[1, 'らせる']],
+          #:'v5aru' => [],
+          :'v5u-s' => [[1, 'わせる'], [1, 'わす']],
+          :'vs-s' => [[2, 'させる'], [2, 'さす']],
+      },
+      :'imperative' => {
+          :'v1' => [[1, 'ろ']],
+          :'v1-s' => [[1, ''], [1, 'ろ']],
+          #:'adj-i' => [],
+          #:'adj-na' => [],
+          :'vs-i' => [[2, 'しろ'], [2, 'せよ'], [2, 'せ']],
+          :'vz' => [[2, 'じろ'], [2, 'ぜよ']],
+          :'vk' => [[2, 'こい']],
+          :'v5g' => [[1, 'げ']],
+          :'v5u' => [[1, 'え']],
+          :'v5k' => [[1, 'け']],
+          :'v5k-s' => [[1, 'け']],
+          :'v5s' => [[1, 'せ']],
+          :'v5t' => [[1, 'て']],
+          :'v5n' => [[1, 'ね']],
+          :'v5b' => [[1, 'べ']],
+          :'v5m' => [[1, 'め']],
+          :'v5r' => [[1, 'れ']],
+          :'v5r-i' => [[1, 'れ']],
+          :'v5aru' => [[1, 'い'], [1, 'れ']],
+          :'v5u-s' => [[1, 'え']],
+          :'vs-s' => [[2, 'しろ'], [2, 'せよ'], [2, 'せ']],
+      },
+      :'conditional' => {
+          :'v1' => [[1, 'たら']],
+          :'v1-s' => [[1, 'たら']],
+          :'adj-i' => [[1, 'かったら']],
+          :'adj-na' => [[0, 'だったら']],
+          :'vs-i' => [[2, 'したら']],
+          :'vz' => [[2, 'じたら']],
+          :'vk' => [[2, 'きたら']],
+          :'v5g' => [[1, 'いだら']],
+          :'v5u' => [[1, 'ったら']],
+          :'v5k' => [[1, 'いたら']],
+          :'v5k-s' => [[1, 'ったら']],
+          :'v5s' => [[1, 'したら']],
+          :'v5t' => [[1, 'ったら']],
+          :'v5n' => [[1, 'んだら']],
+          :'v5b' => [[1, 'んだら']],
+          :'v5m' => [[1, 'んだら']],
+          :'v5r' => [[1, 'ったら']],
+          :'v5r-i' => [[1, 'ったら']],
+          #:'v5aru' => [],
+          :'v5u-s' => [[0, 'たら']],
+          :'vs-s' => [[2, 'したら']],
+      },
+      :'provisional' => {
+          :'v1' => [[1, 'れば']],
+          :'v1-s' => [[1, 'れば']],
+          :'adj-i' => [[1, 'ければ']],
+          :'adj-na' => [[0, 'であれば']],
+          :'vs-i' => [[1, 'れば']],
+          :'vz' => [[1, 'れば']],
+          :'vk' => [[1, 'れば']],
+          :'v5g' => [[1, 'げば']],
+          :'v5u' => [[1, 'えば']],
+          :'v5k' => [[1, 'けば']],
+          :'v5k-s' => [[1, 'けば']],
+          :'v5s' => [[1, 'せば']],
+          :'v5t' => [[1, 'てば']],
+          :'v5n' => [[1, 'ねば']],
+          :'v5b' => [[1, 'べば']],
+          :'v5m' => [[1, 'めば']],
+          :'v5r' => [[1, 'れば']],
+          :'v5r-i' => [[1, 'れば']],
+          #:'v5aru' => [],
+          :'v5u-s' => [[1, 'えば']],
+          :'vs-s' => [[1, 'れば']],
+      },
+      :'volitional' => {
+          :'v1' => [[1, 'よう']],
+          :'v1-s' => [[0, 'だろう']],
+          #:'adj-i' => [],
+          #:'adj-na' => [],
+          :'vs-i' => [[2, 'しよう'], [2, 'そう']],
+          :'vz' => [[2, 'じよう']],
+          :'vk' => [[2, 'こよう']],
+          :'v5g' => [[1, 'ごう']],
+          :'v5u' => [[1, 'おう']],
+          :'v5k' => [[1, 'こう']],
+          :'v5k-s' => [[1, 'こう']],
+          :'v5s' => [[1, 'そう']],
+          :'v5t' => [[1, 'とう']],
+          :'v5n' => [[1, 'のう']],
+          :'v5b' => [[1, 'ぼう']],
+          :'v5m' => [[1, 'もう']],
+          :'v5r' => [[1, 'ろう']],
+          :'v5r-i' => [[1, 'ろう']],
+          #:'v5aru' => [],
+          :'v5u-s' => [[1, 'おう']],
+          :'vs-s' => [[2, 'しよう']],
       }
   }
 end
