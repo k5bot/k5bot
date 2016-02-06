@@ -15,6 +15,7 @@ class WolframAlpha < IRCPlugin
   Description = "a plugin for working with WolframAlpha."
   Commands = {
     :wa => "queries WolframAlpha",
+    :war => "queries WolframAlpha displaying the result directly",
   }
   Dependencies = [ :Menu ]
 
@@ -36,13 +37,15 @@ class WolframAlpha < IRCPlugin
     return unless msg.tail
     case msg.bot_command
     when :wa
-      wolfram(msg.tail, msg)
+      wolfram(msg.tail, msg, false)
+    when :war
+      wolfram(msg.tail, msg, true)
     end
   end
 
   private
 
-  def wolfram(query, msg)
+  def wolfram(query, msg, shortcut)
     user_host = msg.prefix[/@([^@]+)$/, 1]
     addr = Resolv.getaddress(user_host) rescue nil
     addr = '212.45.111.17' unless Resolv::IPv4::Regex =~ addr
@@ -50,9 +53,21 @@ class WolframAlpha < IRCPlugin
     result = Wolfram.fetch(query, 'format'=>'plaintext', 'ip' => addr)
     # to see the result as a hash of pods and assumptions:
     if result.success
-      reply_menu = generate_menu(result, "\"#{query}\" in WolframAlpha")
+      if shortcut == false
+        reply_menu = generate_menu(result, "\"#{query}\" in WolframAlpha")
 
-      reply_with_menu(msg, reply_menu)
+        reply_with_menu(msg, reply_menu)
+      else
+        shortcut_result = generate_shortcut_result(result)
+
+        if shortcut_result
+          msg.reply(shortcut_result)
+        else
+          reply_menu = generate_menu(result, "\"#{query}\" in WolframAlpha")
+
+          reply_with_menu(msg, reply_menu)
+        end
+      end
     else
       xml = result.xml
 
@@ -108,6 +123,16 @@ class WolframAlpha < IRCPlugin
 
   def replace_breaks(text)
     text.gsub(/[\r\n]+/, BREAK_SEPARATOR)
+  end
+
+  def generate_shortcut_result(lookup_result)
+    #pods_to_hash(lookup_result)["Result"].join(",")
+    pods_to_hash(lookup_result).each_pair do |k,v|
+      if k.to_s.match(/^Result/)&&v.any?
+         return v.join(",")
+      end
+    end
+    return nil
   end
 
   def generate_menu(lookup_result, name)
