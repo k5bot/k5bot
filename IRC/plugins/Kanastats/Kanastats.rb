@@ -11,11 +11,13 @@ providing tools to analyze it."
   Dependencies = [ :StorageYAML ]
 
   Commands = {
-    :hirastats => 'Returns hiragana usage statistics.',
-    :katastats => 'Returns katakana usage statistics.',
-    :charstats => 'How often the specified char was publicly used.',
-    :wordstats => 'How often the specified word was publicly used.',
+    # Fix Charstats some day!
+    #:hirastats => 'Returns hiragana usage statistics.',
+    #:katastats => 'Returns katakana usage statistics.',
+    #:charstats => 'How often the specified char was publicly used.',
+    :wordstats => 'How often the specified word or character was publicly used.',
     :logged    => 'Displays information about the log files.',
+    :wordfight! => 'Compares count of words.',
   }
 
   def afterLoad
@@ -46,16 +48,18 @@ providing tools to analyze it."
 
   def on_privmsg(msg)
     case msg.bot_command
-      when :hirastats
-        output_hira(msg)
-      when :katastats
-        output_kata(msg)
-      when :charstats
-        charstat(msg)
+      #when :hirastats
+      #  output_hira(msg)
+      #when :katastats
+      #  output_kata(msg)
+      #when :charstats
+      #  charstat(msg)
       when :wordstats
         wordstats(msg)
       when :logged
         logged(msg)
+      when :wordfight!
+        wordfight(msg)
       else
         unless msg.private?
           statify(msg.message)
@@ -115,9 +119,7 @@ providing tools to analyze it."
     word = msg.tail
     return unless word
 
-    count = File.open(@log_file) do |f|
-      f.each_line.map { |l| l.scan(word).size }.inject(0, :+)
-    end
+    count = count_logfile( word )
 
     msg.reply("The word '#{word}' #{used_text(count)}.")
   end
@@ -149,6 +151,36 @@ providing tools to analyze it."
 
   def logged(msg)
     count = File.foreach(@log_file).count
-    msg.reply "Kanastats online and fully operational. Currently #{count} lines and #{@stats.size} chars have been logged."
+    msg.reply "#{['Kanastats online and fully operational.', 'Kanastats is watching you.'].sample} Currently #{count} lines and #{@stats.size} chars have been logged."
+  end
+
+  def count_logfile(word)
+    count = File.open(@log_file) do |f|
+      f.each_line.map { |l| l.scan(word).size }.inject(0, :+)
+    end
+    return count
+  end
+
+  def wordfight(msg)
+    words = msg.tail.gsub(/　/, " ").split(" ")
+    return unless words.length >= 1
+
+    word_counts = Hash.new
+    words.each{ |w| word_counts[w] = count_logfile(w) }
+
+    word_counts=Hash[ word_counts.sort_by{ |a,b| b }.reverse! ]
+
+    output_string = ""
+
+    word_counts.each_with_index do |(w,c),i|
+      output_string += "#{w}(#{c})"
+      if ( i+1 < word_counts.length && c > word_counts.values[i+1] )
+        output_string += " ＞ "
+      elsif i+1 < word_counts.length
+        output_string += " ＝ "
+      end
+    end
+
+    msg.reply output_string
   end
 end
