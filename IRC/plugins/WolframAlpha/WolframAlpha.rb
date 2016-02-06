@@ -12,10 +12,10 @@ require 'resolv'
 require_relative '../../IRCPlugin'
 
 class WolframAlpha < IRCPlugin
-  Description = "a plugin for working with WolframAlpha."
+  Description = 'a plugin for working with WolframAlpha.'
   Commands = {
-    :wa => "queries WolframAlpha",
-    :war => "queries WolframAlpha displaying the result directly",
+    :wa => 'queries WolframAlpha',
+    :war => 'queries WolframAlpha displaying the result directly',
   }
   Dependencies = [ :Menu ]
 
@@ -53,20 +53,13 @@ class WolframAlpha < IRCPlugin
     result = Wolfram.fetch(query, 'format'=>'plaintext', 'ip' => addr)
     # to see the result as a hash of pods and assumptions:
     if result.success
-      if shortcut == false
-        reply_menu = generate_menu(result, "\"#{query}\" in WolframAlpha")
+      shortcut_result = shortcut && generate_shortcut_result(result)
 
-        reply_with_menu(msg, reply_menu)
+      if shortcut_result
+        msg.reply(shortcut_result)
       else
-        shortcut_result = generate_shortcut_result(result)
-
-        if shortcut_result
-          msg.reply(shortcut_result)
-        else
-          reply_menu = generate_menu(result, "\"#{query}\" in WolframAlpha")
-
-          reply_with_menu(msg, reply_menu)
-        end
+        reply_menu = generate_menu(result, "\"#{query}\" in WolframAlpha")
+        reply_with_menu(msg, reply_menu)
       end
     else
       xml = result.xml
@@ -115,7 +108,7 @@ class WolframAlpha < IRCPlugin
     # Hack: additional to_s() b/c Wolfram::Assumption::Value.to_s() may return non-string.
     text.to_s.gsub(/\\:\h{4}/) do |match|
       codepoint = match[2..-1].hex
-      [codepoint].pack("U")
+      [codepoint].pack('U')
     end
   end
 
@@ -126,13 +119,10 @@ class WolframAlpha < IRCPlugin
   end
 
   def generate_shortcut_result(lookup_result)
-    #pods_to_hash(lookup_result)["Result"].join(",")
-    pods_to_hash(lookup_result).each_pair do |k,v|
-      if k.to_s.match(/^Result/)&&v.any?
-         return v.join(",")
-      end
+    r = pods_to_hash(lookup_result).find_all do |k, v|
+      k.to_s.start_with?('Result') && v.any?
     end
-    return nil
+    r.first.last.join(', ') if r.size == 1
   end
 
   def generate_menu(lookup_result, name)
@@ -158,7 +148,7 @@ class WolframAlpha < IRCPlugin
       assumptions_menu << MenuNodeText.new(name, text)
     end
 
-    menu << MenuNodeSimple.new("Assumptions", assumptions_menu) unless assumptions_menu.empty?
+    menu << MenuNodeSimple.new('Assumptions', assumptions_menu) unless assumptions_menu.empty?
 
     MenuNodeSimple.new(name, menu)
   end
