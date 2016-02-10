@@ -10,6 +10,7 @@ require 'wolfram'
 require 'resolv'
 
 require_relative '../../IRCPlugin'
+require_relative '../../LayoutableText'
 
 class WolframAlpha < IRCPlugin
   Description = 'a plugin for working with WolframAlpha.'
@@ -56,7 +57,9 @@ class WolframAlpha < IRCPlugin
       shortcut_result = shortcut && generate_shortcut_result(result)
 
       if shortcut_result
-        msg.reply(shortcut_result)
+        shortcut_result.each do |sub_pod|
+          msg.reply(sub_pod)
+        end
       else
         reply_menu = generate_menu(result, "\"#{query}\" in WolframAlpha")
         reply_with_menu(msg, reply_menu)
@@ -87,8 +90,14 @@ class WolframAlpha < IRCPlugin
     result.pods.each do |pod|
       subpods = pod.subpods.to_a
       sub_pods = subpods.map do |sub_pod|
-        # TODO: Some additional info might be obtained with (sub_pod.title rescue nil)
-        replace_breaks(unescape_unicode(sub_pod.plaintext))
+        sub_pod_title = sub_pod.title rescue nil
+        sub_pod_lines = replace_breaks(unescape_unicode(sub_pod.plaintext))
+
+        # Prepend sub_pod title, if present
+        if sub_pod_title && !sub_pod_title.empty?
+          sub_pod_lines = LayoutableText::Prefixed.new("#{sub_pod_title}: ", sub_pod_lines)
+        end
+        sub_pod_lines
       end
 
       hash.update(pod.title => sub_pods)
@@ -115,24 +124,26 @@ class WolframAlpha < IRCPlugin
   BREAK_SEPARATOR = ' ░ '
 
   def replace_breaks(text)
-    text.gsub(/[\r\n]+/, BREAK_SEPARATOR)
+    # permit splitting on word boundaries
+    text = text.split(/[\r\n]+/).flat_map{|l| l.split(/\b/) << BREAK_SEPARATOR}
+    text.pop # remove last excess separator
+    LayoutableText::SimpleJoined.new('', text)
   end
 
   def generate_shortcut_result(lookup_result)
     r = pods_to_hash(lookup_result).find_all do |k, v|
       k.to_s.start_with?('Result') && v.any?
     end
-    r.first.last.join(', ') if r.size == 1
+    r.first.last if r.size == 1
   end
 
   def generate_menu(lookup_result, name)
 
     menu = []
     pods_to_hash(lookup_result).each_pair do |k,v|
-      text = v.map {|l| l.strip}.to_a
-      next if text.empty?
+      next if v.empty?
 
-      menu << MenuNodeTextEnumerable.new(k, text)
+      menu << MenuNodeTextRaw.new(k, v)
     end
 
     assumptions_menu = []
