@@ -15,7 +15,7 @@ require_relative 'MenuNodeText'
 require_relative 'MenuNodeTextEnumerable'
 
 class Menu < IRCPlugin
-  Description = "Provides Menu-related functionality."
+  Description = 'Provides Menu-related functionality.'
   Commands = {
     :n => "returns the next list of menu entries. Given a number, \
 shows the list of entries starting from that position",
@@ -74,16 +74,12 @@ shows the list of entries starting from that position",
     @menu_states[msg.context] = menu_state
   end
 
-  def delete_menu(plugin, msg)
-    @menu_states.delete(msg.context)
-  end
-
   def evict_plugin_menus!(plugin)
-    @menu_states.reject! { |k, v| v.plugin == plugin }
+    @menu_states.reject! { |_, v| v.plugin == plugin }
   end
 
   def evict_expired_menus!
-    @menu_states.reject! { |k, v| v.is_expired? }
+    @menu_states.reject! { |_, v| v.is_expired? }
   end
 
   private
