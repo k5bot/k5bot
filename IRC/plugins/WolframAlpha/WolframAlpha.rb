@@ -112,12 +112,26 @@ class WolframAlpha < IRCPlugin
     end
   end
 
+  UNICODE_REPLACEMENTS = {
+      "\uF522" => '→', # limit arrow
+      "\uF74A" => 'γ', # euler's gamma constant
+      "\uF74C" => ' d', # differential
+      "\uF74D" => 'e', # exponent constant
+      "\uF74E" => 'i', # imaginary unit
+      "\uF7D9" => ' = ', # equality
+  }
+
+  UNICODE_REPLACEMENTS_REGEX = Regexp.union(UNICODE_REPLACEMENTS.keys.map{|k| Regexp.escape(k)})
+
   def unescape_unicode(text)
     # Replace unicode escapes like "\:062f"
     # Hack: additional to_s() b/c Wolfram::Assumption::Value.to_s() may return non-string.
-    text.to_s.gsub(/\\:\h{4}/) do |match|
+    unescaped = text.to_s.gsub(/\\:\h{4}/) do |match|
       codepoint = match[2..-1].hex
       [codepoint].pack('U')
+    end
+    unescaped.gsub(UNICODE_REPLACEMENTS_REGEX) do |match|
+      UNICODE_REPLACEMENTS[match]
     end
   end
 
