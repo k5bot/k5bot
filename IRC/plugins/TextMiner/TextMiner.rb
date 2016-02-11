@@ -82,7 +82,7 @@ If the regexp contains round-braced groups, only text matching these groups is r
         increment = -increment if :context.eql?(msg.bot_command)
 
         nav.browse_offset += increment
-        msg.reply(nav.current_line)
+        msg.reply(wrap_to_joined(split_by_words(nav.current_line)))
 
       when :nextexample
         return unless nav && !nav.empty?
@@ -90,7 +90,7 @@ If the regexp contains round-braced groups, only text matching these groups is r
         increment = increment.to_i
 
         nav.move_to_example(nav.example_index + increment)
-        msg.reply(nav.current_line)
+        msg.reply(wrap_to_joined(split_by_words(nav.current_line)))
 
       when :wherefrom
         return unless nav && !nav.empty?
@@ -174,10 +174,10 @@ appears in #{counts.size}/#{@files.size} scripts)"
         # Ensure movement if user searches the same word or with no arguments.
         nav.move_to_example(nav.example_index + 1)
 
-        reply = nav.current_line
+        reply = split_by_words(nav.current_line)
         # Print found lines count if this is the first search for given query
-        reply += " (Hits: #{nav.lines_total})" if first_browsing
-        msg.reply(reply)
+        reply << " (Hits: #{nav.lines_total})" if first_browsing
+        msg.reply(wrap_to_joined(reply))
 
       when :wordfight, :wordfightr, :wordcount, :wordcountr
         return unless word
@@ -206,6 +206,14 @@ appears in #{counts.size}/#{@files.size} scripts)"
   end
 
   private
+
+  def split_by_words(line)
+    line.split(/\b/)
+  end
+
+  def wrap_to_joined(a)
+    LayoutableText::SimpleJoined.new('', a)
+  end
 
   def ensure_searches(cache_key, query_type, *queries)
     # Try to optimize a bit, in case someone throws identical queries at us.
