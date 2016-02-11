@@ -7,9 +7,9 @@
 require_relative '../../IRCPlugin'
 
 class Dice < IRCPlugin
-  Description = "Dice plugin."
+  Description = 'Dice plugin.'
   Commands = {
-    :roll => "rolls the dice",
+    :roll => 'rolls the dice',
   }
 
   def on_privmsg(msg)
@@ -17,8 +17,8 @@ class Dice < IRCPlugin
     when :roll
       die1 = roll
       die2 = roll
-      rollResult = '%s %s ⇒ %s' % [ numberToDie(die1), numberToDie(die2), numberToText(die1 + die2) ]
-      msg.reply(rollResult)
+      roll_result = '%s %s ⇒ %s' % [ number_to_die(die1), number_to_die(die2), number_to_text(die1 + die2) ]
+      msg.reply(roll_result)
     end
   end
 
@@ -26,22 +26,11 @@ class Dice < IRCPlugin
     rand(6) + 1
   end
 
-  def numberToDie(num)
+  def number_to_die(num)
     '|%s|' % ['•' * num]
   end
 
-  def numberToText(num)
-    [ 'one',
-      'two',
-      'three',
-      'four',
-      'five',
-      'six',
-      'seven',
-      'eight',
-      'nine',
-      'ten',
-      'eleven',
-      'twelve' ][num - 1]
+  def number_to_text(num)
+    %w(one two three four five six seven eight nine ten eleven twelve)[num - 1]
   end
 end
