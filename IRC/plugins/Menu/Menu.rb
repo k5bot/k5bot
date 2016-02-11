@@ -56,7 +56,7 @@ shows the list of entries starting from that position",
         menu_state.show_descriptions!(index, msg)
       when :u
         menu_state.move_up!(msg)
-      else
+      when nil
         index = Menu.get_int(msg.tail)
         return unless index
         menu_state.move_down_to!(menu_state.get_child(index), msg)
