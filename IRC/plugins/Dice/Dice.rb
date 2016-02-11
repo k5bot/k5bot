@@ -17,7 +17,7 @@ class Dice < IRCPlugin
     case msg.bot_command
     when :roll
       spec = msg.tail || '2d6'
-      m = spec.match(/^(\d{1,6})[dD](\d{1,6})/)
+      m = spec.match(/^(\d{1,6})[dD](\d{1,6})$/)
       if m
         to_roll = m[1].to_i
         num_faces = m[2].to_i
