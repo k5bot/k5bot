@@ -18,25 +18,30 @@ class Dice < IRCPlugin
     when :roll
       spec = msg.tail || '2d6'
       m = spec.match(/^(\d{1,6})[dD](\d{1,6})$/)
-      if m
-        to_roll = m[1].to_i
-        num_faces = m[2].to_i
-        rolls = to_roll.times.map do
-          rand(num_faces) + 1
-        end
-
-        result = rolls.inject(0, &:+)
-        prefix = if rolls.size < 10
-           rolls.map {|r| number_to_die(r, num_faces)}.join(' ')
-        else
-          'Avg: %.4g' % [result.to_f / rolls.size]
-        end
-
-        #roll_result = '%s %s ⇒ %s' % [ number_to_die(die1), number_to_die(die2), number_to_text(die1 + die2) ]
-        msg.reply("#{prefix} ⇒ #{result}")
-      else
+      unless m
         msg.reply("Unknown dice notation: #{spec}")
+        return
       end
+
+      to_roll = m[1].to_i
+      num_faces = m[2].to_i
+      unless (to_roll > 0) && (num_faces > 0)
+        msg.reply("Unknown dice notation: #{spec}")
+        return
+      end
+
+      rolls = to_roll.times.map do
+        rand(num_faces) + 1
+      end
+
+      result = rolls.inject(0, &:+)
+      prefix = if rolls.size <= 10
+                 rolls.map {|r| number_to_die(r, num_faces)}.join(' ')
+               else
+                 'Avg: %.4g' % [result.to_f / rolls.size]
+               end
+
+      msg.reply("#{prefix} ⇒ #{result}")
     end
   end
 
