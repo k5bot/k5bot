@@ -17,6 +17,7 @@ class Unicode < IRCPlugin
     :'utop%' => 'same as .utop, but the percentages as returned by .us% are compared instead',
     :u? => 'classify given text by Unicode ranges',
     :'u??' => 'output Unicode codepoints in hexadecimal for given text',
+    :'u???' => 'output Unicode codepoint names for given text',
     :uu => 'output Unicode description urls for given text',
   }
   Dependencies = [ :Language, :NumberSpell, :StorageYAML ]
@@ -26,6 +27,7 @@ class Unicode < IRCPlugin
     @storage = @plugin_manager.plugins[:StorageYAML]
 
     @unicode_stats = @storage.read('ustats') || {}
+    @unicode_symbols_data = load_unicode_symbol_data("#{plugin_root}/unicode_data.txt")
   end
 
   def store
@@ -33,6 +35,7 @@ class Unicode < IRCPlugin
   end
 
   def beforeUnload
+    @unicode_symbols_data = nil
     @unicode_stats = nil
 
     @storage = nil
@@ -86,6 +89,16 @@ class Unicode < IRCPlugin
       reply = message.unpack('U*').map do |codepoint|
         codepoint.to_s(16)
       end.join(' ')
+
+      msg.reply(reply) if reply && !reply.empty?
+    when :'u???'
+      message = msg.tail
+      return unless message
+      reply = message.unpack('U*').map do |codepoint|
+        @unicode_symbols_data.fetch(codepoint) do |unknown|
+          "UNKNOWN (0x#{unknown.to_s(16)})"
+        end
+      end.join('; ')
 
       msg.reply(reply) if reply && !reply.empty?
     when :uu
@@ -292,4 +305,18 @@ class Unicode < IRCPlugin
     prefix.downcase.gsub(/ /, '')
   end
 
+  def load_unicode_symbol_data(file_name)
+    File.open(file_name, 'r') do |io|
+      symbols = io.each_line.map do |line|
+        line.chomp!.strip!
+        next if line.nil? || line.empty? || line.start_with?('#')
+        fields = line.split(';', -1)
+        raise "Error parsing #{file_name}" unless fields.size == 15
+
+        [fields[0].to_i(16), fields[1]]
+      end
+
+      Hash[symbols]
+    end
+  end
 end
