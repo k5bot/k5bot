@@ -12,7 +12,7 @@ require_relative '../../IRCPlugin'
 class Language < IRCPlugin
   attr_reader :unicode_desc
 
-  Description = "Provides language-related functionality."
+  Description = 'Provides language-related functionality.'
   Commands = {
     :kana => 'converts specified romazi to kana. Use lower-case for hiragana, upper-case for katakana',
     :romaja => 'converts given hangul to romaja',
@@ -112,7 +112,7 @@ class Language < IRCPlugin
   end
 
   def katakana_to_hiragana(text)
-    return text unless containsKatakana?(text)
+    return text unless contains_katakana?(text)
     text.gsub(@kata2hira.regex) do |k|
       @kata2hira.mapping[k]
     end
@@ -123,7 +123,7 @@ class Language < IRCPlugin
   # @param [String] hangul symbols
   # @return array of names of the characters
   def hangeul_to_romaja(hangul)
-    hangul.unpack("U*").map do |codepoint|
+    hangul.unpack('U*').map do |codepoint|
       s_index = codepoint - HANGUL_S_BASE
 
       raise "Not a Hangul syllable: #{hangul}" if (0 > s_index) || (s_index >= HANGUL_S_COUNT)
@@ -148,7 +148,7 @@ class Language < IRCPlugin
     word.downcase
   end
 
-  def containsJapanese?(text)
+  def contains_japanese?(text)
     # 3040-309F hiragana
     # 30A0-30FF katakana
     # 4E00-9FC2 kanji
@@ -160,14 +160,14 @@ class Language < IRCPlugin
     !!(text =~ /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FC2\uFF61-\uFF9D\u31F0-\u31FF\u3000-\u303F]/)
   end
 
-  def containsHiragana?(text)
+  def contains_hiragana?(text)
     # 3040-309F hiragana
     #
     # Source: http://www.unicode.org/charts/
     !!(text =~ /[\u3040-\u309F]/)
   end
 
-  def containsKatakana?(text)
+  def contains_katakana?(text)
     # 30A0-30FF katakana
     # FF61-FF9D half-width katakana
     # 31F0-31FF katakana phonetic extensions
@@ -176,14 +176,14 @@ class Language < IRCPlugin
     !!(text =~ /[\u30A0-\u30FF\uFF61-\uFF9D\u31F0-\u31FF]/)
   end
 
-  def containsKanji?(text)
+  def contains_kanji?(text)
     # 4E00-9FC2 kanji
     #
     # Source: http://www.unicode.org/charts/
     !!(text =~ /[\u4E00-\u9FC2]/)
   end
 
-  def containsCJKPunctuation?(text)
+  def contains_cjk_punctuation?(text)
     # 3000-303F CJK punctuation
     #
     # Source: http://www.unicode.org/charts/
@@ -206,7 +206,7 @@ class Language < IRCPlugin
   end
 
   def classify_characters(text)
-    text.unpack("U*").map do |codepoint|
+    text.unpack('U*').map do |codepoint|
       codepoint_to_block_id(codepoint)
     end
   end
@@ -242,7 +242,7 @@ class Language < IRCPlugin
                   # the condition on kanji and the condition on kana.
                   :intersection
                 else
-                  raise "Only one && operator is allowed"
+                  raise 'Only one && operator is allowed'
                 end
 
     # duplicate condition on kana from condition on kanji, if not present
@@ -313,7 +313,7 @@ class Language < IRCPlugin
   end
 
   def load_unicode_blocks(file_name)
-    unknown_desc = "Unknown Block".to_sym
+    unknown_desc = :'Unknown Block'
 
     block_prev = -1
     blocks_indices = [] # First codepoints of unicode blocks
