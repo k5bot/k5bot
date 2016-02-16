@@ -7,14 +7,14 @@
 require_relative '../../IRCPlugin'
 
 class Unicode < IRCPlugin
-  Description = "A plugin that counts and manages Unicode statistics."
+  Description = 'A plugin that counts and manages Unicode statistics.'
   Commands = {
-    :us => "shows Unicode statistics: number of characters per Unicode range written by the specified user",
-    :'us%' => "same as .us, but shows percentage ratio to the total number of characters written by the user",
+    :us => 'shows Unicode statistics: number of characters per Unicode range written by the specified user',
+    :'us%' => 'same as .us, but shows percentage ratio to the total number of characters written by the user',
     :urank => "shows user's ranks with respect to other users, as determined by the number of characters written per Unicode range",
-    :'urank%' => "same as .urank, but the percentages as returned by .us% are compared instead",
-    :utop => "shows top 10 users, as determined by the number of characters written per specified Unicode range",
-    :'utop%' => "same as .utop, but the percentages as returned by .us% are compared instead",
+    :'urank%' => 'same as .urank, but the percentages as returned by .us% are compared instead',
+    :utop => 'shows top 10 users, as determined by the number of characters written per specified Unicode range',
+    :'utop%' => 'same as .utop, but the percentages as returned by .us% are compared instead',
     :u? => 'classify given text by Unicode ranges',
     :'u??' => 'output Unicode codepoints in hexadecimal for given text',
     :uu => 'output Unicode description urls for given text',
@@ -61,14 +61,14 @@ class Unicode < IRCPlugin
       description = find_description(msg, prefix)
       return unless description
       reply = format_unicode_top(msg.bot, description) {|stats| stats}
-      msg.reply("Top10 in #{reply[:description]}. #{reply[:places].map { |count, user_nick| "#{user_nick}: #{count}" }.join("; ")}")
+      msg.reply("Top10 in #{reply[:description]}. #{reply[:places].map { |count, user_nick| "#{user_nick}: #{count}" }.join('; ')}")
     when :'utop%'
       prefix = msg.tail
       return unless prefix
       description = find_description(msg, prefix)
       return unless description
       reply = format_unicode_top(msg.bot, description) {|stats| abs_stats_to_percentage_stats(stats)}
-      msg.reply("Top10 in %#{reply[:description]}. #{reply[:places].map { |count, user_nick| "#{user_nick}: #{count}%" }.join("; ")}")
+      msg.reply("Top10 in %#{reply[:description]}. #{reply[:places].map { |count, user_nick| "#{user_nick}: #{count}%" }.join('; ')}")
     when :u?
       message = msg.tail
       return unless message
@@ -166,7 +166,7 @@ class Unicode < IRCPlugin
     result = codepoint_stats_to_desc_stats(stats)
 
     # Sort by count descending, description ascending
-    result.sort { |a, b| [-a[1], a[0]] <=> [-b[1], b[0]] }.map { |desc, count| "#{desc}: #{count}" }.join("; ")
+    result.sort { |a, b| [-a[1], a[0]] <=> [-b[1], b[0]] }.map { |desc, count| "#{desc}: #{count}" }.join('; ')
   end
 
   def format_unicode_stats_percent(stats)
@@ -175,7 +175,7 @@ class Unicode < IRCPlugin
     result = abs_stats_to_percentage_stats(result)
 
     # Sort by count descending, description ascending
-    result.sort { |a, b| [-a[1], a[0]] <=> [-b[1], b[0]] }.map { |desc, count| "#{desc}: #{count}%" }.join("; ")
+    result.sort { |a, b| [-a[1], a[0]] <=> [-b[1], b[0]] }.map { |desc, count| "#{desc}: #{count}%" }.join('; ')
   end
 
   def format_unicode_places(stats)
@@ -212,7 +212,7 @@ class Unicode < IRCPlugin
       worst_place = our_worst_ranks[desc]
       place = "#{place}-#{worst_place}" unless worst_place == place
       "#{desc}: #{place}/#{total_ranks[desc]}"
-    end.join("; ")
+    end.join('; ')
   end
 
   def abs_stats_to_percentage_stats(stats)
