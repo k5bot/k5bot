@@ -22,7 +22,7 @@ class Rotate < IRCPlugin
     return unless msg.tail
 
     number = msg.tail.split(" ")[0].to_i
-    
+
     original = msg.tail.split(" ")
     original.delete_at(0)
     original = original.join

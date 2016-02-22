@@ -23,7 +23,7 @@ class Top3 < IRCPlugin
     :chart_top3 => "shows a chart of you and the top3 users of this month, usage .chart_top3 exclude user1 user2... (made by amigojapan)",
     :opt_out => "Takes away permision for people to see your data (made by amigojapan)",
     :reopt_in => "Regives permision of people to see your data (made by amigojapan)",
-    :mlist => "shows the rank list for this month (made by amigojapan)"  
+    :mlist => "shows the rank list for this month (made by amigojapan)"
   }
   Dependencies = [ :StorageYAML ]
 
@@ -40,7 +40,7 @@ class Top3 < IRCPlugin
     @top3 = nil
     @opt_outs = nil
   end
-  
+
   def opt_out(msg)
     @opt_outs[msg.nick]="opted-out"
     @storage.write('Optouts', @opt_outs)
@@ -52,7 +52,7 @@ class Top3 < IRCPlugin
     @storage.write('Optouts', @opt_outs)
     msg.reply "you have re-opted in"
   end
-  
+
   def chart_vs(msg)
     user1=msg.message.split(/ /)[1]# get parameter
     user2=msg.message.split(/ /)[2]# get parameter
@@ -73,13 +73,13 @@ class Top3 < IRCPlugin
           msg.reply "Sorry, " + user1 + " has opted out of charting"
           return
         end
-      end 
+      end
       if optoutskey==user2
         if @opt_outs[optoutskey]=="opted-out"
           msg.reply "Sorry, " + user2 + " has opted out of charting"
           return
         end
-      end 
+      end
     }
     user1_unsorted_chart=Array.new
     user2_unsorted_chart=Array.new
@@ -109,7 +109,7 @@ class Top3 < IRCPlugin
           #end
         user1_labels+=month_counter.to_s+"|"
         month_counter+=1
-      } 
+      }
     }
     month_counter=1
     user1_labels=user1_labels.chomp("|")
@@ -131,7 +131,7 @@ class Top3 < IRCPlugin
         #end
         user2_labels+= month_counter.to_s+"|"
         month_counter+=1
-      } 
+      }
     }
     user2_labels=user2_labels.chomp("|")
     if user1_labels.length > user2_labels.length
@@ -184,10 +184,10 @@ class Top3 < IRCPlugin
     msg.reply "chart(months are months since record taking): " + Net::HTTP.get('tinyurl.com', '/api-create.php?url='+charturl)
     #msg.reply "chart(warning months are months since record taking): " + charturl
   end
-  
+
   def chart_top3(msg)
   end
-    
+
   def chart(msg)
     person=msg.message.split(/ /)[1]# get parameter
     if person == nil
@@ -205,7 +205,7 @@ class Top3 < IRCPlugin
           msg.reply "Sorry, this user has opted out"
           return
         end
-      end 
+      end
     }
     unsorted_chart=Array.new
     prev_year=0
@@ -227,7 +227,7 @@ class Top3 < IRCPlugin
           charturl4+=year+"%20"
         end
         charturl4+=month.to_s+"|"
-      } 
+      }
     }
     charturl4=charturl4.chomp("|")
     sorted_chart = unsorted_chart.sort
@@ -283,7 +283,7 @@ class Top3 < IRCPlugin
               unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s],data[0]])
               #msg.reply  "here1"+data[0]
             end
-          else 
+          else
             unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s],data[0]])
             #msg.reply  "here2"
           end
@@ -322,8 +322,8 @@ class Top3 < IRCPlugin
     #  end
     #  years=nil
     #else
-    #  current_user = 0          
-    #end      
+    #  current_user = 0
+    #end
     #out=out+"Ranked list of users for " +Time.now.to_s+" server time\n"
     #if exclude_array.include?(msg.nick)
     #  out=out+msg.nick+"'s data cannot be displayed he opted out or was excluded\n"
@@ -335,7 +335,7 @@ class Top3 < IRCPlugin
     #else
     #  out=out+", currently ranked #" + rank.to_s + " of " + place.to_s+"\n"
     #end
-    
+
     uri = URI("https://api.github.com/gists")
 
     payload = {
@@ -361,17 +361,17 @@ class Top3 < IRCPlugin
 
     #puts res.inspect
     #puts res.body.inspect
-    
+
     gistReply=JSON.parse(res.body)
     #msg.reply "List: " + gistReply["files"]["rank.txt"]["raw_url"]
     msg.reply "Ranked list: " + Net::HTTP.get('tinyurl.com', '/api-create.php?url='+gistReply["files"]["rank.txt"]["raw_url"])
-    
+
     #I added these just to make sure this is not causing the plugin to have a memory leak
     unsorted=nil
     sorted=nil
   end
 
-  
+
   def top3(msg)
     out=""
     unsorted=Array.new
@@ -403,7 +403,7 @@ class Top3 < IRCPlugin
               unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s],data[0]])
               #msg.reply  "here1"+data[0]
             end
-          else 
+          else
             unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s],data[0]])
             #msg.reply  "here2"
           end
@@ -442,8 +442,8 @@ class Top3 < IRCPlugin
       end
       years=nil
     else
-      current_user = 0          
-    end      
+      current_user = 0
+    end
     out=out+" | "
     if exclude_array.include?(msg.nick)
       out=out+msg.nick+"'s data cannot be displayed he opted out or was excluded"
@@ -469,7 +469,7 @@ class Top3 < IRCPlugin
           msg.reply "Sorry, this user has opted out"
           return
         end
-      end 
+      end
     }
     if person == nil
       person = msg.nick
@@ -514,8 +514,8 @@ class Top3 < IRCPlugin
       end
       years=nil
     else
-      current_user = 0          
-    end      
+      current_user = 0
+    end
     out=out+person+"'s CJK count is: " + current_user.to_s
     if current_user == 0
       out=out+" "+person+" has not typed any Japanese this month :("
@@ -531,10 +531,10 @@ class Top3 < IRCPlugin
   def count(msg)
     s2=msg.message.split(//)
     chars=0
-    s2.each{|s| 
-    	if s.contains_cjk? == true
-    		chars=chars+1	
-    	end
+    s2.each{|s|
+      if s.contains_cjk? == true
+        chars=chars+1
+      end
     }
     #msg.reply @top3[msg.nick].nil?.to_s
     if @top3[msg.nick].nil? #no data add yearly and monthly arrays
@@ -551,7 +551,7 @@ class Top3 < IRCPlugin
     #end
     #if years[Date.today.year][Date.today.mon].nil? #new month
     #  years[Date.today.year][Date.today.mon]=
-    #end    
+    #end
     if chars > 0
       years=JSON.parse(@top3[msg.nick])
       if years[Date.today.year.to_s].nil?
@@ -566,7 +566,7 @@ class Top3 < IRCPlugin
       #if @top3.include? msg.nick
       #  @top3[msg.nick] = [@top3[msg.nick][0]+chars,Date.today.mon]
       #else
-      #  @top3[msg.nick] = [chars,Date.today.mon]          
+      #  @top3[msg.nick] = [chars,Date.today.mon]
       #end
       @storage.write('Top3', @top3)
     end
@@ -594,8 +594,8 @@ class Top3 < IRCPlugin
     end
   end
   rescue Exception => e
-    @top3["error message"] =  e.message  
-    @top3["error backtrace"] =  e.backtrace.inspect  
+    @top3["error message"] =  e.message
+    @top3["error backtrace"] =  e.backtrace.inspect
     @storage.write('Top3', @top3)
 end
 #(done)Add year tracking

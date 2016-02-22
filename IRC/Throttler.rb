@@ -1,4 +1,3 @@
-
 class Throttler
   attr_reader :burst, :rate
 

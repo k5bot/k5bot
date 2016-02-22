@@ -36,19 +36,19 @@ class Pinyin < IRCPlugin
       msg.reply ipa if ipa
     end
   end
-  
+
   def _pinyin text
     PinYin.sentence text, true
   end
-  
+
   def _reader
     Ting.reader :hanyu, :numbers
   end
-  
+
   def _writer type, tone
     Ting.writer type, tone
   end
-  
+
   def _translation text, type, tone
     pinyin = _pinyin text
     x = _writer type, tone
