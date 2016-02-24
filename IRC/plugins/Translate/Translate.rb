@@ -203,8 +203,18 @@ class Translate < IRCPlugin
 
   def afterLoad
     load_helper_class(:QuirkedJSON)
+    load_helper_class(:GoogleTokenGenerator)
 
     @l = @plugin_manager.plugins[:Language]
+  end
+
+  def beforeUnload
+    unload_helper_class(:GoogleTokenGenerator)
+    unload_helper_class(:QuirkedJSON)
+
+    @l = nil
+
+    nil
   end
 
   def on_privmsg(msg)
@@ -296,6 +306,9 @@ class Translate < IRCPlugin
 
   def google_get_json(text, lp, dt)
     l_from, l_to = lp
+
+    token = GoogleTokenGenerator::generate_token(text)
+
     params = [
         [:client, 't'],
         [:sl, l_from],
@@ -310,6 +323,7 @@ class Translate < IRCPlugin
         [:ssel, 0],
         [:tsel, 0],
         [:q, text],
+        [:tk, token],
     ]
 
     uri = URI.parse(GOOGLE_JSON_URL)
