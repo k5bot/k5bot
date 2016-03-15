@@ -135,26 +135,19 @@ class IRCBot < IRCPlugin
   def truncate_for_irc(opts, byte_limit)
     layoutable_text = opts[:original]
 
-    layout = layoutable_text.layout_calculate do |line, minimum_size: false, **_|
-      line = encode(line.dup)
-
-      # char-per-char replace
-      line.gsub!(/[\r\n]/, ' ')
-      # whitespace elimination
-      line.strip!
-
-      # Accept line if it fits in the byte limit. Also accept if if it doesn't
-      # fit, but is still the smallest line that our layouter can produce.
-      # Except if our caller insisted on not truncating lines, in which case
-      # layouter will raise an exception due to not finding a satisfactory layout.
-      line if (line.bytesize <= byte_limit) || (minimum_size && !opts[:dont_truncate])
-    end
+    layout = layout_to_byte_limit(layoutable_text, byte_limit, !opts[:dont_truncate])
 
     layout = layout.map do |line|
-      line = line.byteslice(0, byte_limit)
-      # The above might have resulted in a malformed string.
-      # Make a clean cut on a character boundary.
-      line[0, line.size]
+      if line.bytesize > byte_limit
+        # Lines were allowed to overflow, so truncate to fit byte limit
+        line = layout_to_byte_limit(
+            LayoutableText::Arrayed.new(line, 1),
+            byte_limit,
+            false
+        ).first
+      end
+
+      line
     end
 
     opts.merge(:truncated => layout)
@@ -353,6 +346,23 @@ class IRCBot < IRCPlugin
       str.force_encoding('CP1252').encode!('UTF-8', {:invalid => :replace, :undef => :replace})
     end
     str
+  end
+
+  def layout_to_byte_limit(layoutable_text, byte_limit, allow_overflow)
+    layout = layoutable_text.layout_calculate do |line, minimum_size: false, ** _|
+    line = encode(line.dup)
+
+    # char-per-char replace
+    line.gsub!(/[\r\n]/, ' ')
+    # whitespace elimination
+    line.strip!
+
+    # Accept line if it fits in the byte limit. Also accept if if it doesn't
+    # fit, but is still the smallest line that our layouter can produce.
+    # Except if our caller insisted on not truncating lines, in which case
+    # layouter will raise an exception due to not finding a satisfactory layout.
+    line if (line.bytesize <= byte_limit) || (minimum_size && allow_overflow)
+    end
   end
 end
 
