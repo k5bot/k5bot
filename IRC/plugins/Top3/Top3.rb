@@ -2,7 +2,7 @@
 # This plugin was developted for the K5 project by amigojapan
 # See files README.md and COPYING for copyright and licensing information.
 
-# Example plugin
+# Top3 plugin
 class String
   def contains_cjk?
     !!(self =~ /\p{Han}|\p{Katakana}|\p{Hiragana}|\p{Hangul}/)
@@ -28,17 +28,17 @@ class Top3 < IRCPlugin
   Dependencies = [ :StorageYAML ]
 
   def afterLoad
-    @locked = false
     @storage = @plugin_manager.plugins[:StorageYAML]
     @top3 = @storage.read('Top3') || {}
     @opt_outs = @storage.read('Optouts') || {}
   end
 
   def beforeUnload
-    "Plugin is busy." if @locked
     @storage = nil
     @top3 = nil
     @opt_outs = nil
+
+    nil
   end
 
   def opt_out(msg)
