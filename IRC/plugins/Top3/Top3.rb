@@ -124,7 +124,7 @@ class Top3 < IRCPlugin
       charturl2+=scaled_value.to_s+','
       current=current+1
     }
-    if not user1longest
+    unless user1longest
       charturl2+='0,'*(user2_sorted_chart.length - user1_sorted_chart.length)
     end
     charturl2=charturl2.chomp(',')
@@ -182,7 +182,7 @@ class Top3 < IRCPlugin
     years.each_key {|year|
        years[year].each_key {|month|
         unsorted_chart.push(years[year][month])
-        if year.to_i>prev_year then
+        if year.to_i>prev_year
           prev_year=year.to_i
           charturl4+=year+'%20'
         end
@@ -218,7 +218,7 @@ class Top3 < IRCPlugin
     splitmsg=msg.message.split#we need this later to get the people to exclude
     @opt_outs.each_key {|optoutskey|
       if @opt_outs[optoutskey]=='opted-out'
-        if not splitmsg.include?('exclude')
+        unless splitmsg.include?('exclude')
           splitmsg.push('exclude')
         end
         splitmsg.push(optoutskey)
@@ -235,12 +235,12 @@ class Top3 < IRCPlugin
       #msg.reply data.to_s
       years=JSON.parse(data[1])
       #msg.reply years.to_s
-      if not years[Date.today.year.to_s].nil? #year not found
-        if not years[Date.today.year.to_s][Date.today.mon.to_s].nil? #display only the entries for the current month
+      if years[Date.today.year.to_s] #year not found
+        if years[Date.today.year.to_s][Date.today.mon.to_s] #display only the entries for the current month
           #msg.reply "not nil"
-          if not exclude_array.nil?
-            if not exclude_array.include?(data[0])#data[0] is the nickname
-              unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s],data[0]])
+          if exclude_array
+            unless exclude_array.include?(data[0]) #data[0] is the nickname
+              unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s], data[0]])
               #msg.reply  "here1"+data[0]
             end
           else
@@ -338,7 +338,7 @@ class Top3 < IRCPlugin
     splitmsg=msg.message.split#we need this later to get the people to exclude
     @opt_outs.each_key {|optoutskey|
       if @opt_outs[optoutskey]=='opted-out'
-        if not splitmsg.include?('exclude')
+        unless splitmsg.include?('exclude')
           splitmsg.push('exclude')
         end
         splitmsg.push(optoutskey)
@@ -355,12 +355,12 @@ class Top3 < IRCPlugin
       #msg.reply data.to_s
       years=JSON.parse(data[1])
       #msg.reply years.to_s
-      if not years[Date.today.year.to_s].nil? #year not found
-        if not years[Date.today.year.to_s][Date.today.mon.to_s].nil? #display only the entries for the current month
+      if years[Date.today.year.to_s] #year not found
+        if years[Date.today.year.to_s][Date.today.mon.to_s] #display only the entries for the current month
           #msg.reply "not nil"
-          if not exclude_array.nil?
-            if not exclude_array.include?(data[0])#data[0] is the nickname
-              unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s],data[0]])
+          if exclude_array
+            unless exclude_array.include?(data[0]) #data[0] is the nickname
+              unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s], data[0]])
               #msg.reply  "here1"+data[0]
             end
           else
@@ -443,8 +443,8 @@ class Top3 < IRCPlugin
       #end
       years=JSON.parse(data[1])
       #msg.reply years.to_s
-      if not years[Date.today.year.to_s].nil? #year not found
-        if not years[Date.today.year.to_s][Date.today.mon.to_s].nil? #display only the entries for the current month
+      if years[Date.today.year.to_s] #year not found
+        if years[Date.today.year.to_s][Date.today.mon.to_s] #display only the entries for the current month
           #msg.reply "not nil"
           unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s],data[0]])
         end
@@ -463,8 +463,8 @@ class Top3 < IRCPlugin
     if @top3.include? person
       #current_user = @top3[person][0]
       years=JSON.parse(@top3[person])
-      if not years[Date.today.year.to_s].nil? #year not found
-        if not years[Date.today.year.to_s][Date.today.mon.to_s].nil? #
+      if years[Date.today.year.to_s] #year not found
+        if years[Date.today.year.to_s][Date.today.mon.to_s] #
           current_user = years[Date.today.year.to_s][Date.today.mon.to_s]
         else
           current_user = 0
