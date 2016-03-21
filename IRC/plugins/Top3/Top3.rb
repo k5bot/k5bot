@@ -14,16 +14,16 @@ require_relative '../../IRCPlugin'
 require 'date'
 
 class Top3 < IRCPlugin
-  Description = "top3 gives the top 3 Japanese writers of the month (made by amigojapan)"
+  Description = 'top3 gives the top 3 Japanese writers of the month (made by amigojapan)'
   Commands = {
-    :top3 => "displays the top 3 Japanese writers of the month. optional .top3 exclude user1 user2... (made by amigojapan)",
-    :rank => "displays the rank of the user(made by amigojapan)",
-    :chart => "shows a chart of user progress examples: .chart or .chart user (made by amigojapan)",
-    :chart_vs => "shows a chart of user progress of user versus user, usage: .chart_vs user1 user2 (made by amigojapan)",
-    :chart_top3 => "shows a chart of you and the top3 users of this month, usage .chart_top3 exclude user1 user2... (made by amigojapan)",
-    :opt_out => "Takes away permision for people to see your data (made by amigojapan)",
-    :reopt_in => "Regives permision of people to see your data (made by amigojapan)",
-    :mlist => "shows the rank list for this month (made by amigojapan)"
+    :top3 => 'displays the top 3 Japanese writers of the month. optional .top3 exclude user1 user2... (made by amigojapan)',
+    :rank => 'displays the rank of the user(made by amigojapan)',
+    :chart => 'shows a chart of user progress examples: .chart or .chart user (made by amigojapan)',
+    :chart_vs => 'shows a chart of user progress of user versus user, usage: .chart_vs user1 user2 (made by amigojapan)',
+    :chart_top3 => 'shows a chart of you and the top3 users of this month, usage .chart_top3 exclude user1 user2... (made by amigojapan)',
+    :opt_out => 'Takes away permision for people to see your data (made by amigojapan)',
+    :reopt_in => 'Regives permision of people to see your data (made by amigojapan)',
+    :mlist => 'shows the rank list for this month (made by amigojapan)'
   }
   Dependencies = [ :StorageYAML ]
 
@@ -42,41 +42,41 @@ class Top3 < IRCPlugin
   end
 
   def opt_out(msg)
-    @opt_outs[msg.nick]="opted-out"
+    @opt_outs[msg.nick]='opted-out'
     @storage.write('Optouts', @opt_outs)
-    msg.reply "you have opted out"
+    msg.reply 'you have opted out'
   end
 
   def reopt_in(msg)
-    @opt_outs[msg.nick]="reopted-in"
+    @opt_outs[msg.nick]='reopted-in'
     @storage.write('Optouts', @opt_outs)
-    msg.reply "you have re-opted in"
+    msg.reply 'you have re-opted in'
   end
 
   def chart_vs(msg)
     user1=msg.message.split(/ /)[1]# get parameter
     user2=msg.message.split(/ /)[2]# get parameter
     if user1 == nil or user2 == nil
-      msg.reply "Usage: .chart_vs user1 user2"
+      msg.reply 'Usage: .chart_vs user1 user2'
       return
     end
     if @top3[user1].nil? or @top3[user2].nil? #year not found
-      msg.reply "Sorry, we have no data for one of these users, check spelling."
+      msg.reply 'Sorry, we have no data for one of these users, check spelling.'
       return
     end
-    charturl1="https://chart.googleapis.com/chart?cht=lc&chs=500&chd=t:"
+    charturl1='https://chart.googleapis.com/chart?cht=lc&chs=500&chd=t:'
     user1_years=JSON.parse(@top3[user1])
     user2_years=JSON.parse(@top3[user2])
     @opt_outs.each_key {|optoutskey|
       if optoutskey==user1
-        if @opt_outs[optoutskey]=="opted-out"
-          msg.reply "Sorry, " + user1 + " has opted out of charting"
+        if @opt_outs[optoutskey]=='opted-out'
+          msg.reply 'Sorry, ' + user1 + ' has opted out of charting'
           return
         end
       end
       if optoutskey==user2
-        if @opt_outs[optoutskey]=="opted-out"
-          msg.reply "Sorry, " + user2 + " has opted out of charting"
+        if @opt_outs[optoutskey]=='opted-out'
+          msg.reply 'Sorry, ' + user2 + ' has opted out of charting'
           return
         end
       end
@@ -84,16 +84,16 @@ class Top3 < IRCPlugin
     user1_unsorted_chart=Array.new
     user2_unsorted_chart=Array.new
     prev_year=0
-    charturl2=""
-    charturl4=""
-    charturl4+="|"#for the first year only
-    user1_labels=""
-    user2_labels=""
+    charturl2=''
+    charturl4=''
+    charturl4+='|'#for the first year only
+    user1_labels=''
+    user2_labels=''
     year_counter=1
     month_counter=1
     user1_years.each_key {|year|
        user1_years[year].each_key {|month|
-         out="year: "+year+" month: "+month
+         out='year: '+year+' month: '+month
         #msg.reply out
         #charturl2+=years[year][month].to_s
         #current=current+1
@@ -107,12 +107,12 @@ class Top3 < IRCPlugin
           #year_counter+=1
           #month_counter=1
           #end
-        user1_labels+=month_counter.to_s+"|"
+        user1_labels+=month_counter.to_s+'|'
         month_counter+=1
       }
     }
     month_counter=1
-    user1_labels=user1_labels.chomp("|")
+    user1_labels=user1_labels.chomp('|')
     user2_years.each_key {|year|
        user2_years[year].each_key {|month|
         #out="year: "+year+" month: "+month
@@ -129,11 +129,11 @@ class Top3 < IRCPlugin
         #  year_counter+=1
         #  month_counter=1
         #end
-        user2_labels+= month_counter.to_s+"|"
+        user2_labels+= month_counter.to_s+'|'
         month_counter+=1
       }
     }
-    user2_labels=user2_labels.chomp("|")
+    user2_labels=user2_labels.chomp('|')
     if user1_labels.length > user2_labels.length
       charturl4+=user1_labels
     else
@@ -154,34 +154,34 @@ class Top3 < IRCPlugin
     user1_unsorted_chart.each{
       #msg.reply unsorted_chart[current]
       scaled_value=(user1_unsorted_chart[current].to_f/max*100).to_i
-      charturl2+=scaled_value.to_s+","
+      charturl2+=scaled_value.to_s+','
       current=current+1
     }
     if not user1longest
-      charturl2+="0,"*(user2_sorted_chart.length - user1_sorted_chart.length)
+      charturl2+='0,'*(user2_sorted_chart.length - user1_sorted_chart.length)
     end
-    charturl2=charturl2.chomp(",")
-    charturl2+="%7C"
+    charturl2=charturl2.chomp(',')
+    charturl2+='%7C'
     current=0
     user2_unsorted_chart.each{
       #msg.reply user2_unsorted_chart[current].to_s
       scaled_value=(user2_unsorted_chart[current].to_f/max*100).to_i
-      charturl2+=scaled_value.to_s+","
+      charturl2+=scaled_value.to_s+','
       current=current+1
     }
     if user1longest
-      charturl2+="0,"*(user1_sorted_chart.length - user2_sorted_chart.length)
+      charturl2+='0,'*(user1_sorted_chart.length - user2_sorted_chart.length)
     end
-    charturl2=charturl2.chomp(",")
+    charturl2=charturl2.chomp(',')
     #msg.reply charturl2
-    charturl4+= "|1:|0|" + (max*1/4).to_s + "|mid%20"+ (max/2).to_s + "|" + (max*3/4).to_s + "|max%20" +max.to_s
-    charturl3="&chxt=x,y&chxl=0:"
-    charturl5="&chdl="
-    charturl6=user1+"|"+user2
-    charturl7="&chco="
-    charturl8="ff0000,0000ff"
+    charturl4+= '|1:|0|' + (max*1/4).to_s + '|mid%20'+ (max/2).to_s + '|' + (max*3/4).to_s + '|max%20' +max.to_s
+    charturl3='&chxt=x,y&chxl=0:'
+    charturl5='&chdl='
+    charturl6=user1+'|'+user2
+    charturl7='&chco='
+    charturl8='ff0000,0000ff'
     charturl=charturl1+charturl2+charturl3+charturl4+charturl5+charturl6+charturl7+charturl8
-    msg.reply "chart(months are months since record taking): " + Net::HTTP.get('tinyurl.com', '/api-create.php?url='+charturl)
+    msg.reply 'chart(months are months since record taking): ' + Net::HTTP.get('tinyurl.com', '/api-create.php?url='+charturl)
     #msg.reply "chart(warning months are months since record taking): " + charturl
   end
 
@@ -194,27 +194,27 @@ class Top3 < IRCPlugin
       person = msg.nick
     end
     if @top3[person].nil? #year not found
-      msg.reply "Sorry, we have no data for this user, check spelling."
+      msg.reply 'Sorry, we have no data for this user, check spelling.'
       return
     end
-    charturl1="https://chart.googleapis.com/chart?cht=lc&chs=500&chd=t:"
+    charturl1='https://chart.googleapis.com/chart?cht=lc&chs=500&chd=t:'
     years=JSON.parse(@top3[person])
     @opt_outs.each_key {|optoutskey|
       if optoutskey==person
-        if @opt_outs[optoutskey]=="opted-out"
-          msg.reply "Sorry, this user has opted out"
+        if @opt_outs[optoutskey]=='opted-out'
+          msg.reply 'Sorry, this user has opted out'
           return
         end
       end
     }
     unsorted_chart=Array.new
     prev_year=0
-    charturl2=""
-    charturl4=""
-    charturl4+="|"#for the first year only
+    charturl2=''
+    charturl4=''
+    charturl4+='|'#for the first year only
     years.each_key {|year|
        years[year].each_key {|month|
-         out="year: "+year+" month: "+month
+         out='year: '+year+' month: '+month
         #msg.reply out
         #charturl2+=years[year][month].to_s
         #current=current+1
@@ -224,12 +224,12 @@ class Top3 < IRCPlugin
         unsorted_chart.push(years[year][month])
         if year.to_i>prev_year then
           prev_year=year.to_i
-          charturl4+=year+"%20"
+          charturl4+=year+'%20'
         end
-        charturl4+=month.to_s+"|"
+        charturl4+=month.to_s+'|'
       }
     }
-    charturl4=charturl4.chomp("|")
+    charturl4=charturl4.chomp('|')
     sorted_chart = unsorted_chart.sort
     max=sorted_chart.last
     #all values / maximum value * 100
@@ -237,36 +237,36 @@ class Top3 < IRCPlugin
     unsorted_chart.each{
       #msg.reply unsorted_chart[current]
       scaled_value=(unsorted_chart[current].to_f/max*100).to_i
-      charturl2+=scaled_value.to_s+","
+      charturl2+=scaled_value.to_s+','
       current=current+1
     }
-    charturl2=charturl2.chomp(",")
+    charturl2=charturl2.chomp(',')
     #msg.reply charturl2
-    charturl4+= "|1:|0|" + (max*1/4).to_s + "|mid%20"+ (max/2).to_s + "|" + (max*3/4).to_s + "|max%20" +max.to_s
-    charturl3="&chxt=x,y&chxl=0:"
-    charturl5="&chdl="
+    charturl4+= '|1:|0|' + (max*1/4).to_s + '|mid%20'+ (max/2).to_s + '|' + (max*3/4).to_s + '|max%20' +max.to_s
+    charturl3='&chxt=x,y&chxl=0:'
+    charturl5='&chdl='
     charturl6=person
-    charturl7="&chco="
-    charturl8="ff0000"
+    charturl7='&chco='
+    charturl8='ff0000'
     charturl=charturl1+charturl2+charturl3+charturl4+charturl5+charturl6+charturl7+charturl8
-    msg.reply "chart: " + Net::HTTP.get('tinyurl.com', '/api-create.php?url='+charturl)
+    msg.reply 'chart: ' + Net::HTTP.get('tinyurl.com', '/api-create.php?url='+charturl)
   end
 
   def mlist(msg)
-    out=""
+    out=''
     unsorted=Array.new
     splitmsg=msg.message.split#we need this later to get the people to exclude
     @opt_outs.each_key {|optoutskey|
-      if @opt_outs[optoutskey]=="opted-out"
-        if not splitmsg.include?("exclude")
-          splitmsg.push("exclude")
+      if @opt_outs[optoutskey]=='opted-out'
+        if not splitmsg.include?('exclude')
+          splitmsg.push('exclude')
         end
         splitmsg.push(optoutskey)
       end
     }
     #msg.reply splitmsg.to_s
-    if splitmsg.include?("exclude")
-      exclude_array=splitmsg.drop(splitmsg.index("exclude")+1) #make exclude list
+    if splitmsg.include?('exclude')
+      exclude_array=splitmsg.drop(splitmsg.index('exclude')+1) #make exclude list
     else
       exclude_array=Array.new
     end
@@ -298,7 +298,7 @@ class Top3 < IRCPlugin
     rank=0
     sorted.each{|data|
       rank=rank+1
-      out=out+" #"+rank.to_s+" "+data[1]+" CJK chars:"+data[0].to_s+"\n"
+      out=out+' #'+rank.to_s+' '+data[1]+' CJK chars:'+data[0].to_s+"\n"
     }
     #rank=0
     #place=0
@@ -336,13 +336,13 @@ class Top3 < IRCPlugin
     #  out=out+", currently ranked #" + rank.to_s + " of " + place.to_s+"\n"
     #end
 
-    uri = URI("https://api.github.com/gists")
+    uri = URI('https://api.github.com/gists')
 
     payload = {
-      'description' => "Ranked list of users for " +Time.now.to_s+" server time\n",
+      'description' => 'Ranked list of users for ' +Time.now.to_s+" server time\n",
       'public' => false,
       'files' => {
-        "rank.txt" => {
+        'rank.txt' => {
           'content' => out
         }
       }
@@ -364,7 +364,7 @@ class Top3 < IRCPlugin
 
     gistReply=JSON.parse(res.body)
     #msg.reply "List: " + gistReply["files"]["rank.txt"]["raw_url"]
-    msg.reply "Ranked list: " + Net::HTTP.get('tinyurl.com', '/api-create.php?url='+gistReply["files"]["rank.txt"]["raw_url"])
+    msg.reply 'Ranked list: ' + Net::HTTP.get('tinyurl.com', '/api-create.php?url='+gistReply['files']['rank.txt']['raw_url'])
 
     #I added these just to make sure this is not causing the plugin to have a memory leak
     unsorted=nil
@@ -373,20 +373,20 @@ class Top3 < IRCPlugin
 
 
   def top3(msg)
-    out=""
+    out=''
     unsorted=Array.new
     splitmsg=msg.message.split#we need this later to get the people to exclude
     @opt_outs.each_key {|optoutskey|
-      if @opt_outs[optoutskey]=="opted-out"
-        if not splitmsg.include?("exclude")
-          splitmsg.push("exclude")
+      if @opt_outs[optoutskey]=='opted-out'
+        if not splitmsg.include?('exclude')
+          splitmsg.push('exclude')
         end
         splitmsg.push(optoutskey)
       end
     }
     #msg.reply splitmsg.to_s
-    if splitmsg.include?("exclude")
-      exclude_array=splitmsg.drop(splitmsg.index("exclude")+1) #make exclude list
+    if splitmsg.include?('exclude')
+      exclude_array=splitmsg.drop(splitmsg.index('exclude')+1) #make exclude list
     else
       exclude_array=Array.new
     end
@@ -418,7 +418,7 @@ class Top3 < IRCPlugin
     rank=0
     sorted.take(3).each{|data|
       rank=rank+1
-      out=out+" #"+rank.to_s+" "+data[1]+" CJK chars:"+data[0].to_s
+      out=out+' #'+rank.to_s+' '+data[1]+' CJK chars:'+data[0].to_s
     }
     rank=0
     place=0
@@ -444,16 +444,16 @@ class Top3 < IRCPlugin
     else
       current_user = 0
     end
-    out=out+" | "
+    out=out+' | '
     if exclude_array.include?(msg.nick)
       out=out+msg.nick+"'s data cannot be displayed he opted out or was excluded"
     else
       out=out+msg.nick+"'s CJK count is: " + current_user.to_s
     end
     if rank == 0
-      out=out+" "+msg.nick+" has not typed any Japanese this month :("
+      out=out+' '+msg.nick+' has not typed any Japanese this month :('
     else
-      out=out+", currently ranked #" + rank.to_s + " of " + place.to_s
+      out=out+', currently ranked #' + rank.to_s + ' of ' + place.to_s
     end
     msg.reply  out
     #I added these just to make sure this is not causing the plugin to have a memory leak
@@ -465,8 +465,8 @@ class Top3 < IRCPlugin
     person=msg.message.split(/ /)[1]# get parameter
     @opt_outs.each_key {|optoutskey|
       if optoutskey==person
-        if @opt_outs[optoutskey]=="opted-out"
-          msg.reply "Sorry, this user has opted out"
+        if @opt_outs[optoutskey]=='opted-out'
+          msg.reply 'Sorry, this user has opted out'
           return
         end
       end
@@ -474,7 +474,7 @@ class Top3 < IRCPlugin
     if person == nil
       person = msg.nick
     end
-    out=""
+    out=''
     unsorted=Array.new
     @top3.each{|data|
       #puts data
@@ -518,9 +518,9 @@ class Top3 < IRCPlugin
     end
     out=out+person+"'s CJK count is: " + current_user.to_s
     if current_user == 0
-      out=out+" "+person+" has not typed any Japanese this month :("
+      out=out+' '+person+' has not typed any Japanese this month :('
     else
-      out=out+", currently ranked #" + rank.to_s + " of " + place.to_s
+      out=out+', currently ranked #' + rank.to_s + ' of ' + place.to_s
     end
     msg.reply  out
     #I added these just to make sure this is not causing the plugin to have a memory leak
@@ -594,8 +594,8 @@ class Top3 < IRCPlugin
     end
   end
   rescue Exception => e
-    @top3["error message"] =  e.message
-    @top3["error backtrace"] =  e.backtrace.inspect
+    @top3['error message'] =  e.message
+    @top3['error backtrace'] =  e.backtrace.inspect
     @storage.write('Top3', @top3)
 end
 #(done)Add year tracking
