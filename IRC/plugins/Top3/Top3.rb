@@ -322,9 +322,9 @@ class Top3 < IRCPlugin
     #puts res.inspect
     #puts res.body.inspect
 
-    gistReply=JSON.parse(res.body)
+    gist_reply=JSON.parse(res.body)
     #msg.reply "List: " + gistReply["files"]["rank.txt"]["raw_url"]
-    msg.reply 'Ranked list: ' + Net::HTTP.get('tinyurl.com', '/api-create.php?url='+gistReply['files']['rank.txt']['raw_url'])
+    msg.reply 'Ranked list: ' + Net::HTTP.get('tinyurl.com', '/api-create.php?url='+gist_reply['files']['rank.txt']['raw_url'])
 
     #I added these just to make sure this is not causing the plugin to have a memory leak
     unsorted=nil
