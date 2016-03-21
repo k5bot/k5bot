@@ -3,11 +3,6 @@
 # See files README.md and COPYING for copyright and licensing information.
 
 # Top3 plugin
-class String
-  def contains_cjk?
-    !!(self =~ /\p{Han}|\p{Katakana}|\p{Hiragana}|\p{Hangul}/)
-  end
-end
 
 require 'net/http'
 require_relative '../../IRCPlugin'
@@ -528,11 +523,15 @@ class Top3 < IRCPlugin
     sorted=nil
   end
 
+  def contains_cjk?(s)
+    !!(s =~ /\p{Han}|\p{Katakana}|\p{Hiragana}|\p{Hangul}/)
+  end
+
   def count(msg)
     s2=msg.message.split(//)
     chars=0
     s2.each{|s|
-      if s.contains_cjk? == true
+      if contains_cjk?(s)
         chars=chars+1
       end
     }
