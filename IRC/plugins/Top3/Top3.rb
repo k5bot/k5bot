@@ -84,24 +84,10 @@ class Top3 < IRCPlugin
     charturl4+='|'#for the first year only
     user1_labels=''
     user2_labels=''
-    year_counter=1
     month_counter=1
     user1_years.each_key {|year|
        user1_years[year].each_key {|month|
-         out='year: '+year+' month: '+month
-        #msg.reply out
-        #charturl2+=years[year][month].to_s
-        #current=current+1
-        #if not years[year].length == current
-        #  charturl2+=","
-        #end
         user1_unsorted_chart.push(user1_years[year][month])
-        #if year.to_i>prev_year
-          #prev_year=year.to_i
-          #user1_labels+="year%20"+year_counter.to_s+"%20"
-          #year_counter+=1
-          #month_counter=1
-          #end
         user1_labels+=month_counter.to_s+'|'
         month_counter+=1
       }
@@ -110,20 +96,7 @@ class Top3 < IRCPlugin
     user1_labels=user1_labels.chomp('|')
     user2_years.each_key {|year|
        user2_years[year].each_key {|month|
-        #out="year: "+year+" month: "+month
-        #msg.reply out
-        #charturl2+=years[year][month].to_s
-        #current=current+1
-        #if not years[year].length == current
-        #  charturl2+=","
-        #end
         user2_unsorted_chart.push(user2_years[year][month])
-        #if year.to_i>prev_year
-        #  prev_year=year.to_i
-        #  user1_labels+="year%20"+year_counter.to_s+"%20"
-        #  year_counter+=1
-        #  month_counter=1
-        #end
         user2_labels+= month_counter.to_s+'|'
         month_counter+=1
       }
@@ -138,7 +111,6 @@ class Top3 < IRCPlugin
     max1=user1_sorted_chart.last
     user2_sorted_chart = user2_unsorted_chart.sort
     max2=user2_sorted_chart.last
-    #msg.reply user2_sorted_chart.to_s
     max=[max1,max2].max
     user1longest=false
     if user1_sorted_chart.length > user2_sorted_chart.length
@@ -209,13 +181,6 @@ class Top3 < IRCPlugin
     charturl4+='|'#for the first year only
     years.each_key {|year|
        years[year].each_key {|month|
-         out='year: '+year+' month: '+month
-        #msg.reply out
-        #charturl2+=years[year][month].to_s
-        #current=current+1
-        #if not years[year].length == current
-        #  charturl2+=","
-        #end
         unsorted_chart.push(years[year][month])
         if year.to_i>prev_year then
           prev_year=year.to_i
