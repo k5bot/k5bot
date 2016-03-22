@@ -38,6 +38,26 @@ class Top3 < IRCPlugin
     nil
   end
 
+  def on_privmsg(msg)
+    if msg.bot_command == :top3
+      top3(msg)
+    elsif msg.bot_command == :rank
+      rank(msg)
+    elsif msg.bot_command == :chart
+      chart(msg)
+    elsif msg.bot_command == :opt_out
+      opt_out(msg)
+    elsif msg.bot_command == :reopt_in
+      reopt_in(msg)
+    elsif msg.bot_command == :chart_top3
+      chart_top3(msg)
+    elsif msg.bot_command == :mlist
+      mlist(msg)
+    elsif !msg.private? and !msg.bot_command
+      count(msg)
+    end
+  end
+
   def opt_out(msg)
     @opt_outs[msg.nick]='opted-out'
     @storage.write('Optouts', @opt_outs)
@@ -354,26 +374,6 @@ class Top3 < IRCPlugin
       years[Date.today.year.to_s][Date.today.mon.to_s]+=chars
       @top3[msg.nick] =years.to_json
       @storage.write('Top3', @top3)
-    end
-  end
-
-  def on_privmsg(msg)
-    if msg.bot_command == :top3
-      top3(msg)
-    elsif msg.bot_command == :rank
-      rank(msg)
-    elsif msg.bot_command == :chart
-      chart(msg)
-    elsif msg.bot_command == :opt_out
-      opt_out(msg)
-    elsif msg.bot_command == :reopt_in
-      reopt_in(msg)
-    elsif msg.bot_command == :chart_top3
-      chart_top3(msg)
-    elsif msg.bot_command == :mlist
-      mlist(msg)
-    elsif !msg.private? and !msg.bot_command
-      count(msg)
     end
   end
 end
