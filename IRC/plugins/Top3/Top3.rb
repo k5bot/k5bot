@@ -376,10 +376,6 @@ class Top3 < IRCPlugin
       count(msg)
     end
   end
-rescue Exception => e
-  @top3['error message'] = e.message
-  @top3['error backtrace'] = e.backtrace.inspect
-  @storage.write('Top3', @top3)
 end
 #(done)Add year tracking
 #add anual top3
