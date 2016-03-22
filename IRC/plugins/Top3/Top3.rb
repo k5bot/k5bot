@@ -4,6 +4,7 @@
 
 # Top3 plugin
 
+require 'uri'
 require 'net/http'
 require_relative '../../IRCPlugin'
 require 'date'
@@ -13,7 +14,7 @@ class Top3 < IRCPlugin
   Commands = {
     :top3 => 'displays the top 3 Japanese writers of the month. optional .top3 exclude user1 user2... (made by amigojapan)',
     :rank => 'displays the rank of the user(made by amigojapan)',
-    :chart => 'shows a chart of user progress examples: .chart or .chart user (made by amigojapan)',
+    :chart => 'shows a chart of user progress. Usage: .chart or .chart user1 user2 etc (made by amigojapan)',
     :chart_vs => 'shows a chart of user progress of user versus user, usage: .chart_vs user1 user2 (made by amigojapan)',
     :chart_top3 => 'shows a chart of you and the top3 users of this month, usage .chart_top3 exclude user1 user2... (made by amigojapan)',
     :opt_out => 'Takes away permision for people to see your data (made by amigojapan)',
@@ -21,6 +22,8 @@ class Top3 < IRCPlugin
     :mlist => 'shows the rank list for this month (made by amigojapan)'
   }
   Dependencies = [ :StorageYAML ]
+
+  CHART_COLORS = %w(ff0000 0000ff 00ff00 ff00ff ffff00 00ffff)
 
   def afterLoad
     @storage = @plugin_manager.plugins[:StorageYAML]
@@ -151,58 +154,82 @@ class Top3 < IRCPlugin
   end
 
   def chart(msg)
-    person=msg.message.split(/ /)[1] # get parameter
-    if person == nil
-      person = msg.nick
-    end
-    if @top3[person].nil? #year not found
-      msg.reply 'Sorry, we have no data for this user, check spelling.'
+    nicks = msg.tail ? msg.tail.split : []
+    nicks = [msg.nick] if nicks.empty?
+
+    if nicks.size > CHART_COLORS.size
+      msg.reply "Too many nicks specified (at most #{CHART_COLORS.size} supported)."
       return
     end
-    charturl1='https://chart.googleapis.com/chart?cht=lc&chs=500&chd=t:'
-    years=JSON.parse(@top3[person])
-    @opt_outs.each_key do |optoutskey|
-      if optoutskey==person
-        if @opt_outs[optoutskey]=='opted-out'
-          msg.reply 'Sorry, this user has opted out'
-          return
-        end
+
+    person_data = nicks.map do |person|
+      if @opt_outs[person] == 'opted-out'
+        msg.reply 'Sorry, this user has opted out.'
+        return
       end
-    end
-    unsorted_chart=Array.new
-    prev_year=0
-    charturl2=''
-    charturl4=''
-    charturl4+='|' #for the first year only
-    years.each_key do |year|
-      years[year].each_key do |month|
-        unsorted_chart.push(years[year][month])
-        if year.to_i>prev_year
-          prev_year=year.to_i
-          charturl4+=year+'%20'
-        end
-        charturl4+=month.to_s+'|'
+      data = @top3[person] && JSON.parse(@top3[person])
+      unless data && !data.empty?
+        msg.reply "Sorry, we have no data for #{person}, check spelling."
+        return
       end
+
+      [person, data]
     end
-    charturl4=charturl4.chomp('|')
-    sorted_chart = unsorted_chart.sort
-    max=sorted_chart.last
-    #all values / maximum value * 100
-    current=0
-    unsorted_chart.each do
-      scaled_value=(unsorted_chart[current].to_f/max*100).to_i
-      charturl2+=scaled_value.to_s+','
-      current=current+1
+
+    person_data = person_data.map do |person, data|
+      data = data.flat_map do |year, months|
+        year = year.to_i
+        months.map do |month, counter|
+          [[year, month.to_i], counter.to_i]
+        end
+      end.sort
+
+      [person, Hash[data]]
     end
-    charturl2=charturl2.chomp(',')
-    charturl4+= '|1:|0|' + (max*1/4).to_s + '|mid%20'+ (max/2).to_s + '|' + (max*3/4).to_s + '|max%20' +max.to_s
-    charturl3='&chxt=x,y&chxl=0:'
-    charturl5='&chdl='
-    charturl6=person
-    charturl7='&chco='
-    charturl8='ff0000'
-    charturl=charturl1+charturl2+charturl3+charturl4+charturl5+charturl6+charturl7+charturl8
-    msg.reply 'chart: ' + Net::HTTP.get('tinyurl.com', '/api-create.php?url='+charturl)
+
+    person_data = Hash[person_data]
+
+    timeline = person_data.values.flat_map(&:keys).sort.uniq
+    max = person_data.values.flat_map(&:values).max
+
+    prev_year = 0
+    timeline_labels = timeline.map do |year, month|
+      if year == prev_year
+        "|#{month}"
+      else
+        prev_year = year
+        "|#{year} #{month}"
+      end
+    end.join
+
+    counter_labels = "|0|#{max/4}|mid #{max/2}|#{(max*3)/4}|max #{max}"
+
+    data_points = person_data.map do |_, data|
+      timeline.map do |time|
+        data[time] ? ((100 * data[time].to_f) / max).to_i : -1
+      end.join(',')
+    end.join('|')
+
+    charturl = URI('https://chart.googleapis.com/chart')
+    params = {
+        :cht => 'lc',
+        :chs => 500,
+        :chxt => 'x,y',
+        :chdl => nicks.join('|'), #TODO: escape vertical bars in nicks somehow
+        :chco => CHART_COLORS[0, nicks.size].join(','),
+        :chxl => "0:#{timeline_labels}|1:#{counter_labels}",
+        :chd => "t:#{data_points}",
+    }
+    charturl.query = URI.encode_www_form(params)
+
+    msg.reply "chart: #{tinyurlify(charturl)}"
+  end
+
+  TINYURL_URL = URI('http://tinyurl.com/api-create.php')
+  def tinyurlify(url)
+    t = TINYURL_URL.dup
+    t.query = URI.encode_www_form(:url => url)
+    Net::HTTP.get(t)
   end
 
   def mlist(msg)
