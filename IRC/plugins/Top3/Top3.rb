@@ -62,7 +62,7 @@ class Top3 < IRCPlugin
     charturl1='https://chart.googleapis.com/chart?cht=lc&chs=500&chd=t:'
     user1_years=JSON.parse(@top3[user1])
     user2_years=JSON.parse(@top3[user2])
-    @opt_outs.each_key { |optoutskey|
+    @opt_outs.each_key do |optoutskey|
       if optoutskey==user1
         if @opt_outs[optoutskey]=='opted-out'
           msg.reply 'Sorry, ' + user1 + ' has opted out of charting'
@@ -75,7 +75,7 @@ class Top3 < IRCPlugin
           return
         end
       end
-    }
+    end
     user1_unsorted_chart=Array.new
     user2_unsorted_chart=Array.new
     charturl2=''
@@ -84,22 +84,22 @@ class Top3 < IRCPlugin
     user1_labels=''
     user2_labels=''
     month_counter=1
-    user1_years.each_key { |year|
-      user1_years[year].each_key { |month|
+    user1_years.each_key do |year|
+      user1_years[year].each_key do |month|
         user1_unsorted_chart.push(user1_years[year][month])
         user1_labels+=month_counter.to_s+'|'
         month_counter+=1
-      }
-    }
+      end
+    end
     month_counter=1
     user1_labels=user1_labels.chomp('|')
-    user2_years.each_key { |year|
-      user2_years[year].each_key { |month|
+    user2_years.each_key do |year|
+      user2_years[year].each_key do |month|
         user2_unsorted_chart.push(user2_years[year][month])
         user2_labels+= month_counter.to_s+'|'
         month_counter+=1
-      }
-    }
+      end
+    end
     user2_labels=user2_labels.chomp('|')
     if user1_labels.length > user2_labels.length
       charturl4+=user1_labels
@@ -117,22 +117,22 @@ class Top3 < IRCPlugin
     end
     #all values / maximum value * 100
     current=0
-    user1_unsorted_chart.each {
+    user1_unsorted_chart.each do
       scaled_value=(user1_unsorted_chart[current].to_f/max*100).to_i
       charturl2+=scaled_value.to_s+','
       current=current+1
-    }
+    end
     unless user1longest
       charturl2+='0,'*(user2_sorted_chart.length - user1_sorted_chart.length)
     end
     charturl2=charturl2.chomp(',')
     charturl2+='%7C'
     current=0
-    user2_unsorted_chart.each {
+    user2_unsorted_chart.each do
       scaled_value=(user2_unsorted_chart[current].to_f/max*100).to_i
       charturl2+=scaled_value.to_s+','
       current=current+1
-    }
+    end
     if user1longest
       charturl2+='0,'*(user1_sorted_chart.length - user2_sorted_chart.length)
     end
@@ -161,39 +161,39 @@ class Top3 < IRCPlugin
     end
     charturl1='https://chart.googleapis.com/chart?cht=lc&chs=500&chd=t:'
     years=JSON.parse(@top3[person])
-    @opt_outs.each_key { |optoutskey|
+    @opt_outs.each_key do |optoutskey|
       if optoutskey==person
         if @opt_outs[optoutskey]=='opted-out'
           msg.reply 'Sorry, this user has opted out'
           return
         end
       end
-    }
+    end
     unsorted_chart=Array.new
     prev_year=0
     charturl2=''
     charturl4=''
     charturl4+='|' #for the first year only
-    years.each_key { |year|
-      years[year].each_key { |month|
+    years.each_key do |year|
+      years[year].each_key do |month|
         unsorted_chart.push(years[year][month])
         if year.to_i>prev_year
           prev_year=year.to_i
           charturl4+=year+'%20'
         end
         charturl4+=month.to_s+'|'
-      }
-    }
+      end
+    end
     charturl4=charturl4.chomp('|')
     sorted_chart = unsorted_chart.sort
     max=sorted_chart.last
     #all values / maximum value * 100
     current=0
-    unsorted_chart.each {
+    unsorted_chart.each do
       scaled_value=(unsorted_chart[current].to_f/max*100).to_i
       charturl2+=scaled_value.to_s+','
       current=current+1
-    }
+    end
     charturl2=charturl2.chomp(',')
     charturl4+= '|1:|0|' + (max*1/4).to_s + '|mid%20'+ (max/2).to_s + '|' + (max*3/4).to_s + '|max%20' +max.to_s
     charturl3='&chxt=x,y&chxl=0:'
@@ -209,20 +209,20 @@ class Top3 < IRCPlugin
     out=''
     unsorted=Array.new
     splitmsg=msg.message.split #we need this later to get the people to exclude
-    @opt_outs.each_key { |optoutskey|
+    @opt_outs.each_key do |optoutskey|
       if @opt_outs[optoutskey]=='opted-out'
         unless splitmsg.include?('exclude')
           splitmsg.push('exclude')
         end
         splitmsg.push(optoutskey)
       end
-    }
+    end
     if splitmsg.include?('exclude')
       exclude_array=splitmsg.drop(splitmsg.index('exclude')+1) #make exclude list
     else
       exclude_array=Array.new
     end
-    @top3.each { |data|
+    @top3.each do |data|
       years=JSON.parse(data[1])
       if years[Date.today.year.to_s] #year not found
         if years[Date.today.year.to_s][Date.today.mon.to_s] #display only the entries for the current month
@@ -235,13 +235,13 @@ class Top3 < IRCPlugin
           end
         end
       end
-    }
+    end
     sorted=unsorted.sort.reverse
     rank=0
-    sorted.each { |data|
+    sorted.each do |data|
       rank=rank+1
       out=out+' #'+rank.to_s+' '+data[1]+' CJK chars:'+data[0].to_s+"\n"
-    }
+    end
 
     uri = URI('https://api.github.com/gists')
 
@@ -272,20 +272,20 @@ class Top3 < IRCPlugin
     out=''
     unsorted=Array.new
     splitmsg=msg.message.split #we need this later to get the people to exclude
-    @opt_outs.each_key { |optoutskey|
+    @opt_outs.each_key do |optoutskey|
       if @opt_outs[optoutskey]=='opted-out'
         unless splitmsg.include?('exclude')
           splitmsg.push('exclude')
         end
         splitmsg.push(optoutskey)
       end
-    }
+    end
     if splitmsg.include?('exclude')
       exclude_array=splitmsg.drop(splitmsg.index('exclude')+1) #make exclude list
     else
       exclude_array=Array.new
     end
-    @top3.each { |data|
+    @top3.each do |data|
       years=JSON.parse(data[1])
       if years[Date.today.year.to_s] #year not found
         if years[Date.today.year.to_s][Date.today.mon.to_s] #display only the entries for the current month
@@ -298,21 +298,21 @@ class Top3 < IRCPlugin
           end
         end
       end
-    }
+    end
     sorted=unsorted.sort.reverse
     rank=0
-    sorted.take(3).each { |data|
+    sorted.take(3).each do |data|
       rank=rank+1
       out=out+' #'+rank.to_s+' '+data[1]+' CJK chars:'+data[0].to_s
-    }
+    end
     rank=0
     place=0
-    sorted.each { |data|
+    sorted.each do |data|
       place=place+1
       if data[1] == msg.nick
         rank=place
       end
-    }
+    end
     if @top3.include? msg.nick
       years=JSON.parse(@top3[msg.nick])
       if years[Date.today.year.to_s].nil?
@@ -343,36 +343,36 @@ class Top3 < IRCPlugin
 
   def rank(msg)
     person=msg.message.split(/ /)[1] # get parameter
-    @opt_outs.each_key { |optoutskey|
+    @opt_outs.each_key do |optoutskey|
       if optoutskey==person
         if @opt_outs[optoutskey]=='opted-out'
           msg.reply 'Sorry, this user has opted out'
           return
         end
       end
-    }
+    end
     if person == nil
       person = msg.nick
     end
     out=''
     unsorted=Array.new
-    @top3.each { |data|
+    @top3.each do |data|
       years=JSON.parse(data[1])
       if years[Date.today.year.to_s] #year not found
         if years[Date.today.year.to_s][Date.today.mon.to_s] #display only the entries for the current month
           unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s], data[0]])
         end
       end
-    }
+    end
     sorted=unsorted.sort.reverse
     rank=0
     place=0
-    sorted.each { |data|
+    sorted.each do |data|
       place=place+1
       if data[1] == person
         rank=place
       end
-    }
+    end
     if @top3.include? person
       years=JSON.parse(@top3[person])
       if years[Date.today.year.to_s] #year not found
@@ -403,11 +403,11 @@ class Top3 < IRCPlugin
   def count(msg)
     s2=msg.message.split(//)
     chars=0
-    s2.each { |s|
+    s2.each do |s|
       if contains_cjk?(s)
         chars=chars+1
       end
-    }
+    end
     if @top3[msg.nick].nil? #no data add yearly and monthly arrays
       years={}
       years[Date.today.year.to_s]={}
