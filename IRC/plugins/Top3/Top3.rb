@@ -78,7 +78,6 @@ class Top3 < IRCPlugin
     }
     user1_unsorted_chart=Array.new
     user2_unsorted_chart=Array.new
-    prev_year=0
     charturl2=''
     charturl4=''
     charturl4+='|'#for the first year only
@@ -236,7 +235,6 @@ class Top3 < IRCPlugin
           end
         end
       end
-      years=nil
     }
     sorted=unsorted.sort.reverse
     rank=0
@@ -267,10 +265,6 @@ class Top3 < IRCPlugin
 
     gist_reply=JSON.parse(res.body)
     msg.reply 'Ranked list: ' + Net::HTTP.get('tinyurl.com', '/api-create.php?url='+gist_reply['files']['rank.txt']['raw_url'])
-
-    #I added these just to make sure this is not causing the plugin to have a memory leak
-    unsorted=nil
-    sorted=nil
   end
 
 
@@ -304,7 +298,6 @@ class Top3 < IRCPlugin
           end
         end
       end
-      years=nil
     }
     sorted=unsorted.sort.reverse
     rank=0
@@ -331,7 +324,6 @@ class Top3 < IRCPlugin
             current_user = years[Date.today.year.to_s][Date.today.mon.to_s]
         end
       end
-      years=nil
     else
       current_user = 0
     end
@@ -347,9 +339,6 @@ class Top3 < IRCPlugin
       out=out+', currently ranked #' + rank.to_s + ' of ' + place.to_s
     end
     msg.reply  out
-    #I added these just to make sure this is not causing the plugin to have a memory leak
-    unsorted=nil
-    sorted=nil
   end
 
   def rank(msg)
@@ -374,7 +363,6 @@ class Top3 < IRCPlugin
           unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s],data[0]])
         end
       end
-      years=nil
     }
     sorted=unsorted.sort.reverse
     rank=0
@@ -396,7 +384,6 @@ class Top3 < IRCPlugin
       else
         current_user = 0
       end
-      years=nil
     else
       current_user = 0
     end
@@ -407,9 +394,6 @@ class Top3 < IRCPlugin
       out=out+', currently ranked #' + rank.to_s + ' of ' + place.to_s
     end
     msg.reply  out
-    #I added these just to make sure this is not causing the plugin to have a memory leak
-    unsorted=nil
-    sorted=nil
   end
 
   def contains_cjk?(s)
@@ -430,7 +414,6 @@ class Top3 < IRCPlugin
       years[Date.today.year.to_s][Date.today.mon.to_s]=chars
       @top3[msg.nick] =years.to_json
       @storage.write('Top3', @top3)
-      years=nil
       return
     end
     if chars > 0
