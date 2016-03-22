@@ -15,7 +15,6 @@ class Top3 < IRCPlugin
     :top3 => 'displays the top 3 Japanese writers of the month. optional .top3 exclude user1 user2... (made by amigojapan)',
     :rank => 'displays the rank of the user(made by amigojapan)',
     :chart => 'shows a chart of user progress. Usage: .chart or .chart user1 user2 etc (made by amigojapan)',
-    :chart_vs => 'shows a chart of user progress of user versus user, usage: .chart_vs user1 user2 (made by amigojapan)',
     :chart_top3 => 'shows a chart of you and the top3 users of this month, usage .chart_top3 exclude user1 user2... (made by amigojapan)',
     :opt_out => 'Takes away permision for people to see your data (made by amigojapan)',
     :reopt_in => 'Regives permision of people to see your data (made by amigojapan)',
@@ -49,105 +48,6 @@ class Top3 < IRCPlugin
     @opt_outs[msg.nick]='reopted-in'
     @storage.write('Optouts', @opt_outs)
     msg.reply 'you have re-opted in'
-  end
-
-  def chart_vs(msg)
-    user1=msg.message.split(/ /)[1] # get parameter
-    user2=msg.message.split(/ /)[2] # get parameter
-    if user1 == nil or user2 == nil
-      msg.reply 'Usage: .chart_vs user1 user2'
-      return
-    end
-    if @top3[user1].nil? or @top3[user2].nil? #year not found
-      msg.reply 'Sorry, we have no data for one of these users, check spelling.'
-      return
-    end
-    charturl1='https://chart.googleapis.com/chart?cht=lc&chs=500&chd=t:'
-    user1_years=JSON.parse(@top3[user1])
-    user2_years=JSON.parse(@top3[user2])
-    @opt_outs.each_key do |optoutskey|
-      if optoutskey==user1
-        if @opt_outs[optoutskey]=='opted-out'
-          msg.reply 'Sorry, ' + user1 + ' has opted out of charting'
-          return
-        end
-      end
-      if optoutskey==user2
-        if @opt_outs[optoutskey]=='opted-out'
-          msg.reply 'Sorry, ' + user2 + ' has opted out of charting'
-          return
-        end
-      end
-    end
-    user1_unsorted_chart=Array.new
-    user2_unsorted_chart=Array.new
-    charturl2=''
-    charturl4=''
-    charturl4+='|' #for the first year only
-    user1_labels=''
-    user2_labels=''
-    month_counter=1
-    user1_years.each_key do |year|
-      user1_years[year].each_key do |month|
-        user1_unsorted_chart.push(user1_years[year][month])
-        user1_labels+=month_counter.to_s+'|'
-        month_counter+=1
-      end
-    end
-    month_counter=1
-    user1_labels=user1_labels.chomp('|')
-    user2_years.each_key do |year|
-      user2_years[year].each_key do |month|
-        user2_unsorted_chart.push(user2_years[year][month])
-        user2_labels+= month_counter.to_s+'|'
-        month_counter+=1
-      end
-    end
-    user2_labels=user2_labels.chomp('|')
-    if user1_labels.length > user2_labels.length
-      charturl4+=user1_labels
-    else
-      charturl4+=user2_labels
-    end
-    user1_sorted_chart = user1_unsorted_chart.sort
-    max1=user1_sorted_chart.last
-    user2_sorted_chart = user2_unsorted_chart.sort
-    max2=user2_sorted_chart.last
-    max=[max1, max2].max
-    user1longest=false
-    if user1_sorted_chart.length > user2_sorted_chart.length
-      user1longest=true
-    end
-    #all values / maximum value * 100
-    current=0
-    user1_unsorted_chart.each do
-      scaled_value=(user1_unsorted_chart[current].to_f/max*100).to_i
-      charturl2+=scaled_value.to_s+','
-      current=current+1
-    end
-    unless user1longest
-      charturl2+='0,'*(user2_sorted_chart.length - user1_sorted_chart.length)
-    end
-    charturl2=charturl2.chomp(',')
-    charturl2+='%7C'
-    current=0
-    user2_unsorted_chart.each do
-      scaled_value=(user2_unsorted_chart[current].to_f/max*100).to_i
-      charturl2+=scaled_value.to_s+','
-      current=current+1
-    end
-    if user1longest
-      charturl2+='0,'*(user1_sorted_chart.length - user2_sorted_chart.length)
-    end
-    charturl2=charturl2.chomp(',')
-    charturl4+= '|1:|0|' + (max*1/4).to_s + '|mid%20'+ (max/2).to_s + '|' + (max*3/4).to_s + '|max%20' +max.to_s
-    charturl3='&chxt=x,y&chxl=0:'
-    charturl5='&chdl='
-    charturl6=user1+'|'+user2
-    charturl7='&chco='
-    charturl8='ff0000,0000ff'
-    charturl=charturl1+charturl2+charturl3+charturl4+charturl5+charturl6+charturl7+charturl8
-    msg.reply 'chart(months are months since record taking): ' + Net::HTTP.get('tinyurl.com', '/api-create.php?url='+charturl)
   end
 
   def chart_top3(msg)
@@ -470,8 +370,6 @@ class Top3 < IRCPlugin
       reopt_in(msg)
     elsif msg.bot_command == :chart_top3
       chart_top3(msg)
-    elsif msg.bot_command == :chart_vs
-      chart_vs(msg)
     elsif msg.bot_command == :mlist
       mlist(msg)
     elsif !msg.private? and !msg.bot_command
