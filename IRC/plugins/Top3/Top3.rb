@@ -119,7 +119,6 @@ class Top3 < IRCPlugin
     #all values / maximum value * 100
     current=0
     user1_unsorted_chart.each{
-      #msg.reply unsorted_chart[current]
       scaled_value=(user1_unsorted_chart[current].to_f/max*100).to_i
       charturl2+=scaled_value.to_s+','
       current=current+1
@@ -131,7 +130,6 @@ class Top3 < IRCPlugin
     charturl2+='%7C'
     current=0
     user2_unsorted_chart.each{
-      #msg.reply user2_unsorted_chart[current].to_s
       scaled_value=(user2_unsorted_chart[current].to_f/max*100).to_i
       charturl2+=scaled_value.to_s+','
       current=current+1
@@ -140,7 +138,6 @@ class Top3 < IRCPlugin
       charturl2+='0,'*(user1_sorted_chart.length - user2_sorted_chart.length)
     end
     charturl2=charturl2.chomp(',')
-    #msg.reply charturl2
     charturl4+= '|1:|0|' + (max*1/4).to_s + '|mid%20'+ (max/2).to_s + '|' + (max*3/4).to_s + '|max%20' +max.to_s
     charturl3='&chxt=x,y&chxl=0:'
     charturl5='&chdl='
@@ -149,7 +146,6 @@ class Top3 < IRCPlugin
     charturl8='ff0000,0000ff'
     charturl=charturl1+charturl2+charturl3+charturl4+charturl5+charturl6+charturl7+charturl8
     msg.reply 'chart(months are months since record taking): ' + Net::HTTP.get('tinyurl.com', '/api-create.php?url='+charturl)
-    #msg.reply "chart(warning months are months since record taking): " + charturl
   end
 
   def chart_top3(msg)
@@ -195,13 +191,11 @@ class Top3 < IRCPlugin
     #all values / maximum value * 100
     current=0
     unsorted_chart.each{
-      #msg.reply unsorted_chart[current]
       scaled_value=(unsorted_chart[current].to_f/max*100).to_i
       charturl2+=scaled_value.to_s+','
       current=current+1
     }
     charturl2=charturl2.chomp(',')
-    #msg.reply charturl2
     charturl4+= '|1:|0|' + (max*1/4).to_s + '|mid%20'+ (max/2).to_s + '|' + (max*3/4).to_s + '|max%20' +max.to_s
     charturl3='&chxt=x,y&chxl=0:'
     charturl5='&chdl='
@@ -224,77 +218,32 @@ class Top3 < IRCPlugin
         splitmsg.push(optoutskey)
       end
     }
-    #msg.reply splitmsg.to_s
     if splitmsg.include?('exclude')
       exclude_array=splitmsg.drop(splitmsg.index('exclude')+1) #make exclude list
     else
       exclude_array=Array.new
     end
     @top3.each{|data|
-      #puts data
-      #msg.reply data.to_s
       years=JSON.parse(data[1])
-      #msg.reply years.to_s
       if years[Date.today.year.to_s] #year not found
         if years[Date.today.year.to_s][Date.today.mon.to_s] #display only the entries for the current month
-          #msg.reply "not nil"
           if exclude_array
             unless exclude_array.include?(data[0]) #data[0] is the nickname
               unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s], data[0]])
-              #msg.reply  "here1"+data[0]
             end
           else
             unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s],data[0]])
-            #msg.reply  "here2"
           end
-          #if (exclude_array.nil?) or (not exclude_array.include?(data[0]))
         end
       end
       years=nil
-      #msg.reply unsorted.to_s
     }
     sorted=unsorted.sort.reverse
-    #puts sorted
     rank=0
     sorted.each{|data|
       rank=rank+1
       out=out+' #'+rank.to_s+' '+data[1]+' CJK chars:'+data[0].to_s+"\n"
     }
-    #rank=0
-    #place=0
-    #sorted.each{|data|
-    #  place=place+1
-    #  if data[1] == msg.nick
-    #    rank=place
-    #  end
-    #}
-    #if @top3.include? msg.nick
-    #  #current_user = @top3[msg.nick][0]
-    #  years=JSON.parse(@top3[msg.nick])
-    #  if years[Date.today.year.to_s].nil?
-    #      current_user = 0
-    #    else
-    #      if years[Date.today.year.to_s][Date.today.mon.to_s].nil?
-    #        current_user = 0
-    #      else
-    #        current_user = years[Date.today.year.to_s][Date.today.mon.to_s]
-    #    end
-    #  end
-    #  years=nil
-    #else
-    #  current_user = 0
-    #end
-    #out=out+"Ranked list of users for " +Time.now.to_s+" server time\n"
-    #if exclude_array.include?(msg.nick)
-    #  out=out+msg.nick+"'s data cannot be displayed he opted out or was excluded\n"
-    #else
-    #  out=out+msg.nick+"'s CJK count is: " + current_user.to_s+"\n"
-    #end
-    #if rank == 0
-    #  out=out+" "+msg.nick+" has not typed any Japanese this month :(\n"
-    #else
-    #  out=out+", currently ranked #" + rank.to_s + " of " + place.to_s+"\n"
-    #end
 
     uri = URI('https://api.github.com/gists')
 
@@ -311,19 +260,12 @@ class Top3 < IRCPlugin
     req = Net::HTTP::Post.new(uri.path)
     req.body = payload.to_json
 
-    #puts req.inspect
-    #puts req.body.inspect
-
     # GitHub API is strictly via HTTPS, so SSL is mandatory
     res = Net::HTTP.start(uri.hostname, uri.port, :use_ssl => true) do |http|
       http.request(req)
     end
 
-    #puts res.inspect
-    #puts res.body.inspect
-
     gist_reply=JSON.parse(res.body)
-    #msg.reply "List: " + gistReply["files"]["rank.txt"]["raw_url"]
     msg.reply 'Ranked list: ' + Net::HTTP.get('tinyurl.com', '/api-create.php?url='+gist_reply['files']['rank.txt']['raw_url'])
 
     #I added these just to make sure this is not causing the plugin to have a memory leak
@@ -344,37 +286,27 @@ class Top3 < IRCPlugin
         splitmsg.push(optoutskey)
       end
     }
-    #msg.reply splitmsg.to_s
     if splitmsg.include?('exclude')
       exclude_array=splitmsg.drop(splitmsg.index('exclude')+1) #make exclude list
     else
       exclude_array=Array.new
     end
     @top3.each{|data|
-      #puts data
-      #msg.reply data.to_s
       years=JSON.parse(data[1])
-      #msg.reply years.to_s
       if years[Date.today.year.to_s] #year not found
         if years[Date.today.year.to_s][Date.today.mon.to_s] #display only the entries for the current month
-          #msg.reply "not nil"
           if exclude_array
             unless exclude_array.include?(data[0]) #data[0] is the nickname
               unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s], data[0]])
-              #msg.reply  "here1"+data[0]
             end
           else
             unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s],data[0]])
-            #msg.reply  "here2"
           end
-          #if (exclude_array.nil?) or (not exclude_array.include?(data[0]))
         end
       end
       years=nil
-      #msg.reply unsorted.to_s
     }
     sorted=unsorted.sort.reverse
-    #puts sorted
     rank=0
     sorted.take(3).each{|data|
       rank=rank+1
@@ -389,7 +321,6 @@ class Top3 < IRCPlugin
       end
     }
     if @top3.include? msg.nick
-      #current_user = @top3[msg.nick][0]
       years=JSON.parse(@top3[msg.nick])
       if years[Date.today.year.to_s].nil?
           current_user = 0
@@ -437,15 +368,9 @@ class Top3 < IRCPlugin
     out=''
     unsorted=Array.new
     @top3.each{|data|
-      #puts data
-      #if data[1][1].to_s == Date.today.mon.to_s #display only the entries for the current month
-      #  unsorted.push([data[1][0],data[0]])
-      #end
       years=JSON.parse(data[1])
-      #msg.reply years.to_s
       if years[Date.today.year.to_s] #year not found
         if years[Date.today.year.to_s][Date.today.mon.to_s] #display only the entries for the current month
-          #msg.reply "not nil"
           unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s],data[0]])
         end
       end
@@ -461,7 +386,6 @@ class Top3 < IRCPlugin
       end
     }
     if @top3.include? person
-      #current_user = @top3[person][0]
       years=JSON.parse(@top3[person])
       if years[Date.today.year.to_s] #year not found
         if years[Date.today.year.to_s][Date.today.mon.to_s] #
@@ -500,7 +424,6 @@ class Top3 < IRCPlugin
         chars=chars+1
       end
     }
-    #msg.reply @top3[msg.nick].nil?.to_s
     if @top3[msg.nick].nil? #no data add yearly and monthly arrays
       years={}
       years[Date.today.year.to_s]={}
@@ -510,12 +433,6 @@ class Top3 < IRCPlugin
       years=nil
       return
     end
-    #if years[Date.today.year].nil? #new year
-    #  years[Date.today.year]={}
-    #end
-    #if years[Date.today.year][Date.today.mon].nil? #new month
-    #  years[Date.today.year][Date.today.mon]=
-    #end
     if chars > 0
       years=JSON.parse(@top3[msg.nick])
       if years[Date.today.year.to_s].nil?
@@ -526,12 +443,6 @@ class Top3 < IRCPlugin
       end
       years[Date.today.year.to_s][Date.today.mon.to_s]+=chars
       @top3[msg.nick] =years.to_json
-      #msg.reply years[Date.today.year.to_s][Date.today.mon.to_s]
-      #if @top3.include? msg.nick
-      #  @top3[msg.nick] = [@top3[msg.nick][0]+chars,Date.today.mon]
-      #else
-      #  @top3[msg.nick] = [chars,Date.today.mon]
-      #end
       @storage.write('Top3', @top3)
     end
   end
