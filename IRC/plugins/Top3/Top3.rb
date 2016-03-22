@@ -145,13 +145,6 @@ class Top3 < IRCPlugin
     msg.reply "chart: #{tinyurlify(charturl)}"
   end
 
-  TINYURL_URL = URI('http://tinyurl.com/api-create.php')
-  def tinyurlify(url)
-    t = TINYURL_URL.dup
-    t.query = URI.encode_www_form(:url => url)
-    Net::HTTP.get(t)
-  end
-
   def mlist(msg)
     out=''
     unsorted=Array.new
@@ -211,9 +204,8 @@ class Top3 < IRCPlugin
     end
 
     gist_reply=JSON.parse(res.body)
-    msg.reply 'Ranked list: ' + Net::HTTP.get('tinyurl.com', '/api-create.php?url='+gist_reply['files']['rank.txt']['raw_url'])
+    msg.reply "Ranked list: #{tinyurlify(gist_reply['files']['rank.txt']['raw_url'])}"
   end
-
 
   def top3(msg)
     out=''
@@ -375,6 +367,13 @@ class Top3 < IRCPlugin
       @top3[msg.nick] =years.to_json
       @storage.write('Top3', @top3)
     end
+  end
+
+  TINYURL_URL = URI('http://tinyurl.com/api-create.php')
+  def tinyurlify(url)
+    t = TINYURL_URL.dup
+    t.query = URI.encode_www_form(:url => url)
+    Net::HTTP.get(t)
   end
 end
 #(done)Add year tracking
