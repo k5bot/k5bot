@@ -232,31 +232,13 @@ class Top3 < IRCPlugin
   end
 
   def rank(msg)
-    exclude_array = []
-    person=msg.message.split(/ /)[1] # get parameter
-    @opt_outs.each_key do |optoutskey|
-      if optoutskey==person
-        if @opt_outs[optoutskey]=='opted-out'
-          msg.reply 'Sorry, this user has opted out'
-          return
-        end
-      end
-    end
-    if person == nil
-      person = msg.nick
-    end
-    out=''
-    unsorted=Array.new
-    @top3.each do |data|
-      years=JSON.parse(data[1])
-      if years[Date.today.year.to_s] #year not found
-        if years[Date.today.year.to_s][Date.today.mon.to_s] #display only the entries for the current month
-          unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s], data[0]])
-        end
-      end
-    end
-    sorted=unsorted.sort.reverse
-    out += format_user_stats(person, sorted, exclude_array)
+    exclude_array = get_exclude_array
+    sorted = get_top_list(exclude_array)
+
+    person = msg.tail ? msg.tail.split : []
+    person = person.first || msg.nick
+
+    out = format_user_stats(person, sorted, exclude_array)
     msg.reply out
   end
 
