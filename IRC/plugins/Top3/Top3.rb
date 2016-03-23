@@ -145,36 +145,31 @@ class Top3 < IRCPlugin
     msg.reply "chart: #{tinyurlify(charturl)}"
   end
 
-  def get_exclude_array(msg)
-    splitmsg=msg.message.split #we need this later to get the people to exclude
-    @opt_outs.each_key do |optoutskey|
-      if @opt_outs[optoutskey]=='opted-out'
-        unless splitmsg.include?('exclude')
-          splitmsg.push('exclude')
-        end
-        splitmsg.push(optoutskey)
-      end
-    end
+  def get_exclude_array(args = '')
+    splitmsg=args.split #we need this later to get the people to exclude
     if splitmsg.include?('exclude')
-      exclude_array=splitmsg.drop(splitmsg.index('exclude')+1) #make exclude list
+      exclude_array = splitmsg.drop(splitmsg.index('exclude')+1) #make exclude list
     else
-      exclude_array=Array.new
+      exclude_array = []
     end
-    exclude_array
+
+    exclude_array + @opt_outs.find_all do |_, v|
+      v == 'opted-out'
+    end.map(&:first)
   end
 
-  def get_top_list(exclude_array = nil)
-    unsorted=Array.new
-    @top3.each do |data|
-      years=JSON.parse(data[1])
-      if years[Date.today.year.to_s] #year not found
-        if years[Date.today.year.to_s][Date.today.mon.to_s] #display only the entries for the current month
-          if exclude_array
-            unless exclude_array.include?(data[0]) #data[0] is the nickname
-              unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s], data[0]])
-            end
-          else
-            unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s], data[0]])
+  def get_top_list(exclude_array = [])
+    date_now = Date.today
+    year_now = date_now.year.to_s
+    month_now = date_now.mon.to_s
+
+    unsorted = []
+    @top3.each do |nick, data|
+      years=JSON.parse(data)
+      if years[year_now] #year not found
+        if years[year_now][month_now] #display only the entries for the current month
+          unless exclude_array.include?(nick)
+            unsorted << [years[year_now][month_now], nick]
           end
         end
       end
@@ -185,7 +180,7 @@ class Top3 < IRCPlugin
 
   def mlist(msg)
     out=''
-    exclude_array = get_exclude_array(msg)
+    exclude_array = get_exclude_array(msg.tail || '')
     sorted = get_top_list(exclude_array)
     rank=0
     sorted.each do |data|
@@ -223,7 +218,7 @@ class Top3 < IRCPlugin
 
   def top3(msg)
     out=''
-    exclude_array = get_exclude_array(msg)
+    exclude_array = get_exclude_array(msg.tail || '')
     sorted = get_top_list(exclude_array)
     rank=0
     sorted.take(3).each do |data|
