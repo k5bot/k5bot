@@ -193,16 +193,21 @@ class Top3 < IRCPlugin
       out=out+' #'+rank.to_s+' '+data[1]+' CJK chars:'+data[0].to_s+"\n"
     end
 
+    gist_reply = gistify(out)
+    msg.reply "Ranked list: #{tinyurlify(gist_reply['files']['rank.txt']['raw_url'])}"
+  end
+
+  def gistify(out)
     uri = URI('https://api.github.com/gists')
 
     payload = {
-      'description' => 'Ranked list of users for ' +Time.now.to_s+" server time\n",
-      'public' => false,
-      'files' => {
-        'rank.txt' => {
-          'content' => out
+        'description' => 'Ranked list of users for ' +Time.now.to_s+" server time\n",
+        'public' => false,
+        'files' => {
+            'rank.txt' => {
+                'content' => out
+            }
         }
-      }
     }
 
     req = Net::HTTP::Post.new(uri.path)
@@ -213,8 +218,7 @@ class Top3 < IRCPlugin
       http.request(req)
     end
 
-    gist_reply=JSON.parse(res.body)
-    msg.reply "Ranked list: #{tinyurlify(gist_reply['files']['rank.txt']['raw_url'])}"
+    JSON.parse(res.body)
   end
 
   def top3(msg)
