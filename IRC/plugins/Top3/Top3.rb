@@ -269,11 +269,11 @@ class Top3 < IRCPlugin
       out=person+"'s data cannot be displayed he opted out or was excluded"
     else
       out=person+"'s CJK count is: " + current_user.to_s
-    end
-    if rank == 0
-      out=out+' '+person+' has not typed any Japanese this month :('
-    else
-      out=out+', currently ranked #' + rank.to_s + ' of ' + place.to_s
+      if rank == 0
+        out=out+' '+person+' has not typed any Japanese this month :('
+      else
+        out=out+', currently ranked #' + rank.to_s + ' of ' + place.to_s
+      end
     end
     out
   end
