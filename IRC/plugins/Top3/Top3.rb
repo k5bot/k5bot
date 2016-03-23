@@ -230,43 +230,14 @@ class Top3 < IRCPlugin
       rank=rank+1
       out=out+' #'+rank.to_s+' '+data[1]+' CJK chars:'+data[0].to_s
     end
-    rank=0
-    place=0
-    sorted.each do |data|
-      place=place+1
-      if data[1] == msg.nick
-        rank=place
-      end
-    end
-    if @top3.include? msg.nick
-      years=JSON.parse(@top3[msg.nick])
-      if years[Date.today.year.to_s].nil?
-        current_user = 0
-      else
-        if years[Date.today.year.to_s][Date.today.mon.to_s].nil?
-          current_user = 0
-        else
-          current_user = years[Date.today.year.to_s][Date.today.mon.to_s]
-        end
-      end
-    else
-      current_user = 0
-    end
     out=out+' | '
-    if exclude_array.include?(msg.nick)
-      out=out+msg.nick+"'s data cannot be displayed he opted out or was excluded"
-    else
-      out=out+msg.nick+"'s CJK count is: " + current_user.to_s
-    end
-    if rank == 0
-      out=out+' '+msg.nick+' has not typed any Japanese this month :('
-    else
-      out=out+', currently ranked #' + rank.to_s + ' of ' + place.to_s
-    end
+    person = msg.nick
+    out += format_user_stats(person, sorted, exclude_array)
     msg.reply out
   end
 
   def rank(msg)
+    exclude_array = []
     person=msg.message.split(/ /)[1] # get parameter
     @opt_outs.each_key do |optoutskey|
       if optoutskey==person
@@ -290,6 +261,11 @@ class Top3 < IRCPlugin
       end
     end
     sorted=unsorted.sort.reverse
+    out += format_user_stats(person, sorted, exclude_array)
+    msg.reply out
+  end
+
+  def format_user_stats(person, sorted, exclude_array)
     rank=0
     place=0
     sorted.each do |data|
@@ -300,8 +276,8 @@ class Top3 < IRCPlugin
     end
     if @top3.include? person
       years=JSON.parse(@top3[person])
-      if years[Date.today.year.to_s] #year not found
-        if years[Date.today.year.to_s][Date.today.mon.to_s] #
+      if years[Date.today.year.to_s]
+        if years[Date.today.year.to_s][Date.today.mon.to_s]
           current_user = years[Date.today.year.to_s][Date.today.mon.to_s]
         else
           current_user = 0
@@ -312,13 +288,17 @@ class Top3 < IRCPlugin
     else
       current_user = 0
     end
-    out=out+person+"'s CJK count is: " + current_user.to_s
-    if current_user == 0
+    if exclude_array.include?(person)
+      out=person+"'s data cannot be displayed he opted out or was excluded"
+    else
+      out=person+"'s CJK count is: " + current_user.to_s
+    end
+    if rank == 0
       out=out+' '+person+' has not typed any Japanese this month :('
     else
       out=out+', currently ranked #' + rank.to_s + ' of ' + place.to_s
     end
-    msg.reply out
+    out
   end
 
   def contains_cjk?(s)
