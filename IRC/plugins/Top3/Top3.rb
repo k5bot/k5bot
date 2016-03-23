@@ -145,8 +145,7 @@ class Top3 < IRCPlugin
     msg.reply "chart: #{tinyurlify(charturl)}"
   end
 
-  def mlist(msg)
-    out=''
+  def get_top_list(msg)
     unsorted=Array.new
     splitmsg=msg.message.split #we need this later to get the people to exclude
     @opt_outs.each_key do |optoutskey|
@@ -176,7 +175,13 @@ class Top3 < IRCPlugin
         end
       end
     end
-    sorted=unsorted.sort.reverse
+
+    unsorted.sort.reverse
+  end
+
+  def mlist(msg)
+    out=''
+    sorted = get_top_list(msg)
     rank=0
     sorted.each do |data|
       rank=rank+1
@@ -209,36 +214,7 @@ class Top3 < IRCPlugin
 
   def top3(msg)
     out=''
-    unsorted=Array.new
-    splitmsg=msg.message.split #we need this later to get the people to exclude
-    @opt_outs.each_key do |optoutskey|
-      if @opt_outs[optoutskey]=='opted-out'
-        unless splitmsg.include?('exclude')
-          splitmsg.push('exclude')
-        end
-        splitmsg.push(optoutskey)
-      end
-    end
-    if splitmsg.include?('exclude')
-      exclude_array=splitmsg.drop(splitmsg.index('exclude')+1) #make exclude list
-    else
-      exclude_array=Array.new
-    end
-    @top3.each do |data|
-      years=JSON.parse(data[1])
-      if years[Date.today.year.to_s] #year not found
-        if years[Date.today.year.to_s][Date.today.mon.to_s] #display only the entries for the current month
-          if exclude_array
-            unless exclude_array.include?(data[0]) #data[0] is the nickname
-              unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s], data[0]])
-            end
-          else
-            unsorted.push([years[Date.today.year.to_s][Date.today.mon.to_s], data[0]])
-          end
-        end
-      end
-    end
-    sorted=unsorted.sort.reverse
+    sorted = get_top_list(msg)
     rank=0
     sorted.take(3).each do |data|
       rank=rank+1
