@@ -4,10 +4,12 @@
 
 # Top3 plugin
 
+require 'set'
 require 'uri'
-require 'net/http'
-require_relative '../../IRCPlugin'
 require 'date'
+require 'net/http'
+
+require_relative '../../IRCPlugin'
 
 class Top3 < IRCPlugin
   Description = 'top3 gives the top 3 Japanese writers of the month (made by amigojapan)'
@@ -84,7 +86,7 @@ class Top3 < IRCPlugin
 
     person_data = nicks.map do |person|
       if @opt_outs[person] == 'opted-out'
-        msg.reply 'Sorry, this user has opted out.'
+        msg.reply "Sorry, #{person} has opted out."
         return
       end
       data = @top3[person] && JSON.parse(@top3[person])
@@ -142,7 +144,9 @@ class Top3 < IRCPlugin
     }
     charturl.query = URI.encode_www_form(params)
 
-    msg.reply "chart: #{tinyurlify(charturl)}"
+    tiny_url = tinyurlify(charturl)
+
+    msg.reply("Chart: #{tiny_url}")
   end
 
   def get_exclude_array(args = '')
@@ -152,6 +156,8 @@ class Top3 < IRCPlugin
     else
       exclude_array = []
     end
+
+    exclude_array = Set.new(exclude_array)
 
     exclude_array + @opt_outs.find_all do |_, v|
       v == 'opted-out'
@@ -165,38 +171,36 @@ class Top3 < IRCPlugin
 
     unsorted = []
     @top3.each do |nick, data|
-      years=JSON.parse(data)
-      if years[year_now] #year not found
-        if years[year_now][month_now] #display only the entries for the current month
-          unless exclude_array.include?(nick)
-            unsorted << [years[year_now][month_now], nick]
-          end
-        end
-      end
+      next if exclude_array.include?(nick)
+      years = JSON.parse(data)
+      next unless years[year_now] #year not found
+      next unless years[year_now][month_now] #display only the entries for the current month
+
+      unsorted << [years[year_now][month_now], nick]
     end
 
     unsorted.sort.reverse
   end
 
   def mlist(msg)
-    out=''
     exclude_array = get_exclude_array(msg.tail || '')
     sorted = get_top_list(exclude_array)
-    rank=0
-    sorted.each do |data|
-      rank=rank+1
-      out=out+' #'+rank.to_s+' '+data[1]+' CJK chars:'+data[0].to_s+"\n"
-    end
+
+    out = sorted.each_with_index.map do |(cnt, nick), rank|
+      " ##{rank+1} #{nick} CJK chars: #{cnt}\n"
+    end.join
 
     gist_reply = gistify(out)
-    msg.reply "Ranked list: #{tinyurlify(gist_reply['files']['rank.txt']['raw_url'])}"
+    tiny_url = tinyurlify(gist_reply['files']['rank.txt']['raw_url'])
+
+    msg.reply("Ranked list: #{tiny_url}")
   end
 
-  def gistify(out)
-    uri = URI('https://api.github.com/gists')
+  GIST_URI = URI('https://api.github.com/gists')
 
+  def gistify(out)
     payload = {
-        'description' => 'Ranked list of users for ' +Time.now.to_s+" server time\n",
+        'description' => "Ranked list of users for #{Time.now} server time\n",
         'public' => false,
         'files' => {
             'rank.txt' => {
@@ -205,11 +209,11 @@ class Top3 < IRCPlugin
         }
     }
 
-    req = Net::HTTP::Post.new(uri.path)
+    req = Net::HTTP::Post.new(GIST_URI.path)
     req.body = payload.to_json
 
     # GitHub API is strictly via HTTPS, so SSL is mandatory
-    res = Net::HTTP.start(uri.hostname, uri.port, :use_ssl => true) do |http|
+    res = Net::HTTP.start(GIST_URI.hostname, GIST_URI.port, :use_ssl => true) do |http|
       http.request(req)
     end
 
@@ -217,18 +221,19 @@ class Top3 < IRCPlugin
   end
 
   def top3(msg)
-    out=''
     exclude_array = get_exclude_array(msg.tail || '')
     sorted = get_top_list(exclude_array)
-    rank=0
-    sorted.take(3).each do |data|
-      rank=rank+1
-      out=out+' #'+rank.to_s+' '+data[1]+' CJK chars:'+data[0].to_s
+
+    sorted_take = sorted.take(3)
+    out = sorted_take.each_with_index.map do |(cnt, nick), rank|
+      " ##{rank+1} #{nick} CJK chars: #{cnt}"
+    end.join
+
+    unless sorted_take.any? {|_, nick| nick == msg.nick}
+      out += ' | ' + format_user_stats(msg.nick, sorted, exclude_array)
     end
-    out=out+' | '
-    person = msg.nick
-    out += format_user_stats(person, sorted, exclude_array)
-    msg.reply out
+
+    msg.reply(out)
   end
 
   def rank(msg)
@@ -239,43 +244,25 @@ class Top3 < IRCPlugin
     person = person.first || msg.nick
 
     out = format_user_stats(person, sorted, exclude_array)
-    msg.reply out
+
+    msg.reply(out)
   end
 
   def format_user_stats(person, sorted, exclude_array)
-    rank=0
-    place=0
-    sorted.each do |data|
-      place=place+1
-      if data[1] == person
-        rank=place
-      end
-    end
-    if @top3.include? person
-      years=JSON.parse(@top3[person])
-      if years[Date.today.year.to_s]
-        if years[Date.today.year.to_s][Date.today.mon.to_s]
-          current_user = years[Date.today.year.to_s][Date.today.mon.to_s]
-        else
-          current_user = 0
-        end
-      else
-        current_user = 0
-      end
-    else
-      current_user = 0
-    end
     if exclude_array.include?(person)
-      out=person+"'s data cannot be displayed he opted out or was excluded"
+      "#{person}'s data cannot be displayed; he opted out or was excluded."
     else
-      out=person+"'s CJK count is: " + current_user.to_s
-      if rank == 0
-        out=out+' '+person+' has not typed any Japanese this month :('
+      rank = sorted.index do |_, nick|
+        nick == person
+      end
+
+      if rank
+        current_user, _ = sorted[rank]
+        "#{person}'s CJK count is: #{current_user}, currently ranked ##{rank+1} of #{sorted.size}"
       else
-        out=out+', currently ranked #' + rank.to_s + ' of ' + place.to_s
+        "#{person} has not typed any Japanese this month :("
       end
     end
-    out
   end
 
   def contains_cjk?(s)
