@@ -112,6 +112,8 @@ class Top3 < IRCPlugin
     person_data = Hash[person_data]
 
     timeline = person_data.values.flat_map(&:keys).sort.uniq
+    timeline = timeline[-24..-1] if timeline.size > 24
+
     max = person_data.values.flat_map(&:values).max
 
     prev_year = 0
