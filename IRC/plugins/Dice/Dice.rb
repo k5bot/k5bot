@@ -12,11 +12,32 @@ class Dice < IRCPlugin
     :roll => "rolls the dice. Supports simple dice notation \
 (e.g. 2d6 means roll two 6-sided dice, the default when the argument is omitted)",
   }
+  Dependencies = [ :StorageYAML ]
+
+  def afterLoad
+    @storage = @plugin_manager.plugins[:StorageYAML]
+
+    @dice = @storage.read('dice') || {}
+  end
+
+  def beforeUnload
+    @dice = nil
+
+    @storage = nil
+
+    nil
+  end
 
   def on_privmsg(msg)
     case msg.bot_command
     when :roll
       spec = msg.tail || '2d6'
+
+      if @dice[spec.downcase]
+        msg.reply(custom_outputs(@dice[spec.downcase]))
+        return
+      end
+
       m = spec.match(/^(\d{1,6})[dD](\d{1,6})$/)
       unless m
         msg.reply("Unknown dice notation: #{spec}")
@@ -51,6 +72,30 @@ class Dice < IRCPlugin
     else
       "|#{num}|"
     end
+  end
+
+  def custom_outputs(dice_table)
+    dice_table = dice_table.map do |el|
+      if el.is_a?(String)
+        {
+            :text => el,
+            :p => 1.0
+        }
+      else
+        el
+      end
+    end
+
+    total = dice_table.map {|el| el[:p]}.inject(0, :+)
+    roll = Kernel.rand * total
+
+    choice = dice_table.take_while do |el|
+      res = roll >= 0
+      roll -= el[:p]
+      res
+    end.last
+
+    choice[:text]
   end
 
   #TODO: reimplement with I18N
