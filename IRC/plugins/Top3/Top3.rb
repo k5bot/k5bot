@@ -15,7 +15,7 @@ class Top3 < IRCPlugin
   Description = 'top3 gives the top 3 Japanese writers of the month (made by amigojapan)'
   Commands = {
     :top3 => 'displays the top 3 Japanese writers of the month. optional .top3 exclude user1 user2... (made by amigojapan)',
-    :rank => 'displays the rank of the user(made by amigojapan)',
+    :rank => 'displays the rank and stats of given user (omitting name means current user, integer means user with that rank) (made by amigojapan)',
     :chart => 'shows a chart of user progress. Usage: .chart or .chart user1 user2 etc (made by amigojapan)',
     #:chart_top3 => 'shows a chart of you and the top3 users of this month, usage .chart_top3 exclude user1 user2... (made by amigojapan)',
     :opt_out => 'Takes away permision for people to see your data (made by amigojapan)',
@@ -245,6 +245,22 @@ class Top3 < IRCPlugin
     person = msg.tail ? msg.tail.split : []
     person = person.first || msg.nick
 
+    rank = Top3.get_int(person)
+    if rank
+      person = if rank < 0
+                 sorted[rank]
+               elsif rank > 0
+                 sorted[rank - 1]
+               end
+      unless person
+        msg.reply("No person with such rank (#{sorted.size} total).")
+        return
+      end
+
+      # extract nick
+      person = person[1]
+    end
+
     out = format_user_stats(person, sorted, exclude_array)
 
     msg.reply(out)
@@ -307,6 +323,16 @@ class Top3 < IRCPlugin
     t.query = URI.encode_www_form(:url => url)
     Net::HTTP.get(t)
   end
+
+  private
+
+  def self.get_int(s)
+    return unless s
+    index_str = s[/^\s*-?[0-9０１２３４５６７８９]+\s*$/]
+    return unless index_str
+    index_str.tr!('０１２３４５６７８９','0123456789')
+    index_str.to_i
+    end
 end
 #(done)Add year tracking
 #add anual top3
