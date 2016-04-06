@@ -62,7 +62,7 @@ class Googler < IRCPlugin
         return unless word
         lookup = find_count(word)
         if lookup && lookup > 0
-          msg.reply("Estimated #{lookup} hit(s) for #{word} in Google")
+          msg.reply("Estimated #{lookup} hit(s) for \"#{word}\" in Google")
         else
           msg.reply("No hits for \"#{word}\" in Google")
         end
