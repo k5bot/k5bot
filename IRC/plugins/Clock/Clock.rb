@@ -10,6 +10,7 @@ require 'tzinfo'
 require 'iso_country_codes'
 
 require_relative '../../IRCPlugin'
+require_relative '../../LayoutableText'
 
 class Clock < IRCPlugin
   Description = 'The Clock plugin tells the time.'
