@@ -16,6 +16,7 @@ class Googler < IRCPlugin
   Commands = {
       :g => 'searches Google and returns the first result',
       :g? => 'searches Google and returns results as a menu',
+      :gcount => 'searches Google and returns estimated hit count',
   }
 
   Dependencies = [:Menu]
@@ -56,6 +57,15 @@ class Googler < IRCPlugin
             msg.reply("#{text} - #{description}")
           end
         end
+      when :gcount
+        word = msg.tail
+        return unless word
+        lookup = find_count(word)
+        if lookup && lookup > 0
+          msg.reply("Estimated #{lookup} hit(s) for #{word} in Google")
+        else
+          msg.reply("No hits for \"#{word}\" in Google")
+        end
     end
   end
 
@@ -86,5 +96,17 @@ class Googler < IRCPlugin
         yielder << result
       end
     end.take(size)
+  end
+
+  def find_count(query)
+    search = Google::Search::Web.new
+    search.query = query
+    search.size = :small
+    search.language = :ja
+
+    response = search.next.response
+    if response.valid?
+      response.estimated_count
+    end
   end
 end
