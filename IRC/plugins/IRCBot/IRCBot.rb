@@ -349,7 +349,7 @@ class IRCBot < IRCPlugin
   end
 
   def layout_to_byte_limit(layoutable_text, byte_limit, allow_overflow)
-    layout = layoutable_text.layout_calculate do |line, minimum_size: false, ** _|
+    layoutable_text.layout_calculate do |line, minimum_size: false, **_|
     line = encode(line.dup)
 
     # char-per-char replace
