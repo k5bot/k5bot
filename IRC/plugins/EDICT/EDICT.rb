@@ -123,7 +123,7 @@ See '.faq regexp'",
     menu = lookup.map do |e, render_kanji, render_kana|
       kanji_list = e.japanese
 
-      description = if render_kanji && !kanji_list.empty? then
+      description = if render_kanji && !kanji_list.empty?
                       render_kana ? "#{kanji_list} (#{e.reading})" : kanji_list
                     elsif e.reading
                       e.reading
