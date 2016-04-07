@@ -107,9 +107,15 @@ class MapDoc < IRCPlugin
   def layout_catalog_keys(full_ref, sub_catalog)
     all_keys = sub_catalog.keys.select { |x| !x.nil? }
 
+    separator = if all_keys.all? {|k| k.size == 1}
+                  ''
+                else
+                  ', '
+                end
+
     LayoutableText::Prefixed.new(
         "#{full_ref.join(' ')} contains: ",
-        LayoutableText::SimpleJoined.new(', ', all_keys)
+        LayoutableText::SimpleJoined.new(separator, all_keys)
     )
   end
 
