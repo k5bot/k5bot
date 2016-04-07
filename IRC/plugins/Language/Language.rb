@@ -212,8 +212,6 @@ class Language < IRCPlugin
   end
 
   def self.parse_complex_regexp_raw(word)
-    word = regexp_half_width(word)
-
     # replace & with @, where it doesn't conflict
     # with && used in character groups.
     word = regexp_custom_ampersand(word)
