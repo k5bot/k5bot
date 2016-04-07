@@ -258,7 +258,7 @@ class Language < IRCPlugin
 
   # Replace full-width special symbols with their regular equivalents.
   def self.regexp_half_width(word)
-    word.tr('　＆｜「」（）。＊＾＄', ' &|[]().*^$')
+    word.tr('　＆｜「」（）。＊＾＄：', ' &|[]().*^$:')
   end
 
   # Replace & not inside [] with @
