@@ -217,7 +217,7 @@ class Language < IRCPlugin
     word = regexp_custom_ampersand(word)
 
     # split into larger groups by && operator.
-    differing_conditions = word.split(/@@/).map {|s| s.strip }
+    differing_conditions = word.split(PRIVATE_REGEXP_SEPARATOR_CHAR+PRIVATE_REGEXP_SEPARATOR_CHAR).map {|s| s.strip }
 
     # parse sub-expressions
     differing_conditions.map {|w| parse_chained_regexps(w)}
@@ -259,7 +259,10 @@ class Language < IRCPlugin
     word.tr('　＆｜「」（）。＊＾＄：', ' &|[]().*^$:')
   end
 
-  # Replace & not inside [] with @
+  # Just a char randomly picked from Unicode Private Use Area.
+  PRIVATE_REGEXP_SEPARATOR_CHAR = "\uF174"
+
+  # Replace & not inside [] with PRIVATE_REGEXP_SEPARATOR_CHAR
   def self.regexp_custom_ampersand(word)
     depth = 0
     result = ''
@@ -270,7 +273,7 @@ class Language < IRCPlugin
       when ']'
         depth-=1
       when '&'
-        c = '@' if 0==depth
+        c = PRIVATE_REGEXP_SEPARATOR_CHAR if 0==depth
       end
       result << c
     end
@@ -279,7 +282,7 @@ class Language < IRCPlugin
   end
 
   def self.parse_chained_regexps(word)
-    multi_conditions = word.split(/@/).map {|s| s.strip }
+    multi_conditions = word.split(PRIVATE_REGEXP_SEPARATOR_CHAR).map {|s| s.strip }
 
     multi_conditions.map do |term|
       parse_sub_regexp(term)
