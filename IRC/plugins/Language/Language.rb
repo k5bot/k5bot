@@ -310,7 +310,7 @@ class Language < IRCPlugin
     word.gsub!(KATAKANA_CHAR_GROUP_MATCHER, KATAKANA_CHAR_GROUP)
     word.gsub!(KANA_CHAR_GROUP_MATCHER, KANA_CHAR_GROUP)
     word.gsub!(NON_KANA_CHAR_GROUP_MATCHER, NON_KANA_CHAR_GROUP)
-    Regexp.new(word, Regexp::EXTENDED)
+    Regexp.new(word)
   end
 
   def load_unicode_blocks(file_name)
