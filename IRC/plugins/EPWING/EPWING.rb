@@ -137,6 +137,12 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
   SPACE_REGEXP = /[ 　]+/
   USER_GAIJI_REGEXP = /^[WwNn]\h{4}$/
 
+  BRAILLE_CHARMAP = (0..255).map do |code|
+    code = code.to_s(2).rjust(8, '0')
+    code = code[7] + code[6] + code[5] + code[3] + code[1] + code[4] + code[2] + code[0]
+    0x2800 + code.to_i(2)
+  end.pack('U*')
+
   def on_privmsg(msg)
     word = msg.tail
     return unless word
@@ -167,10 +173,12 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
       when :gaiji
         change_gaiji(msg, word)
       when :'gaiji?'
-        display_gaiji(msg, word, [' ','▄','▀','█'])
+        display_gaiji(msg, word, BRAILLE_CHARMAP, map_width: 2, map_height: 4)
       when :'gaiji??'
-        display_gaiji(msg, word, %w(░ ▄ ▀ █))
+        display_gaiji(msg, word, [' ','▄','▀','█'])
       when :'gaiji???'
+        display_gaiji(msg, word, %w(░ ▄ ▀ █))
+      when :'gaiji????'
         display_gaiji(msg, word, %w(░ ▓)) # 'Ｏ', '　'
       when :epwing
         return unless check_and_complain(@router, msg, :can_use_mass_epwing_lookup)
