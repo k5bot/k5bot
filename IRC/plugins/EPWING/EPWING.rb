@@ -314,7 +314,7 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
     @storage.write(book_record.gaiji_file, book_record.gaiji_data)
   end
 
-  def display_gaiji(msg, word, charmap)
+  def display_gaiji(msg, word, charmap, map_width: 1, map_height: Math.log2(charmap.size).to_i)
     return unless check_and_complain(@router, msg, :can_add_gaiji)
     dictionary, gaiji = word.split(SPACE_REGEXP, 2)
     book_record = @books[dictionary.downcase.to_sym]
@@ -369,32 +369,32 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
       lines << r
     end
 
-    case charmap.size
-    when 4
-      lines = lines.each_slice(2).map do |top_line, bottom_line|
-        top_line.each_char.zip(bottom_line.each_char).map do |top_char, bottom_char|
-          x = top_char == '0' ? 0 : 2
-          y = bottom_char == '0' ? 0 : 1
-          charmap[x+y]
-        end.join
+    lines = lines.each_slice(map_height).map do |sl|
+      sl = sl.map do |line|
+        line.each_char.each_slice(map_width).map do |chunk|
+          chunk.join.ljust(map_width)
+        end.to_a
       end
 
-      while lines.first && lines.first.delete(charmap[0]).empty?
-        lines.shift
-        skipped_first += 1
+      sl = sl.transpose
+      sl = sl.map(&:join)
+
+      sl = sl.map do |c|
+        c = c.to_i(2)
+        charmap[c]
       end
 
-      while lines.last && lines.last.delete(charmap[0]).empty?
-        lines.pop
-        skipped_last += 1
-      end
-    when 2
-      lines.each do |l|
-        l.gsub!(/0/, charmap[0])
-        l.gsub!(/1/, charmap[1])
-      end
-    else
-      raise "Bug! Charmap size is #{charmap.size}"
+      sl.join
+    end
+
+    while lines.first && lines.first.delete(charmap[0]).empty?
+      lines.shift
+      skipped_first += 1
+    end
+
+    while lines.last && lines.last.delete(charmap[0]).empty?
+      lines.pop
+      skipped_last += 1
     end
 
     if skipped_first > 0
