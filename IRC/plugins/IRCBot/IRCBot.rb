@@ -172,10 +172,12 @@ class IRCBot < IRCPlugin
   end
 
   def irc_send(text, opts = {})
+    return unless @sock
     do_send_raw(truncate_for_irc_client(opts.merge(:original => text)))
   end
 
   def send_raw(opts)
+    return unless @sock
     unless opts.is_a?(Hash)
       opts = {:original => opts}
     end
@@ -281,6 +283,7 @@ class IRCBot < IRCPlugin
     if @sock
       log(:log, 'Forcibly closing socket')
       @sock.close
+      @sock = nil
     end
   end
 
