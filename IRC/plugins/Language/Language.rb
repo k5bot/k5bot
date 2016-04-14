@@ -60,10 +60,14 @@ class Language < IRCPlugin
     @hira2kata = Language::sort_hash(
         @kata2hira.invert
     ) {|k, _| -k.length}
+    @hira2rom = Language::sort_hash(
+        YAML.load_file("#{plugin_root}/hira2rom.yaml")
+    ) {|k, _| -k.length}
 
     @rom2kana = Language::hash_to_replacer(@rom2kana)
     @kata2hira = Language::hash_to_replacer(@kata2hira)
     @hira2kata = Language::hash_to_replacer(@hira2kata)
+    @hira2rom = Language::hash_to_replacer(@hira2rom)
 
     @unicode_blocks, @unicode_desc = load_unicode_blocks("#{plugin_root}/unicode_blocks.txt")
   end
@@ -75,6 +79,8 @@ class Language < IRCPlugin
       msg.reply(romaji_to_kana msg.tail)
     when :romaja
       msg.reply(hangeul_to_romaja(msg.tail).join)
+    when :romaji
+      msg.reply(kana_to_romaji(msg.tail))
     end
   end
 
@@ -103,6 +109,23 @@ class Language < IRCPlugin
       h = @rom2kana.mapping[r]
       k[0].eql?(r[0]) ? h : hiragana_to_katakana(h)
     end
+  end
+
+  def kana_to_romaji(text)
+    res = text.dup
+    res.gsub!(@hira2rom.regex) do |k|
+      @hira2rom.mapping[k]
+    end
+    res = katakana_to_hiragana(res)
+    res.gsub!(@hira2rom.regex) do |k|
+      @hira2rom.mapping[k].upcase
+    end
+    while res.gsub!(/[っッ]([^っッ])/, '\1\1')
+      # loop until no tsus are left
+    end
+    res.gsub!(/っ$/, 'xtu')
+    res.gsub!(/ッ$/, 'XTU')
+    res
   end
 
   def hiragana_to_katakana(text)
