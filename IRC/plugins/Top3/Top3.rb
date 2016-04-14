@@ -332,7 +332,7 @@ class Top3 < IRCPlugin
     return unless index_str
     index_str.tr!('０１２３４５６７８９','0123456789')
     index_str.to_i
-    end
+  end
 end
 #(done)Add year tracking
 #add anual top3
