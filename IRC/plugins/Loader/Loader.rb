@@ -17,7 +17,7 @@ class Loader < IRCPlugin
   def on_privmsg(msg)
     return unless msg.tail
 
-    dispatch_message_by_command(msg, [:load, :unload]) do
+    dispatch_message_by_command(msg, [:load, :unload, :hotload]) do
       check_and_complain(@plugin_manager.plugins[:Router], msg, :can_manage_plugins)
     end
   end
@@ -33,6 +33,15 @@ class Loader < IRCPlugin
 
   def msg_to_principal(msg)
     msg.principals.first
+  end
+
+  def cmd_hotload(msg)
+    plugins = msg.tail.split
+
+    plugins.each do |name|
+      @plugin_manager.hot_reload_plugin(name)
+      msg.reply("'#{name}' hotloaded.")
+    end
   end
 
   def cmd_load(msg)

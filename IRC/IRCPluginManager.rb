@@ -82,6 +82,19 @@ class IRCPluginManager
     true
   end
 
+  def hot_reload_plugin(name)
+    name = name.to_s
+    return if name !~ /\A[a-zA-Z0-9]+\Z/m
+    return unless @plugins[name.to_sym]
+    requested = plugin_file_name(name)
+    filename = Dir.glob(requested, File::FNM_CASEFOLD).first
+    unless requested.eql?(filename)
+      log(:error, "Cannot find plugin '#{name}'.")
+      return false
+    end
+    load(filename)
+  end
+
   protected
 
   # Must be overridden, in order to provide nonempty configuration
