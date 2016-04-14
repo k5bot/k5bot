@@ -158,7 +158,7 @@ class Language < IRCPlugin
     end
     kata_candidates << ['ッ', 'XTU'] if r.match('XTU')
 
-    hira_candidates + kata_candidates
+    (hira_candidates + kata_candidates).sort_by(&:first)
   end
 
   def hiragana_to_katakana(text)
