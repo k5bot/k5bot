@@ -89,7 +89,14 @@ class Language < IRCPlugin
       msg.reply(lookup)
     when :testcomplexr
       lookup = parse_complex_regexp(msg.tail)
-      lookup = LayoutableText::SimpleJoined.new(' ', lookup.map(&:to_s))
+      lookup = lookup.map do |sub|
+        if sub.is_a?(Array)
+          ['['] + sub.map(&:to_s) + [']']
+        else
+          sub
+        end
+      end.flatten(1)
+      lookup = LayoutableText::SimpleJoined.new(' ', lookup)
       msg.reply(lookup)
     end
   end
