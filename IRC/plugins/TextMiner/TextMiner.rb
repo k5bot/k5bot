@@ -37,6 +37,8 @@ If the regexp contains round-braced groups, only text matching these groups is r
   MAX_WORDCOUNT_LINES = 2
 
   def afterLoad
+    @language = @plugin_manager.plugins[:Language]
+
     dir = @config[:data_directory]
     dir ||= '~/.ircbot/text'
 
@@ -66,6 +68,8 @@ If the regexp contains round-braced groups, only text matching these groups is r
 
     @files = nil
     @data_directory = nil
+
+    @language = nil
 
     nil
   end
@@ -104,7 +108,7 @@ If the regexp contains round-braced groups, only text matching these groups is r
                     # Find occurrences of all words in given space-separated list
                     word.split.uniq.map{|w| ContainsQuery.new(w)}
                   else
-                    [RegexpAllQuery.new(Language.parse_complex_regexp_raw(word).flatten, word)]
+                    [RegexpAllQuery.new(@language.parse_complex_regexp_raw(word).flatten, word)]
                   end
                 else
                   # If given no arguments, assume the user wanted info for
@@ -142,7 +146,7 @@ appears in #{counts.size}/#{@files.size} scripts)"
                   if :example.eql?(msg.bot_command)
                     ContainsQuery.new(word)
                   else
-                    RegexpAllQuery.new(Language.parse_complex_regexp_raw(word).flatten, word)
+                    RegexpAllQuery.new(@language.parse_complex_regexp_raw(word).flatten, word)
                   end
                 elsif nav && nav.query
                   # If given no arguments, assume the user wanted
@@ -187,7 +191,7 @@ appears in #{counts.size}/#{@files.size} scripts)"
           results = queries.map {|q| @occurrence_searches[q]}
           results = results.map {|r| [r.query, r.occurrences_total]}
         else
-          query = RegexpAllQuery.new(Language.parse_complex_regexp_raw(word).flatten, word)
+          query = RegexpAllQuery.new(@language.parse_complex_regexp_raw(word).flatten, word)
           ensure_searches([msg.context, :wordcount], [:occurrence_map], query)
           results = @occurrence_map_searches[query].occurrence_total_map.to_a
 

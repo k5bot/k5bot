@@ -234,10 +234,10 @@ class Language < IRCPlugin
     end
   end
 
-  def self.parse_complex_regexp_raw(word)
+  def parse_complex_regexp_raw(word)
     # replace & with @, where it doesn't conflict
     # with && used in character groups.
-    word = regexp_custom_ampersand(word)
+    word = Language.regexp_custom_ampersand(word)
 
     # split into larger groups by && operator.
     differing_conditions = word.split(PRIVATE_REGEXP_SEPARATOR_CHAR+PRIVATE_REGEXP_SEPARATOR_CHAR).map {|s| s.strip }
@@ -246,7 +246,7 @@ class Language < IRCPlugin
     differing_conditions.map {|w| parse_chained_regexps(w)}
   end
 
-  def self.parse_complex_regexp(word)
+  def parse_complex_regexp(word)
     regs = parse_complex_regexp_raw(word)
 
     operation = case regs.size
@@ -304,7 +304,7 @@ class Language < IRCPlugin
     result
   end
 
-  def self.parse_chained_regexps(word)
+  def parse_chained_regexps(word)
     multi_conditions = word.split(PRIVATE_REGEXP_SEPARATOR_CHAR).map {|s| s.strip }
 
     multi_conditions.map do |term|
@@ -328,7 +328,7 @@ class Language < IRCPlugin
   KANA_CHAR_GROUP = '[\u3040-\u30FF\uFF61-\uFF9D\u31F0-\u31FF]'
   NON_KANA_CHAR_GROUP = '[^\u3040-\u30FF\uFF61-\uFF9D\u31F0-\u31FF]'
 
-  def self.parse_sub_regexp(word)
+  def parse_sub_regexp(word)
     word.gsub!(HIRAGANA_CHAR_GROUP_MATCHER, HIRAGANA_CHAR_GROUP)
     word.gsub!(KATAKANA_CHAR_GROUP_MATCHER, KATAKANA_CHAR_GROUP)
     word.gsub!(KANA_CHAR_GROUP_MATCHER, KANA_CHAR_GROUP)

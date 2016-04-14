@@ -32,7 +32,7 @@ See '.faq regexp'",
   def afterLoad
     load_helper_class(:EDICTEntry)
 
-    @l = @plugin_manager.plugins[:Language]
+    @language = @plugin_manager.plugins[:Language]
     @m = @plugin_manager.plugins[:Menu]
 
     @db = database_connect("sqlite://#{(File.dirname __FILE__)}/edict.sqlite", :encoding => 'utf8')
@@ -49,7 +49,7 @@ See '.faq regexp'",
     @db = nil
 
     @m = nil
-    @l = nil
+    @language = nil
 
     unload_helper_class(:EDICTEntry)
 
@@ -61,7 +61,7 @@ See '.faq regexp'",
     when :j
       word = msg.tail
       return unless word
-      variants = @l.variants([word], *Language::JAPANESE_VARIANT_FILTERS)
+      variants = @language.variants([word], *Language::JAPANESE_VARIANT_FILTERS)
       lookup_result = lookup(variants)
       reply_with_menu(
           msg,
@@ -83,7 +83,7 @@ See '.faq regexp'",
       word = msg.tail
       return unless word
       begin
-        complex_regexp = Language.parse_complex_regexp(word)
+        complex_regexp = @language.parse_complex_regexp(word)
       rescue => e
         msg.reply("EDICT Regexp query error: #{e.message}")
         return
