@@ -89,10 +89,10 @@ class IRCHashPluginManager < IRCPluginManager
   end
 end
 
-config = if ARGV.first && File.exists?(ARGV.first)
+config = if ARGV.first && File.exist?(ARGV.first)
            ARGV.shift
          else
-           File.exists?('config.yaml') ? 'config.yaml' : nil
+           File.exist?('config.yaml') ? 'config.yaml' : nil
          end
 
 if config == nil
