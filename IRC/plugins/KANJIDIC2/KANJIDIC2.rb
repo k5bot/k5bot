@@ -52,7 +52,7 @@ if it's the only given search term",
   def afterLoad
     load_helper_class(:KANJIDIC2Entry)
 
-    @l = @plugin_manager.plugins[:Language]
+    @language = @plugin_manager.plugins[:Language]
     @m = @plugin_manager.plugins[:Menu]
 
     dict = load_dict('kanjidic2')
@@ -76,7 +76,7 @@ if it's the only given search term",
     @kanji = nil
 
     @m = nil
-    @l = nil
+    @language = nil
 
     unload_helper_class(:KANJIDIC2Entry)
 
@@ -225,7 +225,7 @@ if it's the only given search term",
     format_reading(out, order, :pinyin)
     format_reading(out, order, :korean_h) do |r_list|
       r_list.map do |hangul|
-        "#{hangul}(#{@l.hangeul_to_romaja(hangul)[0]})"
+        "#{hangul}(#{@language.hangeul_to_romaja(hangul)[0]})"
       end.join(' ')
     end
     format_reading(out, order, :ja_on)

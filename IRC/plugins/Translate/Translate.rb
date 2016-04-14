@@ -206,14 +206,14 @@ class Translate < IRCPlugin
     load_helper_class(:QuirkedJSON)
     load_helper_class(:GoogleTokenGenerator)
 
-    @l = @plugin_manager.plugins[:Language]
+    @language = @plugin_manager.plugins[:Language]
   end
 
   def beforeUnload
     unload_helper_class(:GoogleTokenGenerator)
     unload_helper_class(:QuirkedJSON)
 
-    @l = nil
+    @language = nil
 
     nil
   end
@@ -237,7 +237,7 @@ class Translate < IRCPlugin
   end
 
   def auto_detect_ja_lp(text, to_ja, from_ja)
-    @l.contains_japanese?(text) ? from_ja : to_ja
+    @language.contains_japanese?(text) ? from_ja : to_ja
   end
 
   GOOGLE_BASE_URL = 'https://translate.google.com'

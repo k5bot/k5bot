@@ -23,7 +23,7 @@ class Unicode < IRCPlugin
   Dependencies = [ :Language, :NumberSpell, :StorageYAML ]
 
   def afterLoad
-    @l = @plugin_manager.plugins[:Language]
+    @language = @plugin_manager.plugins[:Language]
     @storage = @plugin_manager.plugins[:StorageYAML]
 
     @unicode_stats = @storage.read('ustats') || {}
@@ -39,7 +39,7 @@ class Unicode < IRCPlugin
     @unicode_stats = nil
 
     @storage = nil
-    @l = nil
+    @language = nil
 
     nil
   end
@@ -132,7 +132,7 @@ class Unicode < IRCPlugin
 
   def count_unicode_stats(message, to_merge)
     # text -> array of unicode block ids
-    block_ids = @l.classify_characters(message)
+    block_ids = @language.classify_characters(message)
 
     # Count number of chars per each block
     counts = block_ids.each_with_object(Hash.new(0)) { |i, h| h[i] += 1 }
@@ -140,7 +140,7 @@ class Unicode < IRCPlugin
     counts.each_pair do |block_id, count|
       # we keep statistics saved as pairs of 'first codepoint in block' -> 'count'
       # this is because block_id-s are subject to unicode standard changes
-      cp = @l.block_id_to_codepoint(block_id)
+      cp = @language.block_id_to_codepoint(block_id)
       to_merge[cp] = (to_merge[cp] || 0) + count
     end
   end
@@ -168,7 +168,7 @@ class Unicode < IRCPlugin
     # We're doing a merge by description here,
     # to merge stats from various 'Unknown Block'-s
     stats.each do |codepoint, count|
-      desc = @l.block_id_to_description(@l.codepoint_to_block_id(codepoint))
+      desc = @language.block_id_to_description(@language.codepoint_to_block_id(codepoint))
       result[desc] = (result[desc] || 0) + count
     end
 
@@ -274,7 +274,7 @@ class Unicode < IRCPlugin
   end
 
   def find_description(msg, prefix)
-    descriptions = find_descriptions(prefix, @l.unicode_desc)
+    descriptions = find_descriptions(prefix, @language.unicode_desc)
 
     unless descriptions.instance_of? Array
       # exact match

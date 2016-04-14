@@ -15,11 +15,11 @@ class Git < IRCPlugin
   Dependencies = [ :Statistics ]
 
   def afterLoad
-    @l = @plugin_manager.plugins[:Statistics]
+    @statistics = @plugin_manager.plugins[:Statistics]
   end
 
   def beforeUnload
-    @l = nil
+    @statistics = nil
 
     nil
   end
@@ -27,9 +27,9 @@ class Git < IRCPlugin
   def on_privmsg(msg)
     case msg.bot_command
     when :pull
-      versionBefore = @l.versionString
+      versionBefore = @statistics.versionString
       gitPull
-      versionAfter = @l.versionString
+      versionAfter = @statistics.versionString
       if versionBefore == versionAfter
         msg.reply('Already up-to-date.')
       else

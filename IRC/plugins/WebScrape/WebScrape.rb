@@ -21,7 +21,7 @@ Locations shown as menu items, ordered by recency.",
 
   def afterLoad
 
-    @l = @plugin_manager.plugins[:Language]
+    @language = @plugin_manager.plugins[:Language]
     @m = @plugin_manager.plugins[:Menu]
     @u = @plugin_manager.plugins[:URL]
   end
@@ -31,7 +31,7 @@ Locations shown as menu items, ordered by recency.",
 
     @u = nil
     @m = nil
-    @l = nil
+    @language = nil
 
     nil
   end
@@ -41,7 +41,7 @@ Locations shown as menu items, ordered by recency.",
       when :gogen
         word = msg.tail
         return unless word
-        lookup = do_gogen_search(@l.romaji_to_hiragana(word))
+        lookup = do_gogen_search(@language.romaji_to_hiragana(word))
         reply_with_menu(msg, generate_menu(lookup, "\"#{word}\" in GOGEN"))
       when :jishin
         do_jishin_latest_search(msg, msg.tail)

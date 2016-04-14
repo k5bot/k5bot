@@ -20,12 +20,11 @@ class CEDICT < IRCPlugin
     :zh => 'looks up a Mandarin word in CEDICT',
     :zhen => 'looks up an English word in CEDICT',
   }
-  Dependencies = [ :Language, :Menu ]
+  Dependencies = [ :Menu ]
 
   def afterLoad
     load_helper_class(:CEDICTEntry)
 
-    @l = @plugin_manager.plugins[:Language]
     @m = @plugin_manager.plugins[:Menu]
 
     @db = database_connect("sqlite://#{(File.dirname __FILE__)}/cedict.sqlite", :encoding => 'utf8')
@@ -42,7 +41,6 @@ class CEDICT < IRCPlugin
     @db = nil
 
     @m = nil
-    @l = nil
 
     unload_helper_class(:CEDICTEntry)
 

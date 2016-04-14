@@ -17,11 +17,11 @@ class Conjugator < IRCPlugin
 
   def afterLoad
     @edict = @plugin_manager.plugins[:EDICT]
-    @l = @plugin_manager.plugins[:Language]
+    @language = @plugin_manager.plugins[:Language]
   end
 
   def beforeUnload
-    @l = nil
+    @language = nil
     @edict = nil
 
     nil
@@ -87,7 +87,7 @@ class Conjugator < IRCPlugin
   end
 
   def get_entries_with_type(word, supported_types)
-    variants = @l.variants([word], *Language::JAPANESE_VARIANT_FILTERS)
+    variants = @language.variants([word], *Language::JAPANESE_VARIANT_FILTERS)
     edict_lookup = @edict.lookup(variants)
 
     # Find entries that we can conjugate.

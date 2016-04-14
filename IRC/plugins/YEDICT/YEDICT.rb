@@ -20,12 +20,11 @@ class YEDICT < IRCPlugin
     :cn => 'looks up a Cantonese word in YEDICT',
     :cnen => 'looks up an English word in YEDICT',
   }
-  Dependencies = [ :Language, :Menu ]
+  Dependencies = [ :Menu ]
 
   def afterLoad
     load_helper_class(:YEDICTEntry)
 
-    @l = @plugin_manager.plugins[:Language]
     @m = @plugin_manager.plugins[:Menu]
 
     @db = database_connect("sqlite://#{(File.dirname __FILE__)}/yedict.sqlite", :encoding => 'utf8')
@@ -42,7 +41,6 @@ class YEDICT < IRCPlugin
     @db = nil
 
     @m = nil
-    @l = nil
 
     unload_helper_class(:YEDICTEntry)
 

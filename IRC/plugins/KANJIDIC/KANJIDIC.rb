@@ -47,13 +47,10 @@ class KANJIDIC < IRCPlugin
     :k => "looks up a given kanji, or shows list of kanji with given SKIP code or strokes number, using KANJIDIC",
     :kl => "gives a link to the kanji entry of the specified kanji at jisho.org"
   }
-  Dependencies = [ :Language ]
 
   attr_reader :kanji, :code_skip, :stroke_count
 
   def afterLoad
-    @l = @plugin_manager.plugins[:Language]
-
     @kanji = {}
     @code_skip = {}
     @stroke_count = {}
@@ -65,8 +62,6 @@ class KANJIDIC < IRCPlugin
     @stroke_count = nil
     @code_skip = nil
     @kanji = nil
-
-    @l = nil
 
     nil
   end

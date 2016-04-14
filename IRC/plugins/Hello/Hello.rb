@@ -26,13 +26,13 @@ class Hello < IRCPlugin
   TIMEOUT = 600
 
   def afterLoad
-    @l = plugin_manager.plugins[:Language]
+    @language = plugin_manager.plugins[:Language]
 
     @forbidden_to_reply = {}
   end
 
   def beforeUnload
-    @l = nil
+    @language = nil
 
     nil
   end
@@ -44,10 +44,10 @@ class Hello < IRCPlugin
     channel_name = msg.channelname
 
     tail = tail.gsub(/[\s!?！？〜\.。]/, '')
-    tail_kana = @l.katakana_to_hiragana(@l.romaji_to_hiragana(tail))
+    tail_kana = @language.katakana_to_hiragana(@language.romaji_to_hiragana(tail))
 
     response = GREETINGS.find do |greeting|
-      @l.katakana_to_hiragana(greeting) == tail_kana
+      @language.katakana_to_hiragana(greeting) == tail_kana
     end
 
     if response
