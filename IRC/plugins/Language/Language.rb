@@ -6,7 +6,9 @@
 
 require 'yaml'
 require 'ostruct'
+
 require_relative '../../IRCPlugin'
+require_relative '../../LayoutableText'
 
 #noinspection RubyLiteralArrayInspection
 class Language < IRCPlugin
@@ -81,6 +83,14 @@ class Language < IRCPlugin
       msg.reply(hangeul_to_romaja(msg.tail).join)
     when :romaji
       msg.reply(kana_to_romaji(msg.tail))
+    when :testkanar
+      lookup = kana_by_regexp(Regexp.new("^#{msg.tail}$"))
+      lookup = LayoutableText::SimpleJoined.new(' ', lookup.map {|k, r| "#{k}=#{r}"} )
+      msg.reply(lookup)
+    when :testcomplexr
+      lookup = parse_complex_regexp(msg.tail)
+      lookup = LayoutableText::SimpleJoined.new(' ', lookup.map(&:to_s))
+      msg.reply(lookup)
     end
   end
 
@@ -126,6 +136,22 @@ class Language < IRCPlugin
     res.gsub!(/っ$/, 'xtu')
     res.gsub!(/ッ$/, 'XTU')
     res
+  end
+
+  def kana_by_regexp(r)
+    hira_candidates = @hira2rom.mapping.find_all do |_, rom|
+      r.match(rom)
+    end
+    hira_candidates << ['っ', 'xtu'] if r.match('xtu')
+
+    kata_candidates = @hira2rom.mapping.find_all do |_, rom|
+      r.match(rom.upcase)
+    end.map do |kana, rom|
+      [hiragana_to_katakana(kana), rom.upcase]
+    end
+    kata_candidates << ['ッ', 'XTU'] if r.match('XTU')
+
+    hira_candidates + kata_candidates
   end
 
   def hiragana_to_katakana(text)
@@ -316,6 +342,7 @@ class Language < IRCPlugin
   KATAKANA_CHAR_GROUP_MATCHER = /\\kk/
   KANA_CHAR_GROUP_MATCHER = /\\k/
   NON_KANA_CHAR_GROUP_MATCHER = /\\K/
+  KANA_REGEXP_GROUP_MATCHER = /\\kr\{([^\{\}]+)\}/
 
   # 3040-309F hiragana
   # 30A0-30FF katakana
@@ -329,6 +356,11 @@ class Language < IRCPlugin
   NON_KANA_CHAR_GROUP = '[^\u3040-\u30FF\uFF61-\uFF9D\u31F0-\u31FF]'
 
   def parse_sub_regexp(word)
+    word.gsub!(KANA_REGEXP_GROUP_MATCHER) do |m|
+      m = KANA_REGEXP_GROUP_MATCHER.match(m)
+      Regexp.union(kana_by_regexp(Regexp.new("^#{m[1]}$")).map(&:first))
+    end
+
     word.gsub!(HIRAGANA_CHAR_GROUP_MATCHER, HIRAGANA_CHAR_GROUP)
     word.gsub!(KATAKANA_CHAR_GROUP_MATCHER, KATAKANA_CHAR_GROUP)
     word.gsub!(KANA_CHAR_GROUP_MATCHER, KANA_CHAR_GROUP)
