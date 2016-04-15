@@ -7,7 +7,7 @@
 class IRCPluginManager
   attr_reader :plugins
 
-  def initialize()
+  def initialize
     @plugins = {}
     @listeners = [] # IRCPluginListener-s of plugin attach/detach events
   end
@@ -20,7 +20,7 @@ class IRCPluginManager
 
   def unregister(listener)
     old_size = @listeners.size
-    @listeners.delete_if{|l| l == listener}
+    @listeners.delete(listener)
     while old_size > @listeners.size
       listener.detached_from_manager(self)
       old_size -= 1
@@ -49,9 +49,9 @@ class IRCPluginManager
       return false unless p
 
       dependants = []
-      @plugins.keys.each do |suspectName|
-        pluginClass = Kernel.const_get(suspectName.to_sym)
-        dependants << suspectName if pluginClass::Dependencies and pluginClass::Dependencies.include? name.to_sym
+      @plugins.keys.each do |suspect_name|
+        plugin_class = Kernel.const_get(suspect_name.to_sym)
+        dependants << suspect_name if plugin_class::Dependencies and plugin_class::Dependencies.include? name.to_sym
       end
 
       unless dependants.empty?
@@ -69,7 +69,7 @@ class IRCPluginManager
 
       unloaded[name] = config # Mark as unloaded
 
-      @plugins.delete name.to_sym
+      @plugins.delete(name.to_sym)
 
       unload_plugin_class(name)
     rescue Exception => e
@@ -133,11 +133,12 @@ class IRCPluginManager
     overall = nil
     begin
       loading.each do |name, config|
-        overall = false if !do_load_plugin(name, config, loading)
+        overall = false unless do_load_plugin(name, config, loading)
       end
 
       loading.each do |name, config|
-        if (plugin = @plugins[name])
+        plugin = @plugins[name]
+        if plugin
           begin
             log(:log, "Initializing plugin #{name}...")
             do_after_loading(plugin)
@@ -150,7 +151,7 @@ class IRCPluginManager
 
             # Remove the plugin, to avoid accidentally using it,
             # or worse, attempting to un-initialize it.
-            @plugins.delete name.to_sym
+            @plugins.delete(name.to_sym)
             unload_plugin_class(name, true)
           end
         end
@@ -174,12 +175,12 @@ class IRCPluginManager
         log(:error, "Cannot find plugin '#{name.to_s}'.")
         return false
       end
+      load(filename)
 
-      load filename
-      pluginClass = Kernel.const_get(name.to_sym)
-      if pluginClass::Dependencies
+      plugin_class = Kernel.const_get(name.to_sym)
+      if plugin_class::Dependencies
         lacking = []
-        pluginClass::Dependencies.each do |d|
+        plugin_class::Dependencies.each do |d|
           lacking << d unless (@plugins[d]) || (loading && loading.include?(d))
         end
         unless lacking.empty?
@@ -188,7 +189,7 @@ class IRCPluginManager
       end
 
       log(:log, "Loading #{name}...")
-      @plugins[name.to_sym] = pluginClass.new(self, (config || {}).freeze)
+      @plugins[name.to_sym] = plugin_class.new(self, (config || {}).freeze)
       log(:log, "Loaded #{name}.")
     rescue Exception => e
       log(:error, "Cannot load plugin '#{name}': #{e}")
