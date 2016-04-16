@@ -184,32 +184,41 @@ providing tools to analyze it."
   end
 
   def count_logfile(word)
-    count = File.open(@log_file) do |f|
-      f.each_line.map { |l| l.scan(word).size }.inject(0, :+)
+    File.open(@log_file) do |f|
+      f.each_line.inject(0) do |sum, l|
+        sum + l.scan(word).size
+      end
     end
-    return count
   end
 
   def wordfight(msg)
-    words = msg.tail.gsub(/　/, " ").split(" ")
+    return unless msg.tail
+    words = msg.tail.split(/[[:space:]]+/)
     return unless words.length >= 1
 
-    word_counts = Hash.new
-    words.each{ |w| word_counts[w] = count_logfile(w) }
+    words = words.uniq
+    word_counts = words.zip(words.map { |w| count_logfile(w) })
 
-    word_counts=Hash[ word_counts.sort_by{ |a,b| b }.reverse! ]
+    msg.reply(WordFightLayouter.new(word_counts))
+  end
 
-    output_string = ""
-
-    word_counts.each_with_index do |(w,c),i|
-      output_string += "#{w}(#{c})"
-      if ( i+1 < word_counts.length && c > word_counts.values[i+1] )
-        output_string += " ＞ "
-      elsif i+1 < word_counts.length
-        output_string += " ＝ "
-      end
+  class WordFightLayouter < LayoutableText::Arrayed
+    def initialize(arr, *args)
+      # Sort by occurrence count.
+      super(arr.sort_by {|_, s| -s}, *args)
     end
 
-    msg.reply output_string
+    protected
+    def format_chunk(arr, chunk_size, is_last_line)
+      chunk = arr.slice(0, chunk_size)
+      # Chunk into equivalence classes by occurrence count.
+      chunk = chunk.chunk {|_, s| s}.map(&:last)
+
+      chunk.map do |equiv|
+        equiv.map do |w, s|
+          "#{w} (#{s})"
+        end.join(' = ')
+      end.join(' > ')
+    end
   end
 end
