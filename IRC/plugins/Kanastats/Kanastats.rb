@@ -104,33 +104,33 @@ providing tools to analyze it."
 
   def cjkstats(msg)
     number = 0
-    number = msg.tail.split(" ")[0].to_i || 0 if msg.tail
-    cjk_count = 0
-    non_count = 0
-    cjk_individual = 0
-    @stats.each do |c, v|
+    number = msg.tail.split.first.to_i if msg.tail
+
+    counts = @stats.group_by do |c, _|
       if contains_cjk?(c)
-        cjk_count += v
-        cjk_individual +=1 unless (ALL_HIRAGANA.include?(c) or ALL_KATAKANA.include?(c))
+        if ALL_HIRAGANA.include?(c) || ALL_KATAKANA.include?(c)
+          :kana
+        else
+          :cjk
+        end
       else
-        non_count += v
+        :non_cjk
       end
     end
 
-    number = [(cjk_individual-11), number].min
+    top10 = counts[:cjk].sort_by {|_, v| -v}
 
-    top10 = @stats.sort_by do |c,v|
-      if contains_cjk?(c) and not ALL_HIRAGANA.include?(c) and not ALL_KATAKANA.include?(c)
-        v
-      else
-        0
-      end
-    end.reverse[number..(number+10)].to_a
+    number = [0, [number, top10.size - 10].min].max
+    top10 = top10[number, 10]
+
+    cjk_count = counts[:cjk].map(&:last).inject(0, &:+)
+    cjk_count += counts[:kana].map(&:last).inject(0, &:+)
+    non_count = counts[:non_cjk].map(&:last).inject(0, &:+)
 
     msg.reply("#{cjk_count} CJK characters and #{non_count} non-CJK characters were written.")
     msg.reply(
         LayoutableText::Prefixed.new(
-            "Top #{number+1} to #{number+11} non-kana CJK characters: ",
+            "Top #{number+1} to #{number+10} non-kana CJK characters: ",
             LayoutableText::SimpleJoined.new(' ', top10)
         )
     )
