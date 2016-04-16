@@ -17,6 +17,7 @@ providing tools to analyze it."
     :wordstats => 'How often the specified word or character was used in logged public conversation.',
     :logged    => 'Displays information about the log files.',
     :wordfight! => 'Compares count of words in logged public conversation.',
+    :cjkstats => 'Counts number of all CJK characters ever written in public conversation. Also outputs the top 10 CJK characters, or top n to n+10 if a number is provided, e.g. .cjkstats 20.',
   }
 
   def afterLoad
@@ -59,6 +60,8 @@ providing tools to analyze it."
         logged(msg)
       when :wordfight!
         wordfight(msg)
+      when :cjkstats
+        cjkstats(msg)
       else
         unless msg.private?
           statify(msg.message)
@@ -100,6 +103,41 @@ providing tools to analyze it."
 
     reply_untruncated(msg, output_array) do |chunk|
       "Katakana stats: #{chunk.join(' ')}"
+    end
+  end
+
+  def contains_cjk?(s)
+    !!(s =~ /\p{Han}|\p{Katakana}|\p{Hiragana}|\p{Hangul}/)
+  end
+
+  def cjkstats(msg)
+    number = 0
+    number = msg.tail.split(" ")[0].to_i || 0 if msg.tail
+    cjk_count = 0
+    non_count = 0
+    cjk_individual = 0
+    @stats.each do |c, v|
+      if contains_cjk?(c)
+        cjk_count += v
+        cjk_individual +=1 unless (ALL_HIRAGANA.include?(c) or ALL_KATAKANA.include?(c))
+      else
+        non_count += v
+      end
+    end
+
+    number = [(cjk_individual-11), number].min
+
+    top10 = @stats.sort_by do |c,v|
+      if contains_cjk?(c) and not ALL_HIRAGANA.include?(c) and not ALL_KATAKANA.include?(c)
+        v
+      else
+        0
+      end
+    end.reverse[number..(number+10)].to_a
+
+    msg.reply("#{cjk_count} CJK characters and #{non_count} non-CJK characters were written.")
+    reply_untruncated(msg, top10) do |chunk|
+      "Top #{number+1} to #{number+11} non-kana CJK characters: #{chunk.join(' ')}"
     end
   end
 
