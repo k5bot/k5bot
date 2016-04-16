@@ -50,9 +50,9 @@ providing tools to analyze it."
   def on_privmsg(msg)
     case msg.bot_command
       when :hirastats
-        output_hira(msg)
+        output_group_stats(msg, 'Hiragana stats: ', ALL_HIRAGANA)
       when :katastats
-        output_kata(msg)
+        output_group_stats(msg, 'Katakana stats: ', ALL_KATAKANA)
       when :charstats
         charstat(msg)
       when :wordstats
@@ -83,8 +83,8 @@ providing tools to analyze it."
   ALL_HIRAGANA = 'あいうえおかきくけこさしすせそたちつてとなにぬねのまみむめもはひふへほやゆよらりるれろわゐゑをんばびぶべぼぱぴぷぺぽがぎぐげござじずぜぞだぢづでどゃゅょぁぃぅぇぉっ'
   ALL_KATAKANA = 'アイウエオカキクケコサシスセソタチツテトナニヌネノマミムメモハヒフヘホヤユヨラリルレロワヰヱヲンバビブベボパピプペポガギグゲゴザジズゼゾダヂヅデドャュョァィゥェォッ'
 
-  def output_hira(msg)
-    output_array = ALL_HIRAGANA.each_char.sort_by do |c|
+  def output_group_stats(msg, prefix, symbols_array)
+    output_array = symbols_array.each_char.sort_by do |c|
       -@stats[c] || 0
     end.map do |c|
       "#{c} #{@stats[c] || 0}"
@@ -92,22 +92,7 @@ providing tools to analyze it."
 
     msg.reply(
         LayoutableText::Prefixed.new(
-            'Hiragana stats: ',
-            LayoutableText::SimpleJoined.new(' ', output_array)
-        )
-    )
-  end
-
-  def output_kata(msg)
-    output_array = ALL_KATAKANA.each_char.sort_by do |c|
-      -@stats[c] || 0
-    end.map do |c|
-      "#{c} #{@stats[c] || 0}"
-    end.to_a
-
-    msg.reply(
-        LayoutableText::Prefixed.new(
-            'Katakana stats: ',
+            prefix,
             LayoutableText::SimpleJoined.new(' ', output_array)
         )
     )
