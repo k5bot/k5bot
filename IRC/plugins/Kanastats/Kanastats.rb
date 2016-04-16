@@ -171,9 +171,16 @@ providing tools to analyze it."
     end
   end
 
+  RANDOM_FUNNY_REPLIES = [
+      'Kanastats online and fully operational.',
+      'Kanastats is watching you.',
+  ]
+
   def logged(msg)
     count = File.foreach(@log_file).count
-    msg.reply "#{['Kanastats online and fully operational.', 'Kanastats is watching you.'].sample} Currently #{count} lines and #{@stats.size} different characters have been logged."
+    msg.reply(
+        "#{RANDOM_FUNNY_REPLIES.sample} Currently #{count} lines and #{@stats.size} different characters have been logged."
+    )
   end
 
   def count_logfile(word)
