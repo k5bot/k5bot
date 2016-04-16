@@ -11,13 +11,12 @@ providing tools to analyze it."
   Dependencies = [ :StorageYAML ]
 
   Commands = {
-    # Fix Charstats some day!
-    #:hirastats => 'Returns hiragana usage statistics.',
-    #:katastats => 'Returns katakana usage statistics.',
-    #:charstats => 'How often the specified char was publicly used.',
     :wordstats => 'How often the specified word or character was publicly used.',
+    :hirastats => 'Returns hiragana usage statistics.',
+    :katastats => 'Returns katakana usage statistics.',
+    :charstats => 'How often the specified char was publicly used.',
     :logged    => 'Displays information about the log files.',
-    :wordfight! => 'Compares count of words.',
+    :wordfight! => 'Compares count of words in logged public conversation.',
   }
 
   def afterLoad
@@ -48,12 +47,12 @@ providing tools to analyze it."
 
   def on_privmsg(msg)
     case msg.bot_command
-      #when :hirastats
-      #  output_hira(msg)
-      #when :katastats
-      #  output_kata(msg)
-      #when :charstats
-      #  charstat(msg)
+      when :hirastats
+        output_hira(msg)
+      when :katastats
+        output_kata(msg)
+      when :charstats
+        charstat(msg)
       when :wordstats
         wordstats(msg)
       when :logged
