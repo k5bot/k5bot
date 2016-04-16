@@ -85,7 +85,7 @@ providing tools to analyze it."
 
   def output_group_stats(msg, prefix, symbols_array)
     output_array = symbols_array.each_char.sort_by do |c|
-      -@stats[c] || 0
+      -(@stats[c] || 0)
     end.map do |c|
       "#{c} #{@stats[c] || 0}"
     end.to_a
