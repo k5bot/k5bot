@@ -36,7 +36,6 @@ class Conjugator < IRCPlugin
       when :inflections
         args = msg.tail.split
         return unless args.size == 1
-        return unless msg.private?
         msg.reply(inflections(args[0]))
     end
   end
