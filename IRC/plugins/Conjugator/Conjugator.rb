@@ -48,24 +48,23 @@ class Conjugator < IRCPlugin
   def inflections( v )
     v = SEARCH_REPLACEMENTS[v] || v
 
-    replies = Array.new
-    c_type = ''
+    c_type = nil
 
-    CONJUGATION_LIST.each do |f|
-      conjugation_form = f.downcase.to_sym
-      type_map = CONJUGATION_TABLE[conjugation_form]
+    replies = CONJUGATION_TABLE.map do |conjugation_form, type_map|
+      next unless type_map
+      entry, conjugation_type = (get_entries_with_type(v, type_map.keys).first || [])
 
-      if type_map
-        entry, conjugation_type = (get_entries_with_type(v, type_map.keys).first || [])
+      next unless conjugation_type
+      c_type = conjugation_type
 
-        if conjugation_type
-          c_type = conjugation_type
-          replies << ( CONJUGATION_MESSAGES_SHORT[conjugation_form].call(entry.japanese, conjugation_type) + apply_conjugation(entry.japanese, type_map[conjugation_type]) + '.' )
-        end
-      end
-    end
-    return unless replies.any?
-    return "List for #{v} (#{c_type}): " + replies.join(' ')
+      conjugated = apply_conjugation(entry.japanese, type_map[conjugation_type])
+
+      "The #{conjugation_name(conjugation_form)} is #{conjugated}."
+    end.compact
+
+    return "Can't determine conjugation type of #{v}." if replies.empty?
+
+    "List for #{v} (#{c_type}): " + replies.join(' ')
   end
 
   def conjugate( f, v )
@@ -81,8 +80,9 @@ class Conjugator < IRCPlugin
 
     return "Can't determine conjugation type of " + v + ", doesn't conjugate to " + f + " or isn't supported yet." unless conjugation_type
 
-    CONJUGATION_MESSAGES[conjugation_form].call(entry.japanese, conjugation_type) +
-        apply_conjugation(entry.japanese, type_map[conjugation_type]) + '.'
+    conjugated = apply_conjugation(entry.japanese, type_map[conjugation_type])
+
+    "The #{conjugation_name(conjugation_form)} of #{entry.japanese} (#{conjugation_type}) is #{conjugated}."
   end
 
   def get_entries_with_type(word, supported_types)
@@ -109,46 +109,22 @@ class Conjugator < IRCPlugin
     end.join(' or ')
   end
 
-  CONJUGATION_LIST = [
-      'negative',
-      'past',
-      'te-form',
-      'polite',
-      'passive',
-      'potential',
-      'causative',
-      'imperative',
-      'conditional',
-      'provisional',
-      'volitional',
-  ]
+  def conjugation_name(c)
+    CONJUGATION_HUMAN_NAMES[c.to_sym] || c.to_s
+  end
 
-  CONJUGATION_MESSAGES = {
-      :'negative' => lambda {|v, c| "The negative of #{v} (#{c}) is " },
-      :'past' => lambda {|v, c| "The past tense of #{v} (#{c}) is " },
-      :'te-form' => lambda {|v, c| "The te-form of #{v} (#{c}) is " },
-      :'polite' => lambda {|v, c| "The polite form of #{v} (#{c}) is " },
-      :'passive' => lambda {|v, c| "The passive of #{v} (#{c}) is " },
-      :'potential' => lambda {|v, c| "The potential form of #{v} (#{c}) is " },
-      :'causative' => lambda {|v, c| "The causative of #{v} (#{c}) is " },
-      :'imperative' => lambda {|v, c| "The imperative of #{v} (#{c}) is " },
-      :'conditional' => lambda {|v, c| "The conditional form of #{v} (#{c}) is " },
-      :'provisional' => lambda {|v, c| "The provisional form of #{v} (#{c}) is " },
-      :'volitional' => lambda {|v, c| "The volitional form of #{v} (#{c}) is " },
-  }
-
-  CONJUGATION_MESSAGES_SHORT = {
-      :'negative' => lambda {|v, c| "The negative is " },
-      :'past' => lambda {|v, c| "The past tense is " },
-      :'te-form' => lambda {|v, c| "The te-form is " },
-      :'polite' => lambda {|v, c| "The polite form is " },
-      :'passive' => lambda {|v, c| "The passive is " },
-      :'potential' => lambda {|v, c| "The potential form is " },
-      :'causative' => lambda {|v, c| "The causative is " },
-      :'imperative' => lambda {|v, c| "The imperative is " },
-      :'conditional' => lambda {|v, c| "The conditional form is " },
-      :'provisional' => lambda {|v, c| "The provisional form is " },
-      :'volitional' => lambda {|v, c| "The volitional form is " },
+  CONJUGATION_HUMAN_NAMES = {
+      :'negative' => 'negative',
+      :'past' => 'past tense',
+      :'te-form' => 'te-form',
+      :'polite' => 'polite form',
+      :'passive' => 'passive',
+      :'potential' => 'potential form',
+      :'causative' => 'causative',
+      :'imperative' => 'imperative',
+      :'conditional' => 'conditional form',
+      :'provisional' => 'provisional form',
+      :'volitional' => 'volitional form',
   }
 
   CONJUGATION_TABLE = {
