@@ -1,8 +1,9 @@
 # encoding: utf-8
 
-require_relative '../../IRCPlugin'
-
 require 'fileutils'
+
+require_relative '../../IRCPlugin'
+require_relative '../../LayoutableText'
 
 class Kanastats < IRCPlugin
   Description = "Statistics plugin logging all public conversation and \
@@ -89,9 +90,12 @@ providing tools to analyze it."
       "#{c} #{@stats[c] || 0}"
     end.to_a
 
-    reply_untruncated(msg, output_array) do |chunk|
-      "Hiragana stats: #{chunk.join(' ')}"
-    end
+    msg.reply(
+        LayoutableText::Prefixed.new(
+            'Hiragana stats: ',
+            LayoutableText::SimpleJoined.new(' ', output_array)
+        )
+    )
   end
 
   def output_kata(msg)
@@ -101,9 +105,12 @@ providing tools to analyze it."
       "#{c} #{@stats[c] || 0}"
     end.to_a
 
-    reply_untruncated(msg, output_array) do |chunk|
-      "Katakana stats: #{chunk.join(' ')}"
-    end
+    msg.reply(
+        LayoutableText::Prefixed.new(
+            'Katakana stats: ',
+            LayoutableText::SimpleJoined.new(' ', output_array)
+        )
+    )
   end
 
   def contains_cjk?(s)
@@ -136,9 +143,12 @@ providing tools to analyze it."
     end.reverse[number..(number+10)].to_a
 
     msg.reply("#{cjk_count} CJK characters and #{non_count} non-CJK characters were written.")
-    reply_untruncated(msg, top10) do |chunk|
-      "Top #{number+1} to #{number+11} non-kana CJK characters: #{chunk.join(' ')}"
-    end
+    msg.reply(
+        LayoutableText::Prefixed.new(
+            "Top #{number+1} to #{number+11} non-kana CJK characters: ",
+            LayoutableText::SimpleJoined.new(' ', top10)
+        )
+    )
   end
 
   def charstat(msg)
@@ -163,20 +173,6 @@ providing tools to analyze it."
     count = count_logfile( word )
 
     msg.reply("The word '#{word}' #{used_text(count)}.")
-  end
-
-  def reply_untruncated(msg, output_array)
-    until output_array.empty?
-      chunk_size = output_array.size
-      begin
-        output_string = yield(output_array[0..chunk_size-1])
-        msg.reply(output_string, :dont_truncate => (chunk_size > 1))
-      rescue
-        chunk_size -= 1
-        retry if chunk_size > 0
-      end
-      output_array.slice!(0, chunk_size)
-    end
   end
 
   def used_text(count)
