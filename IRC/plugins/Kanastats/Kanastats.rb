@@ -82,7 +82,9 @@ providing tools to analyze it."
   def output_hira(msg)
     output_array = ALL_HIRAGANA.each_char.map do |c|
       "#{c} #{@stats[c] || 0}"
-    end.to_a
+    end.sort_by do |item|
+      @stats[item[0]] || 0
+    end.reverse.to_a
 
     reply_untruncated(msg, output_array) do |chunk|
       "Hiragana stats: #{chunk.join(' ')}"
@@ -92,7 +94,9 @@ providing tools to analyze it."
   def output_kata(msg)
     output_array = ALL_KATAKANA.each_char.map do |c|
       "#{c} #{@stats[c] || 0}"
-    end.to_a
+    end.sort_by do |item|
+      @stats[item[0]] || 0
+    end.reverse.to_a
 
     reply_untruncated(msg, output_array) do |chunk|
       "Katakana stats: #{chunk.join(' ')}"
