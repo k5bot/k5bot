@@ -45,9 +45,9 @@ module IRCPluginListener
 
   # Called by the plugin manager after plugin(s) are finalized and unloaded.
   # @param [IRCPluginManager] plugin_manager manager that issues the event
-  # @param [Symbol] to_load the array of plugins that was attempted to
+  # @param [Symbol] to_unload the array of plugins that was attempted to
   # be unloaded. Note, that some of the listed plugins might have
   # failed to be unloaded successfully. Check against plugin_manager.plugins.
   #noinspection RubyUnusedLocalVariable
-  def after_plugin_unload(plugin_manager, to_load) end
+  def after_plugin_unload(plugin_manager, to_unload) end
 end
