@@ -11,10 +11,10 @@ providing tools to analyze it."
   Dependencies = [ :StorageYAML ]
 
   Commands = {
-    :wordstats => 'How often the specified word or character was publicly used.',
     :hirastats => 'Returns hiragana usage statistics.',
     :katastats => 'Returns katakana usage statistics.',
     :charstats => 'How often the specified char was publicly used.',
+    :wordstats => 'How often the specified word or character was used in logged public conversation.',
     :logged    => 'Displays information about the log files.',
     :wordfight! => 'Compares count of words in logged public conversation.',
   }
@@ -150,7 +150,7 @@ providing tools to analyze it."
 
   def logged(msg)
     count = File.foreach(@log_file).count
-    msg.reply "#{['Kanastats online and fully operational.', 'Kanastats is watching you.'].sample} Currently #{count} lines and #{@stats.size} chars have been logged."
+    msg.reply "#{['Kanastats online and fully operational.', 'Kanastats is watching you.'].sample} Currently #{count} lines and #{@stats.size} different characters have been logged."
   end
 
   def count_logfile(word)
