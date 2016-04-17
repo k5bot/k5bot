@@ -22,7 +22,7 @@ class Top3 < IRCPlugin
     :reopt_in => 'Regives permision of people to see your data (made by amigojapan)',
     :mlist => 'shows the rank list for this month (made by amigojapan)'
   }
-  Dependencies = [ :StorageYAML ]
+  DEPENDENCIES = [:StorageYAML]
 
   CHART_COLORS = %w(ff0000 0000ff 00ff00 ff00ff ffff00 00ffff)
 

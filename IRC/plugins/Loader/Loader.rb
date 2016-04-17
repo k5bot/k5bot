@@ -12,7 +12,7 @@ class Loader < IRCPlugin
     :load => 'loads or reloads specified plugin',
     :unload => 'unloads specified plugin',
   }
-  Dependencies = [ :Router ]
+  DEPENDENCIES = [:Router]
 
   def on_privmsg(msg)
     return unless msg.tail

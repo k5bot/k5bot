@@ -16,7 +16,7 @@ class I18N < IRCPlugin
       :i18n_reload => 'reloads i18n translation files',
       :i18n_set => 'set i18n locale',
   }
-  Dependencies = [ :Router ]
+  DEPENDENCIES = [:Router]
 
   def on_privmsg(msg)
     dispatch_message_by_command(msg, COMMANDS.keys) do

@@ -34,7 +34,7 @@ You can look up ASCII rendering of them using .gaiji? command. \
 Using .gaiji command to supply unicode equivalents for gaiji \
 is strongly encouraged.",
   }
-  Dependencies = [ :Menu, :StorageYAML, :Router ]
+  DEPENDENCIES = [:Menu, :StorageYAML, :Router]
 
   def commands
     book_cmds = @books.each_pair.map do |command, book_record|

@@ -23,7 +23,7 @@ class Daijirin < IRCPlugin
     :djr => "searches Japanese words matching given regexp in Daijirin. \
 See '.faq regexp'",
   }
-  Dependencies = [:Language, :Menu]
+  DEPENDENCIES = [:Language, :Menu]
 
   def afterLoad
     load_helper_class(:DaijirinEntry)

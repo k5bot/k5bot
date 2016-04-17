@@ -15,7 +15,7 @@ Example: .seen K5",
 uses .seen command on you. Example: .seenwhile drinking beer",
   }
 
-  Dependencies = [ :StorageYAML ]
+  DEPENDENCIES = [:StorageYAML]
 
   def afterLoad
     @storage = @plugin_manager.plugins[:StorageYAML]

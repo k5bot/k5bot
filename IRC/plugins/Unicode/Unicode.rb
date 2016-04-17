@@ -20,7 +20,7 @@ class Unicode < IRCPlugin
     :'u???' => 'output Unicode codepoint names for given text',
     :uu => 'output Unicode description urls for given text',
   }
-  Dependencies = [ :Language, :NumberSpell, :StorageYAML ]
+  DEPENDENCIES = [:Language, :NumberSpell, :StorageYAML]
 
   def afterLoad
     @language = @plugin_manager.plugins[:Language]

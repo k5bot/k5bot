@@ -17,7 +17,7 @@ Optionally accepts index (1 is the most recent event).",
 Locations shown as menu items, ordered by recency.",
   }
 
-  Dependencies = [:Language, :Menu, :URL]
+  DEPENDENCIES = [:Language, :Menu, :URL]
 
   def afterLoad
 

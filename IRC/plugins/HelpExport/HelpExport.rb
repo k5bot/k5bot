@@ -15,7 +15,7 @@ class HelpExport < IRCPlugin
   COMMANDS = {
     :export_help_xml => 'exports help in XML format',
   }
-  Dependencies = [ :Help ]
+  DEPENDENCIES = [:Help]
 
   def afterLoad
     raise "Configuration error! 'xml' key must be defined." unless @config[:xml]

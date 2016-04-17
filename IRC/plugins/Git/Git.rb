@@ -12,7 +12,7 @@ class Git < IRCPlugin
     :pull => "fetches changes from upstream and resets current branch and working directory to reflect it",
     :upstream => "shows from where changes are pulled"
   }
-  Dependencies = [ :Statistics ]
+  DEPENDENCIES = [:Statistics]
 
   def afterLoad
     @statistics = @plugin_manager.plugins[:Statistics]

@@ -26,7 +26,7 @@ class ENAMDICT < IRCPlugin
     :jnr => "searches Japanese words matching given regexp in ENAMDICT. \
 See '.faq regexp'",
   }
-  Dependencies = [ :Language, :Menu ]
+  DEPENDENCIES = [:Language, :Menu]
 
   def afterLoad
     load_helper_class(:ENAMDICTEntry)

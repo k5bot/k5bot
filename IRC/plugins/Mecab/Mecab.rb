@@ -13,7 +13,7 @@ class Mecab < IRCPlugin
   COMMANDS = {
     :mecab => "attempts to break up given japanese sentence into words, using MeCab morphological analyzer",
   }
-  Dependencies = [ :Menu ]
+  DEPENDENCIES = [:Menu]
 
   def afterLoad
     @menu = @plugin_manager.plugins[:Menu]

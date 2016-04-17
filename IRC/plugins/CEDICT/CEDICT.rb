@@ -20,7 +20,7 @@ class CEDICT < IRCPlugin
     :zh => 'looks up a Mandarin word in CEDICT',
     :zhen => 'looks up an English word in CEDICT',
   }
-  Dependencies = [ :Menu ]
+  DEPENDENCIES = [ :Menu ]
 
   def afterLoad
     load_helper_class(:CEDICTEntry)

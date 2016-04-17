@@ -11,7 +11,7 @@ class Console < IRCPlugin
   include BotCore::Emitter
 
   DESCRIPTION = 'Console interaction plugin'
-  Dependencies = [ :Router ]
+  DEPENDENCIES = [:Router]
 
   attr_reader :start_time
 

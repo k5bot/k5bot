@@ -14,7 +14,7 @@ class Example < IRCPlugin
     :example_lock => "will prevent the plugin from being unloaded",
     :example_unlock => "will make the plugin unloadable again if !example_lock has been called"
   }
-  Dependencies = [ :Clock ]
+  DEPENDENCIES = [:Clock]
 
   def afterLoad
     @locked = false

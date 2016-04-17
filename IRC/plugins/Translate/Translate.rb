@@ -12,7 +12,7 @@ require 'json'
 
 class Translate < IRCPlugin
   DESCRIPTION = 'Uses translation engines to translate between languages.'
-  Dependencies = [ :Language ]
+  DEPENDENCIES = [:Language]
 
   def self.to_lang_key(x)
     x.to_sym

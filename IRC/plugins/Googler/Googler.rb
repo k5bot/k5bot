@@ -19,7 +19,7 @@ class Googler < IRCPlugin
       :gcount => 'searches Google and returns estimated hit count',
   }
 
-  Dependencies = [:Menu]
+  DEPENDENCIES = [:Menu]
 
   def afterLoad
     @m = @plugin_manager.plugins[:Menu]

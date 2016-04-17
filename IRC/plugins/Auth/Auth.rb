@@ -22,7 +22,7 @@ class Auth < IRCPlugin
       COMMAND_ACCOUNT_INFO => 'shows identity and security-related info about caller.',
   }
 
-  Dependencies = [ :StorageYAML, :Router ]
+  DEPENDENCIES = [:StorageYAML, :Router]
 
   def afterLoad
     @router = @plugin_manager.plugins[:Router]

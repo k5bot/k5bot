@@ -12,7 +12,7 @@ require_relative '../../IRCPlugin'
 
 class DCC < IRCPlugin
   DESCRIPTION = 'Direct Client-to-Client protocol plugin.'
-  Dependencies = [ :Router, :IRCBot, :Auth ]
+  DEPENDENCIES = [:Router, :IRCBot, :Auth]
 
   USAGE_PERMISSION = :can_use_dcc_chat
   KILL_ALL_PERMISSION = :can_kill_any_dcc_connection

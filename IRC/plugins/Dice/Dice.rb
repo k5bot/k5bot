@@ -12,7 +12,7 @@ class Dice < IRCPlugin
     :roll => "rolls the dice. Supports simple dice notation \
 (e.g. 2d6 means roll two 6-sided dice, the default when the argument is omitted)",
   }
-  Dependencies = [ :StorageYAML ]
+  DEPENDENCIES = [:StorageYAML]
 
   def afterLoad
     @storage = @plugin_manager.plugins[:StorageYAML]

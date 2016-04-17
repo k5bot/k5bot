@@ -9,7 +9,7 @@ require_relative '../../IRCPlugin'
 class Karma < IRCPlugin
   DESCRIPTION = 'Stores karma and other kinds of points for users.'
 
-  Dependencies = [ :NumberSpell, :StorageYAML ]
+  DEPENDENCIES = [:NumberSpell, :StorageYAML]
 
   def afterLoad
     @ns = @plugin_manager.plugins[:NumberSpell]

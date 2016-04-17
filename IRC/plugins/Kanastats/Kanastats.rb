@@ -9,7 +9,7 @@ class Kanastats < IRCPlugin
   DESCRIPTION = "Statistics plugin logging all public conversation and \
 providing tools to analyze it."
 
-  Dependencies = [ :StorageYAML ]
+  DEPENDENCIES = [:StorageYAML]
 
   COMMANDS = {
     :hirastats => 'Returns hiragana usage statistics.',

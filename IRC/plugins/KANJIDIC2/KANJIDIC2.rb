@@ -43,7 +43,7 @@ if it's the only given search term",
     :k? => 'same as .k, but gives out long results as a menu keyed with radicals',
     :kl => "gives a link to the kanji entry of the specified kanji at jisho.org"
   }
-  Dependencies = [ :Language, :Menu ]
+  DEPENDENCIES = [:Language, :Menu]
 
   MAX_RESULTS_COUNT = 3
 

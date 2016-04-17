@@ -20,7 +20,7 @@ class Router < IRCPlugin
 
   DESCRIPTION = 'Provides inter-plugin message delivery and filtering.'
 
-  Dependencies = [:StorageYAML]
+  DEPENDENCIES = [:StorageYAML]
 
   PRIVATE_RESTRICTION_DISCLAIMER = 'This command works only in private and only for bot operators'
   RESTRICTION_DISCLAIMER = 'This command works only for bot operators'

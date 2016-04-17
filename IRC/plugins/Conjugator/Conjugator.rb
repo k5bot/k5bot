@@ -13,7 +13,7 @@ class Conjugator < IRCPlugin
       :conjugate => "Specify verb or adjective in dictionary form and desired form (e.g. \".conjugate negative 見る\"). Supported forms: negative, past, te-form, polite, passive, potential, causative, imperative, conditional, provisional, volitional",
       :inflections => "Displays a list of supported inflections (e.g. \".inflections 見る\"). Only works in /msg to avoid spam."
   }
-  Dependencies = [ :EDICT, :Language ]
+  DEPENDENCIES = [:EDICT, :Language]
 
   def afterLoad
     @edict = @plugin_manager.plugins[:EDICT]

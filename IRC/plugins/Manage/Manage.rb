@@ -20,7 +20,7 @@ and then acts as if received it in the usual way from sender. Example: \
 .demonstrate PRIVMSG ##japanese :.help <-- prints '.help' followed \
 by help contents, as if sender was in ##japanese and issued .help command"
   }
-  Dependencies = [ :Router ]
+  DEPENDENCIES = [:Router]
 
   def on_privmsg(msg)
     return unless msg.tail

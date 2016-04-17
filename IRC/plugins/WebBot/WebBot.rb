@@ -15,7 +15,7 @@ require_relative '../../IRCPlugin'
 
 class WebBot < IRCPlugin
   DESCRIPTION = 'provides Web access to the bot'
-  Dependencies = [ :Router, :IRCBot, :Auth ]
+  DEPENDENCIES = [:Router, :IRCBot, :Auth]
 
   USAGE_PERMISSION = :can_use_web_chat
 

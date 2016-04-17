@@ -23,7 +23,7 @@ class IRCPlugin
   COMMANDS = nil
 
   # A list containing the names of the plugins this plugin depends on
-  Dependencies = nil
+  DEPENDENCIES = nil
 
   def initialize(manager, config)
     @plugin_manager = manager
@@ -63,7 +63,13 @@ class IRCPlugin
     end
   end
 
-  def dependencies; self.class::Dependencies; end
+  def dependencies
+    if self.class::DEPENDENCIES
+      self.class::DEPENDENCIES
+    elsif self.class.const_defined?('Dependencies')
+      raise "Error in plugin #{name}: Mixed case Dependencies constant in plugins is deprecated. Change it to DEPENDENCIES"
+    end
+  end
 
   def load_helper_class(class_name)
     class_name = class_name.to_sym

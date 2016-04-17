@@ -23,7 +23,7 @@ class IRCBot < IRCPlugin
 
   DESCRIPTION = 'Provides IRC connectivity.'
 
-  Dependencies = [ :Connectix, :Router, :StorageYAML ]
+  DEPENDENCIES = [:Connectix, :Router, :StorageYAML]
 
   attr_reader :last_sent, :start_time, :user
 

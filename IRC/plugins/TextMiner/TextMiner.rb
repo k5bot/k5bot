@@ -9,7 +9,7 @@ class TextMiner < IRCPlugin
   DESCRIPTION = "TextMiner plugin provides access, search, \
 and stats for underlying text corpus."
 
-  Dependencies = [ :Language ]
+  DEPENDENCIES = [:Language]
 
   COMMANDS = {
       :example => "Searches all files for lines containing a given text. \

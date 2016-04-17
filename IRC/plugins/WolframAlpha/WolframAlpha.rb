@@ -18,7 +18,7 @@ class WolframAlpha < IRCPlugin
     :wa => 'queries WolframAlpha',
     :war => 'queries WolframAlpha displaying the result directly',
   }
-  Dependencies = [ :Menu ]
+  DEPENDENCIES = [:Menu]
 
   def afterLoad
     Wolfram.appid = @config[:id]

@@ -10,7 +10,7 @@ require_relative '../../LayoutableText'
 class MapDoc < IRCPlugin
   DESCRIPTION = 'Provides access to simple associative array of text.'
 
-  Dependencies = [ :StorageYAML ]
+  DEPENDENCIES = [:StorageYAML]
 
   def afterLoad
     @storage = @plugin_manager.plugins[:StorageYAML]

@@ -20,7 +20,7 @@ class YEDICT < IRCPlugin
     :cn => 'looks up a Cantonese word in YEDICT',
     :cnen => 'looks up an English word in YEDICT',
   }
-  Dependencies = [ :Menu ]
+  DEPENDENCIES = [:Menu]
 
   def afterLoad
     load_helper_class(:YEDICTEntry)

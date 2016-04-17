@@ -18,7 +18,7 @@ class Tell < IRCPlugin
     :tell => '[nick] [message] (ex.: !tell K5 I will be back later) sends [message] to [nick] when he/she/it says something the next time'
   }
 
-  Dependencies = [ :StorageYAML ]
+  DEPENDENCIES = [:StorageYAML]
 
   def afterLoad
     @storage = @plugin_manager.plugins[:StorageYAML]
