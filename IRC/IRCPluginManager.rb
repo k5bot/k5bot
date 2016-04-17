@@ -49,9 +49,9 @@ class IRCPluginManager
       return false unless p
 
       dependants = []
-      @plugins.keys.each do |suspect_name|
-        plugin_class = Kernel.const_get(suspect_name.to_sym)
-        dependants << suspect_name if plugin_class::Dependencies and plugin_class::Dependencies.include? name.to_sym
+      @plugins.each do |suspect_name, suspect_instance|
+        suspect_deps = suspect_instance.dependencies
+        dependants << suspect_name if suspect_deps && suspect_deps.include?(name.to_sym)
       end
 
       unless dependants.empty?
@@ -169,6 +169,8 @@ class IRCPluginManager
     return true if plugins[name.to_sym] # success, if already loaded
     return false if name !~ /\A[a-zA-Z0-9]+\Z/m
     begin
+      log(:log, "Loading #{name}...")
+
       requested = plugin_file_name(name)
       filename = Dir.glob(requested, File::FNM_CASEFOLD).first
       unless requested.eql? filename
@@ -178,9 +180,14 @@ class IRCPluginManager
       load(filename)
 
       plugin_class = Kernel.const_get(name.to_sym)
-      if plugin_class::Dependencies
+
+      instance = plugin_class.new(self, (config || {}).freeze)
+
+      dependencies = instance.dependencies
+
+      if dependencies
         lacking = []
-        plugin_class::Dependencies.each do |d|
+        dependencies.each do |d|
           lacking << d unless (@plugins[d]) || (loading && loading.include?(d))
         end
         unless lacking.empty?
@@ -188,8 +195,7 @@ class IRCPluginManager
         end
       end
 
-      log(:log, "Loading #{name}...")
-      @plugins[name.to_sym] = plugin_class.new(self, (config || {}).freeze)
+      @plugins[name.to_sym] = instance
       log(:log, "Loaded #{name}.")
     rescue Exception => e
       log(:error, "Cannot load plugin '#{name}': #{e}")
