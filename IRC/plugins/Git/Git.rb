@@ -27,9 +27,9 @@ class Git < IRCPlugin
   def on_privmsg(msg)
     case msg.bot_command
     when :pull
-      versionBefore = @statistics.versionString
+      versionBefore = @statistics.version_string
       gitPull
-      versionAfter = @statistics.versionString
+      versionAfter = @statistics.version_string
       if versionBefore == versionAfter
         msg.reply('Already up-to-date.')
       else

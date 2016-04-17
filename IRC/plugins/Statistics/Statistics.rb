@@ -17,30 +17,35 @@ class Statistics < IRCPlugin
   def on_privmsg(msg)
     case msg.bot_command
     when :uptime
-      msg.reply(uptimeString(msg.bot.start_time))
+      msg.reply(uptime_string(msg.bot.start_time))
     when :version
-      msg.reply(versionString)
+      msg.reply(version_string)
     when :about
-      msg.reply("K5 bot - an open-source IRC bot written in Ruby. You can find its sources at https://github.com/k5bot/k5bot")
+      msg.reply('K5 bot - an open-source IRC bot written in Ruby. You can find its sources at https://github.com/k5bot/k5bot')
     end
   end
 
-  def uptimeString(start_time)
-    uptime = (Time.now - start_time)
+  def uptime_string(start_time)
+    uptime = Time.now - start_time
     u = {}
     u[:minute], u[:second] = uptime.divmod(60)
     u[:hour], u[:minute] = u[:minute].divmod(60)
     u[:day], u[:hour] = u[:hour].divmod(24)
     u[:week], u[:day] = u[:day].divmod(7)
-    'up ' + [:week, :day, :hour, :minute, :second].map { |unit| u[unit].floor == 0 ? nil : "%d %s" % [u[unit], pluralize(unit.to_s, u[unit])] }.reject { |unit| unit.nil? }.join(', ')
+    'up ' + [:week, :day, :hour, :minute, :second].map do |unit|
+      value = u[unit].floor
+      "#{value} #{pluralize(unit.to_s, value)}" unless value == 0
+    end.compact.join(', ')
   end
 
-  def versionString
+  def version_string
     `GIT_DIR=#{File.dirname($0)}/.git $(which git) log -1 --date=relative --format='%h, authored %ad'`.chomp
   end
 
+  private
+
   def pluralize(str, num)
     return unless num
-    num.floor != 1 ? str + 's' : str
+    num != 1 ? str + 's' : str
   end
 end
