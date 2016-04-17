@@ -15,7 +15,7 @@ require_relative '../../IRCPlugin'
 class Tell < IRCPlugin
   DESCRIPTION = 'A plugin that can pass messages between users.'
   COMMANDS = {
-    :tell => '[nick] [message] (ex.: !tell K5 I will be back later) sends [message] to [nick] when he/she/it says something the next time'
+    :tell => '[nick] [message] (ex.: !tell K5 I will be back later) sends [message] to [nick] when he/she/it says something the next time',
   }
 
   DEPENDENCIES = [:StorageYAML]

@@ -9,10 +9,10 @@ require_relative '../../IRCPlugin'
 class Example < IRCPlugin
   DESCRIPTION = 'An example plugin.'
   COMMANDS = {
-    :example => "returns an example message",
-    :example_time => "returns the current time as reported by the Clock plugin",
-    :example_lock => "will prevent the plugin from being unloaded",
-    :example_unlock => "will make the plugin unloadable again if !example_lock has been called"
+    :example => 'returns an example message',
+    :example_time => 'returns the current time as reported by the Clock plugin',
+    :example_lock => 'will prevent the plugin from being unloaded',
+    :example_unlock => 'will make the plugin unloadable again if !example_lock has been called',
   }
   DEPENDENCIES = [:Clock]
 

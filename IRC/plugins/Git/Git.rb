@@ -9,8 +9,8 @@ require_relative '../../IRCPlugin'
 class Git < IRCPlugin
   DESCRIPTION = 'Plugin to run git pull.'
   COMMANDS = {
-    :pull => "fetches changes from upstream and resets current branch and working directory to reflect it",
-    :upstream => "shows from where changes are pulled"
+    :pull => 'fetches changes from upstream and resets current branch and working directory to reflect it',
+    :upstream => 'shows from where changes are pulled',
   }
   DEPENDENCIES = [:Statistics]
 

@@ -11,7 +11,7 @@ class Algorithms < IRCPlugin
   DESCRIPTION = 'The Algorithms plugin contains various geeky functions and algorithms.'
   COMMANDS = {
       :damerau => 'calculates Damerau-Levenshtein distance between two given words',
-      :levenshtein => 'calculates Levenshtein distance between two given words'
+      :levenshtein => 'calculates Levenshtein distance between two given words',
   }
 
   def afterLoad

@@ -9,8 +9,8 @@ require_relative '../../IRCPlugin'
 class Converter < IRCPlugin
   DESCRIPTION = 'Converts units.'
   COMMANDS = {
-    :celsius => "converts to celsius from fahrenheit",
-    :fahrenheit => "converts to fahrenheit from celsius",
+    :celsius => 'converts to celsius from fahrenheit',
+    :fahrenheit => 'converts to fahrenheit from celsius',
   }
 
   def on_privmsg(msg)

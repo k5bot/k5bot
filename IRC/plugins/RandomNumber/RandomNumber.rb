@@ -8,7 +8,7 @@ require_relative '../../IRCPlugin'
 class RandomNumber < IRCPlugin
   DESCRIPTION = 'RandomNumber plugin.'
   COMMANDS = {
-    :randomnumber => "gives a random number",
+    :randomnumber => 'gives a random number',
   }
 
   def on_privmsg(msg)

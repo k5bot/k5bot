@@ -3,9 +3,9 @@ require_relative '../../IRCPlugin'
 class Kotobank < IRCPlugin
   DESCRIPTION = 'Returns link to kotobank.jp/weblio.jp/kobun.weblio.jp lookup.'
   COMMANDS = {
-    :du => "returns kotobank link",
-    :wl => "returns weblio link",
-    :wk => "returns kobun.weblio link"
+    :du => 'returns kotobank link',
+    :wl => 'returns weblio link',
+    :wk => 'returns kobun.weblio link',
   }
 
   def on_privmsg(msg)

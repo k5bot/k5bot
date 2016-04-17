@@ -6,7 +6,7 @@ require_relative '../../IRCPlugin'
 class Rainbow < IRCPlugin
   DESCRIPTION = 'Colours text randomly.'
   COMMANDS = {
-    :rainbow => "Apply random colours to text.",
+    :rainbow => 'Apply random colours to text.',
   }
 
   def on_privmsg(msg)

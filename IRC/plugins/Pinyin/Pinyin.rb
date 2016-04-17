@@ -14,10 +14,10 @@ require 'ruby-pinyin'
 class Pinyin < IRCPlugin
   DESCRIPTION = 'Hanzi conversion plugin.'
   COMMANDS = {
-    :pinyin => "convert hanzi to pinyin",
-    :zhuyin => "convert hanzi to zhuyin (bopomofo)",
-    :wadegiles => "convert hanzi to wadegiles",
-    :ipa => "convert hanzi to ipa",
+    :pinyin => 'convert hanzi to pinyin',
+    :zhuyin => 'convert hanzi to zhuyin (bopomofo)',
+    :wadegiles => 'convert hanzi to wadegiles',
+    :ipa => 'convert hanzi to ipa',
   }
 
   def on_privmsg(msg)

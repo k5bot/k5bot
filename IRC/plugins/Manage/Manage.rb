@@ -18,7 +18,7 @@ command to destination",
     :demonstrate => "accepts raw message without prefix, sends it to server \
 and then acts as if received it in the usual way from sender. Example: \
 .demonstrate PRIVMSG ##japanese :.help <-- prints '.help' followed \
-by help contents, as if sender was in ##japanese and issued .help command"
+by help contents, as if sender was in ##japanese and issued .help command",
   }
   DEPENDENCIES = [:Router]
 

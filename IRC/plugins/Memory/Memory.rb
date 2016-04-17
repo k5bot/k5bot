@@ -3,7 +3,7 @@ require_relative '../../IRCPlugin'
 class Memory < IRCPlugin
   DESCRIPTION = 'Monitors memory usage.'
   COMMANDS = {
-    :free => 'reports memory info'
+    :free => 'reports memory info',
   }
 
   def on_privmsg(msg)

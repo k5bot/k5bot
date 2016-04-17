@@ -20,7 +20,7 @@ class Top3 < IRCPlugin
     #:chart_top3 => 'shows a chart of you and the top3 users of this month, usage .chart_top3 exclude user1 user2... (made by amigojapan)',
     :opt_out => 'Takes away permision for people to see your data (made by amigojapan)',
     :reopt_in => 'Regives permision of people to see your data (made by amigojapan)',
-    :mlist => 'shows the rank list for this month (made by amigojapan)'
+    :mlist => 'shows the rank list for this month (made by amigojapan)',
   }
   DEPENDENCIES = [:StorageYAML]
 

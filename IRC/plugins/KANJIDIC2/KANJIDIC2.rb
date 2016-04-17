@@ -41,7 +41,7 @@ As a shortcut feature, you can also lookup kanji just by stroke count without S 
 if it's the only given search term",
     },
     :k? => 'same as .k, but gives out long results as a menu keyed with radicals',
-    :kl => "gives a link to the kanji entry of the specified kanji at jisho.org"
+    :kl => 'gives a link to the kanji entry of the specified kanji at jisho.org',
   }
   DEPENDENCIES = [:Language, :Menu]
 

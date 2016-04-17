@@ -18,8 +18,8 @@ class Daijirin < IRCPlugin
 
   DESCRIPTION = 'A Daijirin plugin.'
   COMMANDS = {
-    :dj => "looks up a Japanese word in Daijirin",
-    :de => "looks up an English word in Daijirin",
+    :dj => 'looks up a Japanese word in Daijirin',
+    :de => 'looks up an English word in Daijirin',
     :djr => "searches Japanese words matching given regexp in Daijirin. \
 See '.faq regexp'",
   }
