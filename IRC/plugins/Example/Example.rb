@@ -22,25 +22,23 @@ class Example < IRCPlugin
   end
 
   def beforeUnload
-    "Plugin is busy." if @locked
+    'Plugin is busy.' if @locked
   end
 
   def on_privmsg(msg)
     case msg.bot_command
     when :example
-      msg.reply "An example message"
+      msg.reply('An example message')
     when :example_time
-      if @clock
-        msg.reply @clock.time
-      end
+      msg.reply(@clock.time) if @clock
     when :example_lock
-      msg.reply "Example plugin will now refuse unload."
+      msg.reply('Example plugin will now refuse unload.')
       @locked = true
     when :example_unlock
-      msg.reply((@locked ? "Example plugin will now accept unload." : "Example plugin hasn't been locked."))
+      msg.reply(@locked ? 'Example plugin will now accept unload.' : "Example plugin hasn't been locked.")
       @locked = false
     when :example_config
-      msg.reply @config.to_s
+      msg.reply(@config.to_s)
     end
   end
 end
