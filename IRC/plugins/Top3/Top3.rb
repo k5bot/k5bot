@@ -12,7 +12,7 @@ require 'net/http'
 require_relative '../../IRCPlugin'
 
 class Top3 < IRCPlugin
-  Description = 'top3 gives the top 3 Japanese writers of the month (made by amigojapan)'
+  DESCRIPTION = 'top3 gives the top 3 Japanese writers of the month (made by amigojapan)'
   Commands = {
     :top3 => 'displays the top 3 Japanese writers of the month. optional .top3 exclude user1 user2... (made by amigojapan)',
     :rank => 'displays the rank and stats of given user (omitting name means current user, integer means user with that rank) (made by amigojapan)',

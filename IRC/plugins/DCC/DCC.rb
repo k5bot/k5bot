@@ -11,7 +11,7 @@ require 'ostruct'
 require_relative '../../IRCPlugin'
 
 class DCC < IRCPlugin
-  Description = 'Direct Client-to-Client protocol plugin.'
+  DESCRIPTION = 'Direct Client-to-Client protocol plugin.'
   Dependencies = [ :Router, :IRCBot, :Auth ]
 
   USAGE_PERMISSION = :can_use_dcc_chat

@@ -7,7 +7,7 @@
 require_relative '../../IRCPlugin'
 
 class Happy < IRCPlugin
-  Description = ':D'
+  DESCRIPTION = ':D'
 
   PATTERNS = [
     ':)',

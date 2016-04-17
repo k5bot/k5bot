@@ -12,7 +12,7 @@ require_relative '../../Timer'
 require_relative '../../IRCPlugin'
 
 class Connectix < IRCPlugin
-  Description = 'Stacked-functionality IO procuring plugin.'
+  DESCRIPTION = 'Stacked-functionality IO procuring plugin.'
 
   def self.get_connector_classes
     constants.map do |c|

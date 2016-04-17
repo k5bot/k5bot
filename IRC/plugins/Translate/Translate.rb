@@ -11,7 +11,7 @@ require 'net/http'
 require 'json'
 
 class Translate < IRCPlugin
-  Description = 'Uses translation engines to translate between languages.'
+  DESCRIPTION = 'Uses translation engines to translate between languages.'
   Dependencies = [ :Language ]
 
   def self.to_lang_key(x)

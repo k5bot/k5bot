@@ -7,7 +7,7 @@
 require_relative '../../IRCPlugin'
 
 class Karma < IRCPlugin
-  Description = "Stores karma and other kinds of points for users."
+  DESCRIPTION = 'Stores karma and other kinds of points for users.'
 
   Dependencies = [ :NumberSpell, :StorageYAML ]
 

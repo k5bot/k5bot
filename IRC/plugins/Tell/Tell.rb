@@ -13,7 +13,7 @@
 require_relative '../../IRCPlugin'
 
 class Tell < IRCPlugin
-  Description = 'A plugin that can pass messages between users.'
+  DESCRIPTION = 'A plugin that can pass messages between users.'
   Commands = {
     :tell => '[nick] [message] (ex.: !tell K5 I will be back later) sends [message] to [nick] when he/she/it says something the next time'
   }

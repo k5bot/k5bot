@@ -18,7 +18,7 @@ class Router < IRCPlugin
   META_ADD_COMMAND = :add
   META_DEL_COMMAND = :del
 
-  Description = 'Provides inter-plugin message delivery and filtering.'
+  DESCRIPTION = 'Provides inter-plugin message delivery and filtering.'
 
   Dependencies = [:StorageYAML]
 

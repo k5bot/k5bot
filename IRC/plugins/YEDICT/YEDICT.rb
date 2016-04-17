@@ -15,7 +15,7 @@ require_relative 'YEDICTEntry'
 class YEDICT < IRCPlugin
   include SequelHelpers
 
-  Description = 'A YEDICT plugin.'
+  DESCRIPTION = 'A YEDICT plugin.'
   Commands = {
     :cn => 'looks up a Cantonese word in YEDICT',
     :cnen => 'looks up an English word in YEDICT',

@@ -7,7 +7,7 @@
 require_relative '../../IRCPlugin'
 
 class Seen < IRCPlugin
-  Description = 'A plugin that keeps track of when a user was last seen and where.'
+  DESCRIPTION = 'A plugin that keeps track of when a user was last seen and where.'
   Commands = {
     :seen => "[nick] - gives information on when [nick] was last seen. \
 Example: .seen K5",

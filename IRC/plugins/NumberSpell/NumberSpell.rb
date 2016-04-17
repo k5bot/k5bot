@@ -7,7 +7,7 @@
 require_relative '../../IRCPlugin'
 
 class NumberSpell < IRCPlugin
-  Description = "Spells out numbers in Japanese."
+  DESCRIPTION = 'Spells out numbers in Japanese.'
   Commands = { :ns => "spells out the specified number" }
 
   Digits = { 0 => 'ゼロ', 1 => '一', 2 => '二', 3 => '三', 4 => '四', 5 => '五', 6 => '六', 7 => '七', 8 => '八', 9 => '九' }

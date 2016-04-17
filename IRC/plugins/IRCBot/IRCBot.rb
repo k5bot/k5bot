@@ -21,7 +21,7 @@ require_relative 'IRCFirstListener'
 class IRCBot < IRCPlugin
   include BotCore::Emitter
 
-  Description = 'Provides IRC connectivity.'
+  DESCRIPTION = 'Provides IRC connectivity.'
 
   Dependencies = [ :Connectix, :Router, :StorageYAML ]
 

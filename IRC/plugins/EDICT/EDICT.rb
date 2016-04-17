@@ -20,7 +20,7 @@ require_relative 'EDICTEntry'
 class EDICT < IRCPlugin
   include SequelHelpers
 
-  Description = 'An EDICT plugin.'
+  DESCRIPTION = 'An EDICT plugin.'
   Commands = {
     :j => 'looks up a Japanese word in EDICT',
     :e => 'looks up an English word in EDICT',

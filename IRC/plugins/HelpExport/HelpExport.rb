@@ -11,7 +11,7 @@ require 'nokogiri'
 require_relative '../../IRCPlugin'
 
 class HelpExport < IRCPlugin
-  Description = 'Exports help in externally usable formats.'
+  DESCRIPTION = 'Exports help in externally usable formats.'
   Commands = {
     :export_help_xml => 'exports help in XML format',
   }

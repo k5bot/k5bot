@@ -1,7 +1,7 @@
 require_relative '../../IRCPlugin'
 
 class Kotobank < IRCPlugin
-  Description = "Returns link to kotobank.jp/weblio.jp/kobun.weblio.jp lookup."
+  DESCRIPTION = 'Returns link to kotobank.jp/weblio.jp/kobun.weblio.jp lookup.'
   Commands = {
     :du => "returns kotobank link",
     :wl => "returns weblio link",

@@ -7,7 +7,7 @@
 require_relative '../../IRCPlugin'
 
 class WebScrape < IRCPlugin
-  Description = 'Provides access to data from various web sites'
+  DESCRIPTION = 'Provides access to data from various web sites'
   Commands = {
       :gogen => "searches gogen-allguide.com for given word etymology. \
 Warning: it gives out only the first 24 results",

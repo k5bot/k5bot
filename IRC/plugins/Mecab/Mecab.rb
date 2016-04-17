@@ -9,7 +9,7 @@ require 'MeCab' # mecab ruby binding
 require_relative '../../IRCPlugin'
 
 class Mecab < IRCPlugin
-  Description = "Plugin leveraging MeCab morphological analyzer."
+  DESCRIPTION = 'Plugin leveraging MeCab morphological analyzer.'
   Commands = {
     :mecab => "attempts to break up given japanese sentence into words, using MeCab morphological analyzer",
   }

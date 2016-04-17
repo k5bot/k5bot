@@ -3,7 +3,7 @@
 require_relative '../../IRCPlugin'
 
 class Rotate < IRCPlugin
-  Description = "Rotate any unicode string in both directions."
+  DESCRIPTION = 'Rotate any unicode string in both directions.'
 
   Dependencies = [ :StorageYAML ]
 

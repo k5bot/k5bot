@@ -8,7 +8,7 @@ require_relative '../../IRCPlugin'
 require_relative '../../LayoutableText'
 
 class MapDoc < IRCPlugin
-  Description = 'Provides access to simple associative array of text.'
+  DESCRIPTION = 'Provides access to simple associative array of text.'
 
   Dependencies = [ :StorageYAML ]
 

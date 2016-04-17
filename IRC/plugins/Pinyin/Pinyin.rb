@@ -12,7 +12,7 @@ require 'ting'
 require 'ruby-pinyin'
 
 class Pinyin < IRCPlugin
-  Description = "Hanzi conversion plugin."
+  DESCRIPTION = 'Hanzi conversion plugin.'
   Commands = {
     :pinyin => "convert hanzi to pinyin",
     :zhuyin => "convert hanzi to zhuyin (bopomofo)",

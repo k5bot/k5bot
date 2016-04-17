@@ -8,7 +8,7 @@ require_relative '../../IRCPlugin'
 require_relative 'DamerauLevenshtein'
 
 class Algorithms < IRCPlugin
-  Description = "The Algorithms plugin contains various geeky functions and algorithms."
+  DESCRIPTION = 'The Algorithms plugin contains various geeky functions and algorithms.'
   Commands = {
       :damerau => 'calculates Damerau-Levenshtein distance between two given words',
       :levenshtein => 'calculates Levenshtein distance between two given words'

@@ -16,7 +16,7 @@ require 'time'
 require 'json'
 
 class URL < IRCPlugin
-  Description = 'Implements URL preview'
+  DESCRIPTION = 'Implements URL preview'
   Commands = {
       :short => "shortens a previously seen URL with goo.gl. This command can \
 accept either index (1 is the most recent one) or substring of the desired URL",

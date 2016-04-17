@@ -7,7 +7,7 @@
 require_relative '../../IRCPlugin'
 
 class Example < IRCPlugin
-  Description = "An example plugin."
+  DESCRIPTION = 'An example plugin.'
   Commands = {
     :example => "returns an example message",
     :example_time => "returns the current time as reported by the Clock plugin",

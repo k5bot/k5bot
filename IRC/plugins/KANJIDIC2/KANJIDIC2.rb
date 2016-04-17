@@ -16,7 +16,7 @@ require_relative '../../IRCPlugin'
 require_relative 'KANJIDIC2Entry'
 
 class KANJIDIC2 < IRCPlugin
-  Description = "A KANJIDIC2 plugin."
+  DESCRIPTION = 'A KANJIDIC2 plugin.'
   Commands = {
     :k => {
         nil => "looks up a given kanji, or shows list of kanji satisfying given search terms, \

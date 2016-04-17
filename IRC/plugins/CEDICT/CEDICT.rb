@@ -15,7 +15,7 @@ require_relative 'CEDICTEntry'
 class CEDICT < IRCPlugin
   include SequelHelpers
 
-  Description = 'A CEDICT plugin.'
+  DESCRIPTION = 'A CEDICT plugin.'
   Commands = {
     :zh => 'looks up a Mandarin word in CEDICT',
     :zhen => 'looks up an English word in CEDICT',

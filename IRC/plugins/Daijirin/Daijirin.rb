@@ -16,7 +16,7 @@ require_relative 'DaijirinMenuEntry'
 class Daijirin < IRCPlugin
   include SequelHelpers
 
-  Description = "A Daijirin plugin."
+  DESCRIPTION = 'A Daijirin plugin.'
   Commands = {
     :dj => "looks up a Japanese word in Daijirin",
     :de => "looks up an English word in Daijirin",

@@ -11,7 +11,7 @@ require 'i18n'
 require_relative '../../IRCPlugin'
 
 class I18N < IRCPlugin
-  Description = 'Internationalization plugin.'
+  DESCRIPTION = 'Internationalization plugin.'
   Commands = {
       :i18n_reload => 'reloads i18n translation files',
       :i18n_set => 'set i18n locale',

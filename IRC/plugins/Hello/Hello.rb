@@ -5,7 +5,7 @@
 # Hello plugin
 
 class Hello < IRCPlugin
-  Description = 'Says hello.'
+  DESCRIPTION = 'Says hello.'
   Dependencies = [ :Language ]
 
   GREETINGS = %w(

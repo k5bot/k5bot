@@ -4,7 +4,7 @@
 require_relative '../../IRCPlugin'
 
 class Rainbow < IRCPlugin
-  Description = "Colours text randomly."
+  DESCRIPTION = 'Colours text randomly.'
   Commands = {
     :rainbow => "Apply random colours to text.",
   }

@@ -7,7 +7,7 @@
 require_relative '../../IRCPlugin'
 
 class Loader < IRCPlugin
-  Description = 'Loads, reloads, and unloads plugins.'
+  DESCRIPTION = 'Loads, reloads, and unloads plugins.'
   Commands = {
     :load => 'loads or reloads specified plugin',
     :unload => 'unloads specified plugin',

@@ -7,7 +7,7 @@
 require_relative '../../IRCPlugin'
 
 class Unicode < IRCPlugin
-  Description = 'A plugin that counts and manages Unicode statistics.'
+  DESCRIPTION = 'A plugin that counts and manages Unicode statistics.'
   Commands = {
     :us => 'shows Unicode statistics: number of characters per Unicode range written by the specified user',
     :'us%' => 'same as .us, but shows percentage ratio to the total number of characters written by the user',

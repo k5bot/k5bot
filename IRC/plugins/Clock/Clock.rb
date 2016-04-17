@@ -13,7 +13,7 @@ require_relative '../../IRCPlugin'
 require_relative '../../LayoutableText'
 
 class Clock < IRCPlugin
-  Description = 'The Clock plugin tells the time.'
+  DESCRIPTION = 'The Clock plugin tells the time.'
   Commands = {
       :time => "tells the current time. \
 Optionally accepts space-separated list of timezone identifiers (e.g. Asia/Tokyo), \

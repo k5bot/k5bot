@@ -14,7 +14,7 @@ require_relative '../../LayoutableText'
 class Language < IRCPlugin
   attr_reader :unicode_desc
 
-  Description = 'Provides language-related functionality.'
+  DESCRIPTION = 'Provides language-related functionality.'
   Commands = {
     :kana => 'converts specified romazi to kana. Use lower-case for hiragana, upper-case for katakana',
     :romaja => 'converts given hangul to romaja',

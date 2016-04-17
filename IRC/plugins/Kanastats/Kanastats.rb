@@ -6,7 +6,7 @@ require_relative '../../IRCPlugin'
 require_relative '../../LayoutableText'
 
 class Kanastats < IRCPlugin
-  Description = "Statistics plugin logging all public conversation and \
+  DESCRIPTION = "Statistics plugin logging all public conversation and \
 providing tools to analyze it."
 
   Dependencies = [ :StorageYAML ]

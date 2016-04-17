@@ -7,7 +7,7 @@
 require_relative '../../IRCPlugin'
 
 class Manage < IRCPlugin
-  Description = 'A plugin for basic bot management.'
+  DESCRIPTION = 'A plugin for basic bot management.'
   Commands = {
     :join => 'joins specified channel(s)',
     :part => 'parts from specified channel(s)',

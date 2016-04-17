@@ -1,7 +1,7 @@
 require_relative '../../IRCPlugin'
 
 class Memory < IRCPlugin
-  Description = 'Monitors memory usage.'
+  DESCRIPTION = 'Monitors memory usage.'
   Commands = {
     :free => 'reports memory info'
   }

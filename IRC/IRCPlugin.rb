@@ -17,7 +17,7 @@ class IRCPlugin
   attr_reader :plugin_manager
 
   # A short description of this plugin
-  Description = nil
+  DESCRIPTION = nil
 
   # A hash with available commands and their descriptions
   Commands = nil
@@ -47,7 +47,13 @@ class IRCPlugin
   # Returns the root dir of this plugin
   def plugin_root; "#{File.dirname(__FILE__)}/plugins/#{name}"; end
 
-  def description;  self.class::Description;  end
+  def description
+    if self.class::DESCRIPTION
+       self.class::DESCRIPTION
+    elsif self.class.const_defined?('Description')
+      raise 'Mixed case Description constant in plugins is deprecated. Change it to DESCRIPTION'
+    end
+  end
   def commands;     self.class::Commands;     end
   def dependencies; self.class::Dependencies; end
 

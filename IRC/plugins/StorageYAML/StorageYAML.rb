@@ -11,7 +11,7 @@ require 'fileutils'
 
 class StorageYAML < IRCPlugin
 
-  Description = "Provides persistent storage in YAML format for other plugins."
+  DESCRIPTION = 'Provides persistent storage in YAML format for other plugins.'
 
   def afterLoad()
     dir = @config[:data_directory]

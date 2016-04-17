@@ -10,7 +10,7 @@ require_relative '../../IRCPlugin'
 require_relative '../../LayoutableText'
 
 class Help < IRCPlugin
-  Description = 'The help plugin displays help.'
+  DESCRIPTION = 'The help plugin displays help.'
   Commands = {
     :help => 'lists available commands or shows information about specified command or plugin',
     :plugins => 'lists the loaded plugins',

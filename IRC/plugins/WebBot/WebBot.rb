@@ -14,7 +14,7 @@ require 'webrick/https'
 require_relative '../../IRCPlugin'
 
 class WebBot < IRCPlugin
-  Description = 'provides Web access to the bot'
+  DESCRIPTION = 'provides Web access to the bot'
   Dependencies = [ :Router, :IRCBot, :Auth ]
 
   USAGE_PERMISSION = :can_use_web_chat

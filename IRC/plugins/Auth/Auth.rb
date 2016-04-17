@@ -10,7 +10,7 @@ require 'digest/sha2'
 require_relative '../../IRCPlugin'
 
 class Auth < IRCPlugin
-  Description = 'Auth plugin provides functions for authentication and authorization'
+  DESCRIPTION = 'Auth plugin provides functions for authentication and authorization'
 
   COMMAND_REGISTER = :cred_reg
   COMMAND_UNREGISTER = :cred_unreg

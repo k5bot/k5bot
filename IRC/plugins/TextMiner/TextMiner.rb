@@ -6,7 +6,7 @@ require_relative '../../IRCPlugin'
 require_relative '../../LayoutableText'
 
 class TextMiner < IRCPlugin
-  Description = "TextMiner plugin provides access, search, \
+  DESCRIPTION = "TextMiner plugin provides access, search, \
 and stats for underlying text corpus."
 
   Dependencies = [ :Language ]

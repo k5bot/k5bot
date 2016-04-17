@@ -20,7 +20,7 @@ require_relative 'ENAMDICTEntry'
 class ENAMDICT < IRCPlugin
   include SequelHelpers
 
-  Description = 'An ENAMDICT plugin.'
+  DESCRIPTION = 'An ENAMDICT plugin.'
   Commands = {
     :jn => 'looks up a Japanese word in ENAMDICT',
     :jnr => "searches Japanese words matching given regexp in ENAMDICT. \
