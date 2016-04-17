@@ -21,26 +21,21 @@ class Rotate < IRCPlugin
   def rotate(msg)
     return unless msg.tail
 
-    number = msg.tail.split(" ")[0].to_i
+    text = msg.tail.split(' ')
+    number = text.shift
+    number = number.to_i
+    text = text.join
 
-    original = msg.tail.split(" ")
-    original.delete_at(0)
-    original = original.join
+    return unless number != 0 && text.length > 0
 
-    return unless number && original.length > 0
+    rotated = text.unpack('U*').map do |c|
+      next unless c >= LOWER_BOUND && c < UPPER_BOUND
+      LOWER_BOUND + (c + number - LOWER_BOUND) % (UPPER_BOUND - LOWER_BOUND)
+    end.compact.pack('U*')
 
-    msg.reply( original.each_char.map{ |o| o.unpack('U').map{ |c|
-      if( c >= LOWER_BOUND && c <= UPPER_BOUND )
-        new = c + number
-        until new >= LOWER_BOUND && new <= UPPER_BOUND
-          if( new < LOWER_BOUND ) then new += ( UPPER_BOUND - LOWER_BOUND ) end
-          if( new > UPPER_BOUND ) then new -= ( UPPER_BOUND - LOWER_BOUND ) end
-        end
-        c = new
-      end
-    }.pack('U') }.join )
+    msg.reply(rotated)
   end
 
-  UPPER_BOUND = 57343
+  UPPER_BOUND = 0xE000
   LOWER_BOUND = 0
 end
