@@ -24,35 +24,34 @@ class Pinyin < IRCPlugin
     case msg.bot_command
     when :pinyin
       pinyin = _pinyin(msg.tail)
-      msg.reply pinyin if pinyin
+      msg.reply(pinyin) if pinyin
     when :zhuyin
-      zhuyin = _translation msg.tail, :zhuyin, :marks
-      msg.reply zhuyin if zhuyin
+      zhuyin = _translation(msg.tail, :zhuyin, :marks)
+      msg.reply(zhuyin) if zhuyin
     when :wadegiles
-      wadegiles = _translation msg.tail, :wadegiles, :supernum
-      msg.reply wadegiles if wadegiles
+      wadegiles = _translation(msg.tail, :wadegiles, :supernum)
+      msg.reply(wadegiles) if wadegiles
     when :ipa
-      ipa = _translation msg.tail, :ipa, :ipa
-      msg.reply ipa if ipa
+      ipa = _translation(msg.tail, :ipa, :ipa)
+      msg.reply(ipa) if ipa
     end
   end
 
-  def _pinyin text
-    PinYin.sentence text, true
+  def _pinyin(text)
+    PinYin.sentence(text, true)
   end
 
   def _reader
-    Ting.reader :hanyu, :numbers
+    Ting.reader(:hanyu, :numbers)
   end
 
-  def _writer type, tone
-    Ting.writer type, tone
+  def _writer(type, tone)
+    Ting.writer(type, tone)
   end
 
-  def _translation text, type, tone
-    pinyin = _pinyin text
-    x = _writer type, tone
-    x = x << (_reader << pinyin)
+  def _translation(text, type, tone)
+    pinyin = _pinyin(text)
+    x = _writer(type, tone)
+    x << (_reader << pinyin)
   end
-
 end
