@@ -12,14 +12,14 @@ require_relative '../../IRCPlugin'
 
 class I18N < IRCPlugin
   DESCRIPTION = 'Internationalization plugin.'
-  Commands = {
+  COMMANDS = {
       :i18n_reload => 'reloads i18n translation files',
       :i18n_set => 'set i18n locale',
   }
   Dependencies = [ :Router ]
 
   def on_privmsg(msg)
-    dispatch_message_by_command(msg, Commands.keys) do
+    dispatch_message_by_command(msg, COMMANDS.keys) do
       check_and_complain(@plugin_manager.plugins[:Router], msg, :can_do_everything)
     end
   end

@@ -9,7 +9,7 @@ require_relative 'DamerauLevenshtein'
 
 class Algorithms < IRCPlugin
   DESCRIPTION = 'The Algorithms plugin contains various geeky functions and algorithms.'
-  Commands = {
+  COMMANDS = {
       :damerau => 'calculates Damerau-Levenshtein distance between two given words',
       :levenshtein => 'calculates Levenshtein distance between two given words'
   }

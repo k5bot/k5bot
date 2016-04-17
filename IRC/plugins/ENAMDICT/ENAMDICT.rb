@@ -21,7 +21,7 @@ class ENAMDICT < IRCPlugin
   include SequelHelpers
 
   DESCRIPTION = 'An ENAMDICT plugin.'
-  Commands = {
+  COMMANDS = {
     :jn => 'looks up a Japanese word in ENAMDICT',
     :jnr => "searches Japanese words matching given regexp in ENAMDICT. \
 See '.faq regexp'",

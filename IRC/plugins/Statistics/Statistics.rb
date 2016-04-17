@@ -8,7 +8,7 @@ require_relative '../../IRCPlugin'
 
 class Statistics < IRCPlugin
   DESCRIPTION = 'A plugin that keeps track of various statistics.'
-  Commands = {
+  COMMANDS = {
     :uptime => "shows how long the bot has been running",
     :version => "shows the current bot version",
     :about => "shows short description of this bot",

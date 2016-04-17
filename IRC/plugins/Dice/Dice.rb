@@ -8,7 +8,7 @@ require_relative '../../IRCPlugin'
 
 class Dice < IRCPlugin
   DESCRIPTION = 'Dice plugin.'
-  Commands = {
+  COMMANDS = {
     :roll => "rolls the dice. Supports simple dice notation \
 (e.g. 2d6 means roll two 6-sided dice, the default when the argument is omitted)",
   }

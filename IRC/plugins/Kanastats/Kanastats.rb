@@ -11,7 +11,7 @@ providing tools to analyze it."
 
   Dependencies = [ :StorageYAML ]
 
-  Commands = {
+  COMMANDS = {
     :hirastats => 'Returns hiragana usage statistics.',
     :katastats => 'Returns katakana usage statistics.',
     :charstats => 'How often the specified char was publicly used.',

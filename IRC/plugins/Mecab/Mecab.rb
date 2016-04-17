@@ -10,7 +10,7 @@ require_relative '../../IRCPlugin'
 
 class Mecab < IRCPlugin
   DESCRIPTION = 'Plugin leveraging MeCab morphological analyzer.'
-  Commands = {
+  COMMANDS = {
     :mecab => "attempts to break up given japanese sentence into words, using MeCab morphological analyzer",
   }
   Dependencies = [ :Menu ]

@@ -11,7 +11,7 @@ and stats for underlying text corpus."
 
   Dependencies = [ :Language ]
 
-  Commands = {
+  COMMANDS = {
       :example => "Searches all files for lines containing a given text. \
 Repeated invocation with the same text or without text at all is equivalent \
 to .nextexample",

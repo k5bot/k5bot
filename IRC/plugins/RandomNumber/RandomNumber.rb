@@ -7,7 +7,7 @@ require_relative '../../IRCPlugin'
 
 class RandomNumber < IRCPlugin
   DESCRIPTION = 'RandomNumber plugin.'
-  Commands = {
+  COMMANDS = {
     :randomnumber => "gives a random number",
   }
 

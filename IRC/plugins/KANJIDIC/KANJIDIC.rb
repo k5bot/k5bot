@@ -43,7 +43,7 @@ end
 
 class KANJIDIC < IRCPlugin
   DESCRIPTION = 'A KANJIDIC plugin.'
-  Commands = {
+  COMMANDS = {
     :k => "looks up a given kanji, or shows list of kanji with given SKIP code or strokes number, using KANJIDIC",
     :kl => "gives a link to the kanji entry of the specified kanji at jisho.org"
   }

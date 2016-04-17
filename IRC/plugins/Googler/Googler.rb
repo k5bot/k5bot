@@ -13,7 +13,7 @@ require 'htmlentities'
 
 class Googler < IRCPlugin
   DESCRIPTION = 'Provides access to various Google services'
-  Commands = {
+  COMMANDS = {
       :g => 'searches Google and returns the first result',
       :g? => 'searches Google and returns results as a menu',
       :gcount => 'searches Google and returns estimated hit count',

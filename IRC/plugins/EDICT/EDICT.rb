@@ -21,7 +21,7 @@ class EDICT < IRCPlugin
   include SequelHelpers
 
   DESCRIPTION = 'An EDICT plugin.'
-  Commands = {
+  COMMANDS = {
     :j => 'looks up a Japanese word in EDICT',
     :e => 'looks up an English word in EDICT',
     :jr => "searches Japanese words matching given regexp in EDICT. \

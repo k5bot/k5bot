@@ -25,7 +25,7 @@ class Router < IRCPlugin
   PRIVATE_RESTRICTION_DISCLAIMER = 'This command works only in private and only for bot operators'
   RESTRICTION_DISCLAIMER = 'This command works only for bot operators'
 
-  Commands = {
+  COMMANDS = {
       :acl => {
           nil => 'Bot access list and routing commands',
           DENY_COMMAND => "denies access to the bot to any user, whose 'nick!ident@host' matches given mask. #{PRIVATE_RESTRICTION_DISCLAIMER}",

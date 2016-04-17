@@ -7,7 +7,7 @@ class Rotate < IRCPlugin
 
   Dependencies = [ :StorageYAML ]
 
-  Commands = {
+  COMMANDS = {
     :rotate => 'Rotate unicode string by positive or negative number.',
   }
 

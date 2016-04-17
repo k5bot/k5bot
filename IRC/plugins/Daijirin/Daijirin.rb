@@ -17,7 +17,7 @@ class Daijirin < IRCPlugin
   include SequelHelpers
 
   DESCRIPTION = 'A Daijirin plugin.'
-  Commands = {
+  COMMANDS = {
     :dj => "looks up a Japanese word in Daijirin",
     :de => "looks up an English word in Daijirin",
     :djr => "searches Japanese words matching given regexp in Daijirin. \

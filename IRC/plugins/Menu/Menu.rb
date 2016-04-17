@@ -16,7 +16,7 @@ require_relative 'MenuNodeTextEnumerable'
 
 class Menu < IRCPlugin
   DESCRIPTION = 'Provides Menu-related functionality.'
-  Commands = {
+  COMMANDS = {
     :n => "returns the next list of menu entries. Given a number, \
 shows the list of entries starting from that position",
     :u => 'goes up in hierarchy of entries'

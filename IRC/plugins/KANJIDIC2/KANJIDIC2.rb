@@ -17,7 +17,7 @@ require_relative 'KANJIDIC2Entry'
 
 class KANJIDIC2 < IRCPlugin
   DESCRIPTION = 'A KANJIDIC2 plugin.'
-  Commands = {
+  COMMANDS = {
     :k => {
         nil => "looks up a given kanji, or shows list of kanji satisfying given search terms, \
 using Jim Breen's KANJIDIC2( http://www.csse.monash.edu.au/~jwb/kanjidic_doc.html ), \

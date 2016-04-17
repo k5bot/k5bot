@@ -14,7 +14,7 @@ require_relative '../../LayoutableText'
 
 class WolframAlpha < IRCPlugin
   DESCRIPTION = 'a plugin for working with WolframAlpha.'
-  Commands = {
+  COMMANDS = {
     :wa => 'queries WolframAlpha',
     :war => 'queries WolframAlpha displaying the result directly',
   }

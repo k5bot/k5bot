@@ -20,7 +20,7 @@ class IRCPlugin
   DESCRIPTION = nil
 
   # A hash with available commands and their descriptions
-  Commands = nil
+  COMMANDS = nil
 
   # A list containing the names of the plugins this plugin depends on
   Dependencies = nil
@@ -51,10 +51,18 @@ class IRCPlugin
     if self.class::DESCRIPTION
        self.class::DESCRIPTION
     elsif self.class.const_defined?('Description')
-      raise 'Mixed case Description constant in plugins is deprecated. Change it to DESCRIPTION'
+      "Error in plugin #{name}: Mixed case Description constant in plugins is deprecated. Change it to DESCRIPTION"
     end
   end
-  def commands;     self.class::Commands;     end
+
+  def commands
+    if self.class::COMMANDS
+      self.class::COMMANDS
+    elsif self.class.const_defined?('Commands')
+      {("error_#{name.downcase}").to_sym => "Error in plugin #{name}: Mixed case Commands constant in plugins is deprecated. Change it to COMMANDS"}
+    end
+  end
+
   def dependencies; self.class::Dependencies; end
 
   def load_helper_class(class_name)

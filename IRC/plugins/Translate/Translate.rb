@@ -200,7 +200,7 @@ class Translate < IRCPlugin
     return [translation_map, commands]
   end
 
-  TRANSLATION_MAP, Commands = generate_commands
+  TRANSLATION_MAP, COMMANDS = generate_commands
 
   def afterLoad
     load_helper_class(:QuirkedJSON)

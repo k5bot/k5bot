@@ -16,7 +16,7 @@ class Auth < IRCPlugin
   COMMAND_UNREGISTER = :cred_unreg
   COMMAND_ACCOUNT_INFO = :whoami
 
-  Commands = {
+  COMMANDS = {
       COMMAND_REGISTER => 'associates given credentials with the current IRC user.',
       COMMAND_UNREGISTER => 'disassociates given credentials from the current IRC user.',
       COMMAND_ACCOUNT_INFO => 'shows identity and security-related info about caller.',

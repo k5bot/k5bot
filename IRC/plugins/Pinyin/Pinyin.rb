@@ -13,7 +13,7 @@ require 'ruby-pinyin'
 
 class Pinyin < IRCPlugin
   DESCRIPTION = 'Hanzi conversion plugin.'
-  Commands = {
+  COMMANDS = {
     :pinyin => "convert hanzi to pinyin",
     :zhuyin => "convert hanzi to zhuyin (bopomofo)",
     :wadegiles => "convert hanzi to wadegiles",

@@ -13,7 +13,7 @@ require_relative '../../IRCPlugin'
 
 class Top3 < IRCPlugin
   DESCRIPTION = 'top3 gives the top 3 Japanese writers of the month (made by amigojapan)'
-  Commands = {
+  COMMANDS = {
     :top3 => 'displays the top 3 Japanese writers of the month. optional .top3 exclude user1 user2... (made by amigojapan)',
     :rank => 'displays the rank and stats of given user (omitting name means current user, integer means user with that rank) (made by amigojapan)',
     :chart => 'shows a chart of user progress. Usage: .chart or .chart user1 user2 etc (made by amigojapan)',

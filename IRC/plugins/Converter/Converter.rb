@@ -8,7 +8,7 @@ require_relative '../../IRCPlugin'
 
 class Converter < IRCPlugin
   DESCRIPTION = 'Converts units.'
-  Commands = {
+  COMMANDS = {
     :celsius => "converts to celsius from fahrenheit",
     :fahrenheit => "converts to fahrenheit from celsius",
   }

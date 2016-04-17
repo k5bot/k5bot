@@ -16,7 +16,7 @@ class YEDICT < IRCPlugin
   include SequelHelpers
 
   DESCRIPTION = 'A YEDICT plugin.'
-  Commands = {
+  COMMANDS = {
     :cn => 'looks up a Cantonese word in YEDICT',
     :cnen => 'looks up an English word in YEDICT',
   }

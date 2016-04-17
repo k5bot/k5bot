@@ -5,7 +5,7 @@ require_relative '../../IRCPlugin'
 
 class Manyougana < IRCPlugin
   DESCRIPTION = "Rômazi to man'yôgana converter."
-  Commands = {
+  COMMANDS = {
     :manyougana => "Converts from rômazi to man'yôgana. Requires numeral notation for Old Japanese vowels. Since there exist multiple man'yôgana for each mora, the final choice will be random."
   }
 

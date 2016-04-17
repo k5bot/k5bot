@@ -12,7 +12,7 @@ require_relative '../../IRCPlugin'
 
 class HelpExport < IRCPlugin
   DESCRIPTION = 'Exports help in externally usable formats.'
-  Commands = {
+  COMMANDS = {
     :export_help_xml => 'exports help in XML format',
   }
   Dependencies = [ :Help ]

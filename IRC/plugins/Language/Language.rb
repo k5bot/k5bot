@@ -15,7 +15,7 @@ class Language < IRCPlugin
   attr_reader :unicode_desc
 
   DESCRIPTION = 'Provides language-related functionality.'
-  Commands = {
+  COMMANDS = {
     :kana => 'converts specified romazi to kana. Use lower-case for hiragana, upper-case for katakana',
     :romaja => 'converts given hangul to romaja',
   }
