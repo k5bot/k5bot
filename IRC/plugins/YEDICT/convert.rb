@@ -72,6 +72,7 @@ def marshal_dict(dict)
     primary_key :id
 
     String :cantonese, :size => 127, :null => false
+    String :mandarin, :size => 127, :null => false
     String :jyutping, :size => 127, :null => false
 
     String :raw, :size => 4096, :null => false
@@ -105,6 +106,7 @@ def marshal_dict(dict)
 
       entry_id = yedict_entry_dataset.insert(
           :cantonese => entry.cantonese,
+          :mandarin => entry.mandarin,
           :jyutping => entry.jyutping,
           :raw => entry.raw,
       )
@@ -140,6 +142,8 @@ def marshal_dict(dict)
   print '(indices)'
 
   db.add_index(:yedict_entry, :cantonese)
+  print '.'
+  db.add_index(:yedict_entry, :mandarin)
   print '.'
   db.add_index(:yedict_entry, :jyutping)
   print '.'

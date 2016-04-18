@@ -52,7 +52,7 @@ class YEDICT < IRCPlugin
     when :cn
       word = msg.tail
       return unless word
-      yedict_lookup = lookup([word], [:cantonese, :jyutping])
+      yedict_lookup = lookup([word], [:cantonese, :mandarin, :jyutping])
       reply_with_menu(msg, generate_menu(format_description_unambiguous(yedict_lookup), "\"#{word}\" in YEDICT"))
     when :cnen
       word = msg.tail
@@ -103,7 +103,7 @@ class YEDICT < IRCPlugin
       hanzi_list = YEDICT.format_hanzi_list(e)
       jyutping_list = YEDICT.format_jyutping_list(e)
 
-      description = if render_hanzi && !hanzi_list.empty? then
+      description = if render_hanzi && !hanzi_list.empty?
                       render_jyutping ? "#{hanzi_list} (#{jyutping_list})" : hanzi_list
                     elsif jyutping_list
                       jyutping_list
@@ -136,7 +136,7 @@ class YEDICT < IRCPlugin
 
     dataset = table.where(condition).group_by(Sequel.qualify(:yedict_entry, :id))
 
-    standard_order(dataset).select(:cantonese, :jyutping, :id).to_a.map do |entry|
+    standard_order(dataset).select(:cantonese, :mandarin, :jyutping, :id).to_a.map do |entry|
       YEDICTLazyEntry.new(table, entry[:id], entry)
     end
   end
@@ -163,6 +163,7 @@ class YEDICT < IRCPlugin
 
     dataset = dataset.select_append(
         Sequel.qualify(:yedict_entry, :cantonese),
+        Sequel.qualify(:yedict_entry, :mandarin),
         Sequel.qualify(:yedict_entry, :jyutping),
         Sequel.qualify(:yedict_entry, :id),
     )
@@ -199,7 +200,7 @@ class YEDICT < IRCPlugin
   end
 
   class YEDICTLazyEntry
-    attr_reader :cantonese, :jyutping
+    attr_reader :cantonese, :mandarin, :jyutping
     lazy_dataset_field :raw, Sequel.qualify(:yedict_entry, :id)
 
     def initialize(dataset, id, pre_init)
@@ -207,6 +208,7 @@ class YEDICT < IRCPlugin
       @id = id
 
       @cantonese = pre_init[:cantonese]
+      @mandarin = pre_init[:mandarin]
       @jyutping = pre_init[:jyutping]
     end
 
