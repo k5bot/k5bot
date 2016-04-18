@@ -4,7 +4,7 @@
 
 # EDICT plugin
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 require_relative 'MenuNodeText'
 
 class MenuNodeTextEnumerable < MenuNodeText

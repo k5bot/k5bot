@@ -4,7 +4,7 @@
 
 # WebMessage describes message received via HTTP(S) request
 
-require_relative '../../../IRC/Message'
+require 'IRC/Message'
 
 class WebMessage
   include BotCore::Message

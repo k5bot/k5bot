@@ -5,8 +5,8 @@
 # Menu plugin
 
 require 'yaml'
-require_relative '../../IRCPlugin'
-require_relative '../../ContextMetadata'
+require 'IRC/IRCPlugin'
+require 'IRC/ContextMetadata'
 
 require_relative 'MenuState'
 require_relative 'MenuNode'

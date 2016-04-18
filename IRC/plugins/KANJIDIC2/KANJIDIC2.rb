@@ -11,7 +11,7 @@
 
 require 'uri'
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 require_relative 'KANJIDIC2Entry'
 

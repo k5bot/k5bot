@@ -6,7 +6,7 @@
 
 require 'MeCab' # mecab ruby binding
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Mecab < IRCPlugin
   DESCRIPTION = 'Plugin leveraging MeCab morphological analyzer.'

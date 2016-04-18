@@ -5,7 +5,7 @@
 # HTTP Servlet for checking ContextMetadata for valid authentication before,
 # delegating request to wrapped servlet.
 
-require_relative '../../ContextMetadata'
+require 'IRC/ContextMetadata'
 
 class WebAuthFilterServlet < WEBrick::HTTPServlet::AbstractServlet
   WEB_USER_AUTH_KEY = :web_bot_user_auth

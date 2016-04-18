@@ -14,7 +14,11 @@ require 'i18n'
 require 'i18n/backend/fallbacks'
 require 'yaml'
 
-require_relative 'IRC/IRCPluginManager'
+File.dirname(__FILE__).tap do |lib_dir|
+  $LOAD_PATH.unshift(lib_dir) unless $LOAD_PATH.include?(lib_dir)
+end
+
+require 'IRC/IRCPluginManager'
 
 class IRCHashPluginManager < IRCPluginManager
   def initialize(config_name)

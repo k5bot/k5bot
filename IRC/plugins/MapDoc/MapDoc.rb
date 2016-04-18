@@ -4,8 +4,8 @@
 
 # MapDoc plugin presents 'mapdoc' YAML file with hash in it as browsable dictionary
 
-require_relative '../../IRCPlugin'
-require_relative '../../LayoutableText'
+require 'IRC/IRCPlugin'
+require 'IRC/LayoutableText'
 
 class MapDoc < IRCPlugin
   DESCRIPTION = 'Provides access to simple associative array of text.'

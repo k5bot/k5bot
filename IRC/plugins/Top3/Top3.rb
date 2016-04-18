@@ -9,7 +9,7 @@ require 'uri'
 require 'date'
 require 'net/http'
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Top3 < IRCPlugin
   DESCRIPTION = 'top3 gives the top 3 Japanese writers of the month (made by amigojapan)'

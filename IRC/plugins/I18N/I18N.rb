@@ -8,7 +8,7 @@ require 'rubygems'
 require 'bundler/setup'
 require 'i18n'
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class I18N < IRCPlugin
   DESCRIPTION = 'Internationalization plugin.'

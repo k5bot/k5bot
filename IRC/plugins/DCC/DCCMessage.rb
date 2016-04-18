@@ -4,7 +4,7 @@
 
 # DCCMessage describes message received from DCC connection
 
-require_relative '../../../IRC/Message'
+require 'IRC/Message'
 
 class DCCMessage
   include BotCore::Message

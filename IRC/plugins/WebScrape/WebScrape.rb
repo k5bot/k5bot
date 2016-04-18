@@ -4,7 +4,7 @@
 
 # Translate plugin
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class WebScrape < IRCPlugin
   DESCRIPTION = 'Provides access to data from various web sites'

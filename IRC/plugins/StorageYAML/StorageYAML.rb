@@ -4,7 +4,7 @@
 
 # StorageYAML plugin. Provides disk storage functionality in YAML format.
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 require 'yaml'
 require 'fileutils'

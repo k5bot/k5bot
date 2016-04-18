@@ -4,7 +4,7 @@
 
 # Clock plugin tells the time
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 require_relative 'DamerauLevenshtein'
 
 class Algorithms < IRCPlugin

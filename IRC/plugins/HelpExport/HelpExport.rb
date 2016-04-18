@@ -8,7 +8,7 @@ require 'rubygems'
 require 'bundler/setup'
 require 'nokogiri'
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class HelpExport < IRCPlugin
   DESCRIPTION = 'Exports help in externally usable formats.'

@@ -6,7 +6,7 @@
 
 require 'ostruct'
 
-require_relative '../../ContextMetadata'
+require 'IRC/ContextMetadata'
 
 class WebPlainChatServer
   attr_reader :server

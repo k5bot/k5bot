@@ -4,7 +4,7 @@
 
 # ConsoleMessage describes message received from console
 
-require_relative '../../../IRC/Message'
+require 'IRC/Message'
 
 class ConsoleMessage
   include BotCore::Message

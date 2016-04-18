@@ -8,8 +8,8 @@ require 'delegate'
 require 'socket'
 require 'openssl'
 
-require_relative '../../Timer'
-require_relative '../../IRCPlugin'
+require 'IRC/Timer'
+require 'IRC/IRCPlugin'
 
 class Connectix < IRCPlugin
   DESCRIPTION = 'Stacked-functionality IO procuring plugin.'

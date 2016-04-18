@@ -4,7 +4,7 @@
 
 # IRCServerPassListener is the listener that sends login-time PASS command
 
-require_relative '../../Listener'
+require 'IRC/Listener'
 
 class IRCServerPassListener
   include BotCore::Listener

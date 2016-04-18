@@ -3,7 +3,7 @@
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class RandomNumber < IRCPlugin
   DESCRIPTION = 'RandomNumber plugin.'

@@ -4,7 +4,7 @@
 
 # Language points plugin
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Unicode < IRCPlugin
   DESCRIPTION = 'A plugin that counts and manages Unicode statistics.'

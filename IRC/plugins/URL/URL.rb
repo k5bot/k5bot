@@ -4,8 +4,8 @@
 
 # Translate plugin
 
-require_relative '../../IRCPlugin'
-require_relative '../../Counter'
+require 'IRC/IRCPlugin'
+require 'IRC/Counter'
 
 require 'rubygems'
 require 'bundler/setup'

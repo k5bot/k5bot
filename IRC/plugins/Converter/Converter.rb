@@ -4,7 +4,7 @@
 
 # Converter plugin
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Converter < IRCPlugin
   DESCRIPTION = 'Converts units.'

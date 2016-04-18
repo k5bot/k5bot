@@ -1,4 +1,4 @@
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Kotobank < IRCPlugin
   DESCRIPTION = 'Returns link to kotobank.jp/weblio.jp/kobun.weblio.jp lookup.'

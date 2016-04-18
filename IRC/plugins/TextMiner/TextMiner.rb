@@ -2,8 +2,8 @@
 
 require 'set'
 
-require_relative '../../IRCPlugin'
-require_relative '../../LayoutableText'
+require 'IRC/IRCPlugin'
+require 'IRC/LayoutableText'
 
 class TextMiner < IRCPlugin
   DESCRIPTION = "TextMiner plugin provides access, search, \

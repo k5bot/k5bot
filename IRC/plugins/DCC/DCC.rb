@@ -8,7 +8,7 @@ require 'ipaddr'
 require 'socket'
 require 'ostruct'
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class DCC < IRCPlugin
   DESCRIPTION = 'Direct Client-to-Client protocol plugin.'

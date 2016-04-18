@@ -4,7 +4,7 @@
 
 # Direct Client-to-Client chat worker
 
-require_relative '../../Emitter'
+require 'IRC/Emitter'
 
 class DCCBot
   include BotCore::Emitter

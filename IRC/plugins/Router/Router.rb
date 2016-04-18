@@ -4,7 +4,7 @@
 
 # Router plugin routes IRCMessage-s between plugins
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Router < IRCPlugin
 

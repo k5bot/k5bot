@@ -6,7 +6,7 @@
 
 require 'ostruct'
 
-require_relative '../../Listener'
+require 'IRC/Listener'
 
 class IRCIdentifyListener
   include BotCore::Listener

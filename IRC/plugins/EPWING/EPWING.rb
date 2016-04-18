@@ -9,8 +9,8 @@ require 'bundler/setup'
 require 'eb'
 require 'ostruct'
 
-require_relative '../../IRCPlugin'
-require_relative '../../AutoMonitor'
+require 'IRC/IRCPlugin'
+require 'IRC/AutoMonitor'
 
 class EPWING < IRCPlugin
   DESCRIPTION = {

@@ -6,8 +6,8 @@
 
 require 'ostruct'
 
-require_relative '../../IRCPlugin'
-require_relative '../../LayoutableText'
+require 'IRC/IRCPlugin'
+require 'IRC/LayoutableText'
 
 class Help < IRCPlugin
   DESCRIPTION = 'The help plugin displays help.'

@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Rotate < IRCPlugin
   DESCRIPTION = 'Rotate any unicode string in both directions.'

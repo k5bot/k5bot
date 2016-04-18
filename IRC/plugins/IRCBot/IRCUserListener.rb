@@ -6,7 +6,7 @@
 # updated by listening to user-related messages.
 # To find the user who sent a message, use IRCMessage#user.
 
-require_relative '../../Listener'
+require 'IRC/Listener'
 
 require_relative 'IRCUser'
 

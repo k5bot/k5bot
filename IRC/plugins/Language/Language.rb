@@ -7,8 +7,8 @@
 require 'yaml'
 require 'ostruct'
 
-require_relative '../../IRCPlugin'
-require_relative '../../LayoutableText'
+require 'IRC/IRCPlugin'
+require 'IRC/LayoutableText'
 
 #noinspection RubyLiteralArrayInspection
 class Language < IRCPlugin

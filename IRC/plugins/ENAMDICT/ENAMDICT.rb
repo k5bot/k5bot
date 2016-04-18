@@ -13,8 +13,8 @@ require 'rubygems'
 require 'bundler/setup'
 require 'sequel'
 
-require_relative '../../IRCPlugin'
-require_relative '../../SequelHelpers'
+require 'IRC/IRCPlugin'
+require 'IRC/SequelHelpers'
 require_relative 'ENAMDICTEntry'
 
 class ENAMDICT < IRCPlugin

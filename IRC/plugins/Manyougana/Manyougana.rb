@@ -1,7 +1,7 @@
 #!/bin/env ruby
 # encoding: utf-8
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Manyougana < IRCPlugin
   DESCRIPTION = "Rômazi to man'yôgana converter."

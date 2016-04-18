@@ -4,7 +4,7 @@
 
 # Dotdotdot plugin
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Dotdotdot < IRCPlugin
   DESCRIPTION = '...'

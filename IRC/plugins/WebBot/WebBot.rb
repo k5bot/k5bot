@@ -11,7 +11,7 @@ require 'bundler/setup'
 require 'webrick'
 require 'webrick/https'
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class WebBot < IRCPlugin
   DESCRIPTION = 'provides Web access to the bot'

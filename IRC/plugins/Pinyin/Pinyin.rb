@@ -4,7 +4,7 @@
 
 # Pinyin plugin
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 require 'rubygems'
 require 'bundler/setup'

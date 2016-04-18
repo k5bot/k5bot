@@ -4,7 +4,7 @@
 
 # Dice plugin
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Dice < IRCPlugin
   DESCRIPTION = 'Dice plugin.'

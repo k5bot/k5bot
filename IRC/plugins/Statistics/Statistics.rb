@@ -4,7 +4,7 @@
 
 # Statistics plugin
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Statistics < IRCPlugin
   DESCRIPTION = 'A plugin that keeps track of various statistics.'

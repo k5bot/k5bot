@@ -5,7 +5,7 @@
 # IRCFirstListener is the first listener that is called and handles
 # messages that are important for things to function properly.
 
-require_relative '../../Listener'
+require 'IRC/Listener'
 
 class IRCFirstListener
   include BotCore::Listener

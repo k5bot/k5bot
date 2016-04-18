@@ -4,7 +4,7 @@
 
 # Translate plugin
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 require 'rubygems'
 require 'nokogiri'
 require 'net/http'

@@ -9,7 +9,7 @@
 #
 # http://www.csse.monash.edu.au/~jwb/kanjidic.html
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 require 'uri'
 
 class KANJIDICEntry

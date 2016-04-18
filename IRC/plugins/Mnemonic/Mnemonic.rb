@@ -5,7 +5,7 @@
 # Mnemonic plugin
 
 require 'yaml'
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Mnemonic < IRCPlugin
   DESCRIPTION = 'Returns mnemonics for characters.'

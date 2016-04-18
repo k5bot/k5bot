@@ -4,7 +4,7 @@
 
 # Git plugin
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Git < IRCPlugin
   DESCRIPTION = 'Plugin to run git pull.'

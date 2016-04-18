@@ -6,7 +6,7 @@
 
 require 'singleton'
 
-require_relative '../../User'
+require 'IRC/User'
 
 class ConsoleUser
   include BotCore::User

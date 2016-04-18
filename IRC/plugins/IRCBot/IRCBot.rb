@@ -7,11 +7,11 @@
 require 'socket'
 require 'ostruct'
 
-require_relative '../../Emitter'
-require_relative '../../Throttler'
-require_relative '../../IRCPlugin'
-require_relative '../../LayoutableText'
-require_relative '../../ContextMetadata'
+require 'IRC/Emitter'
+require 'IRC/Throttler'
+require 'IRC/IRCPlugin'
+require 'IRC/LayoutableText'
+require 'IRC/ContextMetadata'
 
 require_relative 'IRCUser'
 require_relative 'IRCMessage'

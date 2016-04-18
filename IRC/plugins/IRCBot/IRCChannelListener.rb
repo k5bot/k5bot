@@ -4,7 +4,7 @@
 
 # IRCChannelListener keeps track of all joined channels.
 
-require_relative '../../Listener'
+require 'IRC/Listener'
 
 class IRCChannelListener
   include BotCore::Listener

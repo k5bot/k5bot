@@ -6,7 +6,7 @@
 
 require 'set'
 
-require_relative '../../Listener'
+require 'IRC/Listener'
 
 class IRCCapsListener
   include BotCore::Listener

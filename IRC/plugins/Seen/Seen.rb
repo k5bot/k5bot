@@ -4,7 +4,7 @@
 
 # Seen plugin
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Seen < IRCPlugin
   DESCRIPTION = 'A plugin that keeps track of when a user was last seen and where.'

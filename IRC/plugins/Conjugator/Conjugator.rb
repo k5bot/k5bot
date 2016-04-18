@@ -5,7 +5,7 @@
 
 # Plugin for japanese conjugation.
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Conjugator < IRCPlugin
   DESCRIPTION = 'Conjugates japanese verbs and adjectives.'

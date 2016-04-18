@@ -4,7 +4,7 @@
 
 # Example plugin
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Example < IRCPlugin
   DESCRIPTION = 'An example plugin.'

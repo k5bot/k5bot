@@ -4,7 +4,7 @@
 
 # Karma plugin
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Karma < IRCPlugin
   DESCRIPTION = 'Stores karma and other kinds of points for users.'

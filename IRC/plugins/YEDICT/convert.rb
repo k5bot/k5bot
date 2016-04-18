@@ -13,7 +13,7 @@ require 'rubygems'
 require 'bundler/setup'
 require 'sequel'
 
-require_relative '../../SequelHelpers'
+require 'IRC/SequelHelpers'
 require_relative 'YEDICTEntry'
 
 include SequelHelpers

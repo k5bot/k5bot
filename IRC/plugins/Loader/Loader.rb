@@ -4,7 +4,7 @@
 
 # Loader plugin loads or reloads plugins
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Loader < IRCPlugin
   DESCRIPTION = 'Loads, reloads, and unloads plugins.'

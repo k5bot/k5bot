@@ -4,7 +4,7 @@
 
 # NumberSpell plugin
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class NumberSpell < IRCPlugin
   DESCRIPTION = 'Spells out numbers in Japanese.'

@@ -7,7 +7,7 @@
 require 'base64'
 require 'digest/sha2'
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Auth < IRCPlugin
   DESCRIPTION = 'Auth plugin provides functions for authentication and authorization'

@@ -9,8 +9,8 @@ require 'bundler/setup'
 require 'tzinfo'
 require 'iso_country_codes'
 
-require_relative '../../IRCPlugin'
-require_relative '../../LayoutableText'
+require 'IRC/IRCPlugin'
+require 'IRC/LayoutableText'
 
 class Clock < IRCPlugin
   DESCRIPTION = 'The Clock plugin tells the time.'

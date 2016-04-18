@@ -10,7 +10,7 @@
 # sender is an array of triples.
 # each triple contains the timestamp, the nick the sender had at the time, and the message that was sent.
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Tell < IRCPlugin
   DESCRIPTION = 'A plugin that can pass messages between users.'

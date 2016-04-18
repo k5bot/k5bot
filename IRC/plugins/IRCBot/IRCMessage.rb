@@ -15,8 +15,8 @@
 
 require 'ostruct'
 
-require_relative '../../../IRC/Message'
-require_relative '../../../IRC/LayoutableText'
+require 'IRC/Message'
+require 'IRC/LayoutableText'
 
 class IRCMessage
   include BotCore::Message

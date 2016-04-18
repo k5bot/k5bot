@@ -2,8 +2,8 @@
 
 require 'fileutils'
 
-require_relative '../../IRCPlugin'
-require_relative '../../LayoutableText'
+require 'IRC/IRCPlugin'
+require 'IRC/LayoutableText'
 
 class Kanastats < IRCPlugin
   DESCRIPTION = "Statistics plugin logging all public conversation and \

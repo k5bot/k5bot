@@ -4,7 +4,7 @@
 
 # IRCLoginListener is the listener that sends login-time USER command.
 
-require_relative '../../Listener'
+require 'IRC/Listener'
 
 class IRCLoginListener
   include BotCore::Listener

@@ -4,7 +4,7 @@
 
 # IRCUser describes an IRC user
 
-require_relative '../../User'
+require 'IRC/User'
 
 class IRCUser
   include BotCore::User

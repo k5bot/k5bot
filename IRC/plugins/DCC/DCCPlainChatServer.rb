@@ -6,7 +6,7 @@
 
 require 'gserver'
 
-require_relative '../../ContextMetadata'
+require 'IRC/ContextMetadata'
 
 class DCCPlainChatServer < GServer
   attr_reader :port_to_bot

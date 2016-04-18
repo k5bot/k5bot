@@ -17,7 +17,7 @@ require 'rubygems'
 require 'bundler/setup'
 require 'sequel'
 
-require_relative '../../SequelHelpers'
+require 'IRC/SequelHelpers'
 require_relative 'EDICTEntry'
 
 include SequelHelpers

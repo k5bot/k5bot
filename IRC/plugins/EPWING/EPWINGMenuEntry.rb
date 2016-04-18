@@ -4,8 +4,7 @@
 
 # EPWING plugin. Menu entry for outputting next group of lines per each request.
 
-require_relative '../../IRCPlugin'
-require_relative '../Menu/MenuNode'
+require 'IRC/IRCPlugin'
 
 class EPWINGMenuEntry < MenuNode
   def initialize(description, entry, book_record, preserve_gaiji)

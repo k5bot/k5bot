@@ -4,7 +4,7 @@
 
 # Happy plugin
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Happy < IRCPlugin
   DESCRIPTION = ':D'

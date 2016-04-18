@@ -4,7 +4,7 @@
 
 # Manage plugin
 
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Manage < IRCPlugin
   DESCRIPTION = 'A plugin for basic bot management.'

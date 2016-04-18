@@ -1,4 +1,4 @@
-require_relative '../../IRCPlugin'
+require 'IRC/IRCPlugin'
 
 class Memory < IRCPlugin
   DESCRIPTION = 'Monitors memory usage.'

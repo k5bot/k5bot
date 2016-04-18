@@ -9,8 +9,8 @@ require 'bundler/setup'
 require 'wolfram'
 require 'resolv'
 
-require_relative '../../IRCPlugin'
-require_relative '../../LayoutableText'
+require 'IRC/IRCPlugin'
+require 'IRC/LayoutableText'
 
 class WolframAlpha < IRCPlugin
   DESCRIPTION = 'a plugin for working with WolframAlpha.'
