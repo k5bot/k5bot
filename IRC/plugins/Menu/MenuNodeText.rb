@@ -4,9 +4,6 @@
 
 # EDICT plugin
 
-require 'IRC/IRCPlugin'
-require_relative 'MenuNode'
-
 class MenuNodeText < MenuNode
   def initialize(description, entry)
     @description = description

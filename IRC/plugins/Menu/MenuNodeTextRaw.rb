@@ -4,9 +4,6 @@
 
 # EDICT plugin
 
-require 'IRC/IRCPlugin'
-require_relative 'MenuNodeText'
-
 # Same as MenuNodeTextEnumerable, but doesn't do
 # safety to_s casts. Used with Layoutable-s
 class MenuNodeTextRaw < MenuNodeText

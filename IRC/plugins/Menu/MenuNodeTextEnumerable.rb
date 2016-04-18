@@ -4,9 +4,6 @@
 
 # EDICT plugin
 
-require 'IRC/IRCPlugin'
-require_relative 'MenuNodeText'
-
 class MenuNodeTextEnumerable < MenuNodeText
   def do_reply(msg, entry)
     entry.each do |line|

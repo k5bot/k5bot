@@ -4,8 +4,6 @@
 
 # MenuNodeSimple is a straightforward implementation of MenuNode interface
 
-require_relative 'MenuNode'
-
 class MenuNodeSimple < MenuNode
   attr_accessor :entries
 

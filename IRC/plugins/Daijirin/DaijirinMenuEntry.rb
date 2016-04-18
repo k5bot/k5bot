@@ -5,7 +5,6 @@
 # Daijirin plugin
 
 require 'IRC/IRCPlugin'
-require_relative 'DaijirinEntry'
 
 class DaijirinMenuEntry < MenuNode
   def initialize(description, entry)

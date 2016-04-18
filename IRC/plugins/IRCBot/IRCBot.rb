@@ -13,11 +13,6 @@ require 'IRC/IRCPlugin'
 require 'IRC/LayoutableText'
 require 'IRC/ContextMetadata'
 
-require_relative 'IRCUser'
-require_relative 'IRCMessage'
-require_relative 'IRCLoginListener'
-require_relative 'IRCFirstListener'
-
 class IRCBot < IRCPlugin
   include BotCore::Emitter
 

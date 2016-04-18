@@ -10,7 +10,6 @@ require 'sequel'
 
 require 'IRC/IRCPlugin'
 require 'IRC/SequelHelpers'
-require_relative 'YEDICTEntry'
 
 class YEDICT < IRCPlugin
   include SequelHelpers

@@ -15,7 +15,6 @@ require 'sequel'
 
 require 'IRC/IRCPlugin'
 require 'IRC/SequelHelpers'
-require_relative 'EDICTEntry'
 
 class EDICT < IRCPlugin
   include SequelHelpers

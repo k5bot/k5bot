@@ -8,12 +8,6 @@ require 'yaml'
 require 'IRC/IRCPlugin'
 require 'IRC/ContextMetadata'
 
-require_relative 'MenuState'
-require_relative 'MenuNode'
-require_relative 'MenuNodeSimple'
-require_relative 'MenuNodeText'
-require_relative 'MenuNodeTextEnumerable'
-
 class Menu < IRCPlugin
   DESCRIPTION = 'Provides Menu-related functionality.'
   COMMANDS = {

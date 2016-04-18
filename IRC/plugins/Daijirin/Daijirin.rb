@@ -10,8 +10,6 @@ require 'sequel'
 
 require 'IRC/IRCPlugin'
 require 'IRC/SequelHelpers'
-require_relative 'DaijirinEntry'
-require_relative 'DaijirinMenuEntry'
 
 class Daijirin < IRCPlugin
   include SequelHelpers

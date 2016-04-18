@@ -5,7 +5,6 @@
 # Clock plugin tells the time
 
 require 'IRC/IRCPlugin'
-require_relative 'DamerauLevenshtein'
 
 class Algorithms < IRCPlugin
   DESCRIPTION = 'The Algorithms plugin contains various geeky functions and algorithms.'

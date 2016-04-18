@@ -8,8 +8,6 @@
 
 require 'IRC/Listener'
 
-require_relative 'IRCUser'
-
 class IRCUserListener
   include BotCore::Listener
 
