@@ -127,7 +127,7 @@ providing tools to analyze it."
     cjk_count += counts[:kana].map(&:last).inject(0, &:+)
     non_count = counts[:non_cjk].map(&:last).inject(0, &:+)
 
-    msg.reply("#{cjk_count} CJK characters and #{non_count} non-CJK characters were written.")
+    msg.reply("#{cjk_count} CJK characters and #{non_count} non-CJK characters were written.") unless msg.tail
     msg.reply(
         LayoutableText::Prefixed.new(
             "Top #{number+1} to #{number+10} non-kana CJK characters: ",
