@@ -24,32 +24,19 @@ class Mecab < IRCPlugin
 
     @tagger = MeCab::Tagger.new("--node-format=#{NODE_FORMAT} --unk-format=#{UNK_FORMAT} --eos-format=#{EOS_FORMAT}")
 
-    @class_replacer = Class.new do
-      def initialize(regex, hash)
-        @regex = regex
-        @hash = hash
-      end
-
-      def replace(text)
-        text.gsub(@regex) do |match|
-          @hash[match] || match
-        end
-      end
-    end
-
-    @replacer_nyanify = compile_regex(
+    @replacer_nyanify = Replacer.new(
         'な' => 'にゃ',
         'ナ' => 'ニャ',
     )
 
-    @replacer_azunyanify = compile_regex(
+    @replacer_azunyanify = Replacer.new(
         'な' => 'にゃ',
         'ナ' => 'ニャ',
         'もう' => 'みょう',
         'モウ' => 'ミョウ',
     )
 
-    @replacer_ubernyanify = compile_regex(
+    @replacer_ubernyanify = Replacer.new(
         'な' => 'にゃ',
         'ナ' => 'ニャ',
         'ぬ' => 'にゅ',
@@ -117,12 +104,6 @@ class Mecab < IRCPlugin
     end
 
     separators.zip(new_parts).flatten.compact.join
-  end
-
-  def compile_regex(replacement_hash)
-    replacement_array = replacement_hash.each_pair.sort_by { |key, _| -key.size }
-    replacement_regex = Regexp.new(replacement_array.map {|k, _| Regexp.quote(k)}.join('|'))
-    @class_replacer.new(replacement_regex, Hash[replacement_array])
   end
 
   def extract_separators(analysis, text)
@@ -202,5 +183,20 @@ class Mecab < IRCPlugin
         result,
         msg
     )
+  end
+
+  class Replacer
+    def initialize(replacement_hash)
+      replacement_array = replacement_hash.each_pair.sort_by { |key, _| -key.size }
+      replacement_regex = Regexp.new(replacement_array.map {|k, _| Regexp.quote(k)}.join('|'))
+      @regex = replacement_regex
+      @hash = replacement_array.to_h
+    end
+
+    def replace(text)
+      text.gsub(@regex) do |match|
+        @hash[match] || match
+      end
+    end
   end
 end
