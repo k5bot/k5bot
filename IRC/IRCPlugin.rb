@@ -4,7 +4,7 @@
 
 # IRCPlugin is the superclass of all plugins
 
-require_relative 'Listener'
+require 'IRC/Listener'
 
 class IRCPlugin
   include BotCore::Listener
