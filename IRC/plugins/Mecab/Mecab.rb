@@ -15,10 +15,14 @@ class Mecab < IRCPlugin
   }
   DEPENDENCIES = [:Menu]
 
+  NODE_FORMAT = %w(%M %f[7] %f[6] %F-[0,1,2,3] %f[4] %f[5]).join('\t') + '\n'
+  UNK_FORMAT  = %w(%M %M %M %F-[0,1,2,3]).join('\t') + '\t\t\n'
+  EOS_FORMAT = 'EOS\n'
+
   def afterLoad
     @menu = @plugin_manager.plugins[:Menu]
 
-    @tagger = MeCab::Tagger.new("-Ochasen2")
+    @tagger = MeCab::Tagger.new("--node-format=#{NODE_FORMAT} --unk-format=#{UNK_FORMAT} --eos-format=#{EOS_FORMAT}")
 
     @class_replacer = Class.new do
       def initialize(regex, hash)
