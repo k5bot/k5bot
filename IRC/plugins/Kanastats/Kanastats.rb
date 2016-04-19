@@ -104,7 +104,7 @@ providing tools to analyze it."
 
   def cjkstats(msg)
     number = 0
-    number = msg.tail.split.first.to_i if msg.tail
+    number = (msg.tail.split.first.to_i - 1) if msg.tail
 
     counts = @stats.group_by do |c, _|
       if contains_cjk?(c)
