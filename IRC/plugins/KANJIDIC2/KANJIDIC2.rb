@@ -51,7 +51,7 @@ if it's the only given search term",
     load_helper_class(:KANJIDIC2Entry)
 
     @language = @plugin_manager.plugins[:Language]
-    @m = @plugin_manager.plugins[:Menu]
+    @menu = @plugin_manager.plugins[:Menu]
 
     dict = load_dict('kanjidic2')
 
@@ -64,7 +64,7 @@ if it's the only given search term",
   end
 
   def beforeUnload
-    @m.evict_plugin_menus!(self.name)
+    @menu.evict_plugin_menus!(self.name)
 
     @gsf_order = nil
     @kanji_parts = nil
@@ -73,7 +73,7 @@ if it's the only given search term",
     @code_skip = nil
     @kanji = nil
 
-    @m = nil
+    @menu = nil
     @language = nil
 
     unload_helper_class(:KANJIDIC2Entry)
@@ -145,7 +145,7 @@ if it's the only given search term",
   end
 
   def reply_with_menu(msg, result)
-    @m.put_new_menu(
+    @menu.put_new_menu(
         self.name,
         result,
         msg

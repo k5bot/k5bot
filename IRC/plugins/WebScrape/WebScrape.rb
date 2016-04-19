@@ -22,15 +22,15 @@ Locations shown as menu items, ordered by recency.",
   def afterLoad
 
     @language = @plugin_manager.plugins[:Language]
-    @m = @plugin_manager.plugins[:Menu]
+    @menu = @plugin_manager.plugins[:Menu]
     @u = @plugin_manager.plugins[:URL]
   end
 
   def beforeUnload
-    @m.evict_plugin_menus!(self.name)
+    @menu.evict_plugin_menus!(self.name)
 
     @u = nil
-    @m = nil
+    @menu = nil
     @language = nil
 
     nil
@@ -60,7 +60,7 @@ Locations shown as menu items, ordered by recency.",
   end
 
   def reply_with_menu(msg, result)
-    @m.put_new_menu(
+    @menu.put_new_menu(
         self.name,
         result,
         msg

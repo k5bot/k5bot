@@ -63,7 +63,7 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
     load_helper_class(:EPWINGMenuEntry)
 
     @router = @plugin_manager.plugins[:Router]
-    @m = @plugin_manager.plugins[:Menu]
+    @menu = @plugin_manager.plugins[:Menu]
     @storage = @plugin_manager.plugins[:StorageYAML]
 
     books = @config.map do |book_id, book_config|
@@ -121,11 +121,11 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
   end
 
   def beforeUnload
-    @m.evict_plugin_menus!(self.name)
+    @menu.evict_plugin_menus!(self.name)
 
     @books = nil
 
-    @m = nil
+    @menu = nil
     @storage = nil
     @router = nil
 
@@ -232,7 +232,7 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
   end
 
   def reply_with_menu(msg, result)
-    @m.put_new_menu(
+    @menu.put_new_menu(
         self.name,
         result,
         msg

@@ -32,7 +32,7 @@ See '.faq regexp'",
     load_helper_class(:EDICTEntry)
 
     @language = @plugin_manager.plugins[:Language]
-    @m = @plugin_manager.plugins[:Menu]
+    @menu = @plugin_manager.plugins[:Menu]
 
     @db = database_connect("sqlite://#{(File.dirname __FILE__)}/edict.sqlite", :encoding => 'utf8')
 
@@ -40,14 +40,14 @@ See '.faq regexp'",
   end
 
   def beforeUnload
-    @m.evict_plugin_menus!(self.name)
+    @menu.evict_plugin_menus!(self.name)
 
     @hash_edict = nil
 
     database_disconnect(@db)
     @db = nil
 
-    @m = nil
+    @menu = nil
     @language = nil
 
     unload_helper_class(:EDICTEntry)
@@ -137,7 +137,7 @@ See '.faq regexp'",
   end
 
   def reply_with_menu(msg, result)
-    @m.put_new_menu(
+    @menu.put_new_menu(
         self.name,
         result,
         msg

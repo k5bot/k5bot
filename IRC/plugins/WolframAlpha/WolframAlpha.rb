@@ -23,13 +23,13 @@ class WolframAlpha < IRCPlugin
   def afterLoad
     Wolfram.appid = @config[:id]
 
-    @m = @plugin_manager.plugins[:Menu]
+    @menu = @plugin_manager.plugins[:Menu]
   end
 
   def beforeUnload
-    @m.evict_plugin_menus!(self.name)
+    @menu.evict_plugin_menus!(self.name)
 
-    @m = nil
+    @menu = nil
 
     nil
   end
@@ -179,7 +179,7 @@ class WolframAlpha < IRCPlugin
   end
 
   def reply_with_menu(msg, result)
-    @m.put_new_menu(
+    @menu.put_new_menu(
         self.name,
         result,
         msg

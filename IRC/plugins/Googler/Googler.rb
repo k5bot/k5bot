@@ -22,15 +22,15 @@ class Googler < IRCPlugin
   DEPENDENCIES = [:Menu]
 
   def afterLoad
-    @m = @plugin_manager.plugins[:Menu]
+    @menu = @plugin_manager.plugins[:Menu]
     @html_decoder = HTMLEntities.new
   end
 
   def beforeUnload
-    @m.evict_plugin_menus!(self.name)
+    @menu.evict_plugin_menus!(self.name)
 
     @html_decoder = nil
-    @m = nil
+    @menu = nil
 
     nil
   end
@@ -78,7 +78,7 @@ class Googler < IRCPlugin
   end
 
   def reply_with_menu(msg, result)
-    @m.put_new_menu(
+    @menu.put_new_menu(
         self.name,
         result,
         msg
