@@ -97,10 +97,8 @@ See '.faq regexp'",
 
   def format_description_unambiguous(lookup_result)
     amb_chk_kanji = Hash.new(0)
-    amb_chk_kana = Hash.new(0)
     lookup_result.each do |e|
       amb_chk_kanji[e.japanese] += 1
-      amb_chk_kana[e.reading] += 1
     end
     render_kanji = amb_chk_kanji.keys.size > 1
 
@@ -160,9 +158,7 @@ See '.faq regexp'",
   # Looks up all entries that have any given word in any
   # of the specified columns and returns the result as an array of entries
   def lookup_impl(words, columns)
-    condition = Sequel.|(*words.map do |word|
-      Sequel.or(columns.map { |column| [column, word] })
-    end)
+    condition = Sequel.or(columns.product([words]))
 
     dataset = @db[:edict_entry].where(condition).group_by(Sequel.qualify(:edict_entry, :id))
 
@@ -231,15 +227,9 @@ See '.faq regexp'",
   def keyword_lookup(words)
     return [] if words.empty?
 
-    column = :text
+    words = words.uniq.map(&:to_s)
 
-    words = words.uniq
-
-    condition = Sequel.|(*words.map do |word|
-      { Sequel.qualify(:edict_english, column) => word.to_s }
-    end)
-
-    english_ids = @db[:edict_english].where(condition).select(:id).to_a.flat_map {|h| h.values}
+    english_ids = @db[:edict_english].where(Sequel.qualify(:edict_english, :text) => words).select(:id).to_a.flat_map {|h| h.values}
 
     return [] unless english_ids.size == words.size
 
