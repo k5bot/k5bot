@@ -146,6 +146,8 @@ class YEDICT < IRCPlugin
 
     column = :text
 
+    words = words.uniq
+
     table = @hash_yedict[:yedict_entries]
     yedict_english = @hash_yedict[:yedict_english]
     yedict_english_join = @hash_yedict[:yedict_english_join]
