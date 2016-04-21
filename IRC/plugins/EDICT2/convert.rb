@@ -71,7 +71,7 @@ class EDICT2Converter
         entry.parse
 
         entry.japanese.each do |j|
-          j.usages_count = usages_count[j] || 0
+          j.usages_count = usages_count[j.word] || 0
         end
 
         all_writings = entry.japanese.map do |j|
@@ -251,6 +251,8 @@ def marshal_dict(dict, sqlite_file)
   db.add_index(:edict_entry, :japanese)
   print '.'
   db.add_index(:edict_entry, :reading_norm)
+  print '.'
+  db.add_index(:edict_entry, :edict_text_id)
   print '.'
 
   db.add_index(:edict_entry_to_english, :edict_text_id)

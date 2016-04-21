@@ -61,7 +61,7 @@ See '.faq regexp'",
       word = msg.tail
       return unless word
       variants = @language.variants([word], *Language::JAPANESE_VARIANT_FILTERS)
-      lookup_result = lookup(variants)
+      lookup_result = group_results(lookup(variants))
       reply_with_menu(
           msg,
           generate_menu(
@@ -76,7 +76,7 @@ See '.faq regexp'",
     when :e
       word = msg.tail
       return unless word
-      edict_lookup = keyword_lookup(split_into_keywords(word))
+      edict_lookup = group_results(keyword_lookup(split_into_keywords(word)))
       reply_with_menu(msg, generate_menu(format_description_show_all(edict_lookup), "\"#{word}\" in EDICT2"))
     when :jr
       word = msg.tail
@@ -149,6 +149,14 @@ See '.faq regexp'",
     lookup_impl(words, [:japanese, :reading_norm])
   end
 
+  def group_results(entries)
+    gs = entries.group_by {|e| e.edict_text_id}
+    gs.map do |edict_text_id, g|
+      japanese, reading = g.map {|p| [p.japanese, p.reading]}.transpose
+      EDICT2ResultEntry.new(@db, :japanese => japanese.uniq.join(','), :reading => reading.uniq.join(','), :id => edict_text_id)
+    end
+  end
+
   # Looks up all entries that have any given word in any
   # of the specified columns and returns the result as an array of entries
   def lookup_impl(words, columns)
@@ -176,7 +184,7 @@ See '.faq regexp'",
         kanji_matched = regexps_kanji.all? { |regex| regex =~ word_kanji }
         word_kana = entry.reading
         kana_matched = regexps_kana.all? { |regex| regex =~ word_kana }
-        lookup_result << [entry, !entry.simple_entry, kana_matched] if kanji_matched || kana_matched
+        lookup_result << [entry, kanji_matched, kana_matched] if kanji_matched || kana_matched
       end
     when :intersection
       @regexpable.each do |entry|
@@ -184,15 +192,39 @@ See '.faq regexp'",
         next unless regexps_kanji.all? { |regex| regex =~ word_kanji }
         word_kana = entry.reading
         next unless regexps_kana.all? { |regex| regex =~ word_kana }
-        if regexps_english
-          text_english = entry.raw.split('/', 2)[1] || ''
-          next unless regexps_english.all? { |regex| regex =~ text_english }
-        end
-        lookup_result << [entry, !entry.simple_entry, true]
+        lookup_result << [entry, true, true]
       end
     end
 
-    lookup_result
+    gs = lookup_result.group_by {|e, _, _| e.edict_text_id}
+
+    if regexps_english
+      @db[:edict_text].where(:id => gs.keys).select(:id, :raw).each do |h|
+        text_english = h[:raw]
+        next if regexps_english.all? { |regex| regex =~ text_english }
+        gs.delete(h[:id])
+      end
+    end
+
+    gs.map do |edict_text_id, g|
+      japanese, reading = g.map do |p, kanji_matched, kana_matched|
+        [(p.japanese if kanji_matched), (p.reading if kana_matched)]
+      end.transpose
+      japanese = japanese.compact
+      reading = reading.compact
+      japanese = g.map {|p, _, _| p.japanese} if japanese.empty?
+      #reading = g.map {|p, _, _| p.reading} if reading.empty?
+      [
+          EDICT2ResultEntry.new(
+              @db,
+              :japanese => japanese.uniq.join(','),
+              :reading => reading.uniq.join(','),
+              :id => edict_text_id,
+          ),
+          true,
+          !reading.empty?,
+      ]
+    end
   end
 
   # Looks up all entries that contain all given words in english text
@@ -207,13 +239,13 @@ See '.faq regexp'",
       { Sequel.qualify(:edict_english, column) => word.to_s }
     end)
 
-    english_ids = @db[:edict_english].where(condition).select(:id).to_a.map {|h| h.values}.flatten
+    english_ids = @db[:edict_english].where(condition).select(:id).to_a.flat_map {|h| h.values}
 
     return [] unless english_ids.size == words.size
 
-    dataset = @db[:edict_entry_to_english].where(Sequel.qualify(:edict_entry_to_english, :edict_english_id) => english_ids).group_and_count(Sequel.qualify(:edict_entry_to_english, :edict_entry_id)).join(:edict_entry, :id => :edict_entry_id).having(:count => english_ids.size)
+    text_ids = @db[:edict_entry_to_english].where(Sequel.qualify(:edict_entry_to_english, :edict_english_id) => english_ids).group_and_count(Sequel.qualify(:edict_entry_to_english, :edict_text_id)).having(:count => english_ids.size).select_append(Sequel.qualify(:edict_entry_to_english, :edict_text_id)).to_a.flat_map {|h| h.values}
 
-    dataset = dataset.select_append(*EDICT2LazyEntry::COLUMNS)
+    dataset = @db[:edict_entry].where(Sequel.qualify(:edict_entry, :edict_text_id) => text_ids).select(*EDICT2LazyEntry::COLUMNS)
 
     standard_order(dataset).to_a.map do |entry|
       EDICT2LazyEntry.new(@db, entry)
@@ -239,13 +271,29 @@ See '.faq regexp'",
     regexpable.map do |entry|
       EDICT2LazyEntry.new(db, entry)
     end
+  end
 
-    {
-        :edict_entries => edict_entries,
-        :edict_english => edict_english,
-        :edict_english_join => edict_english_join,
-        :all => regexpable,
-    }
+  class EDICT2ResultEntry
+    attr_reader :japanese, :reading, :simple_entry, :id
+
+    ID_FIELD = Sequel.qualify(:edict_text, :id)
+
+    def initialize(db, pre_init)
+      @db = db
+
+      @japanese = pre_init[:japanese]
+      @reading = pre_init[:reading]
+      @simple_entry = @japanese == @reading
+      @id = pre_init[:id]
+    end
+
+    def raw
+      @db[:edict_text].where(ID_FIELD => @id).select(:raw).first[:raw]
+    end
+
+    def to_s
+      self.raw
+    end
   end
 
   class EDICT2LazyEntry
@@ -253,7 +301,7 @@ See '.faq regexp'",
     FIELDS = [:japanese, :reading, :simple_entry, :id, :edict_text_id]
     COLUMNS = FIELDS.map {|f| Sequel.qualify(:edict_entry, f)}
 
-    ID_FIELD = Sequel.qualify(:edict_entry, :id)
+    TEXT_ID_FIELD = Sequel.qualify(:edict_text, :id)
 
     def initialize(db, pre_init)
       @db = db
@@ -266,7 +314,7 @@ See '.faq regexp'",
     end
 
     def raw
-      @db[:edict_entry].where(ID_FIELD => @id).join(:edict_text, :id => :edict_text_id).select(:raw).first[:raw]
+      @db[:edict_text].where(TEXT_ID_FIELD => @edict_text_id).select(:raw).first[:raw]
     end
 
     def to_s
