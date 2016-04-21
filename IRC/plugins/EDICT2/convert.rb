@@ -260,6 +260,11 @@ def marshal_dict(dict, sqlite_file)
   db.add_index(:edict_entry_to_english, :edict_english_id)
   print '.'
 
+  puts 'done.'
+
+  print "Vacuuming #{sqlite_file}..."
+  db.run('vacuum')
+
   database_disconnect(db)
 
   puts 'done.'
