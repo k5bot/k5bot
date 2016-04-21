@@ -160,8 +160,8 @@ See '.faq regexp'",
 
     dataset = table.where(condition).group_by(Sequel.qualify(:edict_entry, :id))
 
-    standard_order(dataset).select(:japanese, :reading, :simple_entry, :id).to_a.map do |entry|
-      EDICT2LazyEntry.new(table, entry[:id], entry)
+    standard_order(dataset).select(*EDICT2LazyEntry::COLUMNS).to_a.map do |entry|
+      EDICT2LazyEntry.new(table, entry)
     end
   end
 
@@ -219,15 +219,10 @@ See '.faq regexp'",
 
     dataset = edict_english_join.where(Sequel.qualify(:edict_entry_to_english, :edict_english_id) => english_ids).group_and_count(Sequel.qualify(:edict_entry_to_english, :edict_entry_id)).join(:edict_entry, :id => :edict_entry_id).having(:count => english_ids.size)
 
-    dataset = dataset.select_append(
-        Sequel.qualify(:edict_entry, :japanese),
-        Sequel.qualify(:edict_entry, :reading),
-        Sequel.qualify(:edict_entry, :simple_entry),
-        Sequel.qualify(:edict_entry, :id),
-    )
+    dataset = dataset.select_append(*EDICT2LazyEntry::COLUMNS)
 
     standard_order(dataset).to_a.map do |entry|
-      EDICT2LazyEntry.new(table, entry[:id], entry)
+      EDICT2LazyEntry.new(table, entry)
     end
   end
 
@@ -250,9 +245,9 @@ See '.faq regexp'",
       raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[EDICT2Entry::VERSION].inspect} of plugin. Rerun convert.rb."
     end
 
-    regexpable = edict_entries.select(:japanese, :reading, :simple_entry, :id).to_a
+    regexpable = edict_entries.select(*EDICT2LazyEntry::COLUMNS).to_a
     regexpable = regexpable.map do |entry|
-      EDICT2LazyEntry.new(edict_entries, entry[:id], entry)
+      EDICT2LazyEntry.new(edict_entries, entry)
     end
 
     {
@@ -264,17 +259,20 @@ See '.faq regexp'",
   end
 
   class EDICT2LazyEntry
-    attr_reader :japanese, :reading, :simple_entry
+    attr_reader :japanese, :reading, :simple_entry, :id, :edict_text_id
+    FIELDS = [:japanese, :reading, :simple_entry, :id, :edict_text_id]
+    COLUMNS = FIELDS.map {|f| Sequel.qualify(:edict_entry, f)}
 
     ID_FIELD = Sequel.qualify(:edict_entry, :id)
 
-    def initialize(dataset, id, pre_init)
+    def initialize(dataset, pre_init)
       @dataset = dataset
-      @id = id
 
       @japanese = pre_init[:japanese]
       @reading = pre_init[:reading]
       @simple_entry = pre_init[:simple_entry]
+      @id = pre_init[:id]
+      @edict_text_id = pre_init[:edict_text_id]
     end
 
     def raw
