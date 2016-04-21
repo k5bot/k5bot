@@ -102,6 +102,7 @@
 - :Language
 # The following plugins
 #- :EDICT
+#- :EDICT2
 #- :ENAMDICT
 #- :KANJIDIC
 #- :KANJIDIC2
