@@ -36,13 +36,13 @@ See '.faq regexp'",
 
     @db = database_connect("sqlite://#{(File.dirname __FILE__)}/edict2.sqlite", :encoding => 'utf8')
 
-    @hash_edict = load_dict(@db)
+    @regexpable = load_dict(@db)
   end
 
   def beforeUnload
     @menu.evict_plugin_menus!(self.name)
 
-    @hash_edict = nil
+    @regexpable = nil
 
     database_disconnect(@db)
     @db = nil
@@ -152,16 +152,14 @@ See '.faq regexp'",
   # Looks up all entries that have any given word in any
   # of the specified columns and returns the result as an array of entries
   def lookup_impl(words, columns)
-    table = @hash_edict[:edict_entries]
-
     condition = Sequel.|(*words.map do |word|
       Sequel.or(columns.map { |column| [column, word] })
     end)
 
-    dataset = table.where(condition).group_by(Sequel.qualify(:edict_entry, :id))
+    dataset = @db[:edict_entry].where(condition).group_by(Sequel.qualify(:edict_entry, :id))
 
     standard_order(dataset).select(*EDICT2LazyEntry::COLUMNS).to_a.map do |entry|
-      EDICT2LazyEntry.new(table, entry)
+      EDICT2LazyEntry.new(@db, entry)
     end
   end
 
@@ -173,7 +171,7 @@ See '.faq regexp'",
 
     case operation
     when :union
-      @hash_edict[:all].each do |entry|
+      @regexpable.each do |entry|
         word_kanji = entry.japanese
         kanji_matched = regexps_kanji.all? { |regex| regex =~ word_kanji }
         word_kana = entry.reading
@@ -181,7 +179,7 @@ See '.faq regexp'",
         lookup_result << [entry, !entry.simple_entry, kana_matched] if kanji_matched || kana_matched
       end
     when :intersection
-      @hash_edict[:all].each do |entry|
+      @regexpable.each do |entry|
         word_kanji = entry.japanese
         next unless regexps_kanji.all? { |regex| regex =~ word_kanji }
         word_kana = entry.reading
@@ -205,24 +203,20 @@ See '.faq regexp'",
 
     words = words.uniq
 
-    table = @hash_edict[:edict_entries]
-    edict_english = @hash_edict[:edict_english]
-    edict_english_join = @hash_edict[:edict_english_join]
-
     condition = Sequel.|(*words.map do |word|
       { Sequel.qualify(:edict_english, column) => word.to_s }
     end)
 
-    english_ids = edict_english.where(condition).select(:id).to_a.map {|h| h.values}.flatten
+    english_ids = @db[:edict_english].where(condition).select(:id).to_a.map {|h| h.values}.flatten
 
     return [] unless english_ids.size == words.size
 
-    dataset = edict_english_join.where(Sequel.qualify(:edict_entry_to_english, :edict_english_id) => english_ids).group_and_count(Sequel.qualify(:edict_entry_to_english, :edict_entry_id)).join(:edict_entry, :id => :edict_entry_id).having(:count => english_ids.size)
+    dataset = @db[:edict_entry_to_english].where(Sequel.qualify(:edict_entry_to_english, :edict_english_id) => english_ids).group_and_count(Sequel.qualify(:edict_entry_to_english, :edict_entry_id)).join(:edict_entry, :id => :edict_entry_id).having(:count => english_ids.size)
 
     dataset = dataset.select_append(*EDICT2LazyEntry::COLUMNS)
 
     standard_order(dataset).to_a.map do |entry|
-      EDICT2LazyEntry.new(table, entry)
+      EDICT2LazyEntry.new(@db, entry)
     end
   end
 
@@ -235,19 +229,15 @@ See '.faq regexp'",
   end
 
   def load_dict(db)
-    edict_version = db[:edict_version]
-    edict_entries = db[:edict_entry]
-    edict_english = db[:edict_english]
-    edict_english_join = db[:edict_entry_to_english]
-
-    versions = edict_version.to_a.map {|x| x[:id]}
+    versions = db[:edict_version].to_a.map {|x| x[:id]}
     unless versions.include?(EDICT2Entry::VERSION)
       raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[EDICT2Entry::VERSION].inspect} of plugin. Rerun convert.rb."
     end
 
-    regexpable = edict_entries.select(*EDICT2LazyEntry::COLUMNS).to_a
-    regexpable = regexpable.map do |entry|
-      EDICT2LazyEntry.new(edict_entries, entry)
+    regexpable = db[:edict_entry].select(*EDICT2LazyEntry::COLUMNS).to_a
+
+    regexpable.map do |entry|
+      EDICT2LazyEntry.new(db, entry)
     end
 
     {
@@ -265,8 +255,8 @@ See '.faq regexp'",
 
     ID_FIELD = Sequel.qualify(:edict_entry, :id)
 
-    def initialize(dataset, pre_init)
-      @dataset = dataset
+    def initialize(db, pre_init)
+      @db = db
 
       @japanese = pre_init[:japanese]
       @reading = pre_init[:reading]
@@ -276,7 +266,7 @@ See '.faq regexp'",
     end
 
     def raw
-      @dataset.where(ID_FIELD => @id).join(:edict_text, :id => :edict_text_id).select(:raw).first[:raw]
+      @db[:edict_entry].where(ID_FIELD => @id).join(:edict_text, :id => :edict_text_id).select(:raw).first[:raw]
     end
 
     def to_s
