@@ -221,7 +221,7 @@ See '.faq regexp'",
               :reading => reading.uniq.join(','),
               :id => edict_text_id,
           ),
-          true,
+          !(japanese - reading).empty?,
           !reading.empty?,
       ]
     end
