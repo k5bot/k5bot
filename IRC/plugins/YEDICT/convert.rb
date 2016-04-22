@@ -35,7 +35,7 @@ class YEDICTConverter
   end
 
   def read
-    File.open(@yedict_file, 'r', :encoding=> 'utf-8') do |io|
+    File.open(@yedict_file, 'r', :encoding => 'utf-8') do |io|
       io.each_line.each_with_index do |l, i|
         print '.' if 0 == i%1000
 
@@ -52,7 +52,7 @@ class YEDICTConverter
   end
 end
 
-def marshal_dict(dict)
+def marshal_dict(dict, sqlite_file)
   ec = YEDICTConverter.new("#{(File.dirname __FILE__)}/#{dict}")
 
   print "Indexing #{dict.upcase}..."
@@ -61,7 +61,7 @@ def marshal_dict(dict)
 
   print "Marshalling #{dict.upcase}..."
 
-  db = database_connect("sqlite://#{dict}.sqlite", :encoding => 'utf8')
+  db = database_connect("sqlite://#{sqlite_file}", :encoding => 'utf8')
 
   db.drop_table? :yedict_entry_to_english
   db.drop_table? :yedict_english
@@ -118,8 +118,6 @@ def marshal_dict(dict)
     end
 
     yedict_english_dataset = db[:yedict_english]
-    yedict_entry_to_english_dataset = db[:yedict_entry_to_english]
-
     to_import = []
 
     print '(keywords collection)'
@@ -139,7 +137,7 @@ def marshal_dict(dict)
     to_import.sort!
 
     print '(keywords import)'
-    yedict_entry_to_english_dataset.import([:yedict_entry_id, :yedict_english_id], to_import)
+    db[:yedict_entry_to_english].import([:yedict_entry_id, :yedict_english_id], to_import)
     print '.'
   end
 
@@ -157,9 +155,14 @@ def marshal_dict(dict)
   db.add_index(:yedict_entry_to_english, :yedict_english_id)
   print '.'
 
+  puts 'done.'
+
+  print "Vacuuming #{sqlite_file}..."
+  db.run('vacuum')
+
   database_disconnect(db)
 
   puts 'done.'
 end
 
-marshal_dict('yedict')
+marshal_dict('yedict.txt', 'yedict.sqlite')

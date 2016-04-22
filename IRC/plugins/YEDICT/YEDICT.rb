@@ -28,13 +28,11 @@ class YEDICT < IRCPlugin
 
     @db = database_connect("sqlite://#{(File.dirname __FILE__)}/yedict.sqlite", :encoding => 'utf8')
 
-    @hash_yedict = load_dict(@db)
+    load_dict(@db)
   end
 
   def beforeUnload
     @menu.evict_plugin_menus!(self.name)
-
-    @hash_yedict = nil
 
     database_disconnect(@db)
     @db = nil
@@ -51,7 +49,7 @@ class YEDICT < IRCPlugin
     when :cn
       word = msg.tail
       return unless word
-      yedict_lookup = lookup([word], [:cantonese, :mandarin, :jyutping])
+      yedict_lookup = lookup([word])
       reply_with_menu(msg, generate_menu(format_description_unambiguous(yedict_lookup), "\"#{word}\" in YEDICT"))
     when :cnen
       word = msg.tail
@@ -63,20 +61,15 @@ class YEDICT < IRCPlugin
 
   def format_description_unambiguous(lookup_result)
     amb_chk_hanzi = Hash.new(0)
-    amb_chk_jyutping = Hash.new(0)
-
     lookup_result.each do |e|
       hanzi_list = YEDICT.format_hanzi_list(e)
-      jyutping_list = YEDICT.format_jyutping_list(e)
 
       amb_chk_hanzi[hanzi_list] += 1
-      amb_chk_jyutping[jyutping_list] += 1
     end
     render_hanzi = amb_chk_hanzi.keys.size > 1
 
     lookup_result.map do |e|
       hanzi_list = YEDICT.format_hanzi_list(e)
-
       render_jyutping = amb_chk_hanzi[hanzi_list] > 1
 
       [e, render_hanzi, render_jyutping]
@@ -118,25 +111,26 @@ class YEDICT < IRCPlugin
 
   def reply_with_menu(msg, result)
     @menu.put_new_menu(
-      self.name,
-      result,
-      msg
+        self.name,
+        result,
+        msg
     )
+  end
+
+  # Refined version of lookup_impl() suitable for public API use
+  def lookup(words)
+    lookup_impl(words, [:cantonese, :mandarin, :jyutping])
   end
 
   # Looks up all entries that have any given word in any
   # of the specified columns and returns the result as an array of entries
-  def lookup(words, columns)
-    table = @hash_yedict[:yedict_entries]
+  def lookup_impl(words, columns)
+    condition = Sequel.or(columns.product([words]))
 
-    condition = Sequel.|(*words.map do |word|
-      Sequel.or(columns.map { |column| [column, word] })
-    end)
+    dataset = @db[:yedict_entry].where(condition).group_by(Sequel.qualify(:yedict_entry, :id))
 
-    dataset = table.where(condition).group_by(Sequel.qualify(:yedict_entry, :id))
-
-    standard_order(dataset).select(:cantonese, :mandarin, :jyutping, :id).to_a.map do |entry|
-      YEDICTLazyEntry.new(table, entry[:id], entry)
+    standard_order(dataset).select(*YEDICTLazyEntry::COLUMNS).to_a.map do |entry|
+      YEDICTLazyEntry.new(@db, entry)
     end
   end
 
@@ -144,33 +138,18 @@ class YEDICT < IRCPlugin
   def keyword_lookup(words)
     return [] if words.empty?
 
-    column = :text
+    words = words.uniq.map(&:to_s)
 
-    words = words.uniq
-
-    table = @hash_yedict[:yedict_entries]
-    yedict_english = @hash_yedict[:yedict_english]
-    yedict_english_join = @hash_yedict[:yedict_english_join]
-
-    condition = Sequel.|(*words.map do |word|
-      { Sequel.qualify(:yedict_english, column) => word.to_s }
-    end)
-
-    english_ids = yedict_english.where(condition).select(:id).to_a.map {|h| h.values}.flatten
+    english_ids = @db[:yedict_english].where(Sequel.qualify(:yedict_english, :text) => words).select(:id).to_a.flat_map {|h| h.values}
 
     return [] unless english_ids.size == words.size
 
-    dataset = yedict_english_join.where(Sequel.qualify(:yedict_entry_to_english, :yedict_english_id) => english_ids).group_and_count(Sequel.qualify(:yedict_entry_to_english, :yedict_entry_id)).join(:yedict_entry, :id => :yedict_entry_id).having(:count => english_ids.size)
+    dataset = @db[:yedict_entry_to_english].where(Sequel.qualify(:yedict_entry_to_english, :yedict_english_id) => english_ids).group_and_count(Sequel.qualify(:yedict_entry_to_english, :yedict_entry_id)).join(:yedict_entry, :id => :yedict_entry_id).having(:count => english_ids.size)
 
-    dataset = dataset.select_append(
-        Sequel.qualify(:yedict_entry, :cantonese),
-        Sequel.qualify(:yedict_entry, :mandarin),
-        Sequel.qualify(:yedict_entry, :jyutping),
-        Sequel.qualify(:yedict_entry, :id),
-    )
+    dataset = dataset.select_append(*YEDICTLazyEntry::COLUMNS)
 
     standard_order(dataset).to_a.map do |entry|
-      YEDICTLazyEntry.new(table, entry[:id], entry)
+      YEDICTLazyEntry.new(@db, entry)
     end
   end
 
@@ -183,34 +162,28 @@ class YEDICT < IRCPlugin
   end
 
   def load_dict(db)
-    yedict_version = db[:yedict_version]
-    yedict_entries = db[:yedict_entry]
-    yedict_english = db[:yedict_english]
-    yedict_english_join = db[:yedict_entry_to_english]
-
-    versions = yedict_version.to_a.map {|x| x[:id]}
+    versions = db[:yedict_version].to_a.map {|x| x[:id]}
     unless versions.include?(YEDICTEntry::VERSION)
       raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[YEDICTEntry::VERSION].inspect} of plugin. Rerun convert.rb."
     end
-
-    {
-        :yedict_entries => yedict_entries,
-        :yedict_english => yedict_english,
-        :yedict_english_join => yedict_english_join,
-    }
   end
 
   class YEDICTLazyEntry
-    attr_reader :cantonese, :mandarin, :jyutping
-    lazy_dataset_field :raw, Sequel.qualify(:yedict_entry, :id)
+    attr_reader :cantonese, :mandarin, :jyutping, :id
+    FIELDS = [:cantonese, :mandarin, :jyutping, :id]
+    COLUMNS = FIELDS.map {|f| Sequel.qualify(:yedict_entry, f)}
 
-    def initialize(dataset, id, pre_init)
-      @dataset = dataset
-      @id = id
+    def initialize(db, pre_init)
+      @db = db
 
       @cantonese = pre_init[:cantonese]
       @mandarin = pre_init[:mandarin]
       @jyutping = pre_init[:jyutping]
+      @id = pre_init[:id]
+    end
+
+    def raw
+      @db[:yedict_entry].where(:id => @id).select(:raw).first[:raw]
     end
 
     def to_s
