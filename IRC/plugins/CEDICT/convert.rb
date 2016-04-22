@@ -22,7 +22,7 @@ require 'sequel'
 end
 
 require 'IRC/SequelHelpers'
-require_relative 'CEDICTEntry'
+require 'IRC/plugins/CEDICT/CEDICTEntry'
 
 include SequelHelpers
 

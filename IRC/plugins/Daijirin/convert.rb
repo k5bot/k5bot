@@ -22,7 +22,7 @@ require 'sequel'
 end
 
 require 'IRC/SequelHelpers'
-require_relative 'DaijirinEntry'
+require 'IRC/plugins/Daijirin/DaijirinEntry'
 
 include SequelHelpers
 

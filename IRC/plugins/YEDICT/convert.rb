@@ -18,7 +18,7 @@ require 'sequel'
 end
 
 require 'IRC/SequelHelpers'
-require_relative 'YEDICTEntry'
+require 'IRC/plugins/YEDICT/YEDICTEntry'
 
 include SequelHelpers
 

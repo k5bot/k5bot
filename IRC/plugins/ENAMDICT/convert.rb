@@ -22,7 +22,7 @@ require 'sequel'
 end
 
 require 'IRC/SequelHelpers'
-require_relative 'ENAMDICTEntry'
+require 'IRC/plugins/ENAMDICT/ENAMDICTEntry'
 
 include SequelHelpers
 

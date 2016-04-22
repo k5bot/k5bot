@@ -17,7 +17,7 @@ require 'nokogiri'
   $LOAD_PATH.unshift(lib_dir) unless $LOAD_PATH.include?(lib_dir)
 end
 
-require_relative 'KANJIDIC2Entry'
+require 'IRC/plugins/KANJIDIC2/KANJIDIC2Entry'
 
 class KANJIDICConverter
   attr_reader :hash
