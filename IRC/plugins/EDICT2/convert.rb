@@ -62,6 +62,8 @@ class EDICT2Converter
       end
     end] rescue {}
 
+    references_count = Hash.new(0)
+
     File.open(@edict_file, 'r', :encoding => 'EUC-JP') do |io|
       io.each_line.each_with_index do |l, i|
         print '.' if 0 == i%1000
@@ -71,26 +73,14 @@ class EDICT2Converter
         entry.parse
 
         entry.japanese.each do |j|
+          references_count[j.word] += 1
           j.usages_count = usages_count[j.word] || 0
         end
 
-        all_writings = entry.japanese.map do |j|
-          [j.word, j]
-        end.to_h
-
-        entry.reading.each do |reading, writings|
-          writings.each do |w|
-            writing = all_writings[w]
-
-            subentry = SubEntry.new
-            subentry.japanese = w
-            subentry.reading = reading.word
-            subentry.common = reading.common? || writing.common?
-            subentry.gloss_common = entry.common?
-            subentry.parent = entry
-            subentry.usages_count = writing.usages_count
-
-            @subentries << subentry
+        if !entry.simple_entry && entry.raw.include?('(uk)')
+          entry.reading.each do |r, _|
+            references_count[r.word] += 1
+            r.usages_count = usages_count[r.word] || 0
           end
         end
 
@@ -99,6 +89,42 @@ class EDICT2Converter
         end
 
         @all_entries << entry
+      end
+    end
+
+    @all_entries.each do |entry|
+      entry.japanese.each do |j|
+        ref_count = references_count[j.word]
+        j.usages_count /= ref_count if ref_count > 1
+
+        entry.usages_count += j.usages_count
+      end
+
+      entry.reading.each do |r, _|
+        ref_count = references_count[r.word]
+        r.usages_count /= ref_count if ref_count > 1
+
+        entry.usages_count += r.usages_count
+      end
+
+      all_writings = entry.japanese.map do |j|
+        [j.word, j]
+      end.to_h
+
+      entry.reading.each do |reading, writings|
+        writings.each do |w|
+          writing = all_writings[w]
+
+          subentry = SubEntry.new
+          subentry.japanese = w
+          subentry.reading = reading.word
+          subentry.common = reading.common? || writing.common?
+          subentry.gloss_common = entry.common?
+          subentry.parent = entry
+          subentry.usages_count = writing.usages_count + reading.usages_count
+
+          @subentries << subentry
+        end
       end
     end
   end
@@ -112,6 +138,19 @@ class EDICT2Converter
           e.reading,
           e.parent.keywords.size,
           e.japanese.size,
+      ]
+    end
+
+    @all_entries.sort_by! do |e|
+      shortest_reading = e.reading.map(&:first).map(&:word).min_by(&:size)
+      shortest_japanese = e.japanese.map(&:word).min_by(&:size)
+      [
+          -e.usages_count,
+          (e.common? ? -1 : 1),
+          shortest_reading.size,
+          shortest_reading,
+          e.keywords.size,
+          shortest_japanese,
       ]
     end
   end
@@ -217,7 +256,6 @@ def marshal_dict(dict, sqlite_file)
           :simple_entry => entry.reading.eql?(entry.japanese),
           :edict_text_id => id_map[entry.parent],
       )
-      id_map[entry] = entry_id
     end
 
     edict_english_dataset = db[:edict_english]

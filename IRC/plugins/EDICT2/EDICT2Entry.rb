@@ -18,6 +18,7 @@ class EDICT2Entry
         @keywords << $1
         ''
       end.strip
+      @usages_count = 0
     end
 
     def to_s
@@ -38,6 +39,8 @@ class EDICT2Entry
               :english,
               :simple_entry # precomputed boolean, true if reading matches japanese.
 
+  attr_accessor :usages_count
+
   # TODO: the p here conflicts with P that denotes common words. should fix that somehow.
   PROPER_NAME_KEYWORDS = [:s, :p, :u, :g, :f, :m, :h, :pr, :co, :st].to_set
 
@@ -48,6 +51,7 @@ class EDICT2Entry
     @simple_entry = nil
     @english = nil
     @keywords = nil
+    @usages_count = 0
   end
 
   def parse

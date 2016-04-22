@@ -149,7 +149,9 @@ See '.faq regexp'",
 
   def group_results(entries)
     gs = entries.group_by {|e| e.edict_text_id}
-    gs.map do |edict_text_id, g|
+    gs.sort_by do |edict_text_id, _|
+      edict_text_id
+    end.map do |edict_text_id, g|
       japanese, reading = g.map {|p| [p.japanese, p.reading]}.transpose
       EDICT2ResultEntry.new(@db, :japanese => japanese.uniq.join(','), :reading => reading.uniq.join(','), :id => edict_text_id)
     end
@@ -202,7 +204,9 @@ See '.faq regexp'",
       end
     end
 
-    gs.map do |edict_text_id, g|
+    gs.sort_by do |edict_text_id, _|
+      edict_text_id
+    end.map do |edict_text_id, g|
       japanese, reading = g.map do |p, kanji_matched, kana_matched|
         [(p.japanese if kanji_matched), (p.reading if kana_matched)]
       end.transpose
