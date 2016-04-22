@@ -35,13 +35,13 @@ See '.faq regexp'",
 
     @db = database_connect("sqlite://#{(File.dirname __FILE__)}/enamdict.sqlite", :encoding => 'utf8')
 
-    @hash_enamdict = load_dict(@db)
+    @regexpable = load_dict(@db)
   end
 
   def beforeUnload
     @menu.evict_plugin_menus!(self.name)
 
-    @hash_enamdict = nil
+    @regexpable = nil
 
     database_disconnect(@db)
     @db = nil
@@ -60,7 +60,7 @@ See '.faq regexp'",
       word = msg.tail
       return unless word
       variants = @language.variants([word], *Language::JAPANESE_VARIANT_FILTERS)
-      lookup_result = lookup(variants, [:japanese, :reading_norm])
+      lookup_result = lookup(variants)
       reply_with_menu(
           msg,
           generate_menu(
@@ -91,10 +91,8 @@ See '.faq regexp'",
 
   def format_description_unambiguous(lookup_result)
     amb_chk_kanji = Hash.new(0)
-    amb_chk_kana = Hash.new(0)
     lookup_result.each do |e|
       amb_chk_kanji[e.japanese] += 1
-      amb_chk_kana[e.reading] += 1
     end
     render_kanji = amb_chk_kanji.keys.size > 1
 
@@ -116,7 +114,7 @@ See '.faq regexp'",
     menu = lookup.map do |e, render_kanji, render_kana|
       kanji_list = e.japanese
 
-      description = if render_kanji && !kanji_list.empty? then
+      description = if render_kanji && !kanji_list.empty?
                       render_kana ? "#{kanji_list} (#{e.reading})" : kanji_list
                     elsif e.reading
                       e.reading
@@ -138,31 +136,32 @@ See '.faq regexp'",
     )
   end
 
+  # Refined version of lookup_impl() suitable for public API use
+  def lookup(words)
+    lookup_impl(words, [:japanese, :reading_norm])
+  end
+
   # Looks up all entries that have any given word in any
   # of the specified columns and returns the result as an array of entries
-  def lookup(words, columns)
-    table = @hash_enamdict[:enamdict_entries]
+  def lookup_impl(words, columns)
+    condition = Sequel.or(columns.product([words]))
 
-    condition = Sequel.|(*words.map do |word|
-      Sequel.or(columns.map { |column| [column, word] })
-    end)
+    dataset = @db[:enamdict_entry].where(condition).group_by(Sequel.qualify(:enamdict_entry, :id))
 
-    dataset = table.where(condition).group_by(Sequel.qualify(:enamdict_entry, :id))
-
-    standard_order(dataset).select(:japanese, :reading, :simple_entry, :id).to_a.map do |entry|
-      ENAMDICTLazyEntry.new(table, entry[:id], entry)
+    standard_order(dataset).select(*ENAMDICTLazyEntry::COLUMNS).to_a.map do |entry|
+      ENAMDICTLazyEntry.new(@db, entry)
     end
   end
 
   def lookup_complex_regexp(complex_regexp)
     operation = complex_regexp.shift
-    regexps_kanji, regexps_kana = complex_regexp
+    regexps_kanji, regexps_kana, regexps_english = complex_regexp
 
     lookup_result = []
 
     case operation
     when :union
-      @hash_enamdict[:all].each do |entry|
+      @regexpable.each do |entry|
         word_kanji = entry.japanese
         kanji_matched = regexps_kanji.all? { |regex| regex =~ word_kanji }
         word_kana = entry.reading
@@ -170,11 +169,15 @@ See '.faq regexp'",
         lookup_result << [entry, !entry.simple_entry, kana_matched] if kanji_matched || kana_matched
       end
     when :intersection
-      @hash_enamdict[:all].each do |entry|
+      @regexpable.each do |entry|
         word_kanji = entry.japanese
         next unless regexps_kanji.all? { |regex| regex =~ word_kanji }
         word_kana = entry.reading
         next unless regexps_kana.all? { |regex| regex =~ word_kana }
+        if regexps_english
+          text_english = entry.raw.split('/', 2)[1] || ''
+          next unless regexps_english.all? { |regex| regex =~ text_english }
+        end
         lookup_result << [entry, !entry.simple_entry, true]
       end
     end
@@ -188,36 +191,34 @@ See '.faq regexp'",
 
 
   def load_dict(db)
-    enamdict_version = db[:enamdict_version]
-    enamdict_entries = db[:enamdict_entry]
-
-    versions = enamdict_version.to_a.map {|x| x[:id]}
+    versions = db[:enamdict_version].to_a.map {|x| x[:id]}
     unless versions.include?(ENAMDICTEntry::VERSION)
       raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[ENAMDICTEntry::VERSION].inspect} of plugin. Rerun convert.rb."
     end
 
-    regexpable = enamdict_entries.select(:japanese, :reading, :simple_entry, :id).to_a
-    regexpable = regexpable.map do |entry|
-      ENAMDICTLazyEntry.new(enamdict_entries, entry[:id], entry)
-    end
+    regexpable = db[:enamdict_entry].select(*ENAMDICTLazyEntry::COLUMNS).to_a
 
-    {
-        :enamdict_entries => enamdict_entries,
-        :all => regexpable,
-    }
+    regexpable.map do |entry|
+      ENAMDICTLazyEntry.new(@db, entry)
+    end
   end
 
   class ENAMDICTLazyEntry
-    attr_reader :japanese, :reading, :simple_entry
-    lazy_dataset_field :raw, Sequel.qualify(:enamdict_entry, :id)
+    attr_reader :japanese, :reading, :simple_entry, :id
+    FIELDS = [:japanese, :reading, :simple_entry, :id]
+    COLUMNS = FIELDS.map {|f| Sequel.qualify(:enamdict_entry, f)}
 
-    def initialize(dataset, id, pre_init)
-      @dataset = dataset
-      @id = id
+    def initialize(db, pre_init)
+      @db = db
 
       @japanese = pre_init[:japanese]
       @reading = pre_init[:reading]
       @simple_entry = pre_init[:simple_entry]
+      @id = pre_init[:id]
+    end
+
+    def raw
+      @db[:enamdict_entry].where(:id => @id).select(:raw).first[:raw]
     end
 
     def to_s

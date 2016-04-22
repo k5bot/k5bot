@@ -56,11 +56,13 @@ class ENAMDICTConverter
   end
 
   def sort
-    count = 0
-    @all_entries.sort_by!{|e| [e.reading.size, e.reading, e.keywords.size, e.japanese.length]}
-    @all_entries.each do |e|
-      e.sortKey = count
-      count += 1
+    @all_entries.sort_by! do |e|
+      [
+          e.reading.size,
+          e.reading,
+          e.keywords.size,
+          e.japanese.size,
+      ]
     end
   end
 
@@ -73,7 +75,7 @@ class ENAMDICTConverter
   end
 end
 
-def marshal_dict(dict)
+def marshal_dict(dict, sqlite_file)
   ec = ENAMDICTConverter.new("#{(File.dirname __FILE__)}/#{dict}")
 
   print "Indexing #{dict.upcase}..."
@@ -86,7 +88,7 @@ def marshal_dict(dict)
 
   print "Marshalling #{dict.upcase}..."
 
-  db = database_connect("sqlite://#{dict}.sqlite", :encoding => 'utf8')
+  db = database_connect("sqlite://#{sqlite_file}", :encoding => 'utf8')
 
   db.drop_table? :enamdict_entry_to_english
   db.drop_table? :enamdict_english
@@ -152,9 +154,14 @@ def marshal_dict(dict)
   db.add_index(:enamdict_entry, :reading_norm)
   print '.'
 
+  puts 'done.'
+
+  print "Vacuuming #{sqlite_file}..."
+  db.run('vacuum')
+
   database_disconnect(db)
 
   puts 'done.'
 end
 
-marshal_dict('enamdict')
+marshal_dict('enamdict.txt', 'enamdict.sqlite')
