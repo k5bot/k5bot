@@ -295,8 +295,6 @@ See '.faq regexp'",
     FIELDS = [:japanese, :reading, :simple_entry, :id, :edict_text_id]
     COLUMNS = FIELDS.map {|f| Sequel.qualify(:edict_entry, f)}
 
-    TEXT_ID_FIELD = Sequel.qualify(:edict_text, :id)
-
     def initialize(db, pre_init)
       @db = db
 
@@ -308,7 +306,7 @@ See '.faq regexp'",
     end
 
     def raw
-      @db[:edict_text].where(TEXT_ID_FIELD => @edict_text_id).select(:raw).first[:raw]
+      @db[:edict_text].where(:id => @edict_text_id).select(:raw).first[:raw]
     end
 
     def to_s

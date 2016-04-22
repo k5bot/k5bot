@@ -259,8 +259,6 @@ def marshal_dict(dict, sqlite_file)
     end
 
     edict_english_dataset = db[:edict_english]
-    edict_entry_to_english_dataset = db[:edict_entry_to_english]
-
     to_import = []
 
     print '(keywords collection)'
@@ -280,7 +278,7 @@ def marshal_dict(dict, sqlite_file)
     to_import.sort!
 
     print '(keywords import)'
-    edict_entry_to_english_dataset.import([:edict_text_id, :edict_english_id], to_import)
+    db[:edict_entry_to_english].import([:edict_text_id, :edict_english_id], to_import)
     print '.'
   end
 

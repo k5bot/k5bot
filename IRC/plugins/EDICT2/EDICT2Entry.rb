@@ -70,8 +70,6 @@ class EDICT2Entry
     end
     @japanese = japanese
 
-    raise @raw unless japanese
-
     reading = m[2]
     @reading = if reading
                  reading = reading.split(';').map(&:strip).map do |w|
@@ -118,7 +116,7 @@ class EDICT2Entry
   # Returns a list of keywords created from the English translations and meta information.
   # Each keyword is a symbol.
   def keywords
-    @keywords ||= english.map { |e| EDICT2Entry.split_into_keywords(e) }.flatten.sort.uniq
+    @keywords ||= english.flat_map { |e| EDICT2Entry.split_into_keywords(e) }.sort.uniq
   end
 
   def self.split_into_keywords(text)
