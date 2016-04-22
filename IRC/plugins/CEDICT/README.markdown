@@ -1,12 +1,12 @@
-EDICT plugin
+CEDICT plugin
 ============
 
-This plugin needs the EDICT dictionary file.
+This plugin needs the CEDICT dictionary file.
 Download the file and convert it using the supplied scripts.
 
 Usage
 ------------------
-1. Run `./download.sh` to download edict -- or, download it manually to `./edict`.
+1. Run `./download.sh` to download cedict -- or, download it manually to `./cedict.txt`.
 2. Run `./convert.rb` to generate an indexed database that the plugin can use.
 
 Disclaimer

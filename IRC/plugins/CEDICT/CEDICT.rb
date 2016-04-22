@@ -19,7 +19,7 @@ class CEDICT < IRCPlugin
     :zh => 'looks up a Mandarin word in CEDICT',
     :zhen => 'looks up an English word in CEDICT',
   }
-  DEPENDENCIES = [ :Menu ]
+  DEPENDENCIES = [:Menu]
 
   def afterLoad
     load_helper_class(:CEDICTEntry)
@@ -28,13 +28,11 @@ class CEDICT < IRCPlugin
 
     @db = database_connect("sqlite://#{(File.dirname __FILE__)}/cedict.sqlite", :encoding => 'utf8')
 
-    @hash_cedict = load_dict(@db)
+    load_dict(@db)
   end
 
   def beforeUnload
     @menu.evict_plugin_menus!(self.name)
-
-    @hash_cedict = nil
 
     database_disconnect(@db)
     @db = nil
@@ -51,7 +49,7 @@ class CEDICT < IRCPlugin
     when :zh
       word = msg.tail
       return unless word
-      cedict_lookup = lookup([word], [:mandarin_zh, :mandarin_tw, :pinyin])
+      cedict_lookup = lookup([word])
       reply_with_menu(msg, generate_menu(format_description_unambiguous(cedict_lookup), "\"#{word}\" in CEDICT"))
     when :zhen
       word = msg.tail
@@ -63,20 +61,15 @@ class CEDICT < IRCPlugin
 
   def format_description_unambiguous(lookup_result)
     amb_chk_hanzi = Hash.new(0)
-    amb_chk_pinyin = Hash.new(0)
-
     lookup_result.each do |e|
       hanzi_list = CEDICT.format_hanzi_list(e)
-      pinyin_list = CEDICT.format_pinyin_list(e)
 
       amb_chk_hanzi[hanzi_list] += 1
-      amb_chk_pinyin[pinyin_list] += 1
     end
     render_hanzi = amb_chk_hanzi.keys.size > 1
 
     lookup_result.map do |e|
       hanzi_list = CEDICT.format_hanzi_list(e)
-
       render_pinyin = amb_chk_hanzi[hanzi_list] > 1
 
       [e, render_hanzi, render_pinyin]
@@ -102,7 +95,7 @@ class CEDICT < IRCPlugin
       hanzi_list = CEDICT.format_hanzi_list(e)
       pinyin_list = CEDICT.format_pinyin_list(e)
 
-      description = if render_hanzi && !hanzi_list.empty? then
+      description = if render_hanzi && !hanzi_list.empty?
                       render_pinyin ? "#{hanzi_list} (#{pinyin_list})" : hanzi_list
                     elsif pinyin_list
                       pinyin_list
@@ -118,25 +111,26 @@ class CEDICT < IRCPlugin
 
   def reply_with_menu(msg, result)
     @menu.put_new_menu(
-      self.name,
-      result,
-      msg
+        self.name,
+        result,
+        msg
     )
+  end
+
+  # Refined version of lookup_impl() suitable for public API use
+  def lookup(words)
+    lookup_impl(words, [:mandarin_zh, :mandarin_tw, :pinyin])
   end
 
   # Looks up all entries that have any given word in any
   # of the specified columns and returns the result as an array of entries
-  def lookup(words, columns)
-    table = @hash_cedict[:cedict_entries]
+  def lookup_impl(words, columns)
+    condition = Sequel.or(columns.product([words]))
 
-    condition = Sequel.|(*words.map do |word|
-      Sequel.or(columns.map { |column| [column, word] })
-    end)
+    dataset = @db[:cedict_entry].where(condition).group_by(Sequel.qualify(:cedict_entry, :id))
 
-    dataset = table.where(condition).group_by(Sequel.qualify(:cedict_entry, :id))
-
-    standard_order(dataset).select(:mandarin_zh, :mandarin_tw, :pinyin, :id).to_a.map do |entry|
-      CEDICTLazyEntry.new(table, entry[:id], entry)
+    standard_order(dataset).select(*CEDICTLazyEntry::COLUMNS).to_a.map do |entry|
+      CEDICTLazyEntry.new(@db, entry)
     end
   end
 
@@ -144,33 +138,18 @@ class CEDICT < IRCPlugin
   def keyword_lookup(words)
     return [] if words.empty?
 
-    column = :text
+    words = words.uniq.map(&:to_s)
 
-    words = words.uniq
-
-    table = @hash_cedict[:cedict_entries]
-    cedict_english = @hash_cedict[:cedict_english]
-    cedict_english_join = @hash_cedict[:cedict_english_join]
-
-    condition = Sequel.|(*words.map do |word|
-      { Sequel.qualify(:cedict_english, column) => word.to_s }
-    end)
-
-    english_ids = cedict_english.where(condition).select(:id).to_a.map {|h| h.values}.flatten
+    english_ids = @db[:cedict_english].where(Sequel.qualify(:cedict_english, :text) => words).select(:id).to_a.flat_map {|h| h.values}
 
     return [] unless english_ids.size == words.size
 
-    dataset = cedict_english_join.where(Sequel.qualify(:cedict_entry_to_english, :cedict_english_id) => english_ids).group_and_count(Sequel.qualify(:cedict_entry_to_english, :cedict_entry_id)).join(:cedict_entry, :id => :cedict_entry_id).having(:count => english_ids.size)
+    dataset = @db[:cedict_entry_to_english].where(Sequel.qualify(:cedict_entry_to_english, :cedict_english_id) => english_ids).group_and_count(Sequel.qualify(:cedict_entry_to_english, :cedict_entry_id)).join(:cedict_entry, :id => :cedict_entry_id).having(:count => english_ids.size)
 
-    dataset = dataset.select_append(
-        Sequel.qualify(:cedict_entry, :mandarin_zh),
-        Sequel.qualify(:cedict_entry, :mandarin_tw),
-        Sequel.qualify(:cedict_entry, :pinyin),
-        Sequel.qualify(:cedict_entry, :id),
-    )
+    dataset = dataset.select_append(*CEDICTLazyEntry::COLUMNS)
 
     standard_order(dataset).to_a.map do |entry|
-      CEDICTLazyEntry.new(table, entry[:id], entry)
+      CEDICTLazyEntry.new(@db, entry)
     end
   end
 
@@ -183,34 +162,28 @@ class CEDICT < IRCPlugin
   end
 
   def load_dict(db)
-    cedict_version = db[:cedict_version]
-    cedict_entries = db[:cedict_entry]
-    cedict_english = db[:cedict_english]
-    cedict_english_join = db[:cedict_entry_to_english]
-
-    versions = cedict_version.to_a.map {|x| x[:id]}
+    versions = db[:cedict_version].to_a.map {|x| x[:id]}
     unless versions.include?(CEDICTEntry::VERSION)
       raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[CEDICTEntry::VERSION].inspect} of plugin. Rerun convert.rb."
     end
-
-    {
-        :cedict_entries => cedict_entries,
-        :cedict_english => cedict_english,
-        :cedict_english_join => cedict_english_join,
-    }
   end
 
   class CEDICTLazyEntry
-    attr_reader :mandarin_zh, :mandarin_tw, :pinyin
-    lazy_dataset_field :raw, Sequel.qualify(:cedict_entry, :id)
+    attr_reader :mandarin_zh, :mandarin_tw, :pinyin, :id
+    FIELDS = [:mandarin_zh, :mandarin_tw, :pinyin, :id]
+    COLUMNS = FIELDS.map {|f| Sequel.qualify(:cedict_entry, f)}
 
-    def initialize(dataset, id, pre_init)
-      @dataset = dataset
-      @id = id
+    def initialize(db, pre_init)
+      @db = db
 
       @mandarin_zh = pre_init[:mandarin_zh]
       @mandarin_tw = pre_init[:mandarin_tw]
       @pinyin = pre_init[:pinyin]
+      @id = pre_init[:id]
+    end
+
+    def raw
+      @db[:cedict_entry].where(:id => @id).select(:raw).first[:raw]
     end
 
     def to_s

@@ -9,19 +9,15 @@ require 'set'
 class CEDICTEntry
   VERSION = 1
 
-  attr_reader :raw, :simple_entry
-  attr_accessor :sort_key
+  attr_reader :raw
 
   def initialize(raw)
     @raw = raw
     @mandarin_zh = nil
     @mandarin_tw = nil
     @pinyin = nil
-    @simple_entry = nil
     @english = nil
-    @info = nil
     @keywords = nil
-    @sort_key = nil
   end
 
   def mandarin_zh
@@ -55,34 +51,14 @@ class CEDICTEntry
   # Returns a list of keywords created from the English translations and meta information.
   # Each keyword is a symbol.
   def keywords
-    @keywords ||= english.map { |e| CEDICTEntry.split_into_keywords(e) }.flatten.sort.uniq
+    @keywords ||= english.flat_map { |e| CEDICTEntry.split_into_keywords(e) }.sort.uniq
   end
 
   def self.split_into_keywords(text)
      text.downcase.gsub(/[^a-z0-9'\- ]/, '').split.map { |e| e.strip.to_sym }
   end
 
-  def info
-    return @info if @info
-    info = @raw[/^.*?\/\((.*?)\)/, 1]
-    @info = info && info.strip
-  end
-
   def to_s
     @raw.dup
-  end
-
-  def marshal_dump
-    [@sort_key, @raw]
-  end
-
-  def marshal_load(data)
-    @mandarin_zh = nil
-    @mandarin_tw = nil
-    @pinyin = nil
-    @english = nil
-    @info = nil
-    @keywords = nil
-    @sort_key, @raw = data
   end
 end
