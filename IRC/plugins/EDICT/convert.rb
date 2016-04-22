@@ -17,6 +17,10 @@ require 'rubygems'
 require 'bundler/setup'
 require 'sequel'
 
+(File.dirname(__FILE__) +'/../../../').tap do |lib_dir|
+  $LOAD_PATH.unshift(lib_dir) unless $LOAD_PATH.include?(lib_dir)
+end
+
 require 'IRC/SequelHelpers'
 require_relative 'EDICTEntry'
 

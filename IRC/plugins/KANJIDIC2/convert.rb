@@ -13,6 +13,10 @@ require 'rubygems'
 require 'bundler/setup'
 require 'nokogiri'
 
+(File.dirname(__FILE__) +'/../../../').tap do |lib_dir|
+  $LOAD_PATH.unshift(lib_dir) unless $LOAD_PATH.include?(lib_dir)
+end
+
 require_relative 'KANJIDIC2Entry'
 
 class KANJIDICConverter
