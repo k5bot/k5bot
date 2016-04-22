@@ -76,11 +76,8 @@ class EDICTConverter
           e.reading.size,
           e.reading,
           e.keywords.size,
-          e.japanese.length,
+          e.japanese.size,
       ]
-    end
-    @all_entries.each_with_index do |e, count|
-      e.sortKey = count
     end
   end
 
@@ -93,7 +90,7 @@ class EDICTConverter
   end
 end
 
-def marshal_dict(dict)
+def marshal_dict(dict, sqlite_file)
   ec = EDICTConverter.new(
       "#{(File.dirname __FILE__)}/#{dict}",
       "#{(File.dirname __FILE__)}/word_freq_report.txt",
@@ -109,7 +106,7 @@ def marshal_dict(dict)
 
   print "Marshalling #{dict.upcase}..."
 
-  db = database_connect("sqlite://#{dict}.sqlite", :encoding => 'utf8')
+  db = database_connect("sqlite://#{sqlite_file}", :encoding => 'utf8')
 
   db.drop_table? :edict_entry_to_english
   db.drop_table? :edict_english
@@ -177,8 +174,6 @@ def marshal_dict(dict)
     end
 
     edict_english_dataset = db[:edict_english]
-    edict_entry_to_english_dataset = db[:edict_entry_to_english]
-
     to_import = []
 
     print '(keywords collection)'
@@ -198,7 +193,7 @@ def marshal_dict(dict)
     to_import.sort!
 
     print '(keywords import)'
-    edict_entry_to_english_dataset.import([:edict_entry_id, :edict_english_id], to_import)
+    db[:edict_entry_to_english].import([:edict_entry_id, :edict_english_id], to_import)
     print '.'
   end
 
@@ -214,9 +209,14 @@ def marshal_dict(dict)
   db.add_index(:edict_entry_to_english, :edict_english_id)
   print '.'
 
+  puts 'done.'
+
+  print "Vacuuming #{sqlite_file}..."
+  db.run('vacuum')
+
   database_disconnect(db)
 
   puts 'done.'
 end
 
-marshal_dict('edict')
+marshal_dict('edict.txt', 'edict.sqlite')

@@ -36,13 +36,13 @@ See '.faq regexp'",
 
     @db = database_connect("sqlite://#{(File.dirname __FILE__)}/edict.sqlite", :encoding => 'utf8')
 
-    @hash_edict = load_dict(@db)
+    @regexpable = load_dict(@db)
   end
 
   def beforeUnload
     @menu.evict_plugin_menus!(self.name)
 
-    @hash_edict = nil
+    @regexpable = nil
 
     database_disconnect(@db)
     @db = nil
@@ -97,10 +97,8 @@ See '.faq regexp'",
 
   def format_description_unambiguous(lookup_result)
     amb_chk_kanji = Hash.new(0)
-    amb_chk_kana = Hash.new(0)
     lookup_result.each do |e|
       amb_chk_kanji[e.japanese] += 1
-      amb_chk_kana[e.reading] += 1
     end
     render_kanji = amb_chk_kanji.keys.size > 1
 
@@ -152,16 +150,12 @@ See '.faq regexp'",
   # Looks up all entries that have any given word in any
   # of the specified columns and returns the result as an array of entries
   def lookup_impl(words, columns)
-    table = @hash_edict[:edict_entries]
+    condition = Sequel.or(columns.product([words]))
 
-    condition = Sequel.|(*words.map do |word|
-      Sequel.or(columns.map { |column| [column, word] })
-    end)
+    dataset = @db[:edict_entry].where(condition).group_by(Sequel.qualify(:edict_entry, :id))
 
-    dataset = table.where(condition).group_by(Sequel.qualify(:edict_entry, :id))
-
-    standard_order(dataset).select(:japanese, :reading, :simple_entry, :id).to_a.map do |entry|
-      EDICTLazyEntry.new(table, entry[:id], entry)
+    standard_order(dataset).select(*EDICTLazyEntry::COLUMNS).to_a.map do |entry|
+      EDICTLazyEntry.new(@db, entry)
     end
   end
 
@@ -173,7 +167,7 @@ See '.faq regexp'",
 
     case operation
     when :union
-      @hash_edict[:all].each do |entry|
+      @regexpable.each do |entry|
         word_kanji = entry.japanese
         kanji_matched = regexps_kanji.all? { |regex| regex =~ word_kanji }
         word_kana = entry.reading
@@ -181,7 +175,7 @@ See '.faq regexp'",
         lookup_result << [entry, !entry.simple_entry, kana_matched] if kanji_matched || kana_matched
       end
     when :intersection
-      @hash_edict[:all].each do |entry|
+      @regexpable.each do |entry|
         word_kanji = entry.japanese
         next unless regexps_kanji.all? { |regex| regex =~ word_kanji }
         word_kana = entry.reading
@@ -201,33 +195,18 @@ See '.faq regexp'",
   def keyword_lookup(words)
     return [] if words.empty?
 
-    column = :text
+    words = words.uniq.map(&:to_s)
 
-    words = words.uniq
-
-    table = @hash_edict[:edict_entries]
-    edict_english = @hash_edict[:edict_english]
-    edict_english_join = @hash_edict[:edict_english_join]
-
-    condition = Sequel.|(*words.map do |word|
-      { Sequel.qualify(:edict_english, column) => word.to_s }
-    end)
-
-    english_ids = edict_english.where(condition).select(:id).to_a.map {|h| h.values}.flatten
+    english_ids = @db[:edict_english].where(Sequel.qualify(:edict_english, :text) => words).select(:id).to_a.flat_map {|h| h.values}
 
     return [] unless english_ids.size == words.size
 
-    dataset = edict_english_join.where(Sequel.qualify(:edict_entry_to_english, :edict_english_id) => english_ids).group_and_count(Sequel.qualify(:edict_entry_to_english, :edict_entry_id)).join(:edict_entry, :id => :edict_entry_id).having(:count => english_ids.size)
+    dataset = @db[:edict_entry_to_english].where(Sequel.qualify(:edict_entry_to_english, :edict_english_id) => english_ids).group_and_count(Sequel.qualify(:edict_entry_to_english, :edict_entry_id)).join(:edict_entry, :id => :edict_entry_id).having(:count => english_ids.size)
 
-    dataset = dataset.select_append(
-        Sequel.qualify(:edict_entry, :japanese),
-        Sequel.qualify(:edict_entry, :reading),
-        Sequel.qualify(:edict_entry, :simple_entry),
-        Sequel.qualify(:edict_entry, :id),
-    )
+    dataset = dataset.select_append(*EDICTLazyEntry::COLUMNS)
 
     standard_order(dataset).to_a.map do |entry|
-      EDICTLazyEntry.new(table, entry[:id], entry)
+      EDICTLazyEntry.new(@db, entry)
     end
   end
 
@@ -240,40 +219,34 @@ See '.faq regexp'",
   end
 
   def load_dict(db)
-    edict_version = db[:edict_version]
-    edict_entries = db[:edict_entry]
-    edict_english = db[:edict_english]
-    edict_english_join = db[:edict_entry_to_english]
-
-    versions = edict_version.to_a.map {|x| x[:id]}
+    versions = db[:edict_version].to_a.map {|x| x[:id]}
     unless versions.include?(EDICTEntry::VERSION)
       raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[EDICTEntry::VERSION].inspect} of plugin. Rerun convert.rb."
     end
 
-    regexpable = edict_entries.select(:japanese, :reading, :simple_entry, :id).to_a
-    regexpable = regexpable.map do |entry|
-      EDICTLazyEntry.new(edict_entries, entry[:id], entry)
-    end
+    regexpable = db[:edict_entry].select(*EDICTLazyEntry::COLUMNS).to_a
 
-    {
-        :edict_entries => edict_entries,
-        :edict_english => edict_english,
-        :edict_english_join => edict_english_join,
-        :all => regexpable,
-    }
+    regexpable.map do |entry|
+      EDICTLazyEntry.new(@db, entry)
+    end
   end
 
   class EDICTLazyEntry
-    attr_reader :japanese, :reading, :simple_entry
-    lazy_dataset_field :raw, Sequel.qualify(:edict_entry, :id)
+    attr_reader :japanese, :reading, :simple_entry, :id
+    FIELDS = [:japanese, :reading, :simple_entry, :id]
+    COLUMNS = FIELDS.map {|f| Sequel.qualify(:edict_entry, f)}
 
-    def initialize(dataset, id, pre_init)
-      @dataset = dataset
-      @id = id
+    def initialize(db, pre_init)
+      @db = db
 
       @japanese = pre_init[:japanese]
       @reading = pre_init[:reading]
       @simple_entry = pre_init[:simple_entry]
+      @id = pre_init[:id]
+    end
+
+    def raw
+      @db[:edict_entry].where(:id => @id).select(:raw).first[:raw]
     end
 
     def to_s

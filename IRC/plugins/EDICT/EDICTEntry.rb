@@ -10,12 +10,13 @@ class EDICTEntry
   VERSION = 2
 
   attr_reader :raw
-  attr_accessor :usages_count
-  attr_accessor :sortKey
 
   attr_reader :japanese,
               :reading,
+              :english,
               :simple_entry # precomputed boolean, true if reading matches japanese.
+
+  attr_accessor :usages_count
 
   # TODO: the p here conflicts with P that denotes common words. should fix that somehow.
   PROPER_NAME_KEYWORDS = [:s, :p, :u, :g, :f, :m, :h, :pr, :co, :st].to_set
@@ -25,19 +26,26 @@ class EDICTEntry
     @japanese = nil
     @reading = nil
     @simple_entry = nil
-    @usages_count = nil
     @english = nil
-    @info = nil
     @keywords = nil
-    @sortKey = nil
+    @usages_count = 0
   end
 
   def parse
-    japanese = @raw[/^[\s　]*([^\[\/]+)[\s　]*[\[\/]/, 1]
-    @japanese = japanese && japanese.strip
+    header, e = @raw.split('/', 2)
+    @english = e.split('/').map(&:strip)
 
-    reading = @raw[/^[\s　]*[^\[\/]+[\s　]*\[(.*)\]/, 1]
-    @reading = if reading && !reading.empty?
+    header.gsub!(/[[:space:]]/, ' ')
+    header.strip!
+    m = header.match(/^([^\[]+)(?:\[([^\]]+)\])?$/)
+
+    raise @raw unless m
+
+    japanese = m[1]
+    @japanese = japanese.strip
+
+    reading = m[2]
+    @reading = if reading
                  reading.strip
                else
                  @simple_entry = true
@@ -45,15 +53,10 @@ class EDICTEntry
                end
   end
 
-  # Returns an array of the English translations and meta information.
-  def english
-    @english ||= @raw.split('/')[1..-1].map{|e| e.strip}
-  end
-
   # Returns a list of keywords created from the English translations and meta information.
   # Each keyword is a symbol.
   def keywords
-    @keywords ||= english.map { |e| EDICTEntry.split_into_keywords(e) }.flatten.sort.uniq
+    @keywords ||= english.flat_map { |e| EDICTEntry.split_into_keywords(e) }.sort.uniq
   end
 
   def self.split_into_keywords(text)
@@ -76,27 +79,7 @@ class EDICTEntry
     keywords.any? { |k| PROPER_NAME_KEYWORDS.include? k }
   end
 
-  def info
-    return @info if @info
-    info = @raw[/^.*?\/\((.*?)\)/, 1]
-    @info = info && info.strip
-  end
-
   def to_s
     @raw.dup
-  end
-
-  def marshal_dump
-    [@sortKey, @usages_count, @raw]
-  end
-
-  def marshal_load(data)
-    @japanese = nil
-    @reading = nil
-    @simple_entry = nil
-    @english = nil
-    @info = nil
-    @keywords = nil
-    @sortKey, @usages_count, @raw = data
   end
 end
