@@ -233,7 +233,7 @@ See '.faq regexp'",
 
     return [] unless english_ids.size == words.size
 
-    text_ids = @db[:edict_entry_to_english].where(Sequel.qualify(:edict_entry_to_english, :edict_english_id) => english_ids).group_and_count(Sequel.qualify(:edict_entry_to_english, :edict_text_id)).having(:count => english_ids.size).select_append(Sequel.qualify(:edict_entry_to_english, :edict_text_id)).to_a.flat_map {|h| h.values}
+    text_ids = @db[:edict_entry_to_english].where(Sequel.qualify(:edict_entry_to_english, :edict_english_id) => english_ids).group_and_count(Sequel.qualify(:edict_entry_to_english, :edict_text_id)).having(:count => english_ids.size).select_append(Sequel.qualify(:edict_entry_to_english, :edict_text_id)).to_a.map {|h| h[:edict_text_id]}
 
     dataset = @db[:edict_entry].where(Sequel.qualify(:edict_entry, :edict_text_id) => text_ids).select(*EDICT2LazyEntry::COLUMNS)
 
