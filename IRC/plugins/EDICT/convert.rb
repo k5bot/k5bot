@@ -127,11 +127,6 @@ def marshal_dict(dict, sqlite_file)
     String :reading_norm, :size => 127, :null => false
     TrueClass :simple_entry, :null => false
 
-    Integer :usages_count, :null => false
-    TrueClass :common, :null => false
-    TrueClass :x_rated, :null => false
-    TrueClass :vulgar, :null => false
-
     String :raw, :size => 4096, :null => false
   end
 
@@ -166,10 +161,6 @@ def marshal_dict(dict, sqlite_file)
           :reading => entry.reading,
           :reading_norm => ec.hiragana(entry.reading),
           :simple_entry => entry.simple_entry || false,
-          :usages_count => entry.usages_count,
-          :common => entry.common?,
-          :x_rated => entry.xrated?,
-          :vulgar => entry.vulgar?,
           :raw => entry.raw,
       )
       id_map[entry] = entry_id

@@ -8,7 +8,7 @@ require 'set'
 
 class EDICT
 class ParsedEntry
-  VERSION = 2
+  VERSION = 3
 
   attr_reader :raw
 
