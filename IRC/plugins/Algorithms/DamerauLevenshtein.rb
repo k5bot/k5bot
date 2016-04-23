@@ -2,6 +2,7 @@
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
 
+class Algorithms
 module DamerauLevenshtein
 
   # http://en.wikipedia.org/wiki/Levenshtein_distance
@@ -55,4 +56,5 @@ module DamerauLevenshtein
   end
 
   module_function :string_distance
+end
 end

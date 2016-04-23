@@ -6,6 +6,9 @@
 
 require 'IRC/IRCPlugin'
 
+IRCPlugin.remove_required 'IRC/plugins/Algorithms'
+require 'IRC/plugins/Algorithms/DamerauLevenshtein'
+
 class Algorithms
   include IRCPlugin
   DESCRIPTION = 'The Algorithms plugin contains various geeky functions and algorithms.'
@@ -13,16 +16,6 @@ class Algorithms
       :damerau => 'calculates Damerau-Levenshtein distance between two given words',
       :levenshtein => 'calculates Levenshtein distance between two given words',
   }
-
-  def afterLoad
-    load_helper_class(:DamerauLevenshtein)
-  end
-
-  def beforeUnload
-    unload_helper_class(:DamerauLevenshtein)
-
-    nil
-  end
 
   def on_privmsg(msg)
     text = msg.tail
