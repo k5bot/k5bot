@@ -36,7 +36,7 @@ class DaijirinMenuEntry < MenuNode
 
     unless @to_show
       # Restart from the first entry
-      msg.reply("No more sub-entries.")
+      msg.reply('No more sub-entries.')
       @to_show = 0
       return
     end

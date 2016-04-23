@@ -4,13 +4,10 @@
 
 # Daijirin Entry
 
-require 'yaml'
-
 class DaijirinEntry
   VERSION = 5
 
   attr_reader :raw, :parent, :children
-  attr_accessor :sort_key
   attr_reader :sort_key_string
 
   ACCENT_MATCHER=/\[(\d+)\]-?/
@@ -40,7 +37,6 @@ class DaijirinEntry
     @old_kana = nil
 =end
     @reference = nil
-    @sort_key = nil
     @parsed = nil
   end
 
@@ -56,29 +52,6 @@ class DaijirinEntry
 
   def add_child!(child)
     @children = (@children || []) << child
-  end
-
-  def marshal_dump
-    [@sort_key, @raw, @parent, @children]
-  end
-
-  def marshal_load(data)
-    @raw = nil
-    @kanji_for_search = nil
-    @kanji_for_display = nil
-    @kana = nil
-    @english = nil
-=begin # Those are not necessary yet.
-    @accent = nil
-    @type = nil
-    @bunka = nil
-    @alternative_kana = nil
-    @old_kana = nil
-=end
-    @reference = nil
-    @sort_key = nil
-    @parsed = nil
-    @sort_key, @raw, @parent, @children = data
   end
 
   def parse

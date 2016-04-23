@@ -48,7 +48,7 @@ class DaijirinConverter
     File.open(@source_file, 'r', :encoding => 'UTF-8') do |io|
 
       # Extract and group lines separated by line of minuses
-      entry_lines = Enumerator.new() do |y|
+      entry_lines = Enumerator.new do |y|
         lines = []
 
         io.each_line do |l|
@@ -103,11 +103,8 @@ class DaijirinConverter
   end
 
   def sort
-    count = 0
-    @all_entries.sort_by!{|e| e.sort_key_string }
-    @all_entries.each do |e|
-      e.sort_key = count
-      count += 1
+    @all_entries.sort_by! do |e|
+      e.sort_key_string
     end
   end
 
@@ -120,7 +117,7 @@ class DaijirinConverter
   end
 end
 
-def marshal_dict(dict)
+def marshal_dict(dict, sqlite_file)
   ec = DaijirinConverter.new("#{(File.dirname __FILE__)}/#{dict}")
 
   print "Indexing #{dict.upcase}..."
@@ -133,7 +130,7 @@ def marshal_dict(dict)
 
   print "Marshalling #{dict.upcase}..."
 
-  db = database_connect("sqlite://#{dict}.sqlite", :encoding => 'utf8')
+  db = database_connect("sqlite://#{sqlite_file}", :encoding => 'utf8')
 
   db.drop_table? :daijirin_entry_to_kanji
   db.drop_table? :daijirin_kanji
@@ -203,8 +200,6 @@ def marshal_dict(dict)
     end
 
     daijirin_kanji_dataset = db[:daijirin_kanji]
-    daijirin_entry_to_kanji_dataset = db[:daijirin_entry_to_kanji]
-
     to_import = []
 
     print '(kanji collection)'
@@ -224,7 +219,7 @@ def marshal_dict(dict)
     to_import.sort!
 
     print '(kanji import)'
-    daijirin_entry_to_kanji_dataset.import([:daijirin_entry_id, :daijirin_kanji_id], to_import)
+    db[:daijirin_entry_to_kanji].import([:daijirin_entry_id, :daijirin_kanji_id], to_import)
     print '.'
   end
 
@@ -240,9 +235,14 @@ def marshal_dict(dict)
   db.add_index(:daijirin_entry_to_kanji, :daijirin_kanji_id)
   print '.'
 
+  puts 'done.'
+
+  print "Vacuuming #{sqlite_file}..."
+  db.run('vacuum')
+
   database_disconnect(db)
 
   puts 'done.'
 end
 
-marshal_dict('daijirin')
+marshal_dict('daijirin.txt', 'daijirin.sqlite')

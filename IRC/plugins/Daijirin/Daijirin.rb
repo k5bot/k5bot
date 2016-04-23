@@ -32,13 +32,13 @@ See '.faq regexp'",
 
     @db = database_connect("sqlite://#{(File.dirname __FILE__)}/daijirin.sqlite", :encoding => 'utf8')
 
-    @hash = load_dict(@db)
+    @regexpable = load_dict(@db)
   end
 
   def beforeUnload
     @menu.evict_plugin_menus!(self.name)
 
-    @hash = nil
+    @regexpable = nil
 
     database_disconnect(@db)
     @db = nil
@@ -65,7 +65,7 @@ See '.faq regexp'",
               Sequel.qualify(:daijirin_kanji, :text),
               Sequel.qualify(:daijirin_entry, :kana_norm)
           ],
-          @hash[:daijirin_entries].left_join(:daijirin_entry_to_kanji, :daijirin_entry_id => :id).left_join(:daijirin_kanji, :id => :daijirin_kanji_id)
+          @db[:daijirin_entry].left_join(:daijirin_entry_to_kanji, :daijirin_entry_id => :id).left_join(:daijirin_kanji, :id => :daijirin_kanji_id)
       )
       reply_with_menu(
           msg,
@@ -113,7 +113,7 @@ See '.faq regexp'",
       amb_chk_kanji[kanji_list] += 1
       amb_chk_kana[e.kana] += 1
     end
-    render_kanji = amb_chk_kana.any? { |x, y| y > 1 } # || !render_kana
+    render_kanji = amb_chk_kana.any? { |_, y| y > 1 } # || !render_kana
 
     lookup_result.map do |e|
       kanji_list = e.kanji_for_display
@@ -127,12 +127,12 @@ See '.faq regexp'",
     menu = lookup.map do |e, render_kanji, render_kana|
       kanji_list = e.kanji_for_display
 
-      description = if render_kanji && !kanji_list.empty? then
+      description = if render_kanji && !kanji_list.empty?
                       render_kana ? "#{kanji_list} (#{e.kana})" : kanji_list
                     elsif e.kana
                       e.kana
                     else
-                      "<invalid entry>"
+                      '<invalid entry>'
                     end
 
       DaijirinMenuEntry.new(description, e)
@@ -149,34 +149,27 @@ See '.faq regexp'",
     )
   end
 
-
   # Looks up all entries that have each given word in any
   # of the specified columns and returns the result as an array of entries
-  def lookup(words, columns, table = @hash[:daijirin_entries])
-    condition = Sequel.|(*words.map do |word|
-      Sequel.or(columns.map { |column| [column, word] })
-    end)
+  def lookup(words, columns, table = @db[:daijirin_entry])
+    condition = Sequel.or(columns.product([words]))
 
-    dataset  = table.where(condition)
+    dataset = table.where(condition).group_by(Sequel.qualify(:daijirin_entry, :id))
 
-    standard_order(dataset).select(
-        Sequel.qualify(:daijirin_entry, :kanji_for_display),
-        Sequel.qualify(:daijirin_entry, :kana),
-        Sequel.qualify(:daijirin_entry, :id),
-    ).to_a.map do |entry|
-      DaijirinLazyEntry.new(table, entry[:id], entry)
+    standard_order(dataset).select(*DaijirinLazyEntry::COLUMNS).to_a.map do |entry|
+      DaijirinLazyEntry.new(@db, entry)
     end
   end
 
   def lookup_complex_regexp(complex_regexp)
     operation = complex_regexp.shift
-    regexps_kanji, regexps_kana = complex_regexp
+    regexps_kanji, regexps_kana, regexps_english = complex_regexp
 
     lookup_result = []
 
     case operation
     when :union
-      @hash[:all].each do |entry|
+      @regexpable.each do |entry|
         words_kanji = entry.kanji_for_search
         kanji_matched = words_kanji.any? { |word| regexps_kanji.all? { |regex| regex =~ word } }
         word_kana = entry.kana
@@ -184,11 +177,15 @@ See '.faq regexp'",
         lookup_result << [entry, true, kana_matched] if kanji_matched || kana_matched
       end
     when :intersection
-      @hash[:all].each do |entry|
+      @regexpable.each do |entry|
         words_kanji = entry.kanji_for_search
         next unless words_kanji.any? { |word| regexps_kanji.all? { |regex| regex =~ word } }
         word_kana = entry.kana
         next unless word_kana && regexps_kana.all? { |regex| regex =~ word_kana }
+        if regexps_english
+          text_english = entry.raw
+          next unless regexps_english.all? { |regex| regex =~ text_english }
+        end
         lookup_result << [entry, true, true]
       end
     end
@@ -197,55 +194,47 @@ See '.faq regexp'",
   end
 
   def standard_order(dataset)
-    dataset.order_by(Sequel.qualify(:daijirin_entry, :id)).group_by(Sequel.qualify(:daijirin_entry, :id))
+    dataset.order_by(Sequel.qualify(:daijirin_entry, :id))
   end
 
   def load_dict(db)
-    daijirin_version = db[:daijirin_version]
-    daijirin_entries = db[:daijirin_entry]
-    daijirin_kanji = db[:daijirin_kanji]
-
-    versions = daijirin_version.to_a.map {|x| x[:id]}
+    versions = db[:daijirin_version].to_a.map {|x| x[:id]}
     unless versions.include?(DaijirinEntry::VERSION)
       raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[DaijirinEntry::VERSION].inspect} of plugin. Rerun convert.rb."
     end
 
     # Load all lazy entries for regexp search by kanji_for_search and kana fields
-    daijirin_kanji_join = daijirin_kanji.join(:daijirin_entry_to_kanji, :daijirin_kanji_id => :id)
+    kanji_search = db[:daijirin_kanji].join(:daijirin_entry_to_kanji, :daijirin_kanji_id => :id).select_hash_groups(:daijirin_entry_id, :text)
 
-    kanji_search = daijirin_kanji_join.select(:text, :daijirin_entry_id).to_a
+    regexpable = db[:daijirin_entry].select(*DaijirinLazyEntry::COLUMNS).to_a
 
-    kanji_search = kanji_search.each_with_object({}) do |row, h|
-      (h[row[:daijirin_entry_id]] ||= []) << row[:text]
-    end
-
-    regexpable = daijirin_entries.select(:kanji_for_display, :kana, :id).to_a
-    regexpable = regexpable.map do |entry|
+    regexpable.map do |entry|
       entry[:kanji_for_search] = kanji_search[entry[:id]]
-      DaijirinLazyEntry.new(daijirin_entries, entry[:id], entry)
+      DaijirinLazyEntry.new(db, entry)
     end
-
-    {
-        :daijirin_entries => daijirin_entries,
-        :daijirin_kanji_join => daijirin_kanji_join,
-        :all => regexpable,
-    }
   end
 
   class DaijirinLazyEntry
+    attr_reader :kanji_for_display, :kanji_for_search, :kana, :id
+    FIELDS = [:kanji_for_display, :kana, :id]
+    COLUMNS = FIELDS.map {|f| Sequel.qualify(:daijirin_entry, f)}
     EMPTY_ARRAY = [].freeze
 
-    attr_reader :kanji_for_display, :kanji_for_search, :kana
-    lazy_dataset_field :references, Sequel.qualify(:daijirin_entry, :id)
-    lazy_dataset_field :raw, Sequel.qualify(:daijirin_entry, :id)
-
-    def initialize(dataset, id, pre_init)
-      @dataset = dataset
-      @id = id
+    def initialize(db, pre_init)
+      @db = db
 
       @kanji_for_display = pre_init[:kanji_for_display]
       @kanji_for_search = pre_init[:kanji_for_search] || EMPTY_ARRAY
       @kana = pre_init[:kana]
+      @id = pre_init[:id]
+    end
+
+    def raw
+      @db[:daijirin_entry].where(:id => @id).select(:raw).first[:raw]
+    end
+
+    def references
+      @db[:daijirin_entry].where(:id => @id).select(:references).first[:references]
     end
   end
 end
