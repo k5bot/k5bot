@@ -118,6 +118,27 @@ module LayoutableText
     end
   end
 
+  # Simple subclass of Arrayed, that performs a join
+  # with given separator string on every chunk.
+  # Differs from SimpleJoined in that it also adds
+  # separator at the end of each line, except the last one,
+  # so that SplitJoined.new('separator', text.split('separator'))
+  # looks like the original text.
+  class SplitJoined < Arrayed
+    def initialize(separator, *args)
+      super(*args)
+      @separator = separator
+    end
+
+    protected
+
+    def format_chunk(arr, chunk_size, is_last_line)
+      res = arr.slice(0, chunk_size).join(@separator)
+      res += @separator unless is_last_line
+      res
+    end
+  end
+
   # A class for stacked layout modification. Every line is altered
   # by a protected method delegated_format() prior to constraint checking.
   class Delegated
