@@ -182,7 +182,7 @@ See '.faq regexp'",
         word_kana = entry.reading
         next unless regexps_kana.all? { |regex| regex =~ word_kana }
         if regexps_english
-          text_english = entry.raw.split('/', 2)[1] || ''
+          text_english = entry.raw
           next unless regexps_english.all? { |regex| regex =~ text_english }
         end
         lookup_result << [entry, !entry.simple_entry, true]
