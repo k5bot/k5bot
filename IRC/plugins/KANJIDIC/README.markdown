@@ -6,7 +6,7 @@ You may download the file using the supplied script.
 
 Usage
 ------------------
-1. Run `./download.sh` to download kanjidic -- or, download it manually to `./kanjidic`.
+1. Run `./download.sh` to download kanjidic -- or, download it manually to `./kanjidic.txt`.
 
 Disclaimer
 ------------------

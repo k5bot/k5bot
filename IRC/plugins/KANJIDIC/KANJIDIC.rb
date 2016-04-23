@@ -85,7 +85,7 @@ class KANJIDIC
   end
 
   def load_kanjidic
-    kanjidic_file = "#{(File.dirname __FILE__)}/kanjidic"
+    kanjidic_file = "#{(File.dirname __FILE__)}/kanjidic.txt"
     File.open(kanjidic_file, 'r', :encoding => 'EUC-JP') do |io|
       io.each_line do |l|
         entry = ParsedEntry.new(l.encode('UTF-8'))
