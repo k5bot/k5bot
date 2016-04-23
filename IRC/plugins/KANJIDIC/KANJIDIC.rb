@@ -12,34 +12,8 @@
 require 'IRC/IRCPlugin'
 require 'uri'
 
-class KANJIDICEntry
-  attr_reader :raw
-
-  def initialize(raw)
-    @raw = raw
-    @kanji = nil
-  end
-
-  def kanji
-    @kanji ||= @raw[/^\s*(\S+)/, 1]
-  end
-
-  def code_skip
-    @code_skip ||= @raw[/\s+P(\S+)\s*/, 1]
-  end
-
-  def radical_number
-    @radical_number ||= @raw[/\s+B(\S+)\s*/, 1]
-  end
-
-  def stroke_count
-    @stroke_count ||= @raw[/\s+S(\S+)\s*/, 1]
-  end
-
-  def format
-    @raw.dup
-  end
-end
+IRCPlugin.remove_required 'IRC/plugins/KANJIDIC'
+require 'IRC/plugins/KANJIDIC/parsed_entry'
 
 class KANJIDIC
   include IRCPlugin
@@ -114,7 +88,7 @@ class KANJIDIC
     kanjidic_file = "#{(File.dirname __FILE__)}/kanjidic"
     File.open(kanjidic_file, 'r', :encoding => 'EUC-JP') do |io|
       io.each_line do |l|
-        entry = KANJIDICEntry.new(l.encode('UTF-8'))
+        entry = ParsedEntry.new(l.encode('UTF-8'))
         @kanji[entry.kanji] = entry
         @code_skip[entry.code_skip] ||= {}
         @code_skip[entry.code_skip][entry.radical_number] ||= []
