@@ -230,7 +230,7 @@ class KANJIDICConverter
       # we don't actually use other languages yet. free some memory.
       entry.meanings.delete_if {|lang, _| lang != :en}
     else
-      raise "This plugin should be rewritten to properly display more than one reading/meaning group."
+      raise 'This plugin should be rewritten to properly display more than one reading/meaning group.'
     end
   end
 
@@ -267,24 +267,24 @@ class KANJIDICConverter
   end
 end
 
-def marshal_dict(dict, krad_dict, gsf_dict)
-  ec = KANJIDICConverter.new("#{(File.dirname __FILE__)}/#{dict}.xml",
+def marshal_dict(dict, krad_dict, gsf_dict, marshal_file)
+  ec = KANJIDICConverter.new("#{(File.dirname __FILE__)}/#{dict}",
                              "#{(File.dirname __FILE__)}/#{krad_dict}",
-                             "#{(File.dirname __FILE__)}/#{gsf_dict}.txt")
+                             "#{(File.dirname __FILE__)}/#{gsf_dict}")
 
   print "Indexing #{krad_dict.upcase}..."
   ec.read_krad_file
-  puts "done."
+  puts 'done.'
 
   print "Indexing #{dict.upcase}..."
   ec.read
-  puts "done."
+  puts 'done.'
 
-  print "Marshalling #{dict.upcase}..."
-  File.open("#{(File.dirname __FILE__)}/#{dict}.marshal", 'w') do |io|
+  print "Marshalling #{marshal_file.upcase}..."
+  File.open("#{(File.dirname __FILE__)}/#{marshal_file}", 'w') do |io|
     Marshal.dump(ec.hash, io)
   end
-  puts "done."
+  puts 'done.'
 end
 
-marshal_dict('kanjidic2', 'kradfile-u', 'gsf')
+marshal_dict('kanjidic2.xml', 'kradfile-u.txt', 'gsf.txt', 'kanjidic2.marshal')

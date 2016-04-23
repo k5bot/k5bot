@@ -243,7 +243,7 @@ class KANJIDIC2Entry
       %w(龠),
   ]
 
-  def self.kangxi_search_extension()
+  def self.kangxi_search_extension
     f = KANGXI_RADICALS.dup
     f[1] = f[1].dup | %w(｜)
     f[3] = f[3].dup | %w(ノ)
@@ -264,5 +264,5 @@ class KANJIDIC2Entry
     f
   end
 
-  KANGXI_SEARCH_RADICALS = KANJIDIC2Entry.kangxi_search_extension()
+  KANGXI_SEARCH_RADICALS = KANJIDIC2Entry.kangxi_search_extension
 end

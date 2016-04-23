@@ -53,7 +53,7 @@ if it's the only given search term",
     @language = @plugin_manager.plugins[:Language]
     @menu = @plugin_manager.plugins[:Menu]
 
-    dict = load_dict('kanjidic2')
+    dict = load_dict('kanjidic2.marshal')
 
     @kanji = dict[:kanji]
     @code_skip = dict[:code_skip]
@@ -182,10 +182,10 @@ if it's the only given search term",
   end
 
   def load_dict(dict_name)
-    dict = File.open("#{(File.dirname __FILE__)}/#{dict_name}.marshal", 'r') do |io|
+    dict = File.open("#{(File.dirname __FILE__)}/#{dict_name}", 'r') do |io|
       Marshal.load(io)
     end
-    raise "The #{dict_name}.marshal file is outdated. Rerun convert.rb." unless dict[:version] == KANJIDIC2Entry::VERSION
+    raise "The #{dict_name} file is outdated. Rerun convert.rb." unless dict[:version] == KANJIDIC2Entry::VERSION
     dict
   end
 
