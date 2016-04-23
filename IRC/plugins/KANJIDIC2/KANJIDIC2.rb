@@ -89,7 +89,7 @@ if it's the only given search term",
       search_result = @code_skip[msg.tail]
       search_result ||= @stroke_count[msg.tail]
       begin
-        search_result ||= keyword_lookup(KANJIDIC2Entry.split_into_keywords(msg.tail), @misc)
+        search_result ||= keyword_lookup(DatabaseEntry.split_into_keywords(msg.tail), @misc)
       rescue => e
         msg.reply(e.message)
         return
@@ -130,7 +130,7 @@ if it's the only given search term",
 
   def generate_menu(lookup, name)
     menu = lookup.map do |radical_number, entries|
-      description = KANJIDIC2Entry::KANGXI_RADICALS[radical_number-1].join(' ')
+      description = DatabaseEntry::KANGXI_RADICALS[radical_number-1].join(' ')
 
       kanji_list = if entries.size == 1
                      format_entry(entries.first)
@@ -185,7 +185,7 @@ if it's the only given search term",
     dict = File.open("#{(File.dirname __FILE__)}/#{dict_name}", 'r') do |io|
       Marshal.load(io)
     end
-    raise "The #{dict_name} file is outdated. Rerun convert.rb." unless dict[:version] == KANJIDIC2Entry::VERSION
+    raise "The #{dict_name} file is outdated. Rerun convert.rb." unless dict[:version] == DatabaseEntry::VERSION
     dict
   end
 
@@ -197,7 +197,7 @@ if it's the only given search term",
 
   def format_entry(entry)
     out = [entry.kanji]
-    out << "Rad: #{entry.radical_number}(#{KANJIDIC2Entry::KANGXI_RADICALS[entry.radical_number-1].join})"
+    out << "Rad: #{entry.radical_number}(#{DatabaseEntry::KANGXI_RADICALS[entry.radical_number-1].join})"
     out << "SKIP: #{entry.code_skip.join(', ')}" unless entry.code_skip.empty?
     out << "Strokes: #{entry.stroke_count}"
 

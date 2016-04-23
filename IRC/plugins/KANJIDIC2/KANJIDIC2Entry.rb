@@ -5,7 +5,7 @@
 # KANJIDIC2 entry
 
 class KANJIDIC2
-class KANJIDIC2Entry
+class DatabaseEntry
   VERSION = 7
 
   attr_accessor :kanji, # One character. The kanji represented by this entry.
@@ -265,6 +265,6 @@ class KANJIDIC2Entry
     f
   end
 
-  KANGXI_SEARCH_RADICALS = KANJIDIC2Entry.kangxi_search_extension
+  KANGXI_SEARCH_RADICALS = DatabaseEntry.kangxi_search_extension
 end
 end

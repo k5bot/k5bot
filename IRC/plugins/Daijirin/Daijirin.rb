@@ -134,7 +134,7 @@ See '.faq regexp'",
                       '<invalid entry>'
                     end
 
-      DaijirinMenuEntry.new(description, e)
+      MenuEntry.new(description, e)
     end
 
     MenuNodeSimple.new(menu_name, menu)

@@ -220,7 +220,7 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
 
   def generate_menu(lookup, name, is_private, book_record, preserve_gaiji)
     menu = lookup.map do |heading, text|
-      EPWINGMenuEntry.new(
+      MenuEntry.new(
           heading,
           text.each_slice(is_private ? 10 : 3).to_a,
           book_record,

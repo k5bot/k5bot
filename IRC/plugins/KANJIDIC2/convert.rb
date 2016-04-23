@@ -19,7 +19,8 @@ end
 
 require 'IRC/plugins/KANJIDIC2/KANJIDIC2Entry'
 
-class KANJIDICConverter
+class KANJIDIC2
+class Converter
   attr_reader :hash
 
   def initialize(kanjidic_file, krad_file, gsf_file)
@@ -41,7 +42,7 @@ class KANJIDICConverter
     @hash[:misc] = @misc
     @hash[:kanji_parts] = @kanji_parts
     @hash[:gsf_order] = @gsf_order
-    @hash[:version] = KANJIDIC2Entry::VERSION
+    @hash[:version] = DatabaseEntry::VERSION
   end
 
   def read_krad_file
@@ -74,7 +75,7 @@ class KANJIDICConverter
 
     # Compute visual equivalents reverse lookup for radicals.
     visual_equivalents = {}
-    KANJIDIC2Entry::KANGXI_SEARCH_RADICALS.each do |radicals|
+    DatabaseEntry::KANGXI_SEARCH_RADICALS.each do |radicals|
       radicals.each do |radical|
         visual_equivalents.merge!({radical => radicals}) do |_, oldval, newval|
           oldval | newval
@@ -93,7 +94,7 @@ class KANJIDICConverter
       if node.node_type.eql?(Nokogiri::XML::Reader::TYPE_ELEMENT) && 'character'.eql?(node.name)
         parsed = Nokogiri::XML(node.outer_xml)
 
-        entry = KANJIDIC2Entry.new()
+        entry = DatabaseEntry.new
         fill_entry(entry, parsed.child)
 
         @kanji[entry.kanji] = entry
@@ -119,7 +120,7 @@ class KANJIDICConverter
 
         put_to_hash(@misc, chk_term("C#{entry.radical_number}"), entry)
 
-        KANJIDIC2Entry::KANGXI_SEARCH_RADICALS[entry.radical_number-1].each do |rad|
+        DatabaseEntry::KANGXI_SEARCH_RADICALS[entry.radical_number-1].each do |rad|
           put_to_hash(@misc, chk_term("C#{rad}"), entry)
           put_to_hash(@misc, chk_term("PP#{rad}"), entry)
         end
@@ -240,9 +241,9 @@ class KANJIDICConverter
   end
 
   def chk_term(term)
-    tmp = KANJIDIC2Entry.split_into_keywords(term)
+    tmp = DatabaseEntry.split_into_keywords(term)
     unless tmp.size == 1 && term.size.eql?(tmp[0].size)
-      raise "Bug! Term '#{term}' should survive KANJIDIC2Entry.split_into_keywords(). Modify it appropriately."
+      raise "Bug! Term '#{term}' should survive DatabaseEntry.split_into_keywords(). Modify it appropriately."
     end
     tmp[0]
   end
@@ -252,7 +253,7 @@ class KANJIDICConverter
     kun = entry.readings[:ja_kun]
     if kun
       result |= kun.map do |r|
-        KANJIDIC2Entry.get_japanese_stem(r)
+        DatabaseEntry.get_japanese_stem(r)
       end
     end
 
@@ -260,15 +261,16 @@ class KANJIDICConverter
     m = entry.meanings
     [r[:ja_on], r[:pinyin], r[:korean_h], m[:en]].each do |terms|
       next unless terms
-      result |= terms.map {|term| KANJIDIC2Entry.split_into_keywords(term)}.flatten
+      result |= terms.map {|term| DatabaseEntry.split_into_keywords(term)}.flatten
     end
 
     result
   end
 end
+end
 
 def marshal_dict(dict, krad_dict, gsf_dict, marshal_file)
-  ec = KANJIDICConverter.new("#{(File.dirname __FILE__)}/#{dict}",
+  ec = KANJIDIC2::Converter.new("#{(File.dirname __FILE__)}/#{dict}",
                              "#{(File.dirname __FILE__)}/#{krad_dict}",
                              "#{(File.dirname __FILE__)}/#{gsf_dict}")
 

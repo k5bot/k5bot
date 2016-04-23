@@ -7,7 +7,7 @@
 require 'IRC/IRCPlugin'
 
 class EPWING
-class EPWINGMenuEntry < MenuNode
+class MenuEntry < MenuNode
   def initialize(description, entry, book_record, preserve_gaiji)
     @description = description
     @entry = entry
