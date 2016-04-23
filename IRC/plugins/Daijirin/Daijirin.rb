@@ -13,6 +13,7 @@ require 'IRC/SequelHelpers'
 
 IRCPlugin.remove_required 'IRC/plugins/Daijirin'
 require 'IRC/plugins/Daijirin/parsed_entry'
+require 'IRC/plugins/Daijirin/DaijirinMenuEntry'
 
 class Daijirin
   include IRCPlugin
@@ -28,8 +29,6 @@ See '.faq regexp'",
   DEPENDENCIES = [:Language, :Menu]
 
   def afterLoad
-    load_helper_class(:DaijirinMenuEntry)
-
     @language = @plugin_manager.plugins[:Language]
     @menu = @plugin_manager.plugins[:Menu]
 
@@ -48,8 +47,6 @@ See '.faq regexp'",
 
     @menu = nil
     @language = nil
-
-    unload_helper_class(:DaijirinMenuEntry)
 
     nil
   end

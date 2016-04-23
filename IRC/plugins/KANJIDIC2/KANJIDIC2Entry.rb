@@ -4,6 +4,7 @@
 
 # KANJIDIC2 entry
 
+class KANJIDIC2
 class KANJIDIC2Entry
   VERSION = 7
 
@@ -265,4 +266,5 @@ class KANJIDIC2Entry
   end
 
   KANGXI_SEARCH_RADICALS = KANJIDIC2Entry.kangxi_search_extension
+end
 end

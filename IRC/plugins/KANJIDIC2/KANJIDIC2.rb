@@ -13,6 +13,9 @@ require 'uri'
 
 require 'IRC/IRCPlugin'
 
+IRCPlugin.remove_required 'IRC/plugins/KANJIDIC2'
+require 'IRC/plugins/KANJIDIC2/KANJIDIC2Entry'
+
 class KANJIDIC2
   include IRCPlugin
   DESCRIPTION = 'A KANJIDIC2 plugin.'
@@ -49,8 +52,6 @@ if it's the only given search term",
   attr_reader :kanji, :code_skip, :stroke_count, :misc, :kanji_parts, :gsf_order
 
   def afterLoad
-    load_helper_class(:KANJIDIC2Entry)
-
     @language = @plugin_manager.plugins[:Language]
     @menu = @plugin_manager.plugins[:Menu]
 
@@ -76,8 +77,6 @@ if it's the only given search term",
 
     @menu = nil
     @language = nil
-
-    unload_helper_class(:KANJIDIC2Entry)
 
     nil
   end

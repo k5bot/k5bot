@@ -12,6 +12,9 @@ require 'ostruct'
 require 'IRC/IRCPlugin'
 require 'IRC/AutoMonitor'
 
+IRCPlugin.remove_required 'IRC/plugins/EPWING'
+require 'IRC/plugins/EPWING/EPWINGMenuEntry'
+
 class EPWING
   include IRCPlugin
   DESCRIPTION = {
@@ -61,8 +64,6 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
   end
 
   def afterLoad
-    load_helper_class(:EPWINGMenuEntry)
-
     @router = @plugin_manager.plugins[:Router]
     @menu = @plugin_manager.plugins[:Menu]
     @storage = @plugin_manager.plugins[:StorageYAML]
@@ -129,8 +130,6 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
     @menu = nil
     @storage = nil
     @router = nil
-
-    unload_helper_class(:EPWINGMenuEntry)
 
     nil
   end

@@ -6,6 +6,7 @@
 
 require 'IRC/IRCPlugin'
 
+class EPWING
 class EPWINGMenuEntry < MenuNode
   def initialize(description, entry, book_record, preserve_gaiji)
     @description = description
@@ -70,4 +71,5 @@ class EPWINGMenuEntry < MenuNode
   def convert_from_eb(word)
     word.encode('UTF-8')
   end
+end
 end

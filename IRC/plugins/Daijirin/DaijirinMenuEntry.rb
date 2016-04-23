@@ -6,6 +6,7 @@
 
 require 'IRC/IRCPlugin'
 
+class Daijirin
 class DaijirinMenuEntry < MenuNode
   def initialize(description, entry)
     @description = description
@@ -234,4 +235,5 @@ class DaijirinMenuEntry < MenuNode
       REPLACEMENTS[match]
     end
   end
+end
 end
