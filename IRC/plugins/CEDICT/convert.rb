@@ -6,7 +6,7 @@
 # CEDICT converter
 #
 # Converts the CEDICT file to a marshalled hash, readable by the CEDICT plugin.
-# When there are changes to CEDICTEntry or CEDICT is updated, run this script
+# When there are changes to ParsedEntry or CEDICT is updated, run this script
 # to re-index (./convert.rb), then reload the CEDICT plugin (!load CEDICT).
 
 $VERBOSE = true
@@ -26,7 +26,8 @@ require 'IRC/plugins/CEDICT/CEDICTEntry'
 
 include SequelHelpers
 
-class CEDICTConverter
+class CEDICT
+class Converter
   attr_reader :hash
 
   def initialize(cedict_file)
@@ -35,7 +36,7 @@ class CEDICTConverter
     @hash[:keywords] = {}
     @all_entries = []
     @hash[:all] = @all_entries
-    @hash[:version] = CEDICTEntry::VERSION
+    @hash[:version] = ParsedEntry::VERSION
   end
 
   def read
@@ -44,7 +45,7 @@ class CEDICTConverter
         print '.' if 0 == i%1000
         next if l.start_with?('#') # Skip comments
 
-        entry = CEDICTEntry.new(l.strip)
+        entry = ParsedEntry.new(l.strip)
 
         @all_entries << entry
         entry.keywords.each do |k|
@@ -54,9 +55,10 @@ class CEDICTConverter
     end
   end
 end
+end
 
 def marshal_dict(dict, sqlite_file)
-  ec = CEDICTConverter.new("#{(File.dirname __FILE__)}/#{dict}")
+  ec = CEDICT::Converter.new("#{(File.dirname __FILE__)}/#{dict}")
 
   print "Indexing #{dict.upcase}..."
   ec.read

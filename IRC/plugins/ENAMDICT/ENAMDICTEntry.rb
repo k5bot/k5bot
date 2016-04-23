@@ -6,7 +6,8 @@
 
 require 'set'
 
-class ENAMDICTEntry
+class ENAMDICT
+class ParsedEntry
   VERSION = 3
 
   attr_reader :raw
@@ -50,7 +51,7 @@ class ENAMDICTEntry
   # Returns a list of keywords created from the English translations and meta information.
   # Each keyword is a symbol.
   def keywords
-    @keywords ||= english.flat_map { |e| ENAMDICTEntry.split_into_keywords(e) }.sort.uniq
+    @keywords ||= english.flat_map { |e| ParsedEntry.split_into_keywords(e) }.sort.uniq
   end
 
   def self.split_into_keywords(text)
@@ -60,4 +61,5 @@ class ENAMDICTEntry
   def to_s
     @raw.dup
   end
+end
 end

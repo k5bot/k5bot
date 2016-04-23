@@ -11,6 +11,9 @@ require 'sequel'
 require 'IRC/IRCPlugin'
 require 'IRC/SequelHelpers'
 
+IRCPlugin.remove_required 'IRC/plugins/CEDICT'
+require 'IRC/plugins/CEDICT/CEDICTEntry'
+
 class CEDICT
   include IRCPlugin
   include SequelHelpers
@@ -23,8 +26,6 @@ class CEDICT
   DEPENDENCIES = [:Menu]
 
   def afterLoad
-    load_helper_class(:CEDICTEntry)
-
     @menu = @plugin_manager.plugins[:Menu]
 
     @db = database_connect("sqlite://#{(File.dirname __FILE__)}/cedict.sqlite", :encoding => 'utf8')
@@ -39,8 +40,6 @@ class CEDICT
     @db = nil
 
     @menu = nil
-
-    unload_helper_class(:CEDICTEntry)
 
     nil
   end
@@ -159,13 +158,13 @@ class CEDICT
   end
 
   def split_into_keywords(word)
-    CEDICTEntry.split_into_keywords(word).uniq
+    ParsedEntry.split_into_keywords(word).uniq
   end
 
   def load_dict(db)
     versions = db[:cedict_version].to_a.map {|x| x[:id]}
-    unless versions.include?(CEDICTEntry::VERSION)
-      raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[CEDICTEntry::VERSION].inspect} of plugin. Rerun convert.rb."
+    unless versions.include?(ParsedEntry::VERSION)
+      raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[ParsedEntry::VERSION].inspect} of plugin. Rerun convert.rb."
     end
   end
 

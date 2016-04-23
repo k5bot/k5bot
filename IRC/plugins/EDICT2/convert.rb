@@ -6,7 +6,7 @@
 # EDICT2 converter
 #
 # Converts the EDICT2 file to a marshalled hash, readable by the EDICT2 plugin.
-# When there are changes to EDICT2Entry or EDICT2 is updated, run this script
+# When there are changes to ParsedEntry or EDICT2 is updated, run this script
 # to re-index (./convert.rb), then reload the EDICT2 plugin (!load EDICT2).
 
 $VERBOSE = true
@@ -26,7 +26,8 @@ require 'IRC/plugins/EDICT2/EDICT2Entry'
 
 include SequelHelpers
 
-class EDICT2Converter
+class EDICT2
+class Converter
   attr_reader :hash
 
   class SubEntry
@@ -46,7 +47,7 @@ class EDICT2Converter
     @all_entries = []
     @subentries = []
     @hash[:all] = @all_entries
-    @hash[:version] = EDICT2Entry::VERSION
+    @hash[:version] = ParsedEntry::VERSION
     @hash[:subentries] = @subentries
 
     # Duplicated two lines from ../Language/Language.rb
@@ -68,7 +69,7 @@ class EDICT2Converter
       io.each_line.each_with_index do |l, i|
         print '.' if 0 == i%1000
 
-        entry = EDICT2Entry.new(l.encode('UTF-8').strip)
+        entry = ParsedEntry.new(l.encode('UTF-8').strip)
 
         entry.parse
 
@@ -163,9 +164,10 @@ class EDICT2Converter
     hiragana
   end
 end
+end
 
 def marshal_dict(dict, sqlite_file)
-  ec = EDICT2Converter.new(
+  ec = EDICT2::Converter.new(
       "#{(File.dirname __FILE__)}/#{dict}",
       "#{(File.dirname __FILE__)}/word_freq_report.txt",
   )

@@ -22,7 +22,8 @@ require 'IRC/plugins/YEDICT/YEDICTEntry'
 
 include SequelHelpers
 
-class YEDICTConverter
+class YEDICT
+class Converter
   attr_reader :hash
 
   def initialize(yedict_file)
@@ -31,7 +32,7 @@ class YEDICTConverter
     @hash[:keywords] = {}
     @all_entries = []
     @hash[:all] = @all_entries
-    @hash[:version] = YEDICTEntry::VERSION
+    @hash[:version] = ParsedEntry::VERSION
   end
 
   def read
@@ -39,7 +40,7 @@ class YEDICTConverter
       io.each_line.each_with_index do |l, i|
         print '.' if 0 == i%1000
 
-        entry = YEDICTEntry.new(l.strip)
+        entry = ParsedEntry.new(l.strip)
 
         entry.parse
 
@@ -51,9 +52,10 @@ class YEDICTConverter
     end
   end
 end
+end
 
 def marshal_dict(dict, sqlite_file)
-  ec = YEDICTConverter.new("#{(File.dirname __FILE__)}/#{dict}")
+  ec = YEDICT::Converter.new("#{(File.dirname __FILE__)}/#{dict}")
 
   print "Indexing #{dict.upcase}..."
   ec.read

@@ -6,7 +6,8 @@
 
 require 'set'
 
-class EDICT2Entry
+class EDICT2
+class ParsedEntry
   class Variant
     attr_reader :word, :keywords
     attr_accessor :usages_count
@@ -116,7 +117,7 @@ class EDICT2Entry
   # Returns a list of keywords created from the English translations and meta information.
   # Each keyword is a symbol.
   def keywords
-    @keywords ||= english.flat_map { |e| EDICT2Entry.split_into_keywords(e) }.sort.uniq
+    @keywords ||= english.flat_map { |e| ParsedEntry.split_into_keywords(e) }.sort.uniq
   end
 
   def self.split_into_keywords(text)
@@ -146,4 +147,5 @@ class EDICT2Entry
   def contains_cjk?(s)
     !!(s =~ /\p{Han}|\p{Katakana}|\p{Hiragana}|\p{Hangul}/)
   end
+end
 end

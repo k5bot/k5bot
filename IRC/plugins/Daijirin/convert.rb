@@ -6,7 +6,7 @@
 # Daijirin converter
 #
 # Converts the Daijirin file to a marshalled hash, readable by the Daijirin plugin.
-# When there are changes to DaijirinEntry or Daijirin is updated, run this script
+# When there are changes to ParsedEntry or Daijirin is updated, run this script
 # to re-index (./convert.rb), then reload the Daijirin plugin (!load Daijirin).
 
 $VERBOSE = true
@@ -28,7 +28,8 @@ include SequelHelpers
 
 RAW_SIZE = 8192
 
-class DaijirinConverter
+class Daijirin
+class Converter
   attr_reader :hash
 
   def initialize(source_file)
@@ -37,7 +38,7 @@ class DaijirinConverter
     @hash[:kanji] = {}
     @all_entries = []
     @hash[:all] = @all_entries
-    @hash[:version] = DaijirinEntry::VERSION
+    @hash[:version] = ParsedEntry::VERSION
 
     # Duplicated two lines from ../Language/Language.rb
     @kata2hira = YAML.load_file('../Language/kata2hira.yaml') rescue nil
@@ -74,11 +75,11 @@ class DaijirinConverter
         if lns[0].start_with?('――')
           raise 'Child entry found but no parent entry is known.' unless parent_entry
 
-          entry = DaijirinEntry.new(lns, parent_entry)
+          entry = ParsedEntry.new(lns, parent_entry)
 
           parent_entry.add_child!(entry)
         else
-          entry = DaijirinEntry.new(lns)
+          entry = ParsedEntry.new(lns)
 
           parent_entry = entry
         end
@@ -116,9 +117,10 @@ class DaijirinConverter
     hiragana
   end
 end
+end
 
 def marshal_dict(dict, sqlite_file)
-  ec = DaijirinConverter.new("#{(File.dirname __FILE__)}/#{dict}")
+  ec = Daijirin::Converter.new("#{(File.dirname __FILE__)}/#{dict}")
 
   print "Indexing #{dict.upcase}..."
   ec.read

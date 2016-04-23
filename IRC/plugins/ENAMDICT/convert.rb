@@ -6,7 +6,7 @@
 # ENAMDICT converter
 #
 # Converts the ENAMDICT file to a marshalled hash, readable by the ENAMDICT plugin.
-# When there are changes to ENAMDICTEntry or ENAMDICT is updated, run this script
+# When there are changes to ParsedEntry or ENAMDICT is updated, run this script
 # to re-index (./convert.rb), then reload the ENAMDICT plugin (!load ENAMDICT).
 
 $VERBOSE = true
@@ -26,7 +26,8 @@ require 'IRC/plugins/ENAMDICT/ENAMDICTEntry'
 
 include SequelHelpers
 
-class ENAMDICTConverter
+class ENAMDICT
+class Converter
   attr_reader :hash
 
   def initialize(enamdict_file)
@@ -34,7 +35,7 @@ class ENAMDICTConverter
     @hash = {}
     @all_entries = []
     @hash[:all] = @all_entries
-    @hash[:version] = ENAMDICTEntry::VERSION
+    @hash[:version] = ParsedEntry::VERSION
 
     # Duplicated two lines from ../Language/Language.rb
     @kata2hira = YAML.load_file('../Language/kata2hira.yaml') rescue nil
@@ -46,7 +47,7 @@ class ENAMDICTConverter
       io.each_line.each_with_index do |l, i|
         print '.' if 0 == i%1000
 
-        entry = ENAMDICTEntry.new(l.encode('UTF-8').strip)
+        entry = ParsedEntry.new(l.encode('UTF-8').strip)
 
         entry.parse
 
@@ -74,9 +75,10 @@ class ENAMDICTConverter
     hiragana
   end
 end
+end
 
 def marshal_dict(dict, sqlite_file)
-  ec = ENAMDICTConverter.new("#{(File.dirname __FILE__)}/#{dict}")
+  ec = ENAMDICT::Converter.new("#{(File.dirname __FILE__)}/#{dict}")
 
   print "Indexing #{dict.upcase}..."
   ec.read

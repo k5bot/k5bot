@@ -11,6 +11,9 @@ require 'sequel'
 require 'IRC/IRCPlugin'
 require 'IRC/SequelHelpers'
 
+IRCPlugin.remove_required 'IRC/plugins/Daijirin'
+require 'IRC/plugins/Daijirin/DaijirinEntry'
+
 class Daijirin
   include IRCPlugin
   include SequelHelpers
@@ -25,7 +28,6 @@ See '.faq regexp'",
   DEPENDENCIES = [:Language, :Menu]
 
   def afterLoad
-    load_helper_class(:DaijirinEntry)
     load_helper_class(:DaijirinMenuEntry)
 
     @language = @plugin_manager.plugins[:Language]
@@ -48,7 +50,6 @@ See '.faq regexp'",
     @language = nil
 
     unload_helper_class(:DaijirinMenuEntry)
-    unload_helper_class(:DaijirinEntry)
 
     nil
   end
@@ -200,8 +201,8 @@ See '.faq regexp'",
 
   def load_dict(db)
     versions = db[:daijirin_version].to_a.map {|x| x[:id]}
-    unless versions.include?(DaijirinEntry::VERSION)
-      raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[DaijirinEntry::VERSION].inspect} of plugin. Rerun convert.rb."
+    unless versions.include?(ParsedEntry::VERSION)
+      raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[ParsedEntry::VERSION].inspect} of plugin. Rerun convert.rb."
     end
 
     # Load all lazy entries for regexp search by kanji_for_search and kana fields

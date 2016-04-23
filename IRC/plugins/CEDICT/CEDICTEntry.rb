@@ -6,7 +6,8 @@
 
 require 'set'
 
-class CEDICTEntry
+class CEDICT
+class ParsedEntry
   VERSION = 1
 
   attr_reader :raw
@@ -51,7 +52,7 @@ class CEDICTEntry
   # Returns a list of keywords created from the English translations and meta information.
   # Each keyword is a symbol.
   def keywords
-    @keywords ||= english.flat_map { |e| CEDICTEntry.split_into_keywords(e) }.sort.uniq
+    @keywords ||= english.flat_map { |e| ParsedEntry.split_into_keywords(e) }.sort.uniq
   end
 
   def self.split_into_keywords(text)
@@ -61,4 +62,5 @@ class CEDICTEntry
   def to_s
     @raw.dup
   end
+end
 end

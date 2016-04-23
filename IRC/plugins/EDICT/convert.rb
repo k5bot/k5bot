@@ -6,7 +6,7 @@
 # EDICT converter
 #
 # Converts the EDICT file to a marshalled hash, readable by the EDICT plugin.
-# When there are changes to EDICTEntry or EDICT is updated, run this script
+# When there are changes to ParsedEntry or EDICT is updated, run this script
 # to re-index (./convert.rb), then reload the EDICT plugin (!load EDICT).
 
 $VERBOSE = true
@@ -26,7 +26,8 @@ require 'IRC/plugins/EDICT/EDICTEntry'
 
 include SequelHelpers
 
-class EDICTConverter
+class EDICT
+class Converter
   attr_reader :hash
 
   def initialize(edict_file, word_freq_file)
@@ -36,7 +37,7 @@ class EDICTConverter
     @hash[:keywords] = {}
     @all_entries = []
     @hash[:all] = @all_entries
-    @hash[:version] = EDICTEntry::VERSION
+    @hash[:version] = ParsedEntry::VERSION
 
     # Duplicated two lines from ../Language/Language.rb
     @kata2hira = YAML.load_file('../Language/kata2hira.yaml') rescue nil
@@ -55,7 +56,7 @@ class EDICTConverter
       io.each_line.each_with_index do |l, i|
         print '.' if 0 == i%1000
 
-        entry = EDICTEntry.new(l.encode('UTF-8').strip)
+        entry = ParsedEntry.new(l.encode('UTF-8').strip)
 
         entry.parse
         entry.usages_count = usages_count[entry.japanese] || 0
@@ -89,9 +90,10 @@ class EDICTConverter
     hiragana
   end
 end
+end
 
 def marshal_dict(dict, sqlite_file)
-  ec = EDICTConverter.new(
+  ec = EDICT::Converter.new(
       "#{(File.dirname __FILE__)}/#{dict}",
       "#{(File.dirname __FILE__)}/word_freq_report.txt",
   )

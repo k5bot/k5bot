@@ -11,6 +11,9 @@ require 'sequel'
 require 'IRC/IRCPlugin'
 require 'IRC/SequelHelpers'
 
+IRCPlugin.remove_required 'IRC/plugins/YEDICT'
+require 'IRC/plugins/YEDICT/YEDICTEntry'
+
 class YEDICT
   include IRCPlugin
   include SequelHelpers
@@ -23,8 +26,6 @@ class YEDICT
   DEPENDENCIES = [:Menu]
 
   def afterLoad
-    load_helper_class(:YEDICTEntry)
-
     @menu = @plugin_manager.plugins[:Menu]
 
     @db = database_connect("sqlite://#{(File.dirname __FILE__)}/yedict.sqlite", :encoding => 'utf8')
@@ -39,8 +40,6 @@ class YEDICT
     @db = nil
 
     @menu = nil
-
-    unload_helper_class(:YEDICTEntry)
 
     nil
   end
@@ -159,13 +158,13 @@ class YEDICT
   end
 
   def split_into_keywords(word)
-    YEDICTEntry.split_into_keywords(word).uniq
+    ParsedEntry.split_into_keywords(word).uniq
   end
 
   def load_dict(db)
     versions = db[:yedict_version].to_a.map {|x| x[:id]}
-    unless versions.include?(YEDICTEntry::VERSION)
-      raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[YEDICTEntry::VERSION].inspect} of plugin. Rerun convert.rb."
+    unless versions.include?(ParsedEntry::VERSION)
+      raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[ParsedEntry::VERSION].inspect} of plugin. Rerun convert.rb."
     end
   end
 

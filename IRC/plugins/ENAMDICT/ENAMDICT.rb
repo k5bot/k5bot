@@ -16,6 +16,9 @@ require 'sequel'
 require 'IRC/IRCPlugin'
 require 'IRC/SequelHelpers'
 
+IRCPlugin.remove_required 'IRC/plugins/ENAMDICT'
+require 'IRC/plugins/ENAMDICT/ENAMDICTEntry'
+
 class ENAMDICT
   include IRCPlugin
   include SequelHelpers
@@ -29,8 +32,6 @@ See '.faq regexp'",
   DEPENDENCIES = [:Language, :Menu]
 
   def afterLoad
-    load_helper_class(:ENAMDICTEntry)
-
     @language = @plugin_manager.plugins[:Language]
     @menu = @plugin_manager.plugins[:Menu]
 
@@ -49,8 +50,6 @@ See '.faq regexp'",
 
     @menu = nil
     @language = nil
-
-    unload_helper_class(:ENAMDICTEntry)
 
     nil
   end
@@ -193,8 +192,8 @@ See '.faq regexp'",
 
   def load_dict(db)
     versions = db[:enamdict_version].to_a.map {|x| x[:id]}
-    unless versions.include?(ENAMDICTEntry::VERSION)
-      raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[ENAMDICTEntry::VERSION].inspect} of plugin. Rerun convert.rb."
+    unless versions.include?(ParsedEntry::VERSION)
+      raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[ParsedEntry::VERSION].inspect} of plugin. Rerun convert.rb."
     end
 
     regexpable = db[:enamdict_entry].select(*ENAMDICTLazyEntry::COLUMNS).to_a

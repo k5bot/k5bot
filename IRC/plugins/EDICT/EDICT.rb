@@ -17,6 +17,9 @@ require 'IRC/IRCPlugin'
 require 'IRC/LayoutableText'
 require 'IRC/SequelHelpers'
 
+IRCPlugin.remove_required 'IRC/plugins/EDICT'
+require 'IRC/plugins/EDICT/EDICTEntry'
+
 class EDICT
   include IRCPlugin
   include SequelHelpers
@@ -31,8 +34,6 @@ See '.faq regexp'",
   DEPENDENCIES = [:Language, :Menu]
 
   def afterLoad
-    load_helper_class(:EDICTEntry)
-
     @language = @plugin_manager.plugins[:Language]
     @menu = @plugin_manager.plugins[:Menu]
 
@@ -51,8 +52,6 @@ See '.faq regexp'",
 
     @menu = nil
     @language = nil
-
-    unload_helper_class(:EDICTEntry)
 
     nil
   end
@@ -217,13 +216,13 @@ See '.faq regexp'",
   end
 
   def split_into_keywords(word)
-    EDICTEntry.split_into_keywords(word).uniq
+    ParsedEntry.split_into_keywords(word).uniq
   end
 
   def load_dict(db)
     versions = db[:edict_version].to_a.map {|x| x[:id]}
-    unless versions.include?(EDICTEntry::VERSION)
-      raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[EDICTEntry::VERSION].inspect} of plugin. Rerun convert.rb."
+    unless versions.include?(ParsedEntry::VERSION)
+      raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[ParsedEntry::VERSION].inspect} of plugin. Rerun convert.rb."
     end
 
     regexpable = db[:edict_entry].select(*EDICTLazyEntry::COLUMNS).to_a

@@ -100,4 +100,10 @@ module IRCPlugin
     end
     true
   end
+
+  def self.remove_required(lib)
+    $LOADED_FEATURES.delete_if do |path|
+      File.dirname(path).end_with?(lib.chomp(File::SEPARATOR))
+    end
+  end
 end

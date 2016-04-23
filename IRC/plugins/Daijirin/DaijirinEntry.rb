@@ -4,7 +4,8 @@
 
 # Daijirin Entry
 
-class DaijirinEntry
+class Daijirin
+class ParsedEntry
   VERSION = 5
 
   attr_reader :raw, :parent, :children
@@ -279,4 +280,5 @@ class DaijirinEntry
     s.gsub!('∘', '')
     s
   end
+end
 end

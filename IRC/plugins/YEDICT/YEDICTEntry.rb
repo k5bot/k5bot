@@ -6,7 +6,8 @@
 
 require 'set'
 
-class YEDICTEntry
+class YEDICT
+class ParsedEntry
   VERSION = 2
 
   attr_reader :raw
@@ -87,7 +88,7 @@ class YEDICTEntry
   # Returns a list of keywords created from the English translations and meta information.
   # Each keyword is a symbol.
   def keywords
-    @keywords ||= english.flat_map { |e| YEDICTEntry.split_into_keywords(e) }.sort.uniq
+    @keywords ||= english.flat_map { |e| ParsedEntry.split_into_keywords(e) }.sort.uniq
   end
 
   def self.split_into_keywords(text)
@@ -97,4 +98,5 @@ class YEDICTEntry
   def to_s
     @raw.dup
   end
+end
 end
