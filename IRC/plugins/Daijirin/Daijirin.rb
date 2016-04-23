@@ -12,7 +12,7 @@ require 'IRC/IRCPlugin'
 require 'IRC/SequelHelpers'
 
 IRCPlugin.remove_required 'IRC/plugins/Daijirin'
-require 'IRC/plugins/Daijirin/DaijirinEntry'
+require 'IRC/plugins/Daijirin/parsed_entry'
 
 class Daijirin
   include IRCPlugin

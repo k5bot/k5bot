@@ -12,7 +12,7 @@ require 'IRC/IRCPlugin'
 require 'IRC/SequelHelpers'
 
 IRCPlugin.remove_required 'IRC/plugins/CEDICT'
-require 'IRC/plugins/CEDICT/CEDICTEntry'
+require 'IRC/plugins/CEDICT/parsed_entry'
 
 class CEDICT
   include IRCPlugin

@@ -18,7 +18,7 @@ require 'IRC/LayoutableText'
 require 'IRC/SequelHelpers'
 
 IRCPlugin.remove_required 'IRC/plugins/EDICT'
-require 'IRC/plugins/EDICT/EDICTEntry'
+require 'IRC/plugins/EDICT/parsed_entry'
 
 class EDICT
   include IRCPlugin

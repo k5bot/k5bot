@@ -12,7 +12,7 @@ require 'IRC/IRCPlugin'
 require 'IRC/SequelHelpers'
 
 IRCPlugin.remove_required 'IRC/plugins/YEDICT'
-require 'IRC/plugins/YEDICT/YEDICTEntry'
+require 'IRC/plugins/YEDICT/parsed_entry'
 
 class YEDICT
   include IRCPlugin

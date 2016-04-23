@@ -17,7 +17,7 @@ require 'IRC/IRCPlugin'
 require 'IRC/SequelHelpers'
 
 IRCPlugin.remove_required 'IRC/plugins/ENAMDICT'
-require 'IRC/plugins/ENAMDICT/ENAMDICTEntry'
+require 'IRC/plugins/ENAMDICT/parsed_entry'
 
 class ENAMDICT
   include IRCPlugin
