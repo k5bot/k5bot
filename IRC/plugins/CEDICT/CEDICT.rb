@@ -129,8 +129,8 @@ class CEDICT
 
     dataset = @db[:cedict_entry].where(condition).group_by(Sequel.qualify(:cedict_entry, :id))
 
-    standard_order(dataset).select(*CEDICTLazyEntry::COLUMNS).to_a.map do |entry|
-      CEDICTLazyEntry.new(@db, entry)
+    standard_order(dataset).select(*DatabaseEntry::COLUMNS).to_a.map do |entry|
+      DatabaseEntry.new(@db, entry)
     end
   end
 
@@ -146,10 +146,10 @@ class CEDICT
 
     dataset = @db[:cedict_entry_to_english].where(Sequel.qualify(:cedict_entry_to_english, :cedict_english_id) => english_ids).group_and_count(Sequel.qualify(:cedict_entry_to_english, :cedict_entry_id)).join(:cedict_entry, :id => :cedict_entry_id).having(:count => english_ids.size)
 
-    dataset = dataset.select_append(*CEDICTLazyEntry::COLUMNS)
+    dataset = dataset.select_append(*DatabaseEntry::COLUMNS)
 
     standard_order(dataset).to_a.map do |entry|
-      CEDICTLazyEntry.new(@db, entry)
+      DatabaseEntry.new(@db, entry)
     end
   end
 
@@ -168,7 +168,7 @@ class CEDICT
     end
   end
 
-  class CEDICTLazyEntry
+  class DatabaseEntry
     attr_reader :mandarin_zh, :mandarin_tw, :pinyin, :id
     FIELDS = [:mandarin_zh, :mandarin_tw, :pinyin, :id]
     COLUMNS = FIELDS.map {|f| Sequel.qualify(:cedict_entry, f)}

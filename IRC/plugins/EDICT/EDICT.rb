@@ -155,8 +155,8 @@ See '.faq regexp'",
 
     dataset = @db[:edict_entry].where(condition).group_by(Sequel.qualify(:edict_entry, :id))
 
-    standard_order(dataset).select(*EDICTLazyEntry::COLUMNS).to_a.map do |entry|
-      EDICTLazyEntry.new(@db, entry)
+    standard_order(dataset).select(*DatabaseEntry::COLUMNS).to_a.map do |entry|
+      DatabaseEntry.new(@db, entry)
     end
   end
 
@@ -204,10 +204,10 @@ See '.faq regexp'",
 
     dataset = @db[:edict_entry_to_english].where(Sequel.qualify(:edict_entry_to_english, :edict_english_id) => english_ids).group_and_count(Sequel.qualify(:edict_entry_to_english, :edict_entry_id)).join(:edict_entry, :id => :edict_entry_id).having(:count => english_ids.size)
 
-    dataset = dataset.select_append(*EDICTLazyEntry::COLUMNS)
+    dataset = dataset.select_append(*DatabaseEntry::COLUMNS)
 
     standard_order(dataset).to_a.map do |entry|
-      EDICTLazyEntry.new(@db, entry)
+      DatabaseEntry.new(@db, entry)
     end
   end
 
@@ -225,14 +225,14 @@ See '.faq regexp'",
       raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[ParsedEntry::VERSION].inspect} of plugin. Rerun convert.rb."
     end
 
-    regexpable = db[:edict_entry].select(*EDICTLazyEntry::COLUMNS).to_a
+    regexpable = db[:edict_entry].select(*DatabaseEntry::COLUMNS).to_a
 
     regexpable.map do |entry|
-      EDICTLazyEntry.new(@db, entry)
+      DatabaseEntry.new(db, entry)
     end
   end
 
-  class EDICTLazyEntry
+  class DatabaseEntry
     attr_reader :japanese, :reading, :simple_entry, :id
     FIELDS = [:japanese, :reading, :simple_entry, :id]
     COLUMNS = FIELDS.map {|f| Sequel.qualify(:edict_entry, f)}

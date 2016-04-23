@@ -148,8 +148,8 @@ See '.faq regexp'",
 
     dataset = @db[:enamdict_entry].where(condition).group_by(Sequel.qualify(:enamdict_entry, :id))
 
-    standard_order(dataset).select(*ENAMDICTLazyEntry::COLUMNS).to_a.map do |entry|
-      ENAMDICTLazyEntry.new(@db, entry)
+    standard_order(dataset).select(*DatabaseEntry::COLUMNS).to_a.map do |entry|
+      DatabaseEntry.new(@db, entry)
     end
   end
 
@@ -196,14 +196,14 @@ See '.faq regexp'",
       raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[ParsedEntry::VERSION].inspect} of plugin. Rerun convert.rb."
     end
 
-    regexpable = db[:enamdict_entry].select(*ENAMDICTLazyEntry::COLUMNS).to_a
+    regexpable = db[:enamdict_entry].select(*DatabaseEntry::COLUMNS).to_a
 
     regexpable.map do |entry|
-      ENAMDICTLazyEntry.new(@db, entry)
+      DatabaseEntry.new(db, entry)
     end
   end
 
-  class ENAMDICTLazyEntry
+  class DatabaseEntry
     attr_reader :japanese, :reading, :simple_entry, :id
     FIELDS = [:japanese, :reading, :simple_entry, :id]
     COLUMNS = FIELDS.map {|f| Sequel.qualify(:enamdict_entry, f)}

@@ -158,8 +158,8 @@ See '.faq regexp'",
 
     dataset = table.where(condition).group_by(Sequel.qualify(:daijirin_entry, :id))
 
-    standard_order(dataset).select(*DaijirinLazyEntry::COLUMNS).to_a.map do |entry|
-      DaijirinLazyEntry.new(@db, entry)
+    standard_order(dataset).select(*DatabaseEntry::COLUMNS).to_a.map do |entry|
+      DatabaseEntry.new(@db, entry)
     end
   end
 
@@ -208,15 +208,15 @@ See '.faq regexp'",
     # Load all lazy entries for regexp search by kanji_for_search and kana fields
     kanji_search = db[:daijirin_kanji].join(:daijirin_entry_to_kanji, :daijirin_kanji_id => :id).select_hash_groups(:daijirin_entry_id, :text)
 
-    regexpable = db[:daijirin_entry].select(*DaijirinLazyEntry::COLUMNS).to_a
+    regexpable = db[:daijirin_entry].select(*DatabaseEntry::COLUMNS).to_a
 
     regexpable.map do |entry|
       entry[:kanji_for_search] = kanji_search[entry[:id]]
-      DaijirinLazyEntry.new(db, entry)
+      DatabaseEntry.new(db, entry)
     end
   end
 
-  class DaijirinLazyEntry
+  class DatabaseEntry
     attr_reader :kanji_for_display, :kanji_for_search, :kana, :id
     FIELDS = [:kanji_for_display, :kana, :id]
     COLUMNS = FIELDS.map {|f| Sequel.qualify(:daijirin_entry, f)}

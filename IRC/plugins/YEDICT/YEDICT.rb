@@ -129,8 +129,8 @@ class YEDICT
 
     dataset = @db[:yedict_entry].where(condition).group_by(Sequel.qualify(:yedict_entry, :id))
 
-    standard_order(dataset).select(*YEDICTLazyEntry::COLUMNS).to_a.map do |entry|
-      YEDICTLazyEntry.new(@db, entry)
+    standard_order(dataset).select(*DatabaseEntry::COLUMNS).to_a.map do |entry|
+      DatabaseEntry.new(@db, entry)
     end
   end
 
@@ -146,10 +146,10 @@ class YEDICT
 
     dataset = @db[:yedict_entry_to_english].where(Sequel.qualify(:yedict_entry_to_english, :yedict_english_id) => english_ids).group_and_count(Sequel.qualify(:yedict_entry_to_english, :yedict_entry_id)).join(:yedict_entry, :id => :yedict_entry_id).having(:count => english_ids.size)
 
-    dataset = dataset.select_append(*YEDICTLazyEntry::COLUMNS)
+    dataset = dataset.select_append(*DatabaseEntry::COLUMNS)
 
     standard_order(dataset).to_a.map do |entry|
-      YEDICTLazyEntry.new(@db, entry)
+      DatabaseEntry.new(@db, entry)
     end
   end
 
@@ -168,7 +168,7 @@ class YEDICT
     end
   end
 
-  class YEDICTLazyEntry
+  class DatabaseEntry
     attr_reader :cantonese, :mandarin, :jyutping, :id
     FIELDS = [:cantonese, :mandarin, :jyutping, :id]
     COLUMNS = FIELDS.map {|f| Sequel.qualify(:yedict_entry, f)}

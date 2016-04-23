@@ -154,7 +154,7 @@ See '.faq regexp'",
       edict_text_id
     end.map do |edict_text_id, g|
       japanese, reading = g.map {|p| [p.japanese, p.reading]}.transpose
-      EDICT2ResultEntry.new(@db, :japanese => japanese.uniq.join(','), :reading => reading.uniq.join(','), :id => edict_text_id)
+      DatabaseGroupEntry.new(@db, :japanese => japanese.uniq.join(','), :reading => reading.uniq.join(','), :id => edict_text_id)
     end
   end
 
@@ -165,8 +165,8 @@ See '.faq regexp'",
 
     dataset = @db[:edict_entry].where(condition).group_by(Sequel.qualify(:edict_entry, :id))
 
-    standard_order(dataset).select(*EDICT2LazyEntry::COLUMNS).to_a.map do |entry|
-      EDICT2LazyEntry.new(@db, entry)
+    standard_order(dataset).select(*DatabaseEntry::COLUMNS).to_a.map do |entry|
+      DatabaseEntry.new(@db, entry)
     end
   end
 
@@ -216,7 +216,7 @@ See '.faq regexp'",
       japanese = g.map {|p, _, _| p.japanese} if japanese.empty?
       #reading = g.map {|p, _, _| p.reading} if reading.empty?
       [
-          EDICT2ResultEntry.new(
+          DatabaseGroupEntry.new(
               @db,
               :japanese => japanese.uniq.join(','),
               :reading => reading.uniq.join(','),
@@ -240,10 +240,10 @@ See '.faq regexp'",
 
     text_ids = @db[:edict_entry_to_english].where(Sequel.qualify(:edict_entry_to_english, :edict_english_id) => english_ids).group_and_count(Sequel.qualify(:edict_entry_to_english, :edict_text_id)).having(:count => english_ids.size).select_append(Sequel.qualify(:edict_entry_to_english, :edict_text_id)).to_a.map {|h| h[:edict_text_id]}
 
-    dataset = @db[:edict_entry].where(Sequel.qualify(:edict_entry, :edict_text_id) => text_ids).select(*EDICT2LazyEntry::COLUMNS)
+    dataset = @db[:edict_entry].where(Sequel.qualify(:edict_entry, :edict_text_id) => text_ids).select(*DatabaseEntry::COLUMNS)
 
     standard_order(dataset).to_a.map do |entry|
-      EDICT2LazyEntry.new(@db, entry)
+      DatabaseEntry.new(@db, entry)
     end
   end
 
@@ -261,17 +261,15 @@ See '.faq regexp'",
       raise "The database version #{versions.inspect} of #{db.uri} doesn't correspond to this version #{[ParsedEntry::VERSION].inspect} of plugin. Rerun convert.rb."
     end
 
-    regexpable = db[:edict_entry].select(*EDICT2LazyEntry::COLUMNS).to_a
+    regexpable = db[:edict_entry].select(*DatabaseEntry::COLUMNS).to_a
 
     regexpable.map do |entry|
-      EDICT2LazyEntry.new(db, entry)
+      DatabaseEntry.new(db, entry)
     end
   end
 
-  class EDICT2ResultEntry
+  class DatabaseGroupEntry
     attr_reader :japanese, :reading, :simple_entry, :id
-
-    ID_FIELD = Sequel.qualify(:edict_text, :id)
 
     def initialize(db, pre_init)
       @db = db
@@ -283,7 +281,7 @@ See '.faq regexp'",
     end
 
     def raw
-      @db[:edict_text].where(ID_FIELD => @id).select(:raw).first[:raw]
+      @db[:edict_text].where(:id => @id).select(:raw).first[:raw]
     end
 
     def to_s
@@ -291,7 +289,7 @@ See '.faq regexp'",
     end
   end
 
-  class EDICT2LazyEntry
+  class DatabaseEntry
     attr_reader :japanese, :reading, :simple_entry, :id, :edict_text_id
     FIELDS = [:japanese, :reading, :simple_entry, :id, :edict_text_id]
     COLUMNS = FIELDS.map {|f| Sequel.qualify(:edict_entry, f)}
