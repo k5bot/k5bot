@@ -14,6 +14,7 @@ require 'bundler/setup'
 require 'sequel'
 
 require 'IRC/IRCPlugin'
+require 'IRC/LayoutableText'
 require 'IRC/SequelHelpers'
 
 class EDICT < IRCPlugin
@@ -128,7 +129,7 @@ See '.faq regexp'",
                       '<invalid entry>'
                     end
 
-      MenuNodeText.new(description, e)
+      MenuEntry.new(description, e)
     end
 
     MenuNodeSimple.new(name, menu)
@@ -251,6 +252,18 @@ See '.faq regexp'",
 
     def to_s
       self.raw
+    end
+  end
+
+  class MenuEntry < MenuNodeText
+    def do_reply(msg, entry)
+      # split on slashes before entry numbers
+      msg.reply(
+          LayoutableText::SplitJoined.new(
+              '/',
+              entry.raw.split(/\/(?=\s*\(\d+\))/, -1),
+          ),
+      )
     end
   end
 end
