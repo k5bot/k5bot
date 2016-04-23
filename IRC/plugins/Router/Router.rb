@@ -44,7 +44,7 @@ class Router < IRCPlugin
 
     @rules = @storage.read('router') || {}
 
-    parse_rules()
+    parse_rules
   end
 
   def beforeUnload

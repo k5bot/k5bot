@@ -482,7 +482,7 @@ appears in #{counts.size}/#{@files.size} scripts)"
       return if occurence_map.empty?
       @hit_files << hit_file
       @occurrence_maps << occurence_map
-      @occurrence_total_map.merge!(occurence_map) do |key, old_val, new_val|
+      @occurrence_total_map.merge!(occurence_map) do |_, old_val, new_val|
         old_val + new_val
       end
     end

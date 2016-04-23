@@ -13,7 +13,7 @@ class Memory < IRCPlugin
 
         File.open('/proc/meminfo') do |f|
           f.each_line.map do |l|
-            key, value = l.split()
+            key, value = l.split
             tmp = [key.downcase.delete(':').to_sym, value.to_i]
             d[tmp[0]] = tmp[1]
           end

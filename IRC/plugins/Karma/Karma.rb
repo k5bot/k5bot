@@ -170,7 +170,7 @@ class Karma < IRCPlugin
     format.gsub!('#{sender}', sender)
     if sender_points
       format.gsub!('#{sender_points}', sender_points.to_s)
-      format.gsub!('#{sender_points_kanji}') do |m|
+      format.gsub!('#{sender_points_kanji}') do |_|
         @ns.spell(sender_points)
       end
     end
@@ -178,7 +178,7 @@ class Karma < IRCPlugin
     format.gsub!('#{receiver}', receiver) if receiver
     if receiver_points
       format.gsub!('#{receiver_points}', receiver_points.to_s)
-      format.gsub!('#{receiver_points_kanji}') do |m|
+      format.gsub!('#{receiver_points_kanji}') do |_|
         @ns.spell(receiver_points)
       end
     end

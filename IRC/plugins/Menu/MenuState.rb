@@ -183,7 +183,7 @@ class MenuState
 
   # Overridable behavior for when current menu content is exhausted
   def on_menu_cycle_end(msg)
-    msg.reply("No more hits.")
+    msg.reply('No more hits.')
   end
 
   # Overridable behavior for when given node was attempted to be entered into,
@@ -195,7 +195,7 @@ class MenuState
   # Overridable behavior for when given node was attempted to be entered into,
   # yet it yielded empty children list.
   def on_empty_menu(node, msg)
-    msg.reply(node.description ? "No hits for #{node.description}." : "No hits.")
+    msg.reply(node.description ? "No hits for #{node.description}." : 'No hits.')
   end
 
   # Overridable behavior for when user attempted to move higher than root node.

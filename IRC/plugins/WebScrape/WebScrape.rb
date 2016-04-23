@@ -23,13 +23,13 @@ Locations shown as menu items, ordered by recency.",
 
     @language = @plugin_manager.plugins[:Language]
     @menu = @plugin_manager.plugins[:Menu]
-    @u = @plugin_manager.plugins[:URL]
+    @url = @plugin_manager.plugins[:URL]
   end
 
   def beforeUnload
     @menu.evict_plugin_menus!(self.name)
 
-    @u = nil
+    @url = nil
     @menu = nil
     @language = nil
 
@@ -68,7 +68,7 @@ Locations shown as menu items, ordered by recency.",
   end
 
   def fetch_uri_html(uri)
-    @u.fetch_by_uri(uri, 10, nil) do |result|
+    @url.fetch_by_uri(uri, 10, nil) do |result|
       unless result.is_a?(Net::HTTPSuccess)
         result.error!
       end
@@ -77,7 +77,7 @@ Locations shown as menu items, ordered by recency.",
 
       raise "Unexpected content type #{content_type}" unless content_type.eql?('text/html')
 
-      doc = @u.html_to_nokogiri(result)
+      doc = @url.html_to_nokogiri(result)
 
       raise "Failed to get Nokogiri::HTML on #{uri}" unless doc
 

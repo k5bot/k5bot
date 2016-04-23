@@ -12,9 +12,20 @@ class NumberSpell < IRCPlugin
       :ns => 'spells out the specified number',
   }
 
-  Digits = { 0 => 'ゼロ', 1 => '一', 2 => '二', 3 => '三', 4 => '四', 5 => '五', 6 => '六', 7 => '七', 8 => '八', 9 => '九' }
+  DIGITS = {
+      0 => 'ゼロ',
+      1 => '一',
+      2 => '二',
+      3 => '三',
+      4 => '四',
+      5 => '五',
+      6 => '六',
+      7 => '七',
+      8 => '八',
+      9 => '九',
+  }
 
-  Places = {
+  PLACES = {
     0  => nil,
     1  => '十',
     2  => '百',
@@ -35,10 +46,11 @@ class NumberSpell < IRCPlugin
     56 => '阿僧祇',
     60 => '那由他',
     64 => '不可思議',
-    68 => '無量大数'
+    68 => '無量大数',
   }
 
-  Readings = {
+  # noinspection RubyStringKeysInHashInspection
+  READINGS = {
     '一' => 'いち',
     '二' => 'に',
     '三' => 'さん',
@@ -67,10 +79,11 @@ class NumberSpell < IRCPlugin
     '阿僧祇' => 'あそうぎ',
     '那由他' => 'なゆた',
     '不可思議' => 'ふかしぎ',
-    '無量大数' => 'むりょうたいすう'
+    '無量大数' => 'むりょうたいすう',
   }
 
-  Shifts = {
+  # noinspection RubyStringKeysInHashInspection
+  SHIFTS = {
     'さんひ' => 'さんび',
     'さんせ' => 'さんぜ',
     'ちち' => 'っち',
@@ -84,25 +97,26 @@ class NumberSpell < IRCPlugin
     'じゅうせ' => 'じゅっせ',
     'じゅうけ' => 'じゅっけ',
     'くけ' => 'っけ',
-    'ちこ' => 'っこ'
+    'ちこ' => 'っこ',
   }
 
   def on_privmsg(msg)
     case msg.bot_command
     when :ns
-      ns = spell msg.tail
-      msg.reply ns if ns
+      ns = spell(msg.tail)
+      msg.reply(ns) if ns
     end
   end
 
   def spell(number)
-    return unless num = sanitize(number)
-    return "〇 (#{self.class::Digits[0]})" if num == 0
-    absnum = num.abs
-    kanji = kanjiNum(placeTree(absnum))
-    kanji = 'マイナス' + kanji if absnum != num
-    kana = translate(kanji, self.class::Readings)
-    kana = translate(kana, self.class::Shifts)
+    num = sanitize(number)
+    return unless num
+    return "〇 (#{self.class::DIGITS[0]})" if num == 0
+    abs_num = num.abs
+    kanji = kanji_num(place_tree(abs_num))
+    kanji = 'マイナス' + kanji if abs_num != num
+    kana = translate(kanji, self.class::READINGS)
+    kana = translate(kana, self.class::SHIFTS)
     "#{kanji} (#{kana})"
   end
 
@@ -114,33 +128,35 @@ class NumberSpell < IRCPlugin
     string
   end
 
-  def sanitize(numberString)
-    num = numberString.to_s.delete ' '
+  def sanitize(number_string)
+    num = number_string.to_s.delete(' ')
     return unless num =~ /^[-\d]+$/
     num.to_i
   end
 
   # Translates a digit tree into a kanji number
-  def kanjiNum(tree)
+  def kanji_num(tree)
     result = ''
+
     pk = tree.keys.sort.reverse
     pk.each do |p|
-      if tree[p].is_a? Hash
-        result += kanjiNum(tree[p])
+      if tree[p].is_a?(Hash)
+        result += kanji_num(tree[p])
       else
         # append digit to the result
         # unless the digit is 0 and the number of digits is greater than 1
         # or the digit is 1 and the place is tens or hundreds
         # or the digit is 1, the place is thousands, and it's the first digit to be printed
-        result += self.class::Digits[tree[p]] \
-          unless (tree[p] == 0 && tree.size > 1) \
+        unless (tree[p] == 0 && tree.size > 1) \
           or (tree[p] == 1 && (p == 1 || p == 2)) \
           or (tree[p] == 1 && p == 3 && result.empty?)
+          result += self.class::DIGITS[tree[p]]
+        end
       end
-      if pl = self.class::Places[p]
-        result += pl
-      end
+      pl = self.class::PLACES[p]
+      result += pl if pl
     end
+
     result
   end
 
@@ -149,14 +165,14 @@ class NumberSpell < IRCPlugin
   # Like so: {0=>4, 1=>3, 2=>12}
   # Although, as 12 is also needs to be parsed since it is >9, we recurse and store a sub-hash.
   # Like so: {0=>4, 1=>3, 2=>{0=>2, 1=>1}}
-  def placeTree(num)
-    pk = self.class::Places.keys.sort.reverse
-    placeValues = {}
+  def place_tree(num)
+    pk = self.class::PLACES.keys.sort.reverse
+    place_values = {}
     pk.each do |p|
       value = num / 10**p
       num %= 10**p
-      placeValues[p] = (value > 9 ? placeTree(value) : value) unless value == 0
+      place_values[p] = (value > 9 ? place_tree(value) : value) unless value == 0
     end
-    placeValues
+    place_values
   end
 end

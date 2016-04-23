@@ -4,7 +4,7 @@ class QuirkedJSON < JSON::Pure::Parser
 
   # Override parsing method to accept nothing in between array's commas.
   def parse_array
-    raise NestingError, "nesting of #@current_nesting is too deep" if
+    raise NestingError, "nesting of #{@current_nesting} is too deep" if
         @max_nesting.nonzero? && @current_nesting > @max_nesting
     result = @array_class.new
     delim = false
