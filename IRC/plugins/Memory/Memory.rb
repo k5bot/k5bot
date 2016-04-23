@@ -1,6 +1,7 @@
 require 'IRC/IRCPlugin'
 
-class Memory < IRCPlugin
+class Memory
+  include IRCPlugin
   DESCRIPTION = 'Monitors memory usage.'
   COMMANDS = {
     :free => 'reports memory info',

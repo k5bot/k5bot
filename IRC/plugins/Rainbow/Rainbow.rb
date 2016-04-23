@@ -3,7 +3,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Rainbow < IRCPlugin
+class Rainbow
+  include IRCPlugin
   DESCRIPTION = 'Colours text randomly.'
   COMMANDS = {
     :rainbow => 'Apply random colours to text.',

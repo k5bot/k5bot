@@ -6,7 +6,7 @@
 
 require 'IRC/Listener'
 
-class IRCPlugin
+module IRCPlugin
   include BotCore::Listener
 
   # Configuration options set for this plugin

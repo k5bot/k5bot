@@ -16,7 +16,8 @@ require 'sequel'
 require 'IRC/IRCPlugin'
 require 'IRC/SequelHelpers'
 
-class ENAMDICT < IRCPlugin
+class ENAMDICT
+  include IRCPlugin
   include SequelHelpers
 
   DESCRIPTION = 'An ENAMDICT plugin.'

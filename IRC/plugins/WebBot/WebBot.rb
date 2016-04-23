@@ -13,7 +13,8 @@ require 'webrick/https'
 
 require 'IRC/IRCPlugin'
 
-class WebBot < IRCPlugin
+class WebBot
+  include IRCPlugin
   DESCRIPTION = 'provides Web access to the bot'
   DEPENDENCIES = [:Router, :IRCBot, :Auth]
 

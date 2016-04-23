@@ -7,7 +7,8 @@
 require 'IRC/Emitter'
 require 'IRC/IRCPlugin'
 
-class Console < IRCPlugin
+class Console
+  include IRCPlugin
   include BotCore::Emitter
 
   DESCRIPTION = 'Console interaction plugin'

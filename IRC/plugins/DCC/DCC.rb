@@ -10,7 +10,8 @@ require 'ostruct'
 
 require 'IRC/IRCPlugin'
 
-class DCC < IRCPlugin
+class DCC
+  include IRCPlugin
   DESCRIPTION = 'Direct Client-to-Client protocol plugin.'
   DEPENDENCIES = [:Router, :IRCBot, :Auth]
 

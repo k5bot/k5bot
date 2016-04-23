@@ -6,7 +6,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Dice < IRCPlugin
+class Dice
+  include IRCPlugin
   DESCRIPTION = 'Dice plugin.'
   COMMANDS = {
     :roll => "rolls the dice. Supports simple dice notation \

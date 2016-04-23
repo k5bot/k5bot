@@ -11,7 +11,8 @@ require 'sequel'
 require 'IRC/IRCPlugin'
 require 'IRC/SequelHelpers'
 
-class CEDICT < IRCPlugin
+class CEDICT
+  include IRCPlugin
   include SequelHelpers
 
   DESCRIPTION = 'A CEDICT plugin.'

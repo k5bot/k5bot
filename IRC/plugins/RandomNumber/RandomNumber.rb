@@ -5,7 +5,8 @@
 
 require 'IRC/IRCPlugin'
 
-class RandomNumber < IRCPlugin
+class RandomNumber
+  include IRCPlugin
   DESCRIPTION = 'RandomNumber plugin.'
   COMMANDS = {
     :randomnumber => 'gives a random number',

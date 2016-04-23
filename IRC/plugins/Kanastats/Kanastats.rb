@@ -5,7 +5,8 @@ require 'fileutils'
 require 'IRC/IRCPlugin'
 require 'IRC/LayoutableText'
 
-class Kanastats < IRCPlugin
+class Kanastats
+  include IRCPlugin
   DESCRIPTION = "Statistics plugin logging all public conversation and \
 providing tools to analyze it."
 

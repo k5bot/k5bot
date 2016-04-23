@@ -3,7 +3,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Manyougana < IRCPlugin
+class Manyougana
+  include IRCPlugin
   DESCRIPTION = "Rômazi to man'yôgana converter."
   COMMANDS = {
     :manyougana => "Converts from rômazi to man'yôgana. Requires numeral notation for Old Japanese vowels. Since there exist multiple man'yôgana for each mora, the final choice will be random.",

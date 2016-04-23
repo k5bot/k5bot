@@ -7,7 +7,8 @@
 require 'yaml'
 require 'IRC/IRCPlugin'
 
-class Mnemonic < IRCPlugin
+class Mnemonic
+  include IRCPlugin
   DESCRIPTION = 'Returns mnemonics for characters.'
   COMMANDS = {
       :m => 'returns a mnemonic for the specified character',

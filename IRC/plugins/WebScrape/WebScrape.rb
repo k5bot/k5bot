@@ -6,7 +6,8 @@
 
 require 'IRC/IRCPlugin'
 
-class WebScrape < IRCPlugin
+class WebScrape
+  include IRCPlugin
   DESCRIPTION = 'Provides access to data from various web sites'
   COMMANDS = {
       :gogen => "searches gogen-allguide.com for given word etymology. \

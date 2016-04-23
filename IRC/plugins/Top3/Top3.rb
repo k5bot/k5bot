@@ -11,7 +11,8 @@ require 'net/http'
 
 require 'IRC/IRCPlugin'
 
-class Top3 < IRCPlugin
+class Top3
+  include IRCPlugin
   DESCRIPTION = 'top3 gives the top 3 Japanese writers of the month (made by amigojapan)'
   COMMANDS = {
     :top3 => 'displays the top 3 Japanese writers of the month. optional .top3 exclude user1 user2... (made by amigojapan)',

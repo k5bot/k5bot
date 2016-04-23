@@ -11,7 +11,8 @@ require 'bundler/setup'
 require 'google-search'
 require 'htmlentities'
 
-class Googler < IRCPlugin
+class Googler
+  include IRCPlugin
   DESCRIPTION = 'Provides access to various Google services'
   COMMANDS = {
       :g => 'searches Google and returns the first result',

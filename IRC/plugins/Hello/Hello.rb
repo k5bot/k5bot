@@ -4,7 +4,8 @@
 
 # Hello plugin
 
-class Hello < IRCPlugin
+class Hello
+  include IRCPlugin
   DESCRIPTION = 'Says hello.'
   DEPENDENCIES = [:Language]
 

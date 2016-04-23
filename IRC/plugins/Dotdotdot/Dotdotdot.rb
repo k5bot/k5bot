@@ -6,7 +6,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Dotdotdot < IRCPlugin
+class Dotdotdot
+  include IRCPlugin
   DESCRIPTION = '...'
 
   def on_privmsg(msg)

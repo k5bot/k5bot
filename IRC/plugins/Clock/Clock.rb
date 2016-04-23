@@ -12,7 +12,8 @@ require 'iso_country_codes'
 require 'IRC/IRCPlugin'
 require 'IRC/LayoutableText'
 
-class Clock < IRCPlugin
+class Clock
+  include IRCPlugin
   DESCRIPTION = 'The Clock plugin tells the time.'
   COMMANDS = {
       :time => "tells the current time. \

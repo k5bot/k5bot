@@ -6,7 +6,8 @@
 
 require 'IRC/IRCPlugin'
 
-class NumberSpell < IRCPlugin
+class NumberSpell
+  include IRCPlugin
   DESCRIPTION = 'Spells out numbers in Japanese.'
   COMMANDS = {
       :ns => 'spells out the specified number',

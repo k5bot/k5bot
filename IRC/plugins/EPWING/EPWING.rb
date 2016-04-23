@@ -12,7 +12,8 @@ require 'ostruct'
 require 'IRC/IRCPlugin'
 require 'IRC/AutoMonitor'
 
-class EPWING < IRCPlugin
+class EPWING
+  include IRCPlugin
   DESCRIPTION = {
       nil => 'Plugin for working with dictionaries in EPWING format.',
       :search => "Searching is straightforward, but it's worth noting that \

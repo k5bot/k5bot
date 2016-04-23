@@ -17,7 +17,8 @@ require 'IRC/IRCPlugin'
 require 'IRC/LayoutableText'
 require 'IRC/SequelHelpers'
 
-class EDICT < IRCPlugin
+class EDICT
+  include IRCPlugin
   include SequelHelpers
 
   DESCRIPTION = 'An EDICT plugin.'

@@ -6,7 +6,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Git < IRCPlugin
+class Git
+  include IRCPlugin
   DESCRIPTION = 'Plugin to run git pull.'
   COMMANDS = {
     :pull => 'fetches changes from upstream and resets current branch and working directory to reflect it',

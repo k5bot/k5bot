@@ -6,7 +6,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Manage < IRCPlugin
+class Manage
+  include IRCPlugin
   DESCRIPTION = 'A plugin for basic bot management.'
   COMMANDS = {
     :join => 'joins specified channel(s)',

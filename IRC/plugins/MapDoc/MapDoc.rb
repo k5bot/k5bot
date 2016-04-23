@@ -7,7 +7,8 @@
 require 'IRC/IRCPlugin'
 require 'IRC/LayoutableText'
 
-class MapDoc < IRCPlugin
+class MapDoc
+  include IRCPlugin
   DESCRIPTION = 'Provides access to simple associative array of text.'
 
   DEPENDENCIES = [:StorageYAML]

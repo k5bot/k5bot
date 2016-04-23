@@ -10,7 +10,8 @@ require 'nokogiri'
 require 'net/http'
 require 'json'
 
-class Translate < IRCPlugin
+class Translate
+  include IRCPlugin
   DESCRIPTION = 'Uses translation engines to translate between languages.'
   DEPENDENCIES = [:Language]
 

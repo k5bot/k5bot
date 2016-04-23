@@ -6,7 +6,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Statistics < IRCPlugin
+class Statistics
+  include IRCPlugin
   DESCRIPTION = 'A plugin that keeps track of various statistics.'
   COMMANDS = {
     :uptime => 'shows how long the bot has been running',

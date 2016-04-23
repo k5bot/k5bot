@@ -13,7 +13,8 @@ require 'uri'
 
 require 'IRC/IRCPlugin'
 
-class KANJIDIC2 < IRCPlugin
+class KANJIDIC2
+  include IRCPlugin
   DESCRIPTION = 'A KANJIDIC2 plugin.'
   COMMANDS = {
     :k => {

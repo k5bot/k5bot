@@ -11,7 +11,8 @@ require 'openssl'
 require 'IRC/Timer'
 require 'IRC/IRCPlugin'
 
-class Connectix < IRCPlugin
+class Connectix
+  include IRCPlugin
   DESCRIPTION = 'Stacked-functionality IO procuring plugin.'
 
   def self.get_connector_classes

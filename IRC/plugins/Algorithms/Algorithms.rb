@@ -6,7 +6,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Algorithms < IRCPlugin
+class Algorithms
+  include IRCPlugin
   DESCRIPTION = 'The Algorithms plugin contains various geeky functions and algorithms.'
   COMMANDS = {
       :damerau => 'calculates Damerau-Levenshtein distance between two given words',

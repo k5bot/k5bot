@@ -13,7 +13,8 @@ require 'IRC/IRCPlugin'
 require 'IRC/LayoutableText'
 require 'IRC/ContextMetadata'
 
-class IRCBot < IRCPlugin
+class IRCBot
+  include IRCPlugin
   include BotCore::Emitter
 
   DESCRIPTION = 'Provides IRC connectivity.'

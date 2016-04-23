@@ -12,7 +12,8 @@ require 'resolv'
 require 'IRC/IRCPlugin'
 require 'IRC/LayoutableText'
 
-class WolframAlpha < IRCPlugin
+class WolframAlpha
+  include IRCPlugin
   DESCRIPTION = 'a plugin for working with WolframAlpha.'
   COMMANDS = {
     :wa => 'queries WolframAlpha',

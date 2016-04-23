@@ -6,7 +6,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Unicode < IRCPlugin
+class Unicode
+  include IRCPlugin
   DESCRIPTION = 'A plugin that counts and manages Unicode statistics.'
   COMMANDS = {
     :us => 'shows Unicode statistics: number of characters per Unicode range written by the specified user',

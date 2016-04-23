@@ -10,7 +10,8 @@ require 'i18n'
 
 require 'IRC/IRCPlugin'
 
-class I18N < IRCPlugin
+class I18N
+  include IRCPlugin
   DESCRIPTION = 'Internationalization plugin.'
   COMMANDS = {
       :i18n_reload => 'reloads i18n translation files',

@@ -9,7 +9,8 @@ require 'ostruct'
 require 'IRC/IRCPlugin'
 require 'IRC/LayoutableText'
 
-class Help < IRCPlugin
+class Help
+  include IRCPlugin
   DESCRIPTION = 'The help plugin displays help.'
   COMMANDS = {
     :help => 'lists available commands or shows information about specified command or plugin',

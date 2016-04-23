@@ -1,6 +1,7 @@
 require 'IRC/IRCPlugin'
 
-class Kotobank < IRCPlugin
+class Kotobank
+  include IRCPlugin
   DESCRIPTION = 'Returns link to kotobank.jp/weblio.jp/kobun.weblio.jp lookup.'
   COMMANDS = {
     :du => 'returns kotobank link',

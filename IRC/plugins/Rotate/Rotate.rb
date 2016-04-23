@@ -2,7 +2,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Rotate < IRCPlugin
+class Rotate
+  include IRCPlugin
   DESCRIPTION = 'Rotate any unicode string in both directions.'
 
   DEPENDENCIES = [:StorageYAML]

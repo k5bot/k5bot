@@ -6,7 +6,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Example < IRCPlugin
+class Example
+  include IRCPlugin
   DESCRIPTION = 'An example plugin.'
   COMMANDS = {
     :example => 'returns an example message',

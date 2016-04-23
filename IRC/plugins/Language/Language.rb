@@ -11,7 +11,8 @@ require 'IRC/IRCPlugin'
 require 'IRC/LayoutableText'
 
 #noinspection RubyLiteralArrayInspection
-class Language < IRCPlugin
+class Language
+  include IRCPlugin
   attr_reader :unicode_desc
 
   DESCRIPTION = 'Provides language-related functionality.'

@@ -41,7 +41,8 @@ class KANJIDICEntry
   end
 end
 
-class KANJIDIC < IRCPlugin
+class KANJIDIC
+  include IRCPlugin
   DESCRIPTION = 'A KANJIDIC plugin.'
   COMMANDS = {
     :k => 'looks up a given kanji, or shows list of kanji with given SKIP code or strokes number, using KANJIDIC',

@@ -10,7 +10,8 @@ require 'nokogiri'
 
 require 'IRC/IRCPlugin'
 
-class HelpExport < IRCPlugin
+class HelpExport
+  include IRCPlugin
   DESCRIPTION = 'Exports help in externally usable formats.'
   COMMANDS = {
     :export_help_xml => 'exports help in XML format',

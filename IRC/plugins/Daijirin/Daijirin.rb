@@ -11,7 +11,8 @@ require 'sequel'
 require 'IRC/IRCPlugin'
 require 'IRC/SequelHelpers'
 
-class Daijirin < IRCPlugin
+class Daijirin
+  include IRCPlugin
   include SequelHelpers
 
   DESCRIPTION = 'A Daijirin plugin.'

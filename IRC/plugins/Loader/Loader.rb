@@ -6,7 +6,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Loader < IRCPlugin
+class Loader
+  include IRCPlugin
   DESCRIPTION = 'Loads, reloads, and unloads plugins.'
   COMMANDS = {
     :load => 'loads or reloads specified plugin',

@@ -12,7 +12,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Tell < IRCPlugin
+class Tell
+  include IRCPlugin
   DESCRIPTION = 'A plugin that can pass messages between users.'
   COMMANDS = {
     :tell => '[nick] [message] (ex.: !tell K5 I will be back later) sends [message] to [nick] when he/she/it says something the next time',

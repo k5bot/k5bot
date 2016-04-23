@@ -9,7 +9,8 @@ require 'IRC/IRCPlugin'
 require 'yaml'
 require 'fileutils'
 
-class StorageYAML < IRCPlugin
+class StorageYAML
+  include IRCPlugin
 
   DESCRIPTION = 'Provides persistent storage in YAML format for other plugins.'
 

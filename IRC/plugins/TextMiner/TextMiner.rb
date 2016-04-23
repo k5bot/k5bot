@@ -5,7 +5,8 @@ require 'set'
 require 'IRC/IRCPlugin'
 require 'IRC/LayoutableText'
 
-class TextMiner < IRCPlugin
+class TextMiner
+  include IRCPlugin
   DESCRIPTION = "TextMiner plugin provides access, search, \
 and stats for underlying text corpus."
 

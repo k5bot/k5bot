@@ -8,7 +8,8 @@ require 'yaml'
 require 'IRC/IRCPlugin'
 require 'IRC/ContextMetadata'
 
-class Menu < IRCPlugin
+class Menu
+  include IRCPlugin
   DESCRIPTION = 'Provides Menu-related functionality.'
   COMMANDS = {
     :n => "returns the next list of menu entries. Given a number, \

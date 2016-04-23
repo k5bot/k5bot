@@ -8,7 +8,8 @@ require 'MeCab' # mecab ruby binding
 
 require 'IRC/IRCPlugin'
 
-class Mecab < IRCPlugin
+class Mecab
+  include IRCPlugin
   DESCRIPTION = 'Plugin leveraging MeCab morphological analyzer.'
   COMMANDS = {
     :mecab => 'attempts to break up given japanese sentence into words, using MeCab morphological analyzer',

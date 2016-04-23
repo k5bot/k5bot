@@ -15,7 +15,8 @@ require 'net/http'
 require 'time'
 require 'json'
 
-class URL < IRCPlugin
+class URL
+  include IRCPlugin
   DESCRIPTION = 'Implements URL preview'
   COMMANDS = {
       :short => "shortens a previously seen URL with goo.gl. This command can \

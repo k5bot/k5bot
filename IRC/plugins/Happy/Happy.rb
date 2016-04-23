@@ -6,7 +6,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Happy < IRCPlugin
+class Happy
+  include IRCPlugin
   DESCRIPTION = ':D'
 
   PATTERNS = [

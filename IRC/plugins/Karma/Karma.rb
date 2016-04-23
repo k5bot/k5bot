@@ -6,7 +6,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Karma < IRCPlugin
+class Karma
+  include IRCPlugin
   DESCRIPTION = 'Stores karma and other kinds of points for users.'
 
   DEPENDENCIES = [:NumberSpell, :StorageYAML]

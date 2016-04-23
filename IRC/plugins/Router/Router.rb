@@ -6,7 +6,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Router < IRCPlugin
+class Router
+  include IRCPlugin
 
   ALLOW_COMMAND = :unban
   DENY_COMMAND = :ban

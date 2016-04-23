@@ -11,7 +11,8 @@ require 'bundler/setup'
 require 'ting'
 require 'ruby-pinyin'
 
-class Pinyin < IRCPlugin
+class Pinyin
+  include IRCPlugin
   DESCRIPTION = 'Hanzi conversion plugin.'
   COMMANDS = {
     :pinyin => 'convert hanzi to pinyin',

@@ -6,7 +6,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Converter < IRCPlugin
+class Converter
+  include IRCPlugin
   DESCRIPTION = 'Converts units.'
   COMMANDS = {
     :celsius => 'converts to celsius from fahrenheit',

@@ -7,7 +7,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Conjugator < IRCPlugin
+class Conjugator
+  include IRCPlugin
   DESCRIPTION = 'Conjugates japanese verbs and adjectives.'
   COMMANDS = {
       :conjugate => "Specify verb or adjective in dictionary form and desired form (e.g. \".conjugate negative 見る\"). Supported forms: negative, past, te-form, polite, passive, potential, causative, imperative, conditional, provisional, volitional",

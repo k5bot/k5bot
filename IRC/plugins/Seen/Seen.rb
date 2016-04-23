@@ -6,7 +6,8 @@
 
 require 'IRC/IRCPlugin'
 
-class Seen < IRCPlugin
+class Seen
+  include IRCPlugin
   DESCRIPTION = 'A plugin that keeps track of when a user was last seen and where.'
   COMMANDS = {
     :seen => "[nick] - gives information on when [nick] was last seen. \
