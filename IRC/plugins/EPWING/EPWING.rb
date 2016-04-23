@@ -13,7 +13,7 @@ require 'IRC/IRCPlugin'
 require 'IRC/AutoMonitor'
 
 IRCPlugin.remove_required 'IRC/plugins/EPWING'
-require 'IRC/plugins/EPWING/EPWINGMenuEntry'
+require 'IRC/plugins/EPWING/menu_entry'
 
 class EPWING
   include IRCPlugin

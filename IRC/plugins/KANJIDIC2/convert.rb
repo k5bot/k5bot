@@ -17,7 +17,7 @@ require 'nokogiri'
   $LOAD_PATH.unshift(lib_dir) unless $LOAD_PATH.include?(lib_dir)
 end
 
-require 'IRC/plugins/KANJIDIC2/KANJIDIC2Entry'
+require 'IRC/plugins/KANJIDIC2/database_entry'
 
 class KANJIDIC2
 class Converter

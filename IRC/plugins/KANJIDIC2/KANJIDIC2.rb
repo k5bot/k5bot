@@ -14,7 +14,7 @@ require 'uri'
 require 'IRC/IRCPlugin'
 
 IRCPlugin.remove_required 'IRC/plugins/KANJIDIC2'
-require 'IRC/plugins/KANJIDIC2/KANJIDIC2Entry'
+require 'IRC/plugins/KANJIDIC2/database_entry'
 
 class KANJIDIC2
   include IRCPlugin
