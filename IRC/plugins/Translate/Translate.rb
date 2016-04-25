@@ -4,11 +4,16 @@
 
 # Translate plugin
 
-require 'IRC/IRCPlugin'
 require 'rubygems'
 require 'nokogiri'
 require 'net/http'
 require 'json'
+
+require 'IRC/IRCPlugin'
+
+IRCPlugin.remove_required 'IRC/plugins/Translate'
+require 'IRC/plugins/Translate/QuirkedJSON'
+require 'IRC/plugins/Translate/GoogleTokenGenerator'
 
 class Translate
   include IRCPlugin
@@ -204,16 +209,10 @@ class Translate
   TRANSLATION_MAP, COMMANDS = generate_commands
 
   def afterLoad
-    load_helper_class(:QuirkedJSON)
-    load_helper_class(:GoogleTokenGenerator)
-
     @language = @plugin_manager.plugins[:Language]
   end
 
   def beforeUnload
-    unload_helper_class(:GoogleTokenGenerator)
-    unload_helper_class(:QuirkedJSON)
-
     @language = nil
 
     nil

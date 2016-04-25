@@ -1,5 +1,6 @@
 require 'json/pure/parser'
 
+class Translate
 class QuirkedJSON < JSON::Pure::Parser
 
   # Override parsing method to accept nothing in between array's commas.
@@ -38,4 +39,5 @@ class QuirkedJSON < JSON::Pure::Parser
     end
     result
   end
+end
 end

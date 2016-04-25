@@ -4,6 +4,8 @@
 # Thanks to @helen5106 and @tehmaestro and few other cool guys
 # at https://github.com/Stichoza/google-translate-php/issues/32
 #
+
+class Translate
 module GoogleTokenGenerator
   extend self
 
@@ -107,4 +109,5 @@ module GoogleTokenGenerator
     v = char.unpack('U*')
     v[0]
   end
+end
 end
