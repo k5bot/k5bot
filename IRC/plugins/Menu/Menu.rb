@@ -5,8 +5,17 @@
 # Menu plugin
 
 require 'yaml'
+
 require 'IRC/IRCPlugin'
 require 'IRC/ContextMetadata'
+
+IRCPlugin.remove_required 'IRC/plugins/Menu'
+require 'IRC/plugins/Menu/MenuState'
+require 'IRC/plugins/Menu/MenuNode'
+require 'IRC/plugins/Menu/MenuNodeSimple'
+require 'IRC/plugins/Menu/MenuNodeText'
+require 'IRC/plugins/Menu/MenuNodeTextEnumerable'
+require 'IRC/plugins/Menu/MenuNodeTextRaw'
 
 class Menu
   include IRCPlugin
@@ -18,25 +27,11 @@ shows the list of entries starting from that position",
   }
 
   def afterLoad
-    load_helper_class(:MenuState)
-    load_helper_class(:MenuNode)
-    load_helper_class(:MenuNodeSimple)
-    load_helper_class(:MenuNodeText)
-    load_helper_class(:MenuNodeTextEnumerable)
-    load_helper_class(:MenuNodeTextRaw)
-
     @menu_states = {}
   end
 
   def beforeUnload
     @menu_states = nil
-
-    unload_helper_class(:MenuNodeTextRaw)
-    unload_helper_class(:MenuNodeTextEnumerable)
-    unload_helper_class(:MenuNodeText)
-    unload_helper_class(:MenuNodeSimple)
-    unload_helper_class(:MenuNode)
-    unload_helper_class(:MenuState)
 
     nil
   end

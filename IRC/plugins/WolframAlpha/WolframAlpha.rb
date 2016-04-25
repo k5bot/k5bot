@@ -158,7 +158,7 @@ class WolframAlpha
     pods_to_hash(lookup_result).each_pair do |k,v|
       next if v.empty?
 
-      menu << MenuNodeTextRaw.new(k, v)
+      menu << Menu::MenuNodeTextRaw.new(k, v)
     end
 
     assumptions_menu = []
@@ -171,12 +171,12 @@ class WolframAlpha
       text = "Assumed: #{assumed}"
       text = "#{text}; Alternatives: #{v.join(' | ')}" unless v.empty?
 
-      assumptions_menu << MenuNodeText.new(name, text)
+      assumptions_menu << Menu::MenuNodeText.new(name, text)
     end
 
-    menu << MenuNodeSimple.new('Assumptions', assumptions_menu) unless assumptions_menu.empty?
+    menu << Menu::MenuNodeSimple.new('Assumptions', assumptions_menu) unless assumptions_menu.empty?
 
-    MenuNodeSimple.new(name, menu)
+    Menu::MenuNodeSimple.new(name, menu)
   end
 
   def reply_with_menu(msg, result)

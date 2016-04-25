@@ -138,10 +138,10 @@ if it's the only given search term",
                      format_kanji_list(entries)
                    end
 
-      MenuNodeText.new(description, kanji_list)
+      Menu::MenuNodeText.new(description, kanji_list)
     end
 
-    MenuNodeSimple.new(name, menu)
+    Menu::MenuNodeSimple.new(name, menu)
   end
 
   def reply_with_menu(msg, result)

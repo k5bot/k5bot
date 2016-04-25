@@ -7,7 +7,7 @@
 require 'IRC/IRCPlugin'
 
 class Daijirin
-class MenuEntry < MenuNode
+class MenuEntry < (Menu::MenuNode)
   def initialize(description, entry)
     @description = description
     @entry = entry

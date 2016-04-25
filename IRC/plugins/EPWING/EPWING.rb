@@ -13,7 +13,6 @@ require 'IRC/IRCPlugin'
 require 'IRC/AutoMonitor'
 
 IRCPlugin.remove_required 'IRC/plugins/EPWING'
-require 'IRC/plugins/EPWING/menu_entry'
 
 class EPWING
   include IRCPlugin
@@ -64,6 +63,8 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
   end
 
   def afterLoad
+    require 'IRC/plugins/EPWING/menu_entry'
+
     @router = @plugin_manager.plugins[:Router]
     @menu = @plugin_manager.plugins[:Menu]
     @storage = @plugin_manager.plugins[:StorageYAML]
@@ -200,7 +201,7 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
           end
         end.reject {|x| !x}
 
-        reply_with_menu(msg, MenuNodeSimple.new("#{word} in EPWING dictionaries", menus))
+        reply_with_menu(msg, Menu::MenuNodeSimple.new("#{word} in EPWING dictionaries", menus))
       else
         book_record = @books[botcommand]
         if book_record
@@ -228,7 +229,7 @@ See '.help #{name} gaiji' for more info. Example: .gaiji? daijirin WD500",
       )
     end
 
-    MenuNodeSimple.new(name, menu)
+    Menu::MenuNodeSimple.new(name, menu)
   end
 
   def reply_with_menu(msg, result)

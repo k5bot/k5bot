@@ -124,10 +124,10 @@ class Mecab
     success = process_with_mecab(text) do |part, reading, dictionary, types|
       types = types.empty? ? '' : "; Type: #{types.join('／')}"
 
-      result << MenuNodeText.new(part, "Part: #{part}; Reading: #{reading}; Dictionary form: #{dictionary}#{types}")
+      result << Menu::MenuNodeText.new(part, "Part: #{part}; Reading: #{reading}; Dictionary form: #{dictionary}#{types}")
     end
 
-    success ? MenuNodeSimple.new("MeCab analysis for '#{text}'", result) : nil
+    success ? Menu::MenuNodeSimple.new("MeCab analysis for '#{text}'", result) : nil
   end
 
   def get_dictionary_forms(text)

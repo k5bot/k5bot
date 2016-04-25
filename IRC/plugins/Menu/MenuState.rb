@@ -4,6 +4,7 @@
 
 # MenuState contains per-user state of menu.
 
+class Menu
 class MenuState
 
   # The plugin, to which the menu hierarchy belongs.
@@ -217,4 +218,5 @@ class MenuState
 
     false
   end
+end
 end

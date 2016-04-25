@@ -4,6 +4,7 @@
 
 # MenuNode is the interface of a node in menu tree hierarchy
 
+class Menu
 class MenuNode
   # A string, that will be listed in menu as a short description of this entry.
   attr_reader :description
@@ -15,4 +16,5 @@ class MenuNode
   # must return either an array of children MenuNode-s, or null, if this node is
   # leaf/not enterable.
   def enter(from_child, msg) end
+end
 end

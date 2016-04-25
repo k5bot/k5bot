@@ -4,10 +4,12 @@
 
 # EDICT plugin
 
+class Menu
 class MenuNodeTextEnumerable < MenuNodeText
   def do_reply(msg, entry)
     entry.each do |line|
       msg.reply(line.to_s)
     end
   end
+end
 end

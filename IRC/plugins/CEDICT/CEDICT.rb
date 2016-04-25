@@ -103,10 +103,10 @@ class CEDICT
                       '<invalid entry>'
                     end
 
-      MenuNodeText.new(description, e)
+      Menu::MenuNodeText.new(description, e)
     end
 
-    MenuNodeSimple.new(name, menu)
+    Menu::MenuNodeSimple.new(name, menu)
   end
 
   def reply_with_menu(msg, result)

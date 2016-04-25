@@ -4,6 +4,7 @@
 
 # MenuNodeSimple is a straightforward implementation of MenuNode interface
 
+class Menu
 class MenuNodeSimple < MenuNode
   attr_accessor :entries
 
@@ -15,4 +16,5 @@ class MenuNodeSimple < MenuNode
   def enter(from_child, msg)
     @entries
   end
+end
 end

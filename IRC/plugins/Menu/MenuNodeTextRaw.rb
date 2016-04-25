@@ -4,6 +4,7 @@
 
 # EDICT plugin
 
+class Menu
 # Same as MenuNodeTextEnumerable, but doesn't do
 # safety to_s casts. Used with Layoutable-s
 class MenuNodeTextRaw < MenuNodeText
@@ -12,4 +13,5 @@ class MenuNodeTextRaw < MenuNodeText
       msg.reply(line)
     end
   end
+end
 end

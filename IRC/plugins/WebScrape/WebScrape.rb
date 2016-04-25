@@ -54,10 +54,10 @@ Locations shown as menu items, ordered by recency.",
 
   def generate_menu(lookup, name)
     menu = lookup.map do |description, text|
-      MenuNodeText.new(description, text)
+      Menu::MenuNodeText.new(description, text)
     end
 
-    MenuNodeSimple.new(name, menu)
+    Menu::MenuNodeSimple.new(name, menu)
   end
 
   def reply_with_menu(msg, result)

@@ -4,6 +4,7 @@
 
 # EDICT plugin
 
+class Menu
 class MenuNodeText < MenuNode
   def initialize(description, entry)
     @description = description
@@ -18,4 +19,5 @@ class MenuNodeText < MenuNode
   def do_reply(msg, entry)
     msg.reply(entry.to_s)
   end
+end
 end
