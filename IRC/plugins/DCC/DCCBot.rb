@@ -6,6 +6,7 @@
 
 require 'IRC/Emitter'
 
+class DCC
 class DCCBot
   include BotCore::Emitter
 
@@ -114,4 +115,5 @@ class DCCBot
     end
     str
   end
+end
 end

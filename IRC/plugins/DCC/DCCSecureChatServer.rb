@@ -6,6 +6,7 @@
 
 require 'openssl'
 
+class DCC
 class DCCSecureChatServer < DCCPlainChatServer
 
   def initialize(dcc_plugin, config)
@@ -73,4 +74,5 @@ class DCCSecureChatServer < DCCPlainChatServer
     # Use to_io() to convert to the underlying TCPSocket.
     socket.to_io.peeraddr(false)[1]
   end
+end
 end

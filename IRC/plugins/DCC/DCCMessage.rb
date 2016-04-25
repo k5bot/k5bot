@@ -6,6 +6,7 @@
 
 require 'IRC/Message'
 
+class DCC
 class DCCMessage
   include BotCore::Message
 
@@ -132,4 +133,5 @@ class DCCMessage
     # the user on the other side of it.
     bot
   end
+end
 end

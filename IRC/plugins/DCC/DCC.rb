@@ -10,6 +10,12 @@ require 'ostruct'
 
 require 'IRC/IRCPlugin'
 
+IRCPlugin.remove_required 'IRC/plugins/DCC'
+require 'IRC/plugins/DCC/DCCMessage'
+require 'IRC/plugins/DCC/DCCBot'
+require 'IRC/plugins/DCC/DCCPlainChatServer'
+require 'IRC/plugins/DCC/DCCSecureChatServer'
+
 class DCC
   include IRCPlugin
   DESCRIPTION = 'Direct Client-to-Client protocol plugin.'
@@ -49,11 +55,6 @@ connection number (e.g. 12345), 'current' (kills current connection), \
   end
 
   def afterLoad
-    load_helper_class(:DCCMessage)
-    load_helper_class(:DCCBot)
-    load_helper_class(:DCCPlainChatServer)
-    load_helper_class(:DCCSecureChatServer)
-
     @router = @plugin_manager.plugins[:Router]
     @auth = @plugin_manager.plugins[:Auth]
     @parent_ircbot = @plugin_manager.plugins[:IRCBot]
@@ -72,11 +73,6 @@ connection number (e.g. 12345), 'current' (kills current connection), \
     @parent_ircbot = nil
     @auth = nil
     @router = nil
-
-    unload_helper_class(:DCCSecureChatServer)
-    unload_helper_class(:DCCPlainChatServer)
-    unload_helper_class(:DCCBot)
-    unload_helper_class(:DCCMessage)
 
     nil
   end

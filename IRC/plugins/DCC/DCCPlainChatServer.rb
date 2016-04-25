@@ -8,6 +8,7 @@ require 'gserver'
 
 require 'IRC/ContextMetadata'
 
+class DCC
 class DCCPlainChatServer < GServer
   attr_reader :port_to_bot
   attr_reader :config
@@ -161,4 +162,5 @@ See '.help #{@dcc_plugin.class::COMMAND_KILL}'")
   def socket_to_port(socket)
     socket.peeraddr(false)[1]
   end
+end
 end
