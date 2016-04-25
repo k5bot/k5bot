@@ -41,6 +41,11 @@ class IRCBot
   DEFAULT_PORT = 6667
 
   def afterLoad
+    # Hack: add reference to IRCUser from global scope,
+    # so that YAML.load of serialized global IRCUsers will work.
+    # Will not be needed after the first re-save of 'users' file.
+    Object.const_set(:IRCUser, IRCUser)
+
     @config = {
       :serverpass => nil,
       :username => 'bot',
@@ -109,6 +114,8 @@ class IRCBot
     @user = nil
 
     @throttler = nil
+
+    Object.send(:remove_const, :IRCUser)
 
     nil
   end
