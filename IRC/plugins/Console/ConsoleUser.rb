@@ -8,6 +8,7 @@ require 'singleton'
 
 require 'IRC/User'
 
+class Console
 class ConsoleUser
   include BotCore::User
   include Singleton
@@ -23,4 +24,5 @@ class ConsoleUser
   def prefix
     'console'
   end
+end
 end

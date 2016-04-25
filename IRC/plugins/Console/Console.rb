@@ -7,6 +7,10 @@
 require 'IRC/Emitter'
 require 'IRC/IRCPlugin'
 
+IRCPlugin.remove_required 'IRC/plugins/Console'
+require 'IRC/plugins/Console/ConsoleUser'
+require 'IRC/plugins/Console/ConsoleMessage'
+
 class Console
   include IRCPlugin
   include BotCore::Emitter
@@ -17,9 +21,6 @@ class Console
   attr_reader :start_time
 
   def afterLoad
-    load_helper_class(:ConsoleUser)
-    load_helper_class(:ConsoleMessage)
-
     @router = @plugin_manager.plugins[:Router]
     @start_time = Time.now
     @stream_in = $stdin
@@ -31,9 +32,6 @@ class Console
     @stream_in = nil
     @start_time = nil
     @router = nil
-
-    unload_helper_class(:ConsoleMessage)
-    unload_helper_class(:ConsoleUser)
 
     nil
   end

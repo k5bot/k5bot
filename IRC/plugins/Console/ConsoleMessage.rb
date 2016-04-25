@@ -6,6 +6,7 @@
 
 require 'IRC/Message'
 
+class Console
 class ConsoleMessage
   include BotCore::Message
 
@@ -121,4 +122,5 @@ class ConsoleMessage
     # the user on the other side of it.
     bot
   end
+end
 end
