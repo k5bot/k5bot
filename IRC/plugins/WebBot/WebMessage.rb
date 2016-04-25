@@ -6,6 +6,7 @@
 
 require 'IRC/Message'
 
+class WebBot
 class WebMessage
   include BotCore::Message
 
@@ -134,4 +135,5 @@ class WebMessage
     # server, user, browser tab
     [bot.server, prefix, @session]
   end
+end
 end

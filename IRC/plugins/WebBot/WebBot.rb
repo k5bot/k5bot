@@ -13,6 +13,14 @@ require 'webrick/https'
 
 require 'IRC/IRCPlugin'
 
+IRCPlugin.remove_required 'IRC/plugins/WebBot'
+require 'IRC/plugins/WebBot/WebMessage'
+require 'IRC/plugins/WebBot/WebLogger'
+require 'IRC/plugins/WebBot/WebAuthFilterServlet'
+require 'IRC/plugins/WebBot/WebBotServlet'
+require 'IRC/plugins/WebBot/WebPlainChatServer'
+require 'IRC/plugins/WebBot/WebSecureChatServer'
+
 class WebBot
   include IRCPlugin
   DESCRIPTION = 'provides Web access to the bot'
@@ -37,13 +45,6 @@ class WebBot
   end
 
   def afterLoad
-    load_helper_class(:WebMessage)
-    load_helper_class(:WebLogger)
-    load_helper_class(:WebAuthFilterServlet)
-    load_helper_class(:WebBotServlet)
-    load_helper_class(:WebPlainChatServer)
-    load_helper_class(:WebSecureChatServer)
-
     @start_time = Time.now
 
     @router = @plugin_manager.plugins[:Router]
@@ -73,13 +74,6 @@ class WebBot
     @router = nil
 
     @start_time = nil
-
-    unload_helper_class(:WebSecureChatServer)
-    unload_helper_class(:WebPlainChatServer)
-    unload_helper_class(:WebBotServlet)
-    unload_helper_class(:WebAuthFilterServlet)
-    unload_helper_class(:WebLogger)
-    unload_helper_class(:WebMessage)
 
     nil
   end

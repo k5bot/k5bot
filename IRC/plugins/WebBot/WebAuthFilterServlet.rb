@@ -7,6 +7,7 @@
 
 require 'IRC/ContextMetadata'
 
+class WebBot
 class WebAuthFilterServlet < WEBrick::HTTPServlet::AbstractServlet
   WEB_USER_AUTH_KEY = :web_bot_user_auth
 
@@ -63,4 +64,5 @@ class WebAuthFilterServlet < WEBrick::HTTPServlet::AbstractServlet
   def do_log(mode, text)
     puts "#{TIMESTAMP_MODE[mode]}#{self.class.name}: #{Time.now}: #{text}"
   end
+end
 end

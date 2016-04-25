@@ -6,6 +6,7 @@
 
 require 'IRC/Emitter'
 
+class WebBot
 class WebBotServlet < WEBrick::HTTPServlet::AbstractServlet
   include BotCore::Emitter
 
@@ -121,4 +122,5 @@ class WebBotServlet < WEBrick::HTTPServlet::AbstractServlet
     end
     str
   end
+end
 end

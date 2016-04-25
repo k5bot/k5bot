@@ -4,6 +4,7 @@
 
 # HTTPS server wrapper
 
+class WebBot
 class WebSecureChatServer < WebPlainChatServer
   def generate_server_config(plugin_instance, config)
     result = super(plugin_instance, config)
@@ -34,4 +35,5 @@ class WebSecureChatServer < WebPlainChatServer
     # Use to_io() to convert to the underlying TCPSocket.
     client_socket.to_io.peeraddr(true)
   end
+end
 end

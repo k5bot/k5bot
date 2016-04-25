@@ -7,6 +7,7 @@
 
 require 'monitor'
 
+class WebBot
 class WebLogger < WEBrick::BasicLog
   include MonitorMixin
 
@@ -28,4 +29,5 @@ class WebLogger < WEBrick::BasicLog
   def do_log(mode, text)
     "#{TIMESTAMP_MODE[mode]}WEB: #{Time.now}: #{text}"
   end
+end
 end

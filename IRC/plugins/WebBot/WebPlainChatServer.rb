@@ -8,6 +8,7 @@ require 'ostruct'
 
 require 'IRC/ContextMetadata'
 
+class WebBot
 class WebPlainChatServer
   attr_reader :server
 
@@ -107,4 +108,5 @@ class WebPlainChatServer
   def get_caller_info(client_socket)
     client_socket.peeraddr(true)
   end
+end
 end
