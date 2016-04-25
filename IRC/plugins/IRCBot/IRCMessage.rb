@@ -18,6 +18,7 @@ require 'ostruct'
 require 'IRC/Message'
 require 'IRC/LayoutableText'
 
+class IRCBot
 class IRCMessage
   include BotCore::Message
 
@@ -241,4 +242,5 @@ $
   def self.ctcp_unquote(str)
     str.gsub('\0', "\0").gsub('\1', "\1").gsub('\n', "\n").gsub('\r', "\r").gsub('\@', ' ').gsub('\\\\', "\\")
   end
+end
 end

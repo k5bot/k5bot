@@ -96,7 +96,7 @@ connection number (e.g. 12345), 'current' (kills current connection), \
         return
       end
 
-      reply = IRCMessage.make_ctcp_message(:DCC, ['CHAT', 'chat', @plain_chat_info.announce_ip, @plain_chat_info.server.port])
+      reply = IRCBot::IRCMessage.make_ctcp_message(:DCC, ['CHAT', 'chat', @plain_chat_info.announce_ip, @plain_chat_info.server.port])
       msg.reply(reply, :force_private => true)
     when :schat
         return unless @secure_chat_info
@@ -110,7 +110,7 @@ connection number (e.g. 12345), 'current' (kills current connection), \
           return
         end
 
-        reply = IRCMessage.make_ctcp_message(:DCC, ['SCHAT', 'chat', @secure_chat_info.announce_ip, @secure_chat_info.server.port])
+        reply = IRCBot::IRCMessage.make_ctcp_message(:DCC, ['SCHAT', 'chat', @secure_chat_info.announce_ip, @secure_chat_info.server.port])
         msg.reply(reply, :force_private => true)
     when COMMAND_KILL, COMMAND_KILL_ALL
       unless check_access(msg_to_principal(msg))

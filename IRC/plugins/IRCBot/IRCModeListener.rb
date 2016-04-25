@@ -8,6 +8,7 @@ require 'set'
 
 require 'IRC/Listener'
 
+class IRCBot
 class IRCModeListener
   include BotCore::Listener
 
@@ -34,4 +35,5 @@ class IRCModeListener
   def listener_priority
     LISTENER_PRIORITY
   end
+end
 end

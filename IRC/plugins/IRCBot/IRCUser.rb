@@ -6,6 +6,7 @@
 
 require 'IRC/User'
 
+class IRCBot
 class IRCUser
   include BotCore::User
 
@@ -42,4 +43,5 @@ class IRCUser
   def uid
     IRCUserListener.normalize(name) if name
   end
+end
 end

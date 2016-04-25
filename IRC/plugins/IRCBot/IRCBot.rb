@@ -13,6 +13,20 @@ require 'IRC/IRCPlugin'
 require 'IRC/LayoutableText'
 require 'IRC/ContextMetadata'
 
+IRCPlugin.remove_required 'IRC/plugins/IRCBot'
+require 'IRC/plugins/IRCBot/IRCUser'
+require 'IRC/plugins/IRCBot/IRCChannel'
+require 'IRC/plugins/IRCBot/IRCMessage'
+require 'IRC/plugins/IRCBot/IRCCapsListener'
+require 'IRC/plugins/IRCBot/IRCServerPassListener'
+require 'IRC/plugins/IRCBot/IRCUserListener'
+require 'IRC/plugins/IRCBot/IRCChannelListener'
+require 'IRC/plugins/IRCBot/IRCLoginListener'
+require 'IRC/plugins/IRCBot/IRCIdentifyListener'
+require 'IRC/plugins/IRCBot/IRCModeListener'
+require 'IRC/plugins/IRCBot/IRCJoinListener'
+require 'IRC/plugins/IRCBot/IRCFirstListener'
+
 class IRCBot
   include IRCPlugin
   include BotCore::Emitter
@@ -27,19 +41,6 @@ class IRCBot
   DEFAULT_PORT = 6667
 
   def afterLoad
-    load_helper_class(:IRCUser)
-    load_helper_class(:IRCChannel)
-    load_helper_class(:IRCMessage)
-    load_helper_class(:IRCCapsListener)
-    load_helper_class(:IRCServerPassListener)
-    load_helper_class(:IRCUserListener)
-    load_helper_class(:IRCChannelListener)
-    load_helper_class(:IRCLoginListener)
-    load_helper_class(:IRCIdentifyListener)
-    load_helper_class(:IRCModeListener)
-    load_helper_class(:IRCJoinListener)
-    load_helper_class(:IRCFirstListener)
-
     @config = {
       :serverpass => nil,
       :username => 'bot',
@@ -108,19 +109,6 @@ class IRCBot
     @user = nil
 
     @throttler = nil
-
-    unload_helper_class(:IRCFirstListener)
-    unload_helper_class(:IRCJoinListener)
-    unload_helper_class(:IRCModeListener)
-    unload_helper_class(:IRCIdentifyListener)
-    unload_helper_class(:IRCLoginListener)
-    unload_helper_class(:IRCChannelListener)
-    unload_helper_class(:IRCUserListener)
-    unload_helper_class(:IRCServerPassListener)
-    unload_helper_class(:IRCCapsListener)
-    unload_helper_class(:IRCMessage)
-    unload_helper_class(:IRCChannel)
-    unload_helper_class(:IRCUser)
 
     nil
   end

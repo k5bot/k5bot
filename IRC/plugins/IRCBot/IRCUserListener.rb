@@ -8,6 +8,7 @@
 
 require 'IRC/Listener'
 
+class IRCBot
 class IRCUserListener
   include BotCore::Listener
 
@@ -140,4 +141,5 @@ class IRCUserListener
   def self.normalize(s)
     s.downcase
   end
+end
 end

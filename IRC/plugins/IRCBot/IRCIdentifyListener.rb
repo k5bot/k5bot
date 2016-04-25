@@ -8,6 +8,7 @@ require 'ostruct'
 
 require 'IRC/Listener'
 
+class IRCBot
 class IRCIdentifyListener
   include BotCore::Listener
 
@@ -92,4 +93,5 @@ class IRCIdentifyListener
   def listener_priority
     LISTENER_PRIORITY
   end
+end
 end

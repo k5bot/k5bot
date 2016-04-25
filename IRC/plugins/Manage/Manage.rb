@@ -50,7 +50,7 @@ by help contents, as if sender was in ##japanese and issued .help command",
     args = msg.tail.split
     destination = args.shift
     cmd = args.shift
-    msg.bot.send_raw("PRIVMSG #{destination} :#{IRCMessage.make_ctcp_message(cmd, args)}")
+    msg.bot.send_raw("PRIVMSG #{destination} :#{IRCBot::IRCMessage.make_ctcp_message(cmd, args)}")
   end
 
   def cmd_demonstrate(msg)

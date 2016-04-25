@@ -6,6 +6,7 @@
 
 require 'IRC/Listener'
 
+class IRCBot
 class IRCServerPassListener
   include BotCore::Listener
 
@@ -38,4 +39,5 @@ class IRCServerPassListener
   def listener_priority
     LISTENER_PRIORITY
   end
+end
 end

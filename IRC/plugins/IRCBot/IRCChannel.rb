@@ -4,10 +4,12 @@
 
 # IRCChannel describes an IRC channel
 
+class IRCBot
 class IRCChannel
   attr_accessor :name, :topic
 
   def initialize(name, topic=nil)
     @name, @topic = name, topic
   end
+end
 end
