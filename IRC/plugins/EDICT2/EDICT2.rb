@@ -63,19 +63,8 @@ See '.faq regexp'",
     when :j
       word = msg.tail
       return unless word
-      variants = @language.variants([word], *Language::JAPANESE_VARIANT_FILTERS)
-      lookup_result = group_results(lookup(variants))
-      reply_with_menu(
-          msg,
-          generate_menu(
-              format_description_unambiguous(lookup_result),
-              [
-                  wrap(word, '"'),
-                  wrap((variants-[word]).map{|w| wrap(w, '"')}.join(', '), '(', ')'),
-                  'in EDICT2',
-              ].compact.join(' ')
-          )
-      )
+      lookup_result_menu = lookup_menu(word)
+      reply_with_menu(msg, lookup_result_menu)
     when :e
       word = msg.tail
       return unless word
@@ -92,6 +81,20 @@ See '.faq regexp'",
       end
       reply_with_menu(msg, generate_menu(lookup_complex_regexp(complex_regexp), "\"#{word}\" in EDICT2"))
     end
+  end
+
+  def lookup_menu(word)
+    variants = @language.variants([word], *Language::JAPANESE_VARIANT_FILTERS)
+    lookup_result = group_results(lookup(variants))
+    description = [
+        wrap(word, '"'),
+        wrap((variants-[word]).map { |w| wrap(w, '"') }.join(', '), '(', ')'),
+        'in EDICT2'
+    ].compact.join(' ')
+    generate_menu(
+        format_description_unambiguous(lookup_result),
+        description
+    )
   end
 
   def wrap(o, prefix=nil, postfix=prefix)
