@@ -64,6 +64,16 @@ See '.faq regexp'",
       word = msg.tail
       return unless word
       lookup_result_menu = lookup_menu(word)
+
+      enamdict = @plugin_manager.plugins[:ENAMDICT]
+      if lookup_result_menu.entries.empty? && enamdict
+        enamdict_lookup_menu = enamdict.lookup_menu(word)
+        unless enamdict_lookup_menu.entries.empty?
+          msg.reply("No hits for #{lookup_result_menu.description}. Delegating to ENAMDICT.")
+          lookup_result_menu.entries << enamdict_lookup_menu
+        end
+      end
+
       reply_with_menu(msg, lookup_result_menu)
     when :e
       word = msg.tail
