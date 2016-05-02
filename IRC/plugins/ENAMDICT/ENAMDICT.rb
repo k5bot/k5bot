@@ -59,19 +59,7 @@ See '.faq regexp'",
     when :jn
       word = msg.tail
       return unless word
-      variants = @language.variants([word], *Language::JAPANESE_VARIANT_FILTERS)
-      lookup_result = lookup(variants)
-      reply_with_menu(
-          msg,
-          generate_menu(
-              format_description_unambiguous(lookup_result),
-              [
-                  wrap(word, '"'),
-                  wrap((variants-[word]).map{|w| wrap(w, '"')}.join(', '), '(', ')'),
-                  'in ENAMDICT',
-              ].compact.join(' ')
-          )
-      )
+      reply_with_menu(msg, lookup_menu(word))
     when :jnr
       word = msg.tail
       return unless word
@@ -83,6 +71,19 @@ See '.faq regexp'",
       end
       reply_with_menu(msg, generate_menu(lookup_complex_regexp(complex_regexp), "\"#{word}\" in ENAMDICT"))
     end
+  end
+
+  def lookup_menu(word)
+    variants = @language.variants([word], *Language::JAPANESE_VARIANT_FILTERS)
+    lookup_result = lookup(variants)
+    generate_menu(
+        format_description_unambiguous(lookup_result),
+        [
+            wrap(word, '"'),
+            wrap((variants-[word]).map { |w| wrap(w, '"') }.join(', '), '(', ')'),
+            'in ENAMDICT',
+        ].compact.join(' ')
+    )
   end
 
   def wrap(o, prefix=nil, postfix=prefix)
