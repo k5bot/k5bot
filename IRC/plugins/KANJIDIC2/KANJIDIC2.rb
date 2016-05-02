@@ -182,9 +182,18 @@ if it's the only given search term",
   end
 
   def load_dict(dict_name)
-    dict = File.open("#{(File.dirname __FILE__)}/#{dict_name}", 'r') do |io|
-      Marshal.load(io)
+    # Hack: add reference to DatabaseEntry from global scope,
+    # so that YAML.load of serialized global KANJIDIC2Entries will work.
+    # Will not be needed after the reconversion of 'kanjidic2.marshal' file.
+    Object.const_set(:KANJIDIC2Entry, DatabaseEntry)
+    begin
+      dict = File.open("#{(File.dirname __FILE__)}/#{dict_name}", 'r') do |io|
+        Marshal.load(io)
+      end
+    ensure
+      Object.send(:remove_const, :KANJIDIC2Entry)
     end
+
     raise "The #{dict_name} file is outdated. Rerun convert.rb." unless dict[:version] == DatabaseEntry::VERSION
     dict
   end
