@@ -11,12 +11,12 @@ require 'IRC/LayoutableText'
 
 IRCPlugin.remove_required 'IRC/plugins/Language'
 require 'IRC/plugins/Language/romaja'
+require 'IRC/plugins/Language/unicode_blocks'
 
 class Language
   include IRCPlugin
   include Romaja
-
-  attr_reader :unicode_desc
+  include UnicodeBlocks
 
   DESCRIPTION = 'Provides language-related functionality.'
   COMMANDS = {
@@ -33,12 +33,12 @@ class Language
   ]
 
   def afterLoad
+    super
+
     @rom2kana = Replacer.new(YAML.load_file("#{plugin_root}/rom2kana.yaml"))
     @kata2hira = Replacer.new(YAML.load_file("#{plugin_root}/kata2hira.yaml"))
     @hira2kata = Replacer.new(@kata2hira.mapping.invert)
     @hira2rom = Replacer.new(YAML.load_file("#{plugin_root}/hira2rom.yaml"))
-
-    @unicode_blocks, @unicode_desc = load_unicode_blocks("#{plugin_root}/unicode_blocks.txt")
   end
 
   def on_privmsg(msg)
@@ -195,27 +195,6 @@ class Language
     !!(text =~ /[\u3000-\u303F]/)
   end
 
-  # Maps unicode codepoint to the index of respective unicode block
-  def codepoint_to_block_id(codepoint)
-    Language.binary_search(@unicode_blocks, codepoint)
-  end
-
-  # @param [Integer] block_id - unicode block id
-  # @return [Integer] first codepoint in the specified unicode block
-  def block_id_to_codepoint(block_id)
-    @unicode_blocks[block_id]
-  end
-
-  def block_id_to_description(block_id)
-    @unicode_desc[block_id]
-  end
-
-  def classify_characters(text)
-    text.unpack('U*').map do |codepoint|
-      codepoint_to_block_id(codepoint)
-    end
-  end
-
   def parse_complex_regexp_raw(word)
     # replace & with @, where it doesn't conflict
     # with && used in character groups.
@@ -297,52 +276,6 @@ class Language
     word.gsub!(KANA_CHAR_GROUP_MATCHER, KANA_CHAR_GROUP)
     word.gsub!(NON_KANA_CHAR_GROUP_MATCHER, NON_KANA_CHAR_GROUP)
     Regexp.new(word)
-  end
-
-  def load_unicode_blocks(file_name)
-    unknown_desc = :'Unknown Block'
-
-    block_prev = -1
-    blocks_indices = [] # First codepoints of unicode blocks
-    blocks_descriptions = [] # Names of unicode blocks
-
-    File.open(file_name, 'r') do |io|
-      io.each_line do |line|
-        line.chomp!.strip!
-        next if line.nil? || line.empty? || line.start_with?('#')
-        # 0000..007F; Basic Latin
-
-        md = line.match(/^(\h+)..(\h+); (.*)$/)
-
-        # next if md.nil?
-
-        start = md[1].hex
-        finish = md[2].hex
-        desc = md[3].to_sym
-
-        if block_prev + 1 < start
-          # There is a gap between previous and current ranges
-          # Fill this gap with dummy 'Unknown Block'
-          blocks_indices << (block_prev + 1)
-          blocks_descriptions << unknown_desc
-        end
-        block_prev = finish
-
-        blocks_indices << start
-        blocks_descriptions << desc
-      end
-    end
-
-    # Everything past the last known block is unknown
-    blocks_indices << (block_prev + 1)
-    blocks_descriptions << unknown_desc
-
-    [blocks_indices, blocks_descriptions]
-  end
-
-  def self.binary_search(arr, key)
-    # index of the first X from the start, such that X<=key
-    ((0...arr.size).bsearch {|i| arr[i] > key } || arr.size) - 1
   end
 
   class Replacer
