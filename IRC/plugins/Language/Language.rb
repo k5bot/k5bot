@@ -281,32 +281,7 @@ class Language
   end
 
   def parse_complex_regexp(word)
-    regs = parse_complex_regexp_raw(word)
-
-    operation = case regs.size
-                when 1
-                  # when && operator is not used, it is assumed, that
-                  # user wants all matches whether it was kanji or kana.
-                  # in the future this behavior would be
-                  # equivalent to specifying || operator with
-                  # identical conditions on kanji and kana.
-                  :union
-                when 2, 3
-                  # when && operator is used, user wants only
-                  # those entries, that simultaneously satisfied
-                  # the condition on kanji and the condition on kana.
-                  :intersection
-                else
-                  raise 'Only one && operator is allowed'
-                end
-
-    # duplicate condition on kana from condition on kanji, if not present
-    regs << regs[0] if regs.size<2
-
-    # result is of form [operation, regexps...]
-    regs.unshift(operation)
-
-    regs
+    parse_complex_regexp_raw(word)
   end
 
   private

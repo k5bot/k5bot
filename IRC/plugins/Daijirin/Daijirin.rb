@@ -162,13 +162,13 @@ See '.faq regexp'",
   end
 
   def lookup_complex_regexp(complex_regexp)
-    operation = complex_regexp.shift
     regexps_kanji, regexps_kana, regexps_english = complex_regexp
 
     lookup_result = []
 
-    case operation
-    when :union
+    if complex_regexp.size <= 1
+      # Single condition. Add entry if either part matches it.
+      regexps_kana = regexps_kanji
       @regexpable.each do |entry|
         words_kanji = entry.kanji_for_search
         kanji_matched = words_kanji.any? { |word| regexps_kanji.all? { |regex| regex =~ word } }
@@ -176,7 +176,8 @@ See '.faq regexp'",
         kana_matched = word_kana && regexps_kana.all? { |regex| regex =~ word_kana }
         lookup_result << [entry, true, kana_matched] if kanji_matched || kana_matched
       end
-    when :intersection
+    else
+      # Multiple conditions. Add entry, only if all of them match on respective entry parts.
       @regexpable.each do |entry|
         words_kanji = entry.kanji_for_search
         next unless words_kanji.any? { |word| regexps_kanji.all? { |regex| regex =~ word } }
