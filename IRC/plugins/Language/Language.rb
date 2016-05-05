@@ -5,7 +5,6 @@
 # Language plugin
 
 require 'yaml'
-require 'ostruct'
 
 require 'IRC/IRCPlugin'
 require 'IRC/LayoutableText'
@@ -54,23 +53,10 @@ class Language
   HANGUL_S_COUNT = HANGUL_L_COUNT * HANGUL_N_COUNT # 11172
 
   def afterLoad
-    @rom2kana = Language::sort_hash(
-        YAML.load_file("#{plugin_root}/rom2kana.yaml")
-    ) {|k, _| -k.length}
-    @kata2hira = Language::sort_hash(
-        YAML.load_file("#{plugin_root}/kata2hira.yaml")
-    ) {|k, _| -k.length}
-    @hira2kata = Language::sort_hash(
-        @kata2hira.invert
-    ) {|k, _| -k.length}
-    @hira2rom = Language::sort_hash(
-        YAML.load_file("#{plugin_root}/hira2rom.yaml")
-    ) {|k, _| -k.length}
-
-    @rom2kana = Language::hash_to_replacer(@rom2kana)
-    @kata2hira = Language::hash_to_replacer(@kata2hira)
-    @hira2kata = Language::hash_to_replacer(@hira2kata)
-    @hira2rom = Language::hash_to_replacer(@hira2rom)
+    @rom2kana = Replacer.new(YAML.load_file("#{plugin_root}/rom2kana.yaml"))
+    @kata2hira = Replacer.new(YAML.load_file("#{plugin_root}/kata2hira.yaml"))
+    @hira2kata = Replacer.new(@kata2hira.mapping.invert)
+    @hira2rom = Replacer.new(YAML.load_file("#{plugin_root}/hira2rom.yaml"))
 
     @unicode_blocks, @unicode_desc = load_unicode_blocks("#{plugin_root}/unicode_blocks.txt")
   end
@@ -397,20 +383,15 @@ class Language
     ((0...arr.size).bsearch {|i| arr[i] > key } || arr.size) - 1
   end
 
-  def self.sort_hash(h, &b)
-    Hash[h.sort_by(&b)]
-  end
+  class Replacer
+    attr_reader :mapping, :regex, :iregex
 
-  def self.array_to_regex(arr, *options)
-    regexp_join = arr.map { |x| Regexp.quote(x) }.join(')|(?:')
-    Regexp.new("(?:#{regexp_join})", *options)
-  end
-
-  def self.hash_to_replacer(h)
-    OpenStruct.new(
-        :mapping => h,
-        :regex => Language::array_to_regex(h.keys),
-        :iregex => Language::array_to_regex(h.keys, Regexp::IGNORECASE),
-    )
+    def initialize(h)
+      @mapping = h.sort_by do |k, _|
+        -k.length
+      end.to_h
+      @regex = Regexp.union(@mapping.keys)
+      @iregex = Regexp.new(@regex.source, Regexp::IGNORECASE)
+    end
   end
 end
