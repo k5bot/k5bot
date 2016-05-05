@@ -116,14 +116,14 @@ class Language
     hira_candidates = @hira2rom.mapping.find_all do |_, rom|
       r.match(rom)
     end
-    hira_candidates << ['っ', 'xtu'] if r.match('xtu')
+    hira_candidates << %w(っ xtu) if r.match('xtu')
 
     kata_candidates = @hira2rom.mapping.find_all do |_, rom|
       r.match(rom.upcase)
     end.map do |kana, rom|
       [hiragana_to_katakana(kana), rom.upcase]
     end
-    kata_candidates << ['ッ', 'XTU'] if r.match('XTU')
+    kata_candidates << %w(ッ XTU) if r.match('XTU')
 
     (hira_candidates + kata_candidates).sort_by(&:first)
   end
@@ -198,7 +198,7 @@ class Language
   def parse_complex_regexp_raw(word)
     # replace & with @, where it doesn't conflict
     # with && used in character groups.
-    word = Language.regexp_custom_ampersand(word)
+    word = regexp_custom_ampersand(word)
 
     # split into larger groups by && operator.
     differing_conditions = word.split(PRIVATE_REGEXP_SEPARATOR_CHAR+PRIVATE_REGEXP_SEPARATOR_CHAR).map {|s| s.strip }
@@ -214,7 +214,7 @@ class Language
   private
 
   # Replace full-width special symbols with their regular equivalents.
-  def self.regexp_half_width(word)
+  def regexp_half_width(word)
     word.tr('　＆｜「」（）。＊＾＄：', ' &|[]().*^$:')
   end
 
@@ -222,7 +222,7 @@ class Language
   PRIVATE_REGEXP_SEPARATOR_CHAR = "\uF174"
 
   # Replace & not inside [] with PRIVATE_REGEXP_SEPARATOR_CHAR
-  def self.regexp_custom_ampersand(word)
+  def regexp_custom_ampersand(word)
     depth = 0
     result = ''
     word.each_char do |c|
