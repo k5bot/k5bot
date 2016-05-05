@@ -43,5 +43,4 @@ gem 'sequel', :group => :EDICT
 gem 'sqlite3', :group => :EDICT
 
 # for Googler plugin
-gem 'google-search', :group => :Googler
-gem 'htmlentities', :group => :Googler
+gem 'sk_google_custom_search_api', :require => 'google_custom_search_api', :group => :Googler

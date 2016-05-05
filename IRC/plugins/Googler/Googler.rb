@@ -8,8 +8,7 @@ require 'IRC/IRCPlugin'
 
 require 'rubygems'
 require 'bundler/setup'
-require 'google-search'
-require 'htmlentities'
+require 'google_custom_search_api'
 
 class Googler
   include IRCPlugin
@@ -24,13 +23,11 @@ class Googler
 
   def afterLoad
     @menu = @plugin_manager.plugins[:Menu]
-    @html_decoder = HTMLEntities.new
   end
 
   def beforeUnload
     @menu.evict_plugin_menus!(self.name)
 
-    @html_decoder = nil
     @menu = nil
 
     nil
@@ -41,38 +38,35 @@ class Googler
       when :g?
         word = msg.tail
         return unless word
-        lookup = find_item(word, 8).map do |item|
-          [@html_decoder.decode(item.title), item.uri]
+        lookup = find_item(word, 10).map do |item|
+          [item['title'], item['link'], item['snippet']]
         end
         reply_with_menu(msg, generate_menu(lookup, "\"#{word}\" in Google"))
       when :g
         word = msg.tail
         return unless word
         lookup = find_item(word, 1).map do |item|
-          [@html_decoder.decode(item.title), item.uri]
+          [item['title'], item['link'], item['snippet']]
         end
         if lookup.empty?
           msg.reply("No hits for \"#{word}\" in Google")
         else
-          lookup.each do |description, text|
+          lookup.each do |description, text, snippet|
             msg.reply("#{text} - #{description}")
+            msg.reply("#{snippet}") if snippet
           end
         end
       when :gcount
         word = msg.tail
         return unless word
         lookup = find_count(word)
-        if lookup && lookup > 0
-          msg.reply("Estimated #{lookup} hit(s) for \"#{word}\" in Google")
-        else
-          msg.reply("No hits for \"#{word}\" in Google")
-        end
+        msg.reply("Estimated #{lookup} hit(s) for \"#{word}\" in Google")
     end
   end
 
   def generate_menu(lookup, name)
-    menu = lookup.map do |description, text|
-      Menu::MenuNodeText.new(description, text)
+    menu = lookup.map do |description, text, snippet|
+      Menu::MenuNodeTextRaw.new(description, [text, snippet].compact)
     end
 
     Menu::MenuNodeSimple.new(name, menu)
@@ -87,27 +81,17 @@ class Googler
   end
 
   def find_item(query, size)
-    search = Google::Search::Web.new
-    search.query = query
-    search.size = Google::Search.size_for(:small) < size ? :large : :small
-    search.language = :ja
-
-    Enumerator.new do |yielder|
-      search.each do |result|
-        yielder << result
-      end
-    end.take(size)
+    search = perform_query(query, size)
+    search['items'].take(size)
   end
 
   def find_count(query)
-    search = Google::Search::Web.new
-    search.query = query
-    search.size = :small
-    search.language = :ja
+    search = perform_query(query, 1)
+    search['searchInformation']['formattedTotalResults']
+  end
 
-    response = search.next.response
-    if response.valid?
-      response.estimated_count
-    end
+  def perform_query(query, size)
+    options = @config.dup.merge(:num => [10, size].min, :ie => 'utf8', :oe => 'utf8')
+    GoogleCustomSearchApi.search(query, options)
   end
 end
