@@ -81,17 +81,18 @@ class Googler
   end
 
   def find_item(query, size)
-    search = perform_query(query, size)
+    search = perform_query(query, size, 'items(title,link,snippet)')
     search['items'].take(size)
   end
 
   def find_count(query)
-    search = perform_query(query, 1)
+    search = perform_query(query, 1, 'searchInformation/formattedTotalResults')
     search['searchInformation']['formattedTotalResults']
   end
 
-  def perform_query(query, size)
+  def perform_query(query, size, fields = nil)
     options = @config.dup.merge(:num => [10, size].min, :ie => 'utf8', :oe => 'utf8')
+    options[:fields] = fields if fields
     GoogleCustomSearchApi.search(query, options)
   end
 end
