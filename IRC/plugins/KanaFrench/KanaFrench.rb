@@ -7,29 +7,37 @@
 require 'yaml'
 require_relative '../../IRCPlugin'
 
-class Language < IRCPlugin
-  Description = 'Converts kana to French'
-  Commands = {
-    french: 'converts specified hiragana to French.',
+class KanaFrench
+  include IRCPlugin
+
+  DESCRIPTION = 'Converts kana to French'
+  COMMANDS = {
+      :kana2french => 'converts specified hiragana to French.',
   }
-  Dependencies = [:Language]
+  DEPENDENCIES = [:Language]
 
   def afterLoad
-    @kana2french = Language::sort_hash(
-        YAML.load_file("#{plugin_root}/kana2french.yaml")
-    ) { |k, _| -k.length }
-    @kana2french = Language::hash_to_replacer(@kana2french)
+    @kana2french = Language::Replacer.new(YAML.load_file("#{plugin_root}/kana2french.yaml"))
+    @language = @plugin_manager.plugins[:Language]
+  end
+
+  def beforeUnload
+    @kana2french = nil
+    @language = nil
+
+    nil
   end
 
   def on_privmsg(msg)
     return unless msg.tail
     case msg.bot_command
-    when :french
-      msg.reply(kana_to_french(msg.tail))
+      when :kana2french
+        msg.reply(kana_to_french(msg.tail))
     end
   end
 
   def kana_to_french(text)
+    text = @language.katakana_to_hiragana(text)
     text.downcase.gsub(@kana2french.regex) do |r|
       @kana2french.mapping[r]
     end
