@@ -16,7 +16,7 @@ class Googler
   COMMANDS = {
       :g => 'searches Google and returns the first result',
       :g? => 'searches Google and returns results as a menu',
-      :gcount => 'searches Google and returns estimated hit count',
+      :'g#' => 'searches Google and returns estimated hit count',
   }
 
   DEPENDENCIES = [:Menu]
@@ -56,7 +56,7 @@ class Googler
             msg.reply("#{snippet}") if snippet
           end
         end
-      when :gcount
+      when :'g#'
         word = msg.tail
         return unless word
         lookup = find_count(word)
