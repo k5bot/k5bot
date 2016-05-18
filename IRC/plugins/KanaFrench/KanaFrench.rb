@@ -43,7 +43,7 @@ class KanaFrench
   def kana_to_french(text)
     text = @language.katakana_to_hiragana(text)
     text.downcase.gsub(@kana2french.regex) do |r|
-      "#{PRIVATE_SEPARATOR_CHAR}#{@kana2french.mapping[r]}#{PRIVATE_SEPARATOR_CHAR}"
+      "#{PRIVATE_SEPARATOR_CHAR}#{@kana2french.mapping[r].split.sample}#{PRIVATE_SEPARATOR_CHAR}"
     end.gsub(PRIVATE_SEPARATOR_REGEX, ' ').strip
   end
 end
