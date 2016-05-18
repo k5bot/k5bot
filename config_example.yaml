@@ -213,3 +213,4 @@
 - :TextMiner:
     :data_directory: "~/my_text_files/"
 - :RandomNumber
+- :KanaFrench
