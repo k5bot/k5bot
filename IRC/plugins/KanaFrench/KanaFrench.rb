@@ -36,10 +36,14 @@ class KanaFrench
     end
   end
 
+  # Just a char randomly picked from Unicode Private Use Area.
+  PRIVATE_SEPARATOR_CHAR = "\uF174"
+  PRIVATE_SEPARATOR_REGEX = Regexp.new("#{Regexp.quote(PRIVATE_SEPARATOR_CHAR)}+")
+
   def kana_to_french(text)
     text = @language.katakana_to_hiragana(text)
     text.downcase.gsub(@kana2french.regex) do |r|
-      @kana2french.mapping[r]
-    end
+      "#{PRIVATE_SEPARATOR_CHAR}#{@kana2french.mapping[r]}#{PRIVATE_SEPARATOR_CHAR}"
+    end.gsub(PRIVATE_SEPARATOR_REGEX, ' ').strip
   end
 end
