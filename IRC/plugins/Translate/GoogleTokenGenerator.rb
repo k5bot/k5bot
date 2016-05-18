@@ -16,7 +16,7 @@ module GoogleTokenGenerator
   private
 
   def tl(a)
-    b = generate_b
+    b = tkk[0]
     d = []
     e = 0
     f = 0
@@ -61,18 +61,15 @@ module GoogleTokenGenerator
     end
 
     a = rl(a, '+-3^+b+-f')
+    a ^= tkk[1]
     a = (a & 2147483647) + 2147483648 if 0 > a
     a %= 10 ** 6
 
     ("#{ a }.#{ a ^ b }")
   end
 
-  # Generate "b" parameter
-  # The number of hours elapsed, since 1st of January 1970.
-  def generate_b
-    start = Time.local('1970-01-01')
-    now = Time.now
-    (now - start).to_i / 3600
+  def tkk
+    [406398, (561666268 + 1526272306)]
   end
 
   def rl(a, b)
