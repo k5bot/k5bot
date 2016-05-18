@@ -199,8 +199,6 @@
     # hash of params https://developers.google.com/custom-search/json-api/v1/reference/cse/list#parameters
     :api_key: "<Google API key with Custom Search API enabled>"
     :cx_key: "<Google API Custom Search engine ID>"
-    :hl: "ja" # Interface language, apparently affects searches too
-    :lr: "lang_ja" # Language restriction
     :safe: "off" # Safe-search off
     #:googlehost: "google.jp"
 - :URL:
