@@ -18,7 +18,7 @@ class Top3
     :top3 => 'displays the top 3 Japanese writers of the month. optional .top3 exclude user1 user2... (made by amigojapan)',
     :rank => 'displays the rank and stats of given user (omitting name means current user, integer means user with that rank) (made by amigojapan)',
     :chart => 'shows a chart of user progress. Usage: .chart or .chart user1 user2 etc (made by amigojapan)',
-    #:chart_top3 => 'shows a chart of you and the top3 users of this month, usage .chart_top3 exclude user1 user2... (made by amigojapan)',
+    :chart_top => 'shows a chart of you and the top users of this month, usage .chart_top exclude user1 user2... (made by amigojapan)',
     :opt_out => 'Takes away permision for people to see your data (made by amigojapan)',
     :reopt_in => 'Regives permision of people to see your data (made by amigojapan)',
     :mlist => 'shows the rank list for this month (made by amigojapan)',
@@ -52,8 +52,8 @@ class Top3
       opt_out(msg)
     elsif msg.bot_command == :reopt_in
       reopt_in(msg)
-    elsif msg.bot_command == :chart_top3
-      chart_top3(msg)
+    elsif msg.bot_command == :chart_top
+      chart_top(msg)
     elsif msg.bot_command == :mlist
       mlist(msg)
     elsif !msg.private? and !msg.bot_command
@@ -73,13 +73,22 @@ class Top3
     msg.reply 'you have re-opted in'
   end
 
-  def chart_top3(msg)
+  def chart_top(msg)
+    exclude_array = get_exclude_array(msg.tail || '')
+    sorted = get_top_list(exclude_array)
+
+    sorted_nicks = sorted.take(CHART_COLORS.size).map(&:last)
+    make_chart_for(sorted_nicks, msg)
   end
 
   def chart(msg)
     nicks = msg.tail ? msg.tail.split : []
     nicks = [msg.nick] if nicks.empty?
 
+    make_chart_for(nicks, msg)
+  end
+
+  def make_chart_for(nicks, msg)
     if nicks.size > CHART_COLORS.size
       msg.reply "Too many nicks specified (at most #{CHART_COLORS.size} supported)."
       return
@@ -107,10 +116,15 @@ class Top3
         end
       end.sort
 
-      [person, Hash[data]]
+      [person, data.to_h]
     end
 
-    person_data = Hash[person_data]
+    person_data = person_data.to_h
+
+    unless person_data.size > 0
+      msg.reply('Nobody has typed any Japanese this month :(')
+      return
+    end
 
     timeline = person_data.values.flat_map(&:keys).sort.uniq
     timeline = timeline[-24..-1] if timeline.size > 24
