@@ -25,7 +25,7 @@ class Happy
     load_txt!(:table_set, h)
 
     @patterns = h
-    @pattern_regexp = /^\s*(?:(#{Regexp.union(h.values.flatten(1)).source})\s*)+$/
+    @pattern_regexp = /^\s*(?:(#{Regexp.union(h.values.flatten(1).sort_by(&:size).reverse).source})\s*)+$/
   end
 
   def beforeUnload
@@ -59,6 +59,6 @@ class Happy
       l.strip!
       next if l.empty?
       l
-    end.compact.sort_by(&:size).reverse
+    end.compact
   end
 end
