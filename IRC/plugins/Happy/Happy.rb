@@ -13,6 +13,8 @@ class Happy
   PATTERN_ROUTING = {
       :table_flip => [:table_set],
       :table_set => [:table_flip],
+      :table_man_flip => [:table_man_set],
+      :table_man_set => [:table_man_flip],
   }
 
   def afterLoad
@@ -23,6 +25,8 @@ class Happy
     load_txt!(:surprize, h)
     load_txt!(:table_flip, h)
     load_txt!(:table_set, h)
+
+    load_table_man!(h)
 
     @patterns = h
     @pattern_regexp = /^\s*(?:(#{Regexp.union(h.values.flatten(1).sort_by(&:size).reverse).source})\s*)+$/
@@ -59,6 +63,18 @@ class Happy
       l.strip!
       next if l.empty?
       l
+    end.compact
+  end
+
+  def load_table_man!(hash)
+    hash[:table_man_flip] = hash[:table_flip].map do |pattern|
+      res = pattern.gsub('┻━┻', '(ﾉ˳-˳)ﾉ').gsub('┴─┴', '(ﾉ˳-˳)ﾉ')
+      res unless res == pattern
+    end.compact
+
+    hash[:table_man_set] = hash[:table_set].map do |pattern|
+      res = pattern.gsub('┳━┳', '(°_o)').gsub('┬──┬', '(°_o)')
+      res unless res == pattern
     end.compact
   end
 end
