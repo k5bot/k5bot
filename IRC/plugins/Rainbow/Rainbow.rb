@@ -11,7 +11,7 @@ class Rainbow
   }
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
       when :rainbow
         return unless msg.tail
         msg.reply rainbow(msg.tail)

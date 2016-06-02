@@ -45,9 +45,8 @@ module BotCore
 
     def context; _ni end
 
-    # Deprecated. Backward compatibility for bot_command.
     def botcommand
-      bot_command
+      raise 'Deprecated for a long time already. Call bot_command instead.'
     end
   end
 end

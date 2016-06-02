@@ -13,7 +13,7 @@ class RandomNumber
   }
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
     when :randomnumber
       msg.reply(random_number)
     end

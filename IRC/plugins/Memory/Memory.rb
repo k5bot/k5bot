@@ -8,7 +8,7 @@ class Memory
   }
 
   def on_privmsg(msg)
-    case msg.botcommand
+    case msg.bot_command
       when :free
         d = Hash.new(0)
 
