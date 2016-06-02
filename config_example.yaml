@@ -214,3 +214,10 @@
     :data_directory: "~/my_text_files/"
 - :RandomNumber
 - :KanaFrench
+- :AliasCmd:
+    :ex: example
+    :exr: exampler
+    :wf: wordfight
+    :wfr: wordfightr
+    :wc: wordcount
+    :wcr: wordcountr
