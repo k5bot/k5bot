@@ -34,7 +34,7 @@ GEM
     rmmseg-cpp (0.2.9)
     ruby-pinyin (0.4.1)
       rmmseg-cpp (~> 0.2.9)
-    sequel (4.13.0)
+    sequel (4.35.0)
     sk_google_custom_search_api (2.0.1)
       addressable
       httparty
