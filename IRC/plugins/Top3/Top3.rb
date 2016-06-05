@@ -78,6 +78,11 @@ class Top3
     exclude_array = get_exclude_array(msg.tail || '')
     sorted = get_top_list(exclude_array)
 
+    if sorted.empty?
+      msg.reply('Nobody has typed any Japanese this month :(')
+      return
+    end
+
     sorted_nicks = sorted.take(CHART_COLORS.size).map(&:last)
     make_chart_for(sorted_nicks, msg)
   end
@@ -204,6 +209,11 @@ class Top3
     exclude_array = get_exclude_array(msg.tail || '')
     sorted = get_top_list(exclude_array)
 
+    if sorted.empty?
+      msg.reply('Nobody has typed any Japanese this month :(')
+      return
+    end
+
     out = sorted.each_with_index.map do |(cnt, nick), rank|
       " ##{rank+1} #{nick} CJK chars: #{cnt}\n"
     end.join
@@ -242,6 +252,11 @@ class Top3
     exclude_array = get_exclude_array(msg.tail || '')
     sorted = get_top_list(exclude_array)
 
+    if sorted.empty?
+      msg.reply('Nobody has typed any Japanese this month :(')
+      return
+    end
+
     sorted_take = sorted.take(3)
     out = sorted_take.each_with_index.map do |(cnt, nick), rank|
       " ##{rank+1} #{nick} CJK chars: #{cnt}"
@@ -257,6 +272,11 @@ class Top3
   def rank(msg)
     exclude_array = get_exclude_array
     sorted = get_top_list(exclude_array)
+
+    if sorted.empty?
+      msg.reply('Nobody has typed any Japanese this month :(')
+      return
+    end
 
     person = msg.tail ? msg.tail.split : []
     person = person.first || msg.nick
