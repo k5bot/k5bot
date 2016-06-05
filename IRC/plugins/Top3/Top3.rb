@@ -158,7 +158,7 @@ class Top3
     charturl = URI('https://chart.googleapis.com/chart')
     params = {
         :cht => 'lc',
-        :chs => 500,
+        :chs => '750x400',
         :chxt => 'x,y',
         :chdl => nicks.join('|'), #TODO: escape vertical bars in nicks somehow
         :chco => CHART_COLORS[0, nicks.size].join(','),
@@ -215,7 +215,7 @@ class Top3
     end
 
     out = sorted.each_with_index.map do |(cnt, nick), rank|
-      " ##{rank+1} #{nick} CJK chars: #{cnt}\n"
+      "##{rank+1} #{nick} CJK chars: #{cnt}\n"
     end.join
 
     gist_reply = gistify(out)
@@ -259,8 +259,8 @@ class Top3
 
     sorted_take = sorted.take(3)
     out = sorted_take.each_with_index.map do |(cnt, nick), rank|
-      " ##{rank+1} #{nick} CJK chars: #{cnt}"
-    end.join
+      "##{rank+1} #{nick} CJK chars: #{cnt}"
+    end.join(' ')
 
     unless sorted_take.any? {|_, nick| nick == msg.nick}
       out += ' | ' + format_user_stats(msg.nick, sorted, exclude_array)
