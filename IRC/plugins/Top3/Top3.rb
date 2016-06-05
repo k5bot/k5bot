@@ -42,35 +42,36 @@ class Top3
   end
 
   def on_privmsg(msg)
-    if msg.bot_command == :top3
-      top3(msg)
-    elsif msg.bot_command == :rank
-      rank(msg)
-    elsif msg.bot_command == :chart
-      chart(msg)
-    elsif msg.bot_command == :opt_out
-      opt_out(msg)
-    elsif msg.bot_command == :reopt_in
-      reopt_in(msg)
-    elsif msg.bot_command == :chart_top
-      chart_top(msg)
-    elsif msg.bot_command == :mlist
-      mlist(msg)
-    elsif !msg.private? and !msg.bot_command
-      count(msg)
+    case msg.bot_command
+      when :top3
+        top3(msg)
+      when :rank
+        rank(msg)
+      when :chart
+        chart(msg)
+      when :opt_out
+        opt_out(msg)
+      when :reopt_in
+        reopt_in(msg)
+      when :chart_top
+        chart_top(msg)
+      when :mlist
+        mlist(msg)
+      when nil
+        count_cjk(msg) unless msg.private?
     end
   end
 
   def opt_out(msg)
     @opt_outs[msg.nick]='opted-out'
     @storage.write('Optouts', @opt_outs)
-    msg.reply 'you have opted out'
+    msg.reply('You have opted out.')
   end
 
   def reopt_in(msg)
     @opt_outs[msg.nick]='reopted-in'
     @storage.write('Optouts', @opt_outs)
-    msg.reply 'you have re-opted in'
+    msg.reply('You have re-opted in')
   end
 
   def chart_top(msg)
@@ -260,7 +261,7 @@ class Top3
     person = msg.tail ? msg.tail.split : []
     person = person.first || msg.nick
 
-    rank = Top3.get_int(person)
+    rank = get_int(person)
     if rank
       person = if rank < 0
                  sorted[rank]
@@ -341,7 +342,7 @@ class Top3
 
   private
 
-  def self.get_int(s)
+  def get_int(s)
     return unless s
     index_str = s[/^\s*-?[0-9０１２３４５６７８９]+\s*$/]
     return unless index_str
