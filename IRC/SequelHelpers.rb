@@ -2,6 +2,11 @@
 # This file is part of the K5 bot project.
 # See files README.md and COPYING for copyright and licensing information.
 
+require 'rubygems'
+require 'bundler/setup'
+require 'sequel'
+Sequel.extension(:migration)
+
 class Module
   # This is a lazy-ass implementation of a
   # lazy non-caching DB field,
@@ -26,6 +31,7 @@ module Sequel
       ds = old_dataset_method(*args)
       ds.instance_variable_set(:@columns, nil)
       ds.instance_variable_set(:@skip_symbol_cache, nil)
+      ds.instance_variable_set(:@frozen, nil)
       ds.row_proc = nil
       ds
     end
@@ -46,5 +52,24 @@ module SequelHelpers
   def database_disconnect(database)
     database.disconnect
     Sequel.synchronize{::Sequel::DATABASES.delete(database)}
+  end
+
+  def dataset_upsert(dataset, condition)
+    update_vals = yield(true)
+    insert_vals = nil
+    3.times do
+      affected = dataset.where(condition).update(update_vals)
+      case affected
+        when 1
+          return # success
+        when 0
+          insert_vals ||= yield(false)
+          affected = dataset.insert_conflict.insert(insert_vals)
+          return affected if affected && affected > 0
+        else
+          raise "Invalid affected rows count: #{affected}"
+      end
+    end
+    raise 'Exhausted upsert attempts'
   end
 end
