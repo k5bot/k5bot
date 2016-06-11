@@ -81,8 +81,9 @@ providing tools to analyze it."
     store
   end
 
-  ALL_HIRAGANA = 'あいうえおかきくけこさしすせそたちつてとなにぬねのまみむめもはひふへほやゆよらりるれろわゐゑをんばびぶべぼぱぴぷぺぽがぎぐげござじずぜぞだぢづでどゃゅょぁぃぅぇぉっ'
-  ALL_KATAKANA = 'アイウエオカキクケコサシスセソタチツテトナニヌネノマミムメモハヒフヘホヤユヨラリルレロワヰヱヲンバビブベボパピプペポガギグゲゴザジズゼゾダヂヅデドャュョァィゥェォッ'
+  ALL_HIRAGANA = 'あいうゔえおかきくけこさしすせそたちつてとなにぬねのまみむめもはひふへほやゆよらりるれろわゐゑをんばびぶべぼぱぴぷぺぽがぎぐげござじずぜぞだぢづでどゃゅょぁぃぅぇぉっ'
+  ALL_KATAKANA = 'アイウヴエオカキクケコサシスセソタチツテトナニヌネノマミムメモハヒフヘホヤユヨラリルレロワヰヱヲンバビブベボパピプペポガギグゲゴザジズゼゾダヂヅデドャュョァィゥェォッ'
+  ALL_HALFWIDTH = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾏﾐﾑﾒﾓﾊﾋﾌﾍﾎﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ'
 
   def output_group_stats(msg, prefix, symbols_array)
     output_array = symbols_array.each_char.sort_by do |c|
@@ -109,7 +110,7 @@ providing tools to analyze it."
 
     counts = @stats.group_by do |c, _|
       if contains_cjk?(c)
-        if ALL_HIRAGANA.include?(c) || ALL_KATAKANA.include?(c)
+        if ALL_HIRAGANA.include?(c) || ALL_KATAKANA.include?(c) || ALL_HALFWIDTH.include?(c)
           :kana
         else
           :cjk
