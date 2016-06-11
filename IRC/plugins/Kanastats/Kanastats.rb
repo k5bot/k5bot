@@ -18,6 +18,8 @@ providing tools to analyze it."
     :charstats => 'How often the specified char was publicly used.',
     :wordstats => 'How often the specified word or character was used in logged public conversation.',
     :logged    => 'Displays information about the log files.',
+    # Let's not pollute help with this for now.
+    #:wordcount! => 'Same as .wordfight! but outputs words in the same order as given.',
     :wordfight! => 'Compares count of words in logged public conversation.',
     :cjkstats => 'Counts number of all CJK characters ever written in public conversation. Also outputs the top 10 non-Kana CJK characters, or top n to n+9 if a number is provided, e.g. .cjkstats 20. And if you write a kanji, it will show the list surrounding that one.',
   }
@@ -60,8 +62,10 @@ providing tools to analyze it."
         wordstats(msg)
       when :logged
         logged(msg)
+      when :wordcount!
+        wordfight(msg, sort = false)
       when :wordfight!
-        wordfight(msg)
+        wordfight(msg, sort = true)
       when :cjkstats
         cjkstats(msg)
       else
@@ -202,7 +206,7 @@ providing tools to analyze it."
     end
   end
 
-  def wordfight(msg)
+  def wordfight(msg, sort = true)
     return unless msg.tail
     words = msg.tail.split(/[[:space:]]+/)
     return unless words.length >= 1
@@ -210,7 +214,13 @@ providing tools to analyze it."
     words = words.uniq
     word_counts = words.zip(words.map { |w| count_logfile(w) })
 
-    msg.reply(WordFightLayouter.new(word_counts))
+    reply = if sort
+              WordFightLayouter.new(word_counts)
+            else
+              LayoutableText::SimpleJoined.new(', ', word_counts.map {|w, s| "#{w} (#{s})"})
+            end
+
+    msg.reply(reply)
   end
 
   class WordFightLayouter < LayoutableText::Arrayed
