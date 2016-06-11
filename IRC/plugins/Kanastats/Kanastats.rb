@@ -19,7 +19,7 @@ providing tools to analyze it."
     :wordstats => 'How often the specified word or character was used in logged public conversation.',
     :logged    => 'Displays information about the log files.',
     :wordfight! => 'Compares count of words in logged public conversation.',
-    :cjkstats => 'Counts number of all CJK characters ever written in public conversation. Also outputs the top 10 CJK characters, or top n to n+10 if a number is provided, e.g. .cjkstats 20.',
+    :cjkstats => 'Counts number of all CJK characters ever written in public conversation. Also outputs the top 10 non-Kana CJK characters, or top n to n+9 if a number is provided, e.g. .cjkstats 20. And if you write a kanji, it will show the list surrounding that one.',
   }
 
   def afterLoad
@@ -106,7 +106,6 @@ providing tools to analyze it."
 
   def cjkstats(msg)
     number = 0
-    number = (msg.tail.split.first.to_i - 1) if msg.tail
 
     counts = @stats.group_by do |c, _|
       if contains_cjk?(c)
@@ -121,6 +120,16 @@ providing tools to analyze it."
     end
 
     top10 = counts[:cjk].sort_by {|_, v| -v}
+
+    if msg.tail
+      arg = msg.tail.split.first
+      arg_char = arg[0]
+      if contains_cjk?(arg_char)
+        number = (top10.index([arg_char, @stats[arg_char]]) || 0) - 5
+      else
+        number = (arg.to_i - 1) || 0
+      end
+    end
 
     number = [0, [number, top10.size - 10].min].max
     top10 = top10[number, 10]
