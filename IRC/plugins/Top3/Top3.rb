@@ -323,7 +323,7 @@ class Top3
     !!(s =~ /\p{Han}|\p{Katakana}|\p{Hiragana}|\p{Hangul}/)
   end
 
-  def count(msg)
+  def count_cjk(msg)
     s2=msg.message.split(//)
     chars=0
     s2.each do |s|
