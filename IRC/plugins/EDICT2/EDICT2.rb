@@ -13,6 +13,7 @@ require 'rubygems'
 require 'bundler/setup'
 require 'sequel'
 
+require 'IRC/complex_regexp'
 require 'IRC/IRCPlugin'
 require 'IRC/LayoutableText'
 require 'IRC/SequelHelpers'
@@ -90,6 +91,23 @@ See '.faq regexp'",
         return
       end
       reply_with_menu(msg, generate_menu(lookup_complex_regexp(complex_regexp), "\"#{word}\" in EDICT2"))
+    when :jr2
+      word = msg.tail
+      return unless word
+      begin
+        word = ComplexRegexp::strip_complex_whitespace(word)
+        @language.replace_japanese_regex!(word)
+        tree = ComplexRegexp::parse(word)
+        plan = ComplexRegexp::program(tree)
+        plan = ComplexRegexp::guard_names_to_symbols(plan, SUPPORTED_GUARDS)
+        ComplexRegexp::check_types_nesting(ComplexRegexp::get_plan_types(plan)) do |type|
+          !SUPPORTED_TYPES.include?(type)
+        end
+      rescue => e
+        msg.reply("EDICT2 Regexp query error: #{e.message}")
+        return
+      end
+      reply_with_menu(msg, generate_menu(lookup_complex_regexp2(plan), "\"#{word}\" in EDICT2"))
     end
   end
 
@@ -221,6 +239,10 @@ See '.faq regexp'",
       end
     end
 
+    group_matched_entries(gs)
+  end
+
+  def group_matched_entries(gs)
     gs.sort_by do |edict_text_id, _|
       edict_text_id
     end.map do |edict_text_id, g|
@@ -242,6 +264,96 @@ See '.faq regexp'",
           !reading.empty?,
       ]
     end
+  end
+
+  SUPPORTED_TYPES = [
+      [],
+      [:japanese],
+      [:reading],
+      [:full],
+      [:romaji],
+      [:japanese, :romaji],
+      [:reading, :romaji],
+      [:full, :romaji],
+  ]
+
+  # noinspection RubyStringKeysInHashInspection
+  SUPPORTED_GUARDS = {
+      'japanese' => :japanese,
+      '0' => :japanese,
+      'reading' => :reading,
+      '1' => :reading,
+      'full' => :full,
+      '2' => :full,
+      'romaji' => :romaji,
+  }
+
+  def lookup_complex_regexp2(plan)
+    group_depths = ComplexRegexp::get_plan_group_depths(plan)
+
+    # For user convenience, :romaji guard at the top level is a context-free fetcher.
+    # :romaji guard inside a capture group is a kana->romaji converter of group contents,
+    # so rename it to :romaji_inline.
+    group_depths.zip(plan).each do |depth, cmd|
+      if depth > 0 && cmd[3] == :FunctionalGuard && cmd[4] == :romaji
+        cmd[4] = :romaji_inline
+      end
+    end
+
+    plan = ComplexRegexp::replace_context_free_fetchers(plan, [:japanese, :reading, :full, :romaji])
+
+    complex_regexp_full = nil
+    lookup_result = []
+
+    types = ComplexRegexp::get_plan_types(plan)
+
+    if types.all?(&:empty?)
+      # No guards. Add entry if either part matches it.
+      complex_regexp = ComplexRegexp::InterpretingExecutor.new(plan)
+      @regexpable.each do |entry|
+        word_kanji = entry.japanese
+        kanji_matched = complex_regexp.perform_match(word_kanji)
+        word_kana = entry.reading
+        kana_matched = complex_regexp.perform_match(word_kana)
+        lookup_result << [entry, kanji_matched, kana_matched] if kanji_matched || kana_matched
+      end
+    else
+      # Guards present. Add entry, only if all of them match on respective entry parts.
+
+      # Let's leave out steps that need full entry text, for now.
+      plan_full, plan = ComplexRegexp::plan_split(plan) do |_, _, _, match_type, param|
+        match_type == :FunctionalGuard && param == :full
+      end
+
+      unless plan_full.empty?
+        initial = plan_full.first
+        if initial[3] == :FunctionalGuard && initial[4] == :full
+          complex_regexp_full = InterpretingExecutorForEntry.new(plan_full, @language)
+        else
+          raise "Bug! Plan for full match doesn't start with full guard"
+        end
+      end
+
+      complex_regexp = InterpretingExecutorForEntry.new(plan, @language)
+      @regexpable.each do |entry|
+        next unless complex_regexp.perform_match(entry.japanese, entry)
+        lookup_result << [entry, true, true]
+      end
+    end
+
+    gs = lookup_result.group_by {|e, _, _| e.edict_text_id}
+
+    if complex_regexp_full
+      # So we had guards for full text match too.
+      # Let's fetch entries in batch, it's faster that way.
+      @db[:edict_text].where(:id => gs.keys).select(:id, :raw).each do |h|
+        text_english = h[:raw]
+        next if complex_regexp_full.perform_match(text_english)
+        gs.delete(h[:id])
+      end
+    end
+
+    group_matched_entries(gs)
   end
 
   # Looks up all entries that contain all given words in english text
@@ -326,6 +438,30 @@ See '.faq regexp'",
 
     def to_s
       self.raw
+    end
+  end
+
+  class InterpretingExecutorForEntry < ComplexRegexp::InterpretingExecutor
+    def initialize(program, language)
+      super(program)
+      @language = language
+    end
+
+    def call_guard(name, text, guard_context, regex)
+      case name
+        when :japanese
+          regex.match(guard_context.japanese)
+        when :reading
+          regex.match(guard_context.reading)
+        when :full
+          regex.match(guard_context.raw)
+        when :romaji
+          regex.match(@language.kana_to_romaji(guard_context.reading))
+        when :romaji_inline
+          regex.match(@language.kana_to_romaji(text))
+        else
+          raise "Unsupported guard #{name}"
+      end
     end
   end
 end
