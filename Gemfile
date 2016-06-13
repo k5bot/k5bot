@@ -44,3 +44,6 @@ gem 'sqlite3', :group => :EDICT
 
 # for Googler plugin
 gem 'sk_google_custom_search_api', :require => 'google_custom_search_api', :group => :Googler
+
+# for ComplexRegexp core package
+gem 'parslet'
