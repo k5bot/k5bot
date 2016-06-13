@@ -211,6 +211,18 @@ class Language
     parse_complex_regexp_raw(word)
   end
 
+  def replace_japanese_regex!(word)
+    word.gsub!(KANA_REGEXP_GROUP_MATCHER) do |m|
+      m = KANA_REGEXP_GROUP_MATCHER.match(m)
+      Regexp.union(kana_by_regexp(Regexp.new("^#{m[1]}$")).map(&:first))
+    end
+
+    word.gsub!(HIRAGANA_CHAR_GROUP_MATCHER, HIRAGANA_CHAR_GROUP)
+    word.gsub!(KATAKANA_CHAR_GROUP_MATCHER, KATAKANA_CHAR_GROUP)
+    word.gsub!(KANA_CHAR_GROUP_MATCHER, KANA_CHAR_GROUP)
+    word.gsub!(NON_KANA_CHAR_GROUP_MATCHER, NON_KANA_CHAR_GROUP)
+  end
+
   private
 
   # Replace full-width special symbols with their regular equivalents.
@@ -266,15 +278,7 @@ class Language
   NON_KANA_CHAR_GROUP = '[^\u3040-\u30FF\uFF61-\uFF9D\u31F0-\u31FF]'
 
   def parse_sub_regexp(word)
-    word.gsub!(KANA_REGEXP_GROUP_MATCHER) do |m|
-      m = KANA_REGEXP_GROUP_MATCHER.match(m)
-      Regexp.union(kana_by_regexp(Regexp.new("^#{m[1]}$")).map(&:first))
-    end
-
-    word.gsub!(HIRAGANA_CHAR_GROUP_MATCHER, HIRAGANA_CHAR_GROUP)
-    word.gsub!(KATAKANA_CHAR_GROUP_MATCHER, KATAKANA_CHAR_GROUP)
-    word.gsub!(KANA_CHAR_GROUP_MATCHER, KANA_CHAR_GROUP)
-    word.gsub!(NON_KANA_CHAR_GROUP_MATCHER, NON_KANA_CHAR_GROUP)
+    replace_japanese_regex!(word)
     Regexp.new(word)
   end
 
