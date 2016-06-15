@@ -53,18 +53,20 @@ class Latex
       s
     end
 
+    SPACE_FIXES = /^[\s\u2000-\u200b\u2062\u2063]$/
+
     def apply_modifier(text)
       text.gsub(MODIFIER_REGEXP) do
         modifier = $1
         mods = MODIFIERS[modifier]
         chars = $2 || $3
         replacements = chars.each_char.map do |c|
-          mods[c]
+          mods[c] || (SPACE_FIXES.match(c) ? c : nil)
         end
         if replacements.all?
           replacements.join
         else
-          chars.size == 1 ? modifier + chars : "#{modifier}{#{chars}}"
+          chars.size == 1 ? "#{modifier}#{chars}" : "#{modifier}{#{chars}}"
         end
       end
     end
