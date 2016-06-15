@@ -115,6 +115,6 @@ class Latex
         "\\mono"=> TEXTMONO,
     }
 
-    MODIFIER_REGEXP = /(#{Regexp.union(MODIFIERS.keys.sort_by(&:size).reverse).source})(?:([^{])|\{([^{}^_\\]*)\})/
+    MODIFIER_REGEXP = /(#{Regexp.union(MODIFIERS.keys.sort_by(&:size).reverse).source})(?:\s*([^{])|\{([^{}^_\\]*)\})/
   end
 end
