@@ -98,6 +98,7 @@ class Latex
         '^'=> SUPERSCRIPTS,
         '_'=> SUBSCRIPTS,
         "\\bb"=> TEXTBB,
+        "\\mathbb"=> TEXTBB,
         "\\bf"=> TEXTBF,
         "\\it"=> TEXTIT,
         "\\cal"=> TEXTCAL,
