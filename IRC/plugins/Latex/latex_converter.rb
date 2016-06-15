@@ -89,7 +89,7 @@ class Latex
     end
 
     LATEX_SYMBOLS = load_dict('data/symbols')
-    LATEX_SYMBOLS_REGEX = Regexp.union(LATEX_SYMBOLS.keys.sort_by(&:size).reverse)
+    LATEX_SYMBOLS_REGEX = /(?:#{Regexp.union(LATEX_SYMBOLS.keys.sort_by(&:size).reverse).source})(?!\{)/
 
     SUBSCRIPTS = load_dict('data/subscripts')
     SUPERSCRIPTS = load_dict('data/superscripts')
