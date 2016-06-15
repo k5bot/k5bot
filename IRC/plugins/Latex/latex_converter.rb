@@ -53,17 +53,17 @@ class Latex
     end
 
     def apply_modifier(text)
-      text.gsub(MODIFIER_REGEXP) do |orig|
-        mods = MODIFIERS[$1]
+      text.gsub(MODIFIER_REGEXP) do
+        modifier = $1
+        mods = MODIFIERS[modifier]
         chars = $2 || $3
-        chars = chars.each_char.map do |c|
+        replacements = chars.each_char.map do |c|
           mods[c]
         end
-        puts chars.inspect
-        if chars.all?
-          chars.join
+        if replacements.all?
+          replacements.join
         else
-          orig
+          chars.size == 1 ? modifier + chars : "#{modifier}{#{chars}}"
         end
       end
     end
@@ -105,6 +105,6 @@ class Latex
         "\\mono"=> TEXTMONO,
     }
 
-    MODIFIER_REGEXP = /(#{Regexp.union(MODIFIERS.keys.sort_by(&:size).reverse).source})(?:([^{])|\{([^{}^_]*)\})/
+    MODIFIER_REGEXP = /(#{Regexp.union(MODIFIERS.keys.sort_by(&:size).reverse).source})(?:([^{])|\{([^{}^_\\]*)\})/
   end
 end
