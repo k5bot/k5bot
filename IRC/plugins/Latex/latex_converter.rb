@@ -12,7 +12,8 @@ class Latex
 
       s = convert_latex_symbols(s)
       s = process_starting_modifiers(s)
-      apply_all_modifiers(s)
+      s = apply_all_modifiers(s)
+      unescape_braces(s)
     end
 
     # If s is just a latex code "alpha" or "beta" it converts it to its
@@ -66,6 +67,10 @@ class Latex
           chars.size == 1 ? modifier + chars : "#{modifier}{#{chars}}"
         end
       end
+    end
+
+    def unescape_braces(s)
+      s.gsub(/\\([{}])/, '\1')
     end
 
     def self.load_dict(filename)
