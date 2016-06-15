@@ -107,7 +107,9 @@ class Latex
         "\\bf"=> TEXTBF,
         "\\it"=> TEXTIT,
         "\\cal"=> TEXTCAL,
+        "\\mathcal"=> TEXTCAL,
         "\\frak"=> TEXTFRAK,
+        "\\mathfrak"=> TEXTFRAK,
         "\\mono"=> TEXTMONO,
     }
 
