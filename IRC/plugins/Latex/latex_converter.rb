@@ -113,6 +113,7 @@ class Latex
     TEXTCAL = passthrough(idempotent(load_dict('data/textcal')))
     TEXTFRAK = passthrough(idempotent(load_dict('data/textfrak')))
     TEXTMONO = passthrough(idempotent(load_dict('data/textmono')))
+    TEXTSF = passthrough(idempotent(load_dict('data/textsf')))
 
     # noinspection RubyStringKeysInHashInspection
     MODIFIERS = {
@@ -130,6 +131,8 @@ class Latex
         "\\frak"=> TEXTFRAK,
         "\\mathfrak"=> TEXTFRAK,
         "\\mono"=> TEXTMONO,
+        "\\sf"=> TEXTSF,
+        "\\mathsf"=> TEXTSF,
     }
 
     MODIFIER_REGEXP = /(#{Regexp.union(MODIFIERS.keys.sort_by(&:size).reverse).source})(?:\s*([^{])|\{([^{}^_\\]*)\})/
