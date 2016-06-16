@@ -96,9 +96,11 @@ class Latex
       h
     end
 
+    PASSTHROUGH_REGEX = /^[[\p{Math}&&\p{Symbol}][\p{ASCII}&&\p{Punct}]\d]$/
+
     def self.passthrough(h)
       h.default_proc = proc do |_, key|
-        /^[[\p{Math}&&\p{Symbol}][\p{ASCII}&&\p{Punct}]]$/.match(key) ? key : nil
+        PASSTHROUGH_REGEX.match(key) ? key : nil
       end
       h
     end
