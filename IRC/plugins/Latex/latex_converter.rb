@@ -66,7 +66,7 @@ class Latex
         if replacements.all?
           replacements.join
         else
-          chars.size == 1 ? "#{modifier}#{chars}" : "#{modifier}{#{chars}}"
+          chars.size == 1 ? "#{modifier} #{chars}" : "#{modifier}{#{chars}}"
         end
       end
     end
