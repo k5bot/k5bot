@@ -36,12 +36,13 @@ class Latex
     # If s start with "it ", "cal ", etc. then make the whole string
     # italic, calligraphic, etc.
     def process_starting_modifiers(s)
-      s = s.sub(/^bb (.*)$/, "\\bb{\\1}")
-      s = s.sub(/^bf (.*)$/, "\\bf{\\1}")
-      s = s.sub(/^it (.*)$/, "\\it{\\1}")
-      s = s.sub(/^cal (.*)$/, "\\cal{\\1}")
-      s = s.sub(/^frak (.*)$/, "\\frak{\\1}")
-      s.sub(/^mono (.*)$/, "\\mono{\\1}")
+      prefix = %w(bb bf it cal frak mono sf).find do |p|
+        s.start_with?(p + ' ')
+      end
+      if prefix
+        s = "\\#{prefix}{#{s[prefix.size+1..-1]}}"
+      end
+      s
     end
 
     def apply_all_modifiers(s)
