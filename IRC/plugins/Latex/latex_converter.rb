@@ -118,6 +118,7 @@ class Latex
         "\\it"=> TEXTIT,
         "\\mathit"=> TEXTIT,
         "\\cal"=> TEXTCAL,
+        "\\mathscr"=> TEXTCAL,
         "\\mathcal"=> TEXTCAL,
         "\\frak"=> TEXTFRAK,
         "\\mathfrak"=> TEXTFRAK,
