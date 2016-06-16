@@ -88,17 +88,24 @@ class Latex
       d
     end
 
+    def self.idempotent(h)
+      h.values.dup.each do |v|
+        h[v] = v
+      end
+      h
+    end
+
     LATEX_SYMBOLS = load_dict('data/symbols')
     LATEX_SYMBOLS_REGEX = /(?:#{Regexp.union(LATEX_SYMBOLS.keys.sort_by(&:size).reverse).source})(?!\{)/
 
     SUBSCRIPTS = load_dict('data/subscripts')
     SUPERSCRIPTS = load_dict('data/superscripts')
-    TEXTBB = load_dict('data/textbb')
-    TEXTBF = load_dict('data/textbf')
-    TEXTIT = load_dict('data/textit')
-    TEXTCAL = load_dict('data/textcal')
-    TEXTFRAK = load_dict('data/textfrak')
-    TEXTMONO = load_dict('data/textmono')
+    TEXTBB = idempotent(load_dict('data/textbb'))
+    TEXTBF = idempotent(load_dict('data/textbf'))
+    TEXTIT = idempotent(load_dict('data/textit'))
+    TEXTCAL = idempotent(load_dict('data/textcal'))
+    TEXTFRAK = idempotent(load_dict('data/textfrak'))
+    TEXTMONO = idempotent(load_dict('data/textmono'))
 
     # noinspection RubyStringKeysInHashInspection
     MODIFIERS = {
