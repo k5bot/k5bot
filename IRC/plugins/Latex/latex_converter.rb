@@ -97,7 +97,7 @@ class Latex
 
     def self.passthrough(h)
       h.default_proc = proc do |_, key|
-        /^[\p{Math}&&\p{Symbol}]$/.match(key) ? key : nil
+        /^[[\p{Math}&&\p{Symbol}][\p{ASCII}&&\p{Punct}]]$/.match(key) ? key : nil
       end
       h
     end
