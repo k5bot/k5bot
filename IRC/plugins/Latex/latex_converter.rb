@@ -97,7 +97,7 @@ class Latex
     end
 
     COMBINING_SYMBOLS_REGEXP = /^[\u0300-\u036f]$/
-    PASSTHROUGH_REGEX = /^[[\p{Math}&&\p{Symbol}][\p{ASCII}&&\p{Punct}]\d]$/
+    PASSTHROUGH_REGEX = /^[[\p{Math}&&\p{Symbol}][\p{ASCII}&&\p{Punct}][\u0300-\u036f]\d]$/
 
     def self.passthrough(h)
       h.default_proc = proc do |_, key|
