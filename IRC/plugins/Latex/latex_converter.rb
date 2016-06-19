@@ -10,17 +10,17 @@ class Latex
       ss = convert_single_symbol(s)
       return ss if ss
 
-      s = convert_latex_symbols(s)
+      s = unescape(s)
       s = process_starting_modifiers(s)
+      s = convert_latex_symbols(s)
       s = apply_all_modifiers(s)
-      unescape_braces(s)
+      escape_back(s)
     end
 
     # If s is just a latex code "alpha" or "beta" it converts it to its
     # unicode representation.
     def convert_single_symbol(s)
-      ss = "\\#{s}"
-      LATEX_SYMBOLS[ss]
+      LATEX_SYMBOLS[s]
     end
 
     private
@@ -28,8 +28,8 @@ class Latex
     # Replace each "\alpha", "\beta" and similar latex symbols with
     # their unicode representation.
     def convert_latex_symbols(s)
-      s.gsub(LATEX_SYMBOLS_REGEX) do |m|
-        LATEX_SYMBOLS[m]
+      s.gsub(LATEX_SYMBOLS_REGEX) do
+        LATEX_SYMBOLS[$1]
       end
     end
 
@@ -40,7 +40,7 @@ class Latex
         s.start_with?(p + ' ')
       end
       if prefix
-        s = "\\#{prefix}{#{s[prefix.size+1..-1]}}"
+        s = "#{PUA_MACRO_CALL_OPEN}#{prefix}#{PUA_MACRO_CALL_CLOSE}#{PUA_GROUP_OPEN}#{s[prefix.size+1..-1]}#{PUA_GROUP_CLOSE}"
       end
       s
     end
@@ -67,13 +67,47 @@ class Latex
         if replacements.all?
           replacements.join
         else
-          chars.size == 1 ? "#{modifier}#{chars}" : "#{modifier}{#{chars}}"
+          modifier = "#{PUA_MACRO_CALL_OPEN}#{modifier}#{PUA_MACRO_CALL_CLOSE}"
+          chars = "#{PUA_GROUP_OPEN}#{chars}#{PUA_GROUP_CLOSE}" unless chars.size == 1
+          chars = " #{chars}" if modifier.match(/[A-Za-z]$/) && chars.match(/^[A-Za-z]/)
+          "#{modifier}#{chars}"
         end
       end
     end
 
-    def unescape_braces(s)
-      s.gsub(/\\([{}])/, '\1')
+    # Just chars randomly picked from Unicode Private Use Area.
+    PUA_GROUP_OPEN = "\uF175"
+    PUA_GROUP_CLOSE = "\uF176"
+    PUA_MACRO_CALL_OPEN = "\uF177"
+    PUA_MACRO_CALL_CLOSE = "\uF178"
+    PUA_TMP = "\uF179"
+
+    def unescape(s)
+      # Backslash with any single char or any sequence of letters is a macro call.
+      s = s.gsub(/\\([A-Za-z]+|[^A-Za-z])/, "#{PUA_MACRO_CALL_OPEN}\\1#{PUA_MACRO_CALL_CLOSE}")
+
+      # Unescaped braces are group markers
+      s = s.gsub(/(?<!#{PUA_MACRO_CALL_OPEN})\{/o, PUA_GROUP_OPEN)
+      s = s.gsub(/(?<!#{PUA_MACRO_CALL_OPEN})\}/o, PUA_GROUP_CLOSE)
+
+      # Unescaped ascii arrow is arrow
+      s = s.gsub(/(?<!#{PUA_MACRO_CALL_OPEN})->/o, '→')
+
+      swap_active_chars(s)
+    end
+
+    def escape_back(s)
+      s = swap_active_chars(s)
+      s = s.gsub(/#{PUA_GROUP_OPEN}/o, '{').gsub(/#{PUA_GROUP_CLOSE}/o, '}')
+      s.gsub(/#{PUA_MACRO_CALL_OPEN}/o, '\\').gsub(/#{PUA_MACRO_CALL_CLOSE}/o, '')
+    end
+
+    def swap_active_chars(s)
+      # Unescaped _ and ^ are actually the active chars, not escaped ones.
+      # Swap them.
+      s = s.gsub(/(?<!#{PUA_MACRO_CALL_OPEN})([_^])/o, "#{PUA_TMP}\\1")
+      s = s.gsub(/#{PUA_MACRO_CALL_OPEN}([_^])#{PUA_MACRO_CALL_CLOSE}/o, "\\1")
+      s.gsub(/#{PUA_TMP}(.)/o, "#{PUA_MACRO_CALL_OPEN}\\1#{PUA_MACRO_CALL_CLOSE}")
     end
 
     def self.load_dict(filename)
@@ -106,8 +140,12 @@ class Latex
       h
     end
 
-    LATEX_SYMBOLS = load_dict('data/symbols')
-    LATEX_SYMBOLS_REGEX = /(?:#{Regexp.union(LATEX_SYMBOLS.keys.sort_by(&:size).reverse).source})(?!\{)/
+    LATEX_SYMBOLS = load_dict('data/symbols').map do |k, v|
+      [k.start_with?('\\') ? k[1..-1] : k, v]
+    end.to_h
+
+    LATEX_SYMBOLS_NAMES_REGEX = Regexp.union(LATEX_SYMBOLS.keys.sort_by(&:size).reverse).source
+    LATEX_SYMBOLS_REGEX = /#{PUA_MACRO_CALL_OPEN}(#{LATEX_SYMBOLS_NAMES_REGEX})#{PUA_MACRO_CALL_CLOSE}/
 
     SUBSCRIPTS = load_dict('data/subscripts')
     SUPERSCRIPTS = load_dict('data/superscripts')
@@ -121,30 +159,34 @@ class Latex
 
     # noinspection RubyStringKeysInHashInspection
     MODIFIERS = {
-        '^'=> SUPERSCRIPTS,
-        '_'=> SUBSCRIPTS,
-        "\\bb"=> TEXTBB,
-        "\\mathbb"=> TEXTBB,
-        "\\bf"=> TEXTBF,
-        "\\mathbf"=> TEXTBF,
-        "\\it"=> TEXTIT,
-        "\\mathit"=> TEXTIT,
-        "\\cal"=> TEXTCAL,
-        "\\mathscr"=> TEXTCAL,
-        "\\mathcal"=> TEXTCAL,
-        "\\frak"=> TEXTFRAK,
-        "\\mathfrak"=> TEXTFRAK,
-        "\\mono"=> TEXTMONO,
-        "\\sf"=> TEXTSF,
-        "\\mathsf"=> TEXTSF,
-        "\\hat" => Hash.new do |_, k|
+        '^' => SUPERSCRIPTS,
+        '_' => SUBSCRIPTS,
+        'bb' => TEXTBB,
+        'mathbb' => TEXTBB,
+        'bf' => TEXTBF,
+        'mathbf' => TEXTBF,
+        'it' => TEXTIT,
+        'mathit' => TEXTIT,
+        'cal' => TEXTCAL,
+        'mathscr' => TEXTCAL,
+        'mathcal' => TEXTCAL,
+        'frak' => TEXTFRAK,
+        'mathfrak' => TEXTFRAK,
+        'mono' => TEXTMONO,
+        'sf' => TEXTSF,
+        'mathsf' => TEXTSF,
+        'hat' => Hash.new do |_, k|
           k.match(COMBINING_SYMBOLS_REGEXP) ? k : "#{k}\u0302"
         end,
-        "\\widetilde" => Hash.new do |_, k|
-          k.match(COMBINING_SYMBOLS_REGEXP) ? k : "#{k}\u0360"  # \u0303
+        'widetilde' => Hash.new do |_, k|
+          k.match(COMBINING_SYMBOLS_REGEXP) ? k : "#{k}\u0303"  # \u0360 is double char tilde
         end
     }
 
-    MODIFIER_REGEXP = /(#{Regexp.union(MODIFIERS.keys.sort_by(&:size).reverse).source})(?:\s*([^{])|\{([^{}^_\\]*)\})/
+    NON_MACRO_CHAR_REGEX = /[^#{PUA_MACRO_CALL_OPEN}#{PUA_MACRO_CALL_CLOSE}]/.source
+    NON_SPEC_CHAR_REGEX = /[^#{PUA_MACRO_CALL_OPEN}#{PUA_MACRO_CALL_CLOSE}#{PUA_GROUP_OPEN}#{PUA_GROUP_CLOSE}]/.source
+
+    MODIFIER_NAMES_REGEXP = Regexp.union(MODIFIERS.keys.sort_by(&:size).reverse).source
+    MODIFIER_REGEXP = /#{PUA_MACRO_CALL_OPEN}(#{MODIFIER_NAMES_REGEXP})#{PUA_MACRO_CALL_CLOSE}\s*(?:(#{NON_SPEC_CHAR_REGEX})|#{PUA_GROUP_OPEN}(#{NON_SPEC_CHAR_REGEX}*)#{PUA_GROUP_CLOSE})/
   end
 end
