@@ -96,6 +96,7 @@ class Latex
       h
     end
 
+    COMBINING_SYMBOLS_REGEXP = /^[\u0300-\u036f]$/
     PASSTHROUGH_REGEX = /^[[\p{Math}&&\p{Symbol}][\p{ASCII}&&\p{Punct}]\d]$/
 
     def self.passthrough(h)
@@ -136,6 +137,12 @@ class Latex
         "\\mono"=> TEXTMONO,
         "\\sf"=> TEXTSF,
         "\\mathsf"=> TEXTSF,
+        "\\hat" => Hash.new do |_, k|
+          k.match(COMBINING_SYMBOLS_REGEXP) ? k : "#{k}\u0302"
+        end,
+        "\\widetilde" => Hash.new do |_, k|
+          k.match(COMBINING_SYMBOLS_REGEXP) ? k : "#{k}\u0360"  # \u0303
+        end
     }
 
     MODIFIER_REGEXP = /(#{Regexp.union(MODIFIERS.keys.sort_by(&:size).reverse).source})(?:\s*([^{])|\{([^{}^_\\]*)\})/
