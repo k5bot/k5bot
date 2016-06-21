@@ -91,6 +91,26 @@ class Unicode
       reply = format_info_level_3(message)
 
       msg.reply(reply) if reply && !reply.empty?
+    when :ur, :ur?, :'ur??', :'ur???'
+      message = msg.tail
+      return unless message
+      begin
+        regexp_new = Regexp.new(message)
+      rescue => e
+        msg.reply(e)
+        return
+      end
+      result = symbols_by_regexp(regexp_new)
+      case msg.bot_command
+        when :ur?
+          msg.reply(format_info_level_1(result))
+        when :'ur??'
+          msg.reply(format_info_level_2(result[0, 100]))
+        when :'ur???'
+          msg.reply(format_info_level_3(result[0, 100]))
+        else
+          msg.reply(result[0, 100].gsub(/[\p{Control}&&\p{ASCII}]+/, ''))
+      end
     when :uu
       message = msg.tail
       return unless message
@@ -118,6 +138,12 @@ class Unicode
         store
       end
     end
+  end
+
+  def symbols_by_regexp(regexp_new)
+    [(1...0xD800), (0xE000...0x110000)].map do |r|
+      r.to_a.pack('U*').scan(regexp_new).join
+    end.join
   end
 
   def format_info_level_1(message)
