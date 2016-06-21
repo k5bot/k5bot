@@ -11,12 +11,10 @@ require 'IRC/LayoutableText'
 
 IRCPlugin.remove_required 'IRC/plugins/Language'
 require 'IRC/plugins/Language/romaja'
-require 'IRC/plugins/Language/unicode_blocks'
 
 class Language
   include IRCPlugin
   include Romaja
-  include UnicodeBlocks
 
   DESCRIPTION = 'Provides language-related functionality.'
   COMMANDS = {

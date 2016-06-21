@@ -6,8 +6,13 @@
 
 require 'IRC/IRCPlugin'
 
+IRCPlugin.remove_required 'IRC/plugins/Unicode'
+require 'IRC/plugins/Unicode/unicode_blocks'
+
 class Unicode
   include IRCPlugin
+  include UnicodeBlocks
+
   DESCRIPTION = 'A plugin that provides various Unicode related info and tools.'
   COMMANDS = {
     :u? => 'classify given text by Unicode ranges',
@@ -15,17 +20,15 @@ class Unicode
     :'u???' => 'output Unicode codepoint names for given text',
     :ul => 'output Unicode description urls for given text',
   }
-  DEPENDENCIES = [:Language]
 
   def afterLoad
-    @language = @plugin_manager.plugins[:Language]
+    super
     @unicode_symbols_data = load_unicode_symbol_data("#{plugin_root}/unicode_data.txt")
   end
 
   def beforeUnload
     @unicode_symbols_data = nil
-    @language = nil
-
+    super
     nil
   end
 
@@ -71,10 +74,6 @@ class Unicode
     end
   end
 
-  def unicode_desc
-    @language.unicode_desc
-  end
-
   def symbols_by_regexp(regexp_new)
     [(1...0xD800), (0xE000...0x110000)].map do |r|
       r.to_a.pack('U*').scan(regexp_new).join
@@ -103,7 +102,7 @@ class Unicode
 
   def count_unicode_stats(message, to_merge)
     # text -> array of unicode block ids
-    block_ids = @language.classify_characters(message)
+    block_ids = classify_characters(message)
 
     # Count number of chars per each block
     counts = block_ids.each_with_object(Hash.new(0)) { |i, h| h[i] += 1 }
@@ -111,7 +110,7 @@ class Unicode
     counts.each_pair do |block_id, count|
       # we keep statistics saved as pairs of 'first codepoint in block' -> 'count'
       # this is because block_id-s are subject to unicode standard changes
-      cp = @language.block_id_to_codepoint(block_id)
+      cp = block_id_to_codepoint(block_id)
       to_merge[cp] = (to_merge[cp] || 0) + count
     end
   end
@@ -122,7 +121,7 @@ class Unicode
     # We're doing a merge by description here,
     # to merge stats from various 'Unknown Block'-s
     stats.each do |codepoint, count|
-      desc = @language.block_id_to_description(@language.codepoint_to_block_id(codepoint))
+      desc = block_id_to_description(codepoint_to_block_id(codepoint))
       result[desc] = (result[desc] || 0) + count
     end
 

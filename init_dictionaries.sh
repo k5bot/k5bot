@@ -45,11 +45,6 @@ pushd "${root}/IRC/plugins/YEDICT" && \
 ./convert.rb
 popd
 
-# Language
-pushd "${root}/IRC/plugins/Language" && \
-./download.sh
-popd
-
 # Unicode
 pushd "${root}/IRC/plugins/Unicode" && \
 ./download.sh
