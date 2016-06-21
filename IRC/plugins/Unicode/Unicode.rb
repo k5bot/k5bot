@@ -21,7 +21,7 @@ class Unicode
     :'u???' => 'output Unicode codepoint names for given text',
     :ul => 'output Unicode description urls for given text',
   }
-  DEPENDENCIES = [:Language, :NumberSpell, :StorageYAML]
+  DEPENDENCIES = [:Language, :StorageYAML]
 
   def afterLoad
     @language = @plugin_manager.plugins[:Language]
