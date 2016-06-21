@@ -1,7 +1,11 @@
+\% %
+\$ $
+\_ _
+\# #
+\& &
 \{ {
 \} }
 \,  
-\.  
 \AElig Æ
 \Aacute Á
 \Abreve Ă
@@ -452,6 +456,7 @@
 \Rscr ℛ
 \Rsh ↱
 \RuleDelayed ⧴
+\S §
 \SHCHcy Щ
 \SHcy Ш
 \SOFTcy Ь
@@ -594,6 +599,7 @@
 \Zfr ℨ
 \Zopf ℤ
 \Zscr 𝒵
+\aa å
 \aacute á
 \abreve ă
 \ac ∾
@@ -1137,6 +1143,7 @@
 \hstrok ħ
 \hybull ⁃
 \hyphen ‐
+\i ı
 \iacute í
 \ic ⁣
 \icirc î
@@ -1188,10 +1195,11 @@
 \itilde ĩ
 \iukcy і
 \iuml ï
+\j ȷ
 \jcirc ĵ
 \jcy й
 \jfr 𝔧
-\jmath j
+\jmath ȷ
 \jopf 𝕛
 \jscr 𝒿
 \jsercy ј
@@ -1206,6 +1214,7 @@
 \kjcy ќ
 \kopf 𝕜
 \kscr 𝓀
+\l ł
 \lAarr ⇚
 \lArr ⇐
 \lAtail ⤛
@@ -1564,6 +1573,7 @@
 \nwarr ↖
 \nwarrow ↖
 \nwnear ⤧
+\o ø
 \oS Ⓢ
 \oacute ó
 \oast ⊛

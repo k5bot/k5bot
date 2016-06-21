@@ -46,8 +46,9 @@ class Latex
     end
 
     def apply_all_modifiers(s)
+      cmd_instance = Commands.new
       while true
-        tmp = apply_modifier(s)
+        tmp = apply_modifier(cmd_instance, s)
         break if tmp == s
         s = tmp
       end
@@ -56,20 +57,17 @@ class Latex
 
     SPACE_FIXES = /^[\s\u2000-\u200b\u2062\u2063]$/
 
-    def apply_modifier(text)
+    def apply_modifier(cmd_instance, text)
       text.gsub(MODIFIER_REGEXP) do
         modifier = $1
-        mods = MODIFIERS[modifier]
         chars = $2 || $3
-        replacements = chars.each_char.map do |c|
-          mods[c] || (SPACE_FIXES.match(c) ? c : nil)
-        end
-        if replacements.all?
-          replacements.join
+        replacement = cmd_instance.respond_to?(modifier) && cmd_instance.__send__(modifier, chars)
+        if replacement
+          replacement
         else
-          modifier = "#{PUA_MACRO_CALL_OPEN}#{modifier}#{PUA_MACRO_CALL_CLOSE}"
           chars = "#{PUA_GROUP_OPEN}#{chars}#{PUA_GROUP_CLOSE}" unless chars.size == 1
           chars = " #{chars}" if modifier.match(/[A-Za-z]$/) && chars.match(/^[A-Za-z]/)
+          modifier = "#{PUA_MACRO_CALL_OPEN}#{modifier}#{PUA_MACRO_CALL_CLOSE}"
           "#{modifier}#{chars}"
         end
       end
@@ -157,36 +155,96 @@ class Latex
     TEXTMONO = passthrough(idempotent(load_dict('data/textmono')))
     TEXTSF = passthrough(idempotent(load_dict('data/textsf')))
 
-    # noinspection RubyStringKeysInHashInspection
-    MODIFIERS = {
-        '^' => SUPERSCRIPTS,
-        '_' => SUBSCRIPTS,
-        'bb' => TEXTBB,
-        'mathbb' => TEXTBB,
-        'bf' => TEXTBF,
-        'mathbf' => TEXTBF,
-        'it' => TEXTIT,
-        'mathit' => TEXTIT,
-        'cal' => TEXTCAL,
-        'mathscr' => TEXTCAL,
-        'mathcal' => TEXTCAL,
-        'frak' => TEXTFRAK,
-        'mathfrak' => TEXTFRAK,
-        'mono' => TEXTMONO,
-        'sf' => TEXTSF,
-        'mathsf' => TEXTSF,
-        'hat' => Hash.new do |_, k|
-          k.match(COMBINING_SYMBOLS_REGEXP) ? k : "#{k}\u0302"
-        end,
-        'widetilde' => Hash.new do |_, k|
-          k.match(COMBINING_SYMBOLS_REGEXP) ? k : "#{k}\u0303"  # \u0360 is double char tilde
-        end
-    }
-
     NON_MACRO_CHAR_REGEX = /[^#{PUA_MACRO_CALL_OPEN}#{PUA_MACRO_CALL_CLOSE}]/.source
     NON_SPEC_CHAR_REGEX = /[^#{PUA_MACRO_CALL_OPEN}#{PUA_MACRO_CALL_CLOSE}#{PUA_GROUP_OPEN}#{PUA_GROUP_CLOSE}]/.source
 
-    MODIFIER_NAMES_REGEXP = Regexp.union(MODIFIERS.keys.sort_by(&:size).reverse).source
-    MODIFIER_REGEXP = /#{PUA_MACRO_CALL_OPEN}(#{MODIFIER_NAMES_REGEXP})#{PUA_MACRO_CALL_CLOSE}\s*(?:(#{NON_SPEC_CHAR_REGEX})|#{PUA_GROUP_OPEN}(#{NON_SPEC_CHAR_REGEX}*)#{PUA_GROUP_CLOSE})/
+    MODIFIER_REGEXP = /#{PUA_MACRO_CALL_OPEN}(#{NON_SPEC_CHAR_REGEX}+)#{PUA_MACRO_CALL_CLOSE}\s*(?:(#{NON_SPEC_CHAR_REGEX})|#{PUA_GROUP_OPEN}(#{NON_SPEC_CHAR_REGEX}*)#{PUA_GROUP_CLOSE})/
+
+    class Commands
+      def self.hash_method(name, mods)
+        define_method(name) do |arg|
+          replacements = arg.each_char.map do |c|
+            mods[c] || (SPACE_FIXES.match(c) ? c : nil)
+          end
+          replacements.join if replacements.all?
+        end
+      end
+
+      def self.combinator_method(name, combinator)
+        define_method(name) do |arg|
+          arg.each_char.map do |c|
+            c.match(COMBINING_SYMBOLS_REGEXP) ? c : "#{c}#{combinator}"
+          end.join
+        end
+      end
+      def self.wide_combinator_method(name, combinator, combinator_small = nil)
+        define_method(name) do |arg|
+          chars = arg.each_char.slice_before do |c|
+            !c.match(COMBINING_SYMBOLS_REGEXP)
+          end.map do |chunk|
+            chunk.join
+          end
+
+          combining_prefix = chars.first && chars.first[0].match(COMBINING_SYMBOLS_REGEXP) && chars.shift
+          result = if chars.size == 1 && combinator_small
+                     "#{chars.join}#{combinator_small}"
+                   else
+                     chars.join(combinator)
+                   end
+          result = "#{combining_prefix}#{result}" if combining_prefix
+          result
+        end
+      end
+
+      hash_method(:'^', SUPERSCRIPTS)
+      hash_method(:'_', SUBSCRIPTS)
+      hash_method(:'bb', TEXTBB)
+      hash_method(:'bf', TEXTBF)
+      hash_method(:'it', TEXTIT)
+      hash_method(:'cal', TEXTCAL)
+      hash_method(:'frak', TEXTFRAK)
+      hash_method(:'mono', TEXTMONO)
+      hash_method(:'sf', TEXTSF)
+
+      combinator_method(:'`', "\u0300") # grave
+      combinator_method(:"'", "\u0301") # acute
+      combinator_method(:'hat', "\u0302") # circumflex
+      combinator_method(:'~', "\u0303") # tilde
+      combinator_method(:'"', "\u0308") # umlaut/trema/diaeresis
+      combinator_method(:'H', "\u030b") # long hungarian umlaut/double acute
+      combinator_method(:'c', "\u0327") # cedilla
+      combinator_method(:'k', "\u0328") # ogonek
+      combinator_method(:'=', "\u0304") # macron/bar
+      combinator_method(:'b', "\u0331") # bar under
+      combinator_method(:'.', "\u0307") # dot
+      combinator_method(:'d', "\u0323") # dot below
+      combinator_method(:'r', "\u030a") # ring
+      combinator_method(:'u', "\u0306") # breve
+      combinator_method(:'v', "\u030c") # caron
+      combinator_method(:'vec', "\u0350") # vector/arrow over letter
+
+      wide_combinator_method(:'widetilde', "\u0360", "\u0303") # two letter wide tilde
+      wide_combinator_method(:'t', "\u0361", "\u0311") # tie (two letter wide inverted breve)
+      #wide_combinator_method(:'widehat', ) # two letter wide hat
+
+      alias_method(:'mathbb', :'bb')
+      alias_method(:'mathbf', :'bf')
+      alias_method(:'mathit', :'it')
+      alias_method(:'mathscr', :'cal')
+      alias_method(:'mathcal', :'cal')
+      alias_method(:'mathfrak', :'frak')
+      alias_method(:'mathsf', :'sf')
+
+      #alias_method(:'^', :'hat') # conflicts with math mode ^ superscript
+      alias_method(:'check', :'v')
+      alias_method(:'tilde', :'~')
+      alias_method(:'acute', :"'")
+      alias_method(:'grave', :'`')
+      alias_method(:'dot', :'.')
+      alias_method(:'ddot', :'"')
+      alias_method(:'breve', :'u')
+      alias_method(:'bar', :'=')
+
+    end
   end
 end
