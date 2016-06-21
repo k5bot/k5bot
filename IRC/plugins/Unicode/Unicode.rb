@@ -78,19 +78,19 @@ class Unicode
       return unless message
 
       reply = format_info_level_1(message)
-      msg.reply(reply) if reply && !reply.empty?
+      msg.reply(reply) if reply
     when :'u??'
       message = msg.tail
       return unless message
       reply = format_info_level_2(message)
 
-      msg.reply(reply) if reply && !reply.empty?
+      msg.reply(reply) if reply
     when :'u???'
       message = msg.tail
       return unless message
       reply = format_info_level_3(message)
 
-      msg.reply(reply) if reply && !reply.empty?
+      msg.reply(reply) if reply
     when :ur, :ur?, :'ur??', :'ur???'
       message = msg.tail
       return unless message
@@ -120,7 +120,7 @@ class Unicode
         URI.escape("http://www.fileformat.info/info/unicode/char/#{codepoint.to_s(16)}/index.htm")
       end.join(' | ')
 
-      msg.reply(reply) if reply && !reply.empty?
+      msg.reply(reply) unless reply.empty?
     when nil # Count message only if it's not a bot command
       unless msg.private?
         # Update Unicode statistics
