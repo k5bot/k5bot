@@ -77,29 +77,18 @@ class Unicode
       message = msg.tail
       return unless message
 
-      to_merge = {}
-
-      count_unicode_stats(message, to_merge)
-
-      reply = format_unicode_stats(to_merge)
-
+      reply = format_info_level_1(message)
       msg.reply(reply) if reply && !reply.empty?
     when :'u??'
       message = msg.tail
       return unless message
-      reply = message.unpack('U*').map do |codepoint|
-        codepoint.to_s(16)
-      end.join(' ')
+      reply = format_info_level_2(message)
 
       msg.reply(reply) if reply && !reply.empty?
     when :'u???'
       message = msg.tail
       return unless message
-      reply = message.unpack('U*').map do |codepoint|
-        @unicode_symbols_data.fetch(codepoint) do |unknown|
-          "UNKNOWN (0x#{unknown.to_s(16)})"
-        end
-      end.join('; ')
+      reply = format_info_level_3(message)
 
       msg.reply(reply) if reply && !reply.empty?
     when :uu
@@ -129,6 +118,29 @@ class Unicode
         store
       end
     end
+  end
+
+  def format_info_level_1(message)
+    to_merge = {}
+    count_unicode_stats(message, to_merge)
+    reply = format_unicode_stats(to_merge)
+    reply unless reply.empty?
+  end
+
+  def format_info_level_2(message)
+    reply = message.unpack('U*').map do |codepoint|
+      codepoint.to_s(16)
+    end.join(' ')
+    reply unless reply.empty?
+  end
+
+  def format_info_level_3(message)
+    reply = message.unpack('U*').map do |codepoint|
+      @unicode_symbols_data.fetch(codepoint) do |unknown|
+        "UNKNOWN (0x#{unknown.to_s(16)})"
+      end
+    end.join('; ')
+    reply unless reply.empty?
   end
 
   def count_unicode_stats(message, to_merge)
@@ -245,7 +257,7 @@ class Unicode
       [key, val]
     end
 
-    Hash[converted]
+    converted.to_h
   end
 
   def count_total(stats)
@@ -317,7 +329,7 @@ class Unicode
         [fields[0].to_i(16), fields[1]]
       end
 
-      Hash[symbols]
+      symbols.to_h
     end
   end
 end
