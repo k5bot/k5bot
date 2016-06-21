@@ -19,7 +19,7 @@ class Unicode
     :u? => 'classify given text by Unicode ranges',
     :'u??' => 'output Unicode codepoints in hexadecimal for given text',
     :'u???' => 'output Unicode codepoint names for given text',
-    :uu => 'output Unicode description urls for given text',
+    :ul => 'output Unicode description urls for given text',
   }
   DEPENDENCIES = [:Language, :NumberSpell, :StorageYAML]
 
@@ -111,7 +111,7 @@ class Unicode
         else
           msg.reply(result[0, 100].gsub(/[\p{Control}&&\p{ASCII}]+/, ''))
       end
-    when :uu
+    when :ul
       message = msg.tail
       return unless message
 
