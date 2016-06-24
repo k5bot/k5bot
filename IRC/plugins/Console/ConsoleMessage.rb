@@ -120,7 +120,7 @@ class ConsoleMessage
   def context
     # We're peer-to-peer. The bot uniquely identifies the connection and
     # the user on the other side of it.
-    bot
+    bot.object_id
   end
 end
 end

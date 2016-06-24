@@ -216,7 +216,7 @@ $
   def context
     # if public message, all the people in the channel saw it.
     # if private message, only the user in question did.
-    [bot, private? ? user : channelname]
+    [bot.object_id, private? ? user : channelname]
   end
 
   def self.make_ctcp_message(command, arguments)

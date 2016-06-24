@@ -133,7 +133,7 @@ class WebMessage
   # and who will (or rather sensibly should) see our replies.
   def context
     # server, user, browser tab
-    [bot.server, prefix, @session]
+    [bot.server.object_id, prefix, @session]
   end
 end
 end
