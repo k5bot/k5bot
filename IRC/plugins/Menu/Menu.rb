@@ -14,7 +14,6 @@ require 'IRC/plugins/Menu/MenuState'
 require 'IRC/plugins/Menu/MenuNode'
 require 'IRC/plugins/Menu/MenuNodeSimple'
 require 'IRC/plugins/Menu/MenuNodeText'
-require 'IRC/plugins/Menu/MenuNodeTextEnumerable'
 require 'IRC/plugins/Menu/MenuNodeTextRaw'
 
 class Menu
@@ -43,7 +42,10 @@ shows the list of entries starting from that position",
     case msg.bot_command
       when :n
         index = Menu.get_int(msg.tail)
-        menu_state.show_descriptions!(index, msg)
+        if index
+          menu_state.mark = (index-1 if (1..menu_state.items.size).include?(index))
+        end
+        menu_state.show_descriptions!(msg)
       when :u
         menu_state.move_up!(msg)
       when nil
