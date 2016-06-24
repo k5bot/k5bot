@@ -7,17 +7,11 @@
 require 'IRC/IRCPlugin'
 
 class Daijirin
-class MenuEntry < (Menu::MenuNode)
+class MenuEntry < Menu::MenuNodeText
   def initialize(description, entry)
-    @description = description
-    @entry = entry
+    super(description, entry)
     @to_show = 0
     @info = nil
-  end
-
-  def enter(from_child, msg)
-    do_reply(msg, @entry)
-    nil
   end
 
   def do_reply(msg, entry)

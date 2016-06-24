@@ -3,7 +3,7 @@
 # See files README.md and COPYING for copyright and licensing information.
 
 class EDICT
-  class MenuEntry < (Menu::MenuNodeText)
+  class MenuEntry < Menu::MenuNodeText
     def do_reply(msg, entry)
       # split on slashes before entry numbers
       msg.reply(

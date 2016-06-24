@@ -7,18 +7,12 @@
 require 'IRC/IRCPlugin'
 
 class EPWING
-class MenuEntry < (Menu::MenuNode)
+class MenuEntry < Menu::MenuNodeText
   def initialize(description, entry, book_record, preserve_gaiji)
-    @description = description
-    @entry = entry
+    super(description, entry)
     @book_record = book_record
     @preserve_gaiji = preserve_gaiji
     @to_show = 0
-  end
-
-  def enter(from_child, msg)
-    do_reply(msg, @entry)
-    nil
   end
 
   def description
