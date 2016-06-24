@@ -45,16 +45,37 @@ class IRCMessage
   def parse(raw)
     return unless raw
     raw.strip!
-    msg_parts = raw.to_s.split(/[ 　]/)
-    @prefix = msg_parts.shift[1..-1] if msg_parts.first.start_with?(':')
-    @command = msg_parts.shift.downcase.to_sym
-    @params = []
-    @params << msg_parts.shift while msg_parts.first and !msg_parts.first.start_with?(':')
-    msg_parts.first.slice!(0) if msg_parts.first
-    @params.delete_if{|param| param.empty?}
-    @params << msg_parts.join(' ') unless msg_parts.empty?
+
+    if raw.start_with?(':')
+      prefix, raw = raw.split(/ /, 2)
+      prefix.slice!(0)
+      @prefix = prefix
+    end
+
+    command, raw = raw.split(/ /, 2)
+    @command = command.downcase.to_sym
+
+    params = raw.split(/ /, 15)
+
+    last_param_idx = params.find_index do |p|
+      p.start_with?(':')
+    end
+
+    if last_param_idx
+      last_param = params.pop(params.size - last_param_idx).join(' ')
+      last_param.slice!(0)
+      params << last_param
+    end
+
+    @params = params
 
     if @command == :privmsg || @command == :notice
+      # Convenience replacement so that plugins
+      # won't have to handle full width space themselves.
+      @params.each do |p|
+        p.gsub!(/　/, ' ')
+      end
+
       @is_private = @params.first.eql?(@bot.user.nick)
 
       @ctcp = if message
@@ -106,7 +127,7 @@ $
         # Turn MatchData into a hash of named group captures.
         # This is so that we don't error out on m[:command]
         # when it's not present.
-        m = Hash[m.names.map(&:to_sym).zip(m.captures)]
+        m = m.names.map(&:to_sym).zip(m.captures).to_h
 
         # If bot nick is mentioned, consider this message dedicated
         @is_dedicated = !!m[:dedicated]
