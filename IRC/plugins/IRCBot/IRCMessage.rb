@@ -77,10 +77,12 @@ class IRCMessage
     if @command == :privmsg
       m = if message
             # Try to find "[bot_nick:].command tail"
+            bot_nick = Regexp.quote(@bot.user.nick)
+
             /
 ^
 \s*
-(?<dedicated>#{@bot.user.nick}\s*[:>,]?\s*)?
+(?<dedicated>#{bot_nick}\s*[:>,]?\s*)?
 #{command_prefix_matcher}
 (?<command>[\p{ASCII}\uFF01-\uFF5E&&[^\p{Z}]]+)
 \p{Z}*
@@ -91,7 +93,7 @@ $
             /
 ^
 \s*
-(?<dedicated>#{@bot.user.nick}\s*[:>,]?\s*)
+(?<dedicated>#{bot_nick}\s*[:>,]?\s*)
 (?<tail>.*)
 $
              /ix.match(message)
