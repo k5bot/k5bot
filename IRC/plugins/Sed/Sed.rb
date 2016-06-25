@@ -25,7 +25,7 @@ class Sed
     nil
   end
 
-  BACKLOG_SIZE = 5
+  BACKLOG_SIZE = 100
 
   def on_privmsg(msg)
     unless msg.bot_command
@@ -53,7 +53,7 @@ class Sed
   end
 
   def get_context_key(msg)
-    [msg.context, msg.user.uid]
+    [msg.context]
   end
 
   def parse_script(script, msg)
