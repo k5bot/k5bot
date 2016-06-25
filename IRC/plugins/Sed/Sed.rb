@@ -51,7 +51,7 @@ class Sed
   def on_ctcp_privmsg(msg)
     msg.ctcp.each do |ctcp|
       next if ctcp.command != :ACTION
-      log_line(msg, "* #{msg.nick} #{ctcp.raw}")
+      log_line(msg, ctcp.raw)
     end
   end
 
