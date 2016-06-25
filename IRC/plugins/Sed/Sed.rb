@@ -29,11 +29,7 @@ class Sed
 
   def on_privmsg(msg)
     unless msg.bot_command
-      key = get_context_key(msg)
-      v = @backlog[key] || []
-      v.unshift(msg.message)
-      v.pop if v.size > BACKLOG_SIZE
-      @backlog[key] = v
+      log_line(msg, msg.message)
       return
     end
 
@@ -50,6 +46,21 @@ class Sed
     return unless script
 
     apply_script(script, texts, msg)
+  end
+
+  def on_ctcp_privmsg(msg)
+    msg.ctcp.each do |ctcp|
+      next if ctcp.command != :ACTION
+      log_line(msg, "* #{msg.nick} #{ctcp.raw}")
+    end
+  end
+
+  def log_line(msg, text)
+    key = get_context_key(msg)
+    v = @backlog[key] || []
+    v.unshift(text)
+    v.pop if v.size > BACKLOG_SIZE
+    @backlog[key] = v
   end
 
   def get_context_key(msg)
