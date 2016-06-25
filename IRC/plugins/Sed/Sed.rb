@@ -11,8 +11,8 @@ class Sed
   DESCRIPTION = 'A plugin providing simple sed-like functionality.'
   COMMANDS = {
     :s => "Makes a sed replace on the last line you said. \
-'g' flag, alternate delimiters and several commands per line are supported \
-(ex: '.s/a/b/ s/b/c/g s_d_e').",
+'g' flag, 'i' flag, alternate delimiters and several commands per line are supported \
+(ex: '.s/a/b/ s/b/c/g s_d_e_i').",
   }
 
   def afterLoad
@@ -70,13 +70,16 @@ class Sed
   def parse_script(script, msg)
     parsed = []
 
-    while script.sub!(/^s(.)(.*?)(?<!\\)\1(.*?)(?<!\\)\1(g)?\s*/, '')
+    while script.sub!(/^s(.)(.*?)(?<!\\)\1(.*?)(?<!\\)\1([gi]{0,2})\s*/, '')
       pattern = $2
       substitution = $3
-      global = $4
+      flags = $4
+
+      global = flags.include?('g')
+      case_insensitive = flags.include?('i')
 
       begin
-        regex = Regexp.new(pattern)
+        regex = Regexp.new(pattern, case_insensitive && Regexp::IGNORECASE)
       rescue RegexpError => e
         msg.reply('Sed: ' + e.message)
         return
