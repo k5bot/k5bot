@@ -25,24 +25,36 @@ class Sed
     nil
   end
 
+  BACKLOG_SIZE = 5
+
   def on_privmsg(msg)
     unless msg.bot_command
-      @backlog[[msg.context, msg.user.uid]] = msg.message
+      key = [msg.context, msg.user.uid]
+      v = @backlog[key] || []
+      v.unshift(msg.message)
+      v.pop if v.size > BACKLOG_SIZE
+      @backlog[key] = v
+      return
     end
 
     cmd = msg.bot_command.to_s.dup
     return unless cmd.start_with?('s')
 
-    text = @backlog[[msg.context, msg.user.uid]]
-    return unless text
+    texts = @backlog[[msg.context, msg.user.uid]]
+    return unless texts
 
-    command = msg.message[/#{Regexp.quote(cmd)}\p{Z}*#{Regexp.quote(msg.tail)}$/]
+    command = msg.message[/#{Regexp.quote(cmd)}\p{Z}*#{Regexp.quote("#{msg.tail}")}$/]
     return unless command
 
-    apply_script(command, text, msg)
+    script = parse_script(command, msg)
+    return unless script
+
+    apply_script(script, texts, msg)
   end
 
-  def apply_script(script, text, msg)
+  def parse_script(script, msg)
+    parsed = []
+
     while script.sub!(/^s(.)(.*?)(?<!\\)\1(.*?)(?<!\\)\1(g)?\s*/, '')
       pattern = $2
       substitution = $3
@@ -55,13 +67,34 @@ class Sed
         return
       end
 
-      text = global ? text.gsub(regex, substitution) : text.sub(regex, substitution)
+      parsed << [regex, substitution, global]
     end
 
     if script.empty?
-      msg.reply(text)
+      parsed
     else
       msg.reply("Sed: can't parse: #{script}")
+      nil
     end
+  end
+
+  def apply_script(script, texts, msg)
+    texts.each do |text|
+      text = text.dup
+      all_matched = script.all? do |regex, substitution, global|
+        if global
+          text.gsub!(regex, substitution)
+        else
+          text.sub!(regex, substitution)
+        end
+      end
+
+      if all_matched
+        msg.reply(text)
+        return
+      end
+    end
+
+    msg.reply("Sed: can't find a matching line among the last known #{texts.size}.")
   end
 end
