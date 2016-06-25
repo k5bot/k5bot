@@ -11,7 +11,8 @@ class Sed
   DESCRIPTION = 'A plugin providing simple sed-like functionality.'
   COMMANDS = {
     :s => "Makes a sed replace on the last line you said. \
-'g' flag, 'i' flag, alternate delimiters and several commands per line are supported \
+'g' flag, 'i' flag, alternate delimiters and several commands per line are supported. \
+Last delimiter on the line is optional. \
 (ex: '.s/a/b/ s/b/c/g s_d_e_i').",
   }
 
@@ -70,7 +71,7 @@ class Sed
   def parse_script(script, msg)
     parsed = []
 
-    while script.sub!(/^s(.)(.*?)(?<!\\)\1(.*?)(?<!\\)\1([gi]{0,2})\s*/, '')
+    while script.sub!(/^s(.)(.*?)(?<!\\)\1(.*?)(?<!\\)(?:\1|$)([gi]{0,2})\s*/, '')
       pattern = $2
       substitution = $3
       flags = $4
