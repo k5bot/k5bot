@@ -43,7 +43,7 @@ class Sed
     texts = @backlog[[msg.context, msg.user.uid]]
     return unless texts
 
-    command = msg.message[/#{Regexp.quote(cmd)}\p{Z}*#{Regexp.quote("#{msg.tail}")}$/]
+    command = msg.message[/(?i:#{Regexp.quote(cmd)})\p{Z}*#{Regexp.quote("#{msg.tail}")}$/]
     return unless command
 
     script = parse_script(command, msg)
