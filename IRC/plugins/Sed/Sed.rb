@@ -105,7 +105,7 @@ class Sed
       end
 
       if all_matched
-        msg.reply(text)
+        msg.reply(text.gsub(/[\p{Control}&&\p{ASCII}]+/, ''))
         return
       end
     end
