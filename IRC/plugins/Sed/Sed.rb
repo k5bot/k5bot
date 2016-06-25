@@ -29,7 +29,7 @@ class Sed
 
   def on_privmsg(msg)
     unless msg.bot_command
-      key = [msg.context, msg.user.uid]
+      key = get_context_key(msg)
       v = @backlog[key] || []
       v.unshift(msg.message)
       v.pop if v.size > BACKLOG_SIZE
@@ -40,7 +40,7 @@ class Sed
     cmd = msg.bot_command.to_s.dup
     return unless cmd.start_with?('s')
 
-    texts = @backlog[[msg.context, msg.user.uid]]
+    texts = @backlog[get_context_key(msg)]
     return unless texts
 
     command = msg.message[/(?i:#{Regexp.quote(cmd)})\p{Z}*#{Regexp.quote("#{msg.tail}")}$/]
@@ -50,6 +50,10 @@ class Sed
     return unless script
 
     apply_script(script, texts, msg)
+  end
+
+  def get_context_key(msg)
+    [msg.context, msg.user.uid]
   end
 
   def parse_script(script, msg)
