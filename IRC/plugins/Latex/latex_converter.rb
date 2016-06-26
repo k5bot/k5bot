@@ -230,6 +230,7 @@ class Latex
       alias_method(:'mathbb', :'bb')
       alias_method(:'mathbf', :'bf')
       alias_method(:'mathit', :'it')
+      alias_method(:'emph', :'it')
       alias_method(:'mathscr', :'cal')
       alias_method(:'mathcal', :'cal')
       alias_method(:'mathfrak', :'frak')
