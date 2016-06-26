@@ -10,8 +10,8 @@ class Sed
   include IRCPlugin
   DESCRIPTION = 'A plugin providing simple sed-like functionality.'
   COMMANDS = {
-    :s => "Makes a sed replace on the last line you said. \
-'g' flag, 'i' flag, alternate delimiters and several commands per line are supported. \
+    :s => "Makes a sed replace on a line in channel. \
+'g' flag, 'i' flag, '?' flag, alternate delimiters and several commands per line are supported. \
 Last delimiter on the line is optional. \
 (ex: '.s/a/b/ s/b/c/g s_d_e_i').",
   }
@@ -71,12 +71,11 @@ Last delimiter on the line is optional. \
   def parse_script(script, msg)
     parsed = []
 
-    while script.sub!(/^s(.)(.*?)(?<!\\)\1(.*?)(?<!\\)(?:\1|$)([gi]{0,2})\s*/, '')
+    while script.sub!(/^s(.)(.*?)(?<!\\)\1(.*?)(?<!\\)(?:\1|$)([gi?]{0,3})\s*/, '')
       pattern = $2
       substitution = $3
       flags = $4
 
-      global = flags.include?('g')
       case_insensitive = flags.include?('i')
 
       begin
@@ -86,7 +85,7 @@ Last delimiter on the line is optional. \
         return
       end
 
-      parsed << [regex, substitution, global]
+      parsed << [regex, substitution, flags]
     end
 
     if script.empty?
@@ -100,12 +99,12 @@ Last delimiter on the line is optional. \
   def apply_script(script, texts, msg)
     texts.each do |text|
       text = text.dup
-      all_matched = script.all? do |regex, substitution, global|
-        if global
+      all_matched = script.all? do |regex, substitution, flags|
+        if flags.include?('g')
           text.gsub!(regex, substitution)
         else
           text.sub!(regex, substitution)
-        end
+        end || flags.include?('?')
       end
 
       if all_matched
