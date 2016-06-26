@@ -71,7 +71,7 @@ Last delimiter on the line is optional. \
   def parse_script(script, msg)
     parsed = []
 
-    while script.sub!(/^s(.)(.*?)(?<!\\)\1(.*?)(?<!\\)(?:\1|$)([gi?]{0,3})\s*/, '')
+    while script.sub!(/^\.?s(.)(.*?)(?<!\\)\1(.*?)(?<!\\)(?:\1|$)([gi?]{0,3})(\s+|\s*$)/, '')
       pattern = $2
       substitution = $3
       flags = $4
