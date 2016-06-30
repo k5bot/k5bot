@@ -64,6 +64,16 @@ class Dice
                end
 
       msg.reply("#{prefix} ⇒ #{result}")
+    when :choose
+      choices = msg.tail
+      return unless choices
+      choices = if choices.match(/\bor\b/i)
+                  choices.split(/\bor\b/i).map(&:strip)
+                else
+                  choices.split(/\s+/)
+                end
+
+      msg.reply("Chosen: #{choices.sample}")
     end
   end
 
