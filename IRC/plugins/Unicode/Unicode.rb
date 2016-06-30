@@ -62,7 +62,7 @@ class Unicode
         when :'ur???'
           msg.reply(format_info_level_3(result[0, 100]))
         else
-          msg.reply(result[0, 100].gsub(/[\p{Control}&&\p{ASCII}]+/, ''))
+          msg.reply(result[0, 500].gsub(/[\p{Control}&&\p{ASCII}]+/, ''))
       end
     when :ul
       reply = message.unpack('U*').map do |codepoint|
