@@ -37,6 +37,10 @@ Last delimiter on the line is optional. \
     cmd = msg.bot_command.to_s.dup
     return unless cmd.start_with?('s')
 
+    # avoid interpreting commands that happen to start with s
+    # but continue with a letter.
+    return unless cmd.match(/^s[\W&&\p{ASCII}]/)
+
     texts = @backlog[get_context_key(msg)]
     return unless texts
 
