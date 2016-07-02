@@ -80,6 +80,8 @@ Last delimiter on the line is optional. \
       substitution = $3
       flags = $4
 
+      pattern = unescape(pattern)
+      substitution = unescape(substitution)
       case_insensitive = flags.include?('i')
 
       begin
@@ -118,5 +120,27 @@ Last delimiter on the line is optional. \
     end
 
     msg.reply("Sed: can't find a matching line among the last known #{texts.size}.")
+  end
+
+  # noinspection RubyStringKeysInHashInspection
+  UNESCAPES = {
+      '0' => "\x00",
+      'a' => "\x07", 'b' => "\x08", 't' => "\x09",
+      'n' => "\x0a", 'v' => "\x0b", 'f' => "\x0c",
+      'r' => "\x0d", 'e' => "\x1b", 's' => "\x20",
+  }
+
+  def unescape(str)
+    # Escape all the things
+
+    str.gsub(/\\(?:u(\h{4})|u\{(\h{1,6})\}|(.))/) do
+      if $1 # escape \u0000 unicode
+        ["#{$1}".hex].pack('U*')
+      elsif $2 # escape \u{000000} unicode
+        ["#{$2}".hex].pack('U*')
+      elsif $3
+        UNESCAPES.fetch($3, $3)
+      end
+    end
   end
 end
