@@ -112,7 +112,7 @@ Last delimiter on the line is optional. \
       end
 
       if all_matched
-        msg.reply(text.gsub(/[\p{Control}&&\p{ASCII}&&[^\u0002\u0003\u000F\u0016\u001D\u001F]]+/, ''))
+        msg.reply(text.gsub(/[\u0000\p{Control}&&\p{ASCII}&&[^\u0002\u0003\u000F\u0016\u001D\u001F]]+/, ''))
         return
       end
     end
