@@ -81,7 +81,8 @@ Last delimiter on the line is optional. \
       flags = $4
 
       pattern = unescape(pattern)
-      substitution = unescape(substitution)
+      # unescape keeping \oct as it conflicts with \1, etc. groups references
+      substitution = unescape(substitution, can_oct = false)
       case_insensitive = flags.include?('i')
 
       begin
@@ -129,20 +130,24 @@ Last delimiter on the line is optional. \
       'r' => "\x0d", 'e' => "\x1b", 's' => "\x20",
   }
 
-  def unescape(str)
+  def unescape(str, can_oct = true)
     # Escape all the things
 
-    str.gsub(/\\(?:u(\h{4})|u\{(\h{1,6})\}|x(\h{1,2})|([0-7]{1,3})|(.))/) do
+    str.gsub(/\\(?:u(\h{4})|u\{(\h{1,6})\}|x(\h{1,2})|([0-7]{1,3})|(.))/) do |orig|
       if $1 # escape \u0000 unicode
         ["#{$1}".hex].pack('U*')
       elsif $2 # escape \u{000000} unicode
         ["#{$2}".hex].pack('U*')
-      elsif $3 # escape \x00 unicode (differs from ruby which embeds a raw byte)
+      elsif $3 # escape \x00 unicode
+        # differs from ruby which embeds a raw byte
         ["#{$3}".hex].pack('U*')
-      elsif $4 # escape \000 octal unicode (differs from ruby which embeds a raw byte)
+      elsif can_oct && $4 # escape \000 octal unicode
+        # differs from ruby which embeds a raw byte
         ["#{$4}".oct].pack('U*')
       elsif $5 # escape character or verbatim copy
         UNESCAPES.fetch($5, $5)
+      else
+        orig
       end
     end
   end
