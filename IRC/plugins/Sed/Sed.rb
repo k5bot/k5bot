@@ -75,14 +75,15 @@ Last delimiter on the line is optional. \
   def parse_script(script, msg)
     parsed = []
 
-    while script.sub!(/^\.?s(.)(.*?)(?<!\\)\1(.*?)(?<!\\)(?:\1|$)([gi?]{0,3})(\s+|\s*$)/, '')
+    while script.sub!(/^\.?s(.)((?:\\.|(?!\1)[^\\])*?)\1((?:\\.|(?!\1)[^\\])*?)(?:\1|$)([gi?]{0,3})(\s+|\s*$)/, '')
+      separator = $1
       pattern = $2
       substitution = $3
       flags = $4
 
-      pattern = unescape(pattern)
+      pattern = unescape(pattern, separator)
       # unescape keeping \oct as it conflicts with \1, etc. groups references
-      substitution = unescape(substitution, can_oct = false)
+      substitution = unescape(substitution, separator, false)
       case_insensitive = flags.include?('i')
 
       begin
@@ -123,14 +124,7 @@ Last delimiter on the line is optional. \
     msg.reply("Sed: can't find a matching line among the last known #{texts.size}.")
   end
 
-  # noinspection RubyStringKeysInHashInspection
-  UNESCAPES = {
-      'a' => "\x07", 'b' => "\x08", 't' => "\x09",
-      'n' => "\x0a", 'v' => "\x0b", 'f' => "\x0c",
-      'r' => "\x0d", 'e' => "\x1b", 's' => "\x20",
-  }
-
-  def unescape(str, can_oct = true)
+  def unescape(str, separator, can_oct = true)
     # Escape all the things
 
     str.gsub(/\\(?:u(\h{4})|u\{(\h{1,6})\}|x(\h{1,2})|([0-7]{1,3})|(.))/) do |orig|
@@ -145,7 +139,7 @@ Last delimiter on the line is optional. \
         # differs from ruby which embeds a raw byte
         ["#{$4}".oct].pack('U*')
       elsif $5 # escape character or verbatim copy
-        UNESCAPES.fetch($5, $5)
+        $5 == separator ? separator : orig
       else
         orig
       end
