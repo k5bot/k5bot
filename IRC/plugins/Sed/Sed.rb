@@ -124,7 +124,6 @@ Last delimiter on the line is optional. \
 
   # noinspection RubyStringKeysInHashInspection
   UNESCAPES = {
-      '0' => "\x00",
       'a' => "\x07", 'b' => "\x08", 't' => "\x09",
       'n' => "\x0a", 'v' => "\x0b", 'f' => "\x0c",
       'r' => "\x0d", 'e' => "\x1b", 's' => "\x20",
@@ -133,13 +132,17 @@ Last delimiter on the line is optional. \
   def unescape(str)
     # Escape all the things
 
-    str.gsub(/\\(?:u(\h{4})|u\{(\h{1,6})\}|(.))/) do
+    str.gsub(/\\(?:u(\h{4})|u\{(\h{1,6})\}|x(\h{1,2})|([0-7]{1,3})|(.))/) do
       if $1 # escape \u0000 unicode
         ["#{$1}".hex].pack('U*')
       elsif $2 # escape \u{000000} unicode
         ["#{$2}".hex].pack('U*')
-      elsif $3
-        UNESCAPES.fetch($3, $3)
+      elsif $3 # escape \x00 unicode (differs from ruby which embeds a raw byte)
+        ["#{$3}".hex].pack('U*')
+      elsif $4 # escape \000 octal unicode (differs from ruby which embeds a raw byte)
+        ["#{$4}".oct].pack('U*')
+      elsif $5 # escape character or verbatim copy
+        UNESCAPES.fetch($5, $5)
       end
     end
   end
