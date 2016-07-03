@@ -169,6 +169,9 @@ class Converter
 
   def fill_entry(entry, node)
     entry.kanji = node.css('literal').first.text
+
+    raise "Kanji is not a single char #{entry.kanji}" unless entry.kanji.size == 1
+
     entry.radical_number = node.css('radical rad_value[rad_type="classical"]').first.text.to_i
 
     entry.code_skip = node.css('query_code q_code[qc_type="skip"]').map {|n| n.text.strip}
