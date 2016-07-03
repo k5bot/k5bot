@@ -210,6 +210,14 @@ class Language
   end
 
   def replace_japanese_regex!(word)
+    kanjidic = @plugin_manager.plugins[:KANJIDIC2]
+    if kanjidic
+      word.gsub!(KANJIDIC_GROUP_MATCHER) do
+        kanji = (kanjidic.search_kanji_by_keywords($1) || []).map(&:kanji).join
+        kanji.empty? ? '(?!)' : "[#{kanji}]"
+      end
+    end
+
     word.gsub!(KANA_REGEXP_GROUP_MATCHER) do
       Regexp.union(kana_by_regexp(Regexp.new("^#{$1}$")).map(&:first))
     end
@@ -262,6 +270,7 @@ class Language
   KANA_CHAR_GROUP_MATCHER = /\\k/
   NON_KANA_CHAR_GROUP_MATCHER = /\\K/
   KANA_REGEXP_GROUP_MATCHER = /\\kr\{([^\{\}]+)\}/
+  KANJIDIC_GROUP_MATCHER = /\\KD\{([^\{\}]+)\}/
 
   # 3040-309F hiragana
   # 30A0-30FF katakana
