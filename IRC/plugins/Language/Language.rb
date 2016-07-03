@@ -210,9 +210,8 @@ class Language
   end
 
   def replace_japanese_regex!(word)
-    word.gsub!(KANA_REGEXP_GROUP_MATCHER) do |m|
-      m = KANA_REGEXP_GROUP_MATCHER.match(m)
-      Regexp.union(kana_by_regexp(Regexp.new("^#{m[1]}$")).map(&:first))
+    word.gsub!(KANA_REGEXP_GROUP_MATCHER) do
+      Regexp.union(kana_by_regexp(Regexp.new("^#{$1}$")).map(&:first))
     end
 
     word.gsub!(HIRAGANA_CHAR_GROUP_MATCHER, HIRAGANA_CHAR_GROUP)
