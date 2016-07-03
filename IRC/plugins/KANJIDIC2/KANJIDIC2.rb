@@ -89,7 +89,7 @@ if it's the only given search term",
       search_result = @code_skip[msg.tail]
       search_result ||= @stroke_count[msg.tail]
       begin
-        search_result ||= keyword_lookup(DatabaseEntry.split_into_keywords(msg.tail), @misc)
+        search_result ||= search_kanji_by_keywords(msg.tail)
       rescue => e
         msg.reply(e.message)
         return
@@ -124,6 +124,10 @@ if it's the only given search term",
         msg.reply(not_found_msg(msg.tail))
       end
     end
+  end
+
+  def search_kanji_by_keywords(keywords)
+    keyword_lookup(DatabaseEntry.split_into_keywords(keywords), @misc)
   end
 
   private
@@ -174,7 +178,7 @@ if it's the only given search term",
       end
     end
 
-    Hash[radical_groups.sort]
+    radical_groups.sort.to_h
   end
 
   def not_found_msg(requested)
