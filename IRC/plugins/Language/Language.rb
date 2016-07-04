@@ -219,7 +219,13 @@ class Language
     end
 
     word.gsub!(KANA_REGEXP_GROUP_MATCHER) do
-      Regexp.union(kana_by_regexp(Regexp.new("^#{$1}$")).map(&:first))
+      kana = kana_by_regexp(Regexp.new("^#{$1}$")).map(&:first)
+      if kana.empty? || kana.any? {|k| k.size != 1}
+        Regexp.union(kana)
+      else
+        # Don't use brace groups if a character class can be used.
+        "[#{kana.join}]"
+      end
     end
 
     word.gsub!(HIRAGANA_CHAR_GROUP_MATCHER, HIRAGANA_CHAR_GROUP)
