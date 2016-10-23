@@ -87,7 +87,7 @@ providing tools to analyze it."
 
   ALL_HIRAGANA = 'あいうゔえおかきくけこさしすせそたちつてとなにぬねのまみむめもはひふへほやゆよらりるれろわゐゑをんばびぶべぼぱぴぷぺぽがぎぐげござじずぜぞだぢづでどゃゅょぁぃぅぇぉっ'
   ALL_KATAKANA = 'アイウヴエオカキクケコサシスセソタチツテトナニヌネノマミムメモハヒフヘホヤユヨラリルレロワヰヱヲンバビブベボパピプペポガギグゲゴザジズゼゾダヂヅデドァィゥェォヵㇰㇱㇲッㇳㇴㇺㇵㇶㇷㇸㇹㇻㇼㇽㇾㇿャュョヮ'
-  ALL_HALFWIDTH = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾏﾐﾑﾒﾓﾊﾋﾌﾍﾎﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ'
+  ALL_HALFWIDTH = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾏﾐﾑﾒﾓﾊﾋﾌﾍﾎﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｨｫｯｬｭョ'
 
   def output_group_stats(msg, prefix, symbols_array)
     output_array = symbols_array.each_char.sort_by do |c|
