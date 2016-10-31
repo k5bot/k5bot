@@ -39,16 +39,16 @@ class F1
 
   DESCRIPTION = 'Parser for the official F1 live timing'
   COMMANDS = {
-    :f1pos => "displays positions in current race, or previous one given a track name (#{PREVIOUS_RACES.join(', ')})",
-    :f1cal => "displays the next race weekend's starting times"
+    f1pos: "displays positions in current race, or previous one given a track name (#{PREVIOUS_RACES.join(', ')})",
+    f1cal: "displays the next race weekend's starting times",
   }
 
   def on_privmsg(msg)
     case msg.bot_command
-      when :f1pos
-        positions(msg)
-      when :f1cal
-        calendar(msg)
+    when :f1pos
+      positions(msg)
+    when :f1cal
+      calendar(msg)
     end
   end
 
@@ -89,11 +89,11 @@ class F1
       end
     end
 
-    msg.reply "#{race} positions: #{drivers.sort_by!{ |i| i.split(' ')[0].to_i }.join(', ')}"
+    msg.reply("#{race} positions: #{drivers.sort_by!{ |i| i.split(' ')[0].to_i }.join(', ')}")
   end
 
   def calendar(msg)
-    page = Nokogiri::HTML(open("https://www.f1calendar.com/"))
+    page = Nokogiri::HTML(open('https://www.f1calendar.com/'))
 
     weekend = page.css('tbody.next-event').css('span.location')[0].inner_html.strip
     fp1 = Time.iso8601(page.css('tbody.next-event').css('tr.first-practice').css('abbr.dtstart').attribute('title')).utc
@@ -102,6 +102,6 @@ class F1
     q = Time.iso8601(page.css('tbody.next-event').css('tr.qualifying').css('abbr.dtstart').attribute('title')).utc
     r = Time.iso8601(page.css('tbody.next-event').css('tr.race').css('abbr.dtstart').attribute('title')).utc
 
-    msg.reply"#{weekend} FP1: #{fp1} FP2: #{fp2} FP3: #{fp3} Q: #{q} R: #{r}"
+    msg.reply("#{weekend} FP1: #{fp1} FP2: #{fp2} FP3: #{fp3} Q: #{q} R: #{r}")
   end
 end
