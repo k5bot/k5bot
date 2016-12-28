@@ -61,6 +61,8 @@ class Tell
       tell_messages = rcpt[msg.user.uid] ||= []
       if tell_messages.index { |_, _, m| m == tell_message }
         msg.reply("#{msg.nick}: Already noted.")
+      elsif tell_messages.length >= 5
+        msg.reply("#{msg.nick}: How about you do that when #{user.nick} returns. Yeah that would be great.")
       else
         tell_messages << [Time.now, msg.nick, tell_message]
         store
