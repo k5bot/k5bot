@@ -70,12 +70,6 @@ class IRCMessage
     @params = params
 
     if @command == :privmsg || @command == :notice
-      # Convenience replacement so that plugins
-      # won't have to handle full width space themselves.
-      @params.each do |p|
-        p.gsub!(/　/, ' ')
-      end
-
       @is_private = @params.first.eql?(@bot.user.nick)
 
       @ctcp = if message
