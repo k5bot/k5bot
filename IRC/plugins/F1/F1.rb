@@ -33,11 +33,13 @@ class F1
     'Suzuka',
     'Austin',
     'MexicoCity',
+    'SaoPaulo',
+    'AbuDhabi',
   ]
 
   SERVERLIST = 'http://www.formula1.com/sp/static/f1/2016/serverlist/svr/serverlist.xml.js'
 
-  DESCRIPTION = 'Parser for the official F1 live timing'
+  DESCRIPTION = 'Parser for the official F1 live timing (2016 season)'
   COMMANDS = {
     f1pos: "displays positions in current race, or previous one given a track name (#{PREVIOUS_RACES.join(', ')})",
     f1cal: "displays the next race weekend's starting times",
