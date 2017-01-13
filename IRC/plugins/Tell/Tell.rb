@@ -92,7 +92,7 @@ class Tell
       if tell_messages.index { |_, _, m| m == tell_message }
         msg.reply("#{msg.nick}: Already noted.")
       elsif tell_messages.length >= 3
-        msg.reply("#{msg.nick}: Please do that when #{user.nick} returns or use the memo command.")
+        msg.reply("#{msg.nick}: Maybe you could do it.")
       else
         tell_messages << [Time.now, msg.nick, tell_message]
         store
