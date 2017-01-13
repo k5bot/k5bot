@@ -34,7 +34,7 @@ class F1
     'Austin',
     'MexicoCity',
     'SaoPaulo',
-    'AbuDhabi',
+    'YasMarina',
   ]
 
   SERVERLIST = 'http://www.formula1.com/sp/static/f1/2016/serverlist/svr/serverlist.xml.js'
