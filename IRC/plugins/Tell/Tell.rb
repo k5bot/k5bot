@@ -17,6 +17,7 @@ class Tell
   DESCRIPTION = 'A plugin that can pass messages between users.'
   COMMANDS = {
     :tell => '[nick] [message] (ex.: !tell K5 I will be back later) sends [message] to [nick] when he/she/it says something the next time',
+    :memo => 'Same as .tell, but sends messages privately',
   }
 
   DEPENDENCIES = [:StorageYAML]
@@ -25,10 +26,12 @@ class Tell
     @storage = @plugin_manager.plugins[:StorageYAML]
 
     @tell = @storage.read('tell') || {}
+    @memo = @storage.read('memo') || {}
   end
 
   def beforeUnload
     @tell = nil
+    @memo = nil
 
     @storage = nil
 
@@ -37,14 +40,41 @@ class Tell
 
   def store
     @storage.write('tell', @tell)
+    @storage.write('memo', @memo)
   end
 
   def on_privmsg(msg)
     case msg.bot_command
     when :tell
       store_tell(msg)
+    when :memo
+      store_memo(msg)
     end
     do_tell(msg)
+  end
+
+  # Stores a memo
+  def store_memo(msg)
+    return unless msg.tail
+    recipient_nick, tell_message = msg.tail.scan(/^\s*(\S+)\s+(.+)\s*$/).flatten
+    return unless recipient_nick and tell_message
+    return if recipient_nick.casecmp(msg.nick) == 0
+    return if recipient_nick.casecmp(msg.bot.user.nick) == 0
+    user = msg.bot.find_user_by_nick(recipient_nick)
+    if user && user.uid
+      @memo[user.uid] ||= {}
+      rcpt = @memo[user.uid]
+      tell_messages = rcpt[msg.user.uid] ||= []
+      if tell_messages.index { |_, _, m| m == tell_message }
+        msg.reply("#{msg.nick}: Already noted.")
+      else
+        tell_messages << [Time.now, msg.nick, tell_message]
+        store
+        msg.reply("#{msg.nick}: Will do.")
+      end
+    else
+      msg.reply("#{msg.nick}: I do not know who that is. Sorry.")
+    end
   end
 
   # Stores a message from the sender
@@ -75,6 +105,21 @@ class Tell
 
   # Checks if the sender has any messages and delivers them
   def do_tell(msg)
+    if @memo[msg.user.uid]
+      @memo[msg.user.uid].each do |sender_uid, tell_msgs|
+        sender_nick = tell_msgs.last[1]  # default to use the second element ( = the nick) of the last message as the sender nick
+        sender_user = msg.bot.find_user_by_uid(sender_uid)
+        if sender_user
+          sender_nick = sender_user.nick
+        end
+        tell_msgs.each do |t, _, tell_msg|
+          as = format_ago_string(t)
+          msg.reply("#{msg.nick}, #{sender_nick} told me #{as + ' ' if as}to tell you: #{tell_msg}", :force_private => true)
+        end
+      end
+      @memo.delete(msg.user.uid)
+      store
+    end
     unless msg.private?
       if @tell[msg.user.uid]
         @tell[msg.user.uid].each do |sender_uid, tell_msgs|
