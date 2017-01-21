@@ -4,8 +4,6 @@
 
 # Help plugin displays help
 
-require 'rubygems'
-require 'bundler/setup'
 require 'nokogiri'
 
 require 'IRC/IRCPlugin'

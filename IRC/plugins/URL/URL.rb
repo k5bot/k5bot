@@ -7,8 +7,6 @@
 require 'IRC/IRCPlugin'
 require 'IRC/Counter'
 
-require 'rubygems'
-require 'bundler/setup'
 require 'nokogiri'
 require 'addressable/uri'
 require 'net/http'

@@ -8,10 +8,24 @@ $VERBOSE = true
 
 $stdout.sync = true
 
-require 'rubygems'
-require 'bundler/setup'
+require 'addressable'
+require 'eb'
+require 'google_custom_search_api'
 require 'i18n'
 require 'i18n/backend/fallbacks'
+require 'iso_country_codes'
+require 'json'
+require 'mecab-ruby'
+require 'nokogiri'
+require 'parslet'
+require 'ruby-pinyin'
+require 'sequel'
+require 'sk_google_custom_search_api'
+require 'sqlite3'
+require 'ting'
+require 'tzinfo'
+require 'webrick'
+require 'wolfram'
 require 'yaml'
 
 File.dirname(__FILE__).tap do |lib_dir|

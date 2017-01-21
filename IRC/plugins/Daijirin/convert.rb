@@ -13,8 +13,6 @@ $VERBOSE = true
 
 require 'yaml'
 
-require 'rubygems'
-require 'bundler/setup'
 require 'sequel'
 
 (File.dirname(__FILE__) +'/../../../').tap do |lib_dir|

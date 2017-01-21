@@ -9,8 +9,6 @@
 #
 # http://www.csse.monash.edu.au/~jwb/edict.html
 
-require 'rubygems'
-require 'bundler/setup'
 require 'sequel'
 
 require 'IRC/complex_regexp'

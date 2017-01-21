@@ -6,8 +6,6 @@
 
 require 'ostruct'
 
-require 'rubygems'
-require 'bundler/setup'
 require 'webrick'
 require 'webrick/https'
 

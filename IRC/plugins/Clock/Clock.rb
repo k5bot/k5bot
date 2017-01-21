@@ -4,8 +4,6 @@
 
 # Clock plugin tells the time
 
-require 'rubygems'
-require 'bundler/setup'
 require 'tzinfo'
 require 'iso_country_codes'
 
