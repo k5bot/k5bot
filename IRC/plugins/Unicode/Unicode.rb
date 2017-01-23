@@ -15,6 +15,7 @@ class Unicode
 
   DESCRIPTION = 'A plugin that provides various Unicode related info and tools.'
   COMMANDS = {
+    :glw => 'return link to glyphwiki',
     :u? => 'classify given text by Unicode ranges',
     :'u??' => 'output Unicode codepoints in hexadecimal for given text',
     :'u???' => 'output Unicode codepoint names for given text',
@@ -37,6 +38,9 @@ class Unicode
     return unless message
 
     case msg.bot_command
+    when :glw
+      uc = format_info_level_2(message)
+      msg.reply("http://en.glyphwiki.org/wiki/u#{uc.rjust(4, '0')}") unless uc.empty?
     when :u?
       reply = format_info_level_1(message)
       msg.reply(reply) unless reply.empty?
