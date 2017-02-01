@@ -21,7 +21,7 @@ class Top3
     :chart_top => 'shows a chart of you and the top users of this month, usage .chart_top exclude user1 user2... (made by amigojapan)',
     :opt_out => 'Takes away permision for people to see your data (made by amigojapan)',
     :reopt_in => 'Regives permision of people to see your data (made by amigojapan)',
-    :mlist => 'Shows the rank list for this or a previous month (made by amigojapan). Takes a date as first argument and exclusion list as further arguments.',
+    :mlist => 'Shows the rank list for this or a previous month (made by amigojapan). Takes a date as an optional first argument and exclusion list as further arguments.',
   }
   DEPENDENCIES = [:StorageYAML]
 
@@ -206,9 +206,15 @@ class Top3
 
   def mlist(msg)
     if msg.tail
-      exclude_array = get_exclude_array(msg.tail.split[1...-1].join(' ') || '')
-      date_from_tail = Date.parse(msg.tail.split.first) rescue Date.today
-      sorted = get_top_list(exclude_array, date_from_tail)
+      begin
+        date_from_tail = Date.parse(msg.tail.split.first)
+
+        exclude_array = get_exclude_array(msg.tail.gsub(/^\S­+\s+/, '') || '')
+        sorted = get_top_list(exclude_array, date_from_tail)
+      rescue ArgumentError
+        exclude_array = get_exclude_array(msg.tail)
+        sorted = get_top_list(exclude_array)
+      end
     else
       exclude_array = get_exclude_array('')
       sorted = get_top_list(exclude_array)
