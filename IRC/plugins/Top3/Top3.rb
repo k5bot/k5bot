@@ -207,7 +207,8 @@ class Top3
   def mlist(msg)
     if msg.tail
       exclude_array = get_exclude_array(msg.tail.split[1...-1].join(' ') || '')
-      sorted = get_top_list(exclude_array, Date.parse(msg.tail.split.first) || Date.now)
+      date_from_tail = Date.parse(msg.tail.split.first) rescue Date.today
+      sorted = get_top_list(exclude_array, date_from_tail)
     else
       exclude_array = get_exclude_array('')
       sorted = get_top_list(exclude_array)
