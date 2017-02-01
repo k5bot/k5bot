@@ -21,7 +21,7 @@ class Top3
     :chart_top => 'shows a chart of you and the top users of this month, usage .chart_top exclude user1 user2... (made by amigojapan)',
     :opt_out => 'Takes away permision for people to see your data (made by amigojapan)',
     :reopt_in => 'Regives permision of people to see your data (made by amigojapan)',
-    :mlist => 'shows the rank list for this month (made by amigojapan)',
+    :mlist => 'Shows the rank list for this or a previous month (made by amigojapan). Takes a date as first argument and exclusion list as further arguments.',
   }
   DEPENDENCIES = [:StorageYAML]
 
@@ -187,8 +187,7 @@ class Top3
     end.map(&:first)
   end
 
-  def get_top_list(exclude_array = [])
-    date_now = Date.today
+  def get_top_list(exclude_array = [], date_now = Date.today)
     year_now = date_now.year.to_s
     month_now = date_now.mon.to_s
 
@@ -206,8 +205,13 @@ class Top3
   end
 
   def mlist(msg)
-    exclude_array = get_exclude_array(msg.tail || '')
-    sorted = get_top_list(exclude_array)
+    if msg.tail
+      exclude_array = get_exclude_array(msg.tail.split[1...-1].join(' ') || '')
+      sorted = get_top_list(exclude_array, Date.parse(msg.tail.split.first) || Date.now)
+    else
+      exclude_array = get_exclude_array('')
+      sorted = get_top_list(exclude_array)
+    end
 
     if sorted.empty?
       msg.reply('Nobody has typed any Japanese this month :(')
