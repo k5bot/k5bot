@@ -3,12 +3,12 @@ ruby '~> 2.1.2'
 source "https://rubygems.org"
 
 # for WolframAlpha plugin
-git 'https://github.com/albel727/wolfram.git' do
+git 'https://github.com/k5bot/wolfram.git' do
   gem 'wolfram', :group => :WolframAlpha
 end
 
 # for Mecab plugin
-git 'https://github.com/albel727/mecab-ruby-gem.git' do
+git 'https://github.com/k5bot/mecab-ruby-gem.git' do
   gem 'mecab-ruby', :group => :Mecab
 end
 
@@ -31,7 +31,7 @@ gem 'tzinfo', :group => :Clock
 gem 'iso_country_codes', :group => :Clock
 
 # for EPWING plugin
-git 'https://github.com/albel727/rubyeb19.git' do
+git 'https://github.com/k5bot/rubyeb19.git' do
   gem 'eb', :group => :EPWING
 end
 
