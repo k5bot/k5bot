@@ -13,8 +13,8 @@ class Help
   include IRCPlugin
   DESCRIPTION = 'The help plugin displays help.'
   COMMANDS = {
-    :help => 'lists available commands or shows information about specified command or plugin',
-    :plugins => 'lists the loaded plugins',
+    :help => 'lists available commands if called without arguments in private or shows information about specified command or plugin',
+    :plugins => 'lists the loaded plugins in if called in private',
   }
 
   def afterLoad
@@ -27,6 +27,7 @@ class Help
       if msg.tail
         describe_word(msg, msg.tail)
       else
+        return unless msg.private?
         all_cmds = all_commands(msg.command_prefix)
         msg.reply(LayoutableText::Prefixed.new(
                       'Commands: ',
@@ -34,6 +35,7 @@ class Help
                   ))
       end
     when :plugins
+      return unless msg.private?
       all_plugins = @pm.plugins.keys.sort
       msg.reply(LayoutableText::Prefixed.new(
                     'Loaded plugins: ',
