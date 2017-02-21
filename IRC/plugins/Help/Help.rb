@@ -27,12 +27,14 @@ class Help
       if msg.tail
         describe_word(msg, msg.tail)
       else
-        return unless msg.private?
+        unless msg.private?
+          msg.reply('Full list only available in private. Please do /msg next time.')
+        end
         all_cmds = all_commands(msg.command_prefix)
         msg.reply(LayoutableText::Prefixed.new(
                       'Commands: ',
                       LayoutableText::SimpleJoined.new(' ', all_cmds)
-                  ))
+                  ), :force_private => true)
       end
     when :plugins
       return unless msg.private?
