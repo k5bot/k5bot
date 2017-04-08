@@ -16,30 +16,12 @@ class F1
 
   PREVIOUS_RACES = [
     'Melbourne',
-    'Sakhir',
     'Shanghai',
-    'Sochi',
-    'Catalunya',
-    'Montreal',
-    'MonteCarlo',
-    'Baku',
-    'Spielberg',
-    'Silverstone',
-    'Budapest',
-    'Hockenheim',
-    'Spa',
-    'Monza',
-    'KualaLumpur',
-    'Suzuka',
-    'Austin',
-    'MexicoCity',
-    'SaoPaulo',
-    'YasMarina',
   ]
 
-  SERVERLIST = 'http://www.formula1.com/sp/static/f1/2016/serverlist/svr/serverlist.xml.js'
+  SERVERLIST = 'http://www.formula1.com/sp/static/f1/2017/serverlist/svr/serverlist.xml.js'
 
-  DESCRIPTION = 'Parser for the official F1 live timing (2016 season)'
+  DESCRIPTION = 'Parser for the official F1 live timing (2017 season)'
   COMMANDS = {
     f1pos: "displays positions in current race, or previous one given a track name (#{PREVIOUS_RACES.join(', ')})",
     f1cal: "displays the next race weekend's starting times",
@@ -75,23 +57,29 @@ class F1
       race = msg.tail.gsub(/\s+/, '')
     end
 
-    url = "http://www.formula1.com/sp/static/f1/2016/live/#{race}/Race/all.js"
-    url_live = "https://lb.softpauer.com/f1/2016/live/#{race}/Race/all.js"
+    url = "http://www.formula1.com/sp/static/f1/2017/live/#{race}/Race/all.js"
+    url_live = "https://lb.softpauer.com/f1/2017/live/#{race}/Race/all.js"
 
     drivers = []
 
     timing = open(url_live) || open(url)
 
-    timing.each_line do |l|
-      if l.start_with?("SP._input_('f'")
-        l.split('[')[1].split(']')[0].split("{\"F\":\"")[1..-1].each do |d|
-          i = d.split(",\"}")[0].split(',')
-          drivers.push("#{i[3]} #{i[0]}")
+    if timing
+
+      timing.each_line do |l|
+        if l.start_with?("SP._input_('f'")
+          l.split('[')[1].split(']')[0].split("{\"F\":\"")[1..-1].each do |d|
+            i = d.split(",\"}")[0].split(',')
+            drivers.push("#{i[3]} #{i[0]}")
+          end
         end
       end
-    end
 
-    msg.reply("#{race} positions: #{drivers.sort_by!{ |i| i.split(' ')[0].to_i }.join(', ')}")
+      msg.reply("#{race} positions: #{drivers.sort_by!{ |i| i.split(' ')[0].to_i }.join(', ')}")
+    else
+      msg.reply("No timing available for #{race}.");
+    end
+  
   end
 
   def calendar(msg)
