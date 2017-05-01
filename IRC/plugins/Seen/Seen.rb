@@ -106,8 +106,6 @@ uses .seen command on you. Example: .seenwhile drinking beer",
                 m = '. ' + sought_user.nick + ' ' + m
               else # :msg
                 m = ' saying: ' + m
-                # If we have both seen-while text and user message, connect them with 'and'
-                m = ' and' + m if sw
             end
           else
             # Add trailing dot, if we have no user message coming last.
