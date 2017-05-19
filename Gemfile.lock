@@ -1,17 +1,17 @@
 GIT
-  remote: https://github.com/albel727/mecab-ruby-gem.git
+  remote: https://github.com/k5bot/mecab-ruby-gem.git
   revision: 8c34c5b06cdeef1530ab1996e148b3bf071d1519
   specs:
     mecab-ruby (0.996)
 
 GIT
-  remote: https://github.com/albel727/rubyeb19.git
-  revision: 70ebfdd764ea707def6588005b3da62953078bc3
+  remote: https://github.com/k5bot/rubyeb19.git
+  revision: b434e8dfadd08e90e962d434ee65912cd4519264
   specs:
     eb (2.6.0)
 
 GIT
-  remote: https://github.com/albel727/wolfram.git
+  remote: https://github.com/k5bot/wolfram.git
   revision: 3267f9c789cd0f67d58986b02d88db252783c2c7
   specs:
     wolfram (0.2.1)
