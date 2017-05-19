@@ -71,7 +71,7 @@ accept either index (1 is the most recent one) or substring of the desired URL",
     # We'll be modifying text in place, so copy it beforehand.
     text = text.dup
 
-    uris = URI.extract(text)
+    uris = URI::Parser.new.extract(text)
 
     uris.delete_if do |uri|
       # Silently skip anything not starting with that,
