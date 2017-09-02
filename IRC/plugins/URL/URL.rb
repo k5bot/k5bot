@@ -112,7 +112,7 @@ accept either index (1 is the most recent one) or substring of the desired URL",
     end
   end
 
-  USER_AGENT='Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36'
+  USER_AGENT='Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2883.87 Safari/537.36'
   ACCEPT_LANGUAGE='en, ja, *'
 
   def handle_uri(uri, msg)
