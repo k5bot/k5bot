@@ -22,6 +22,7 @@ class URL
       :short => "shortens a previously seen URL with goo.gl. This command can \
 accept either index (1 is the most recent one) or substring of the desired URL",
   }
+  DEPENDENCIES = [:I18N]
 
   def initialize(manager, config)
     super
