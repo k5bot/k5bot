@@ -384,6 +384,8 @@ the 'name' key with the connector name string"
         log(:error, "Watchdog interval (#{@timeout}) elapsed, forcibly closing io.")
         timer.stop
         io.close
+        # Here we should really try to reconnect, but since we don't, terminate
+        exit 1
       end
       io.instance_variable_set(:@_connectix_watchdog, watchdog)
       io.extend(Wrapper)
