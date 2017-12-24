@@ -89,6 +89,10 @@ class Loader
         msg.reply 'Refusing to unload the loader plugin.'
         next
       end
+      if name.eql? 'IRCBot'
+        msg.reply 'Refusing to unload the IRC bot plugin.'
+        next
+      end
       if @plugin_manager.unload_plugin name
         msg.reply "'#{name}' unloaded."
       else
