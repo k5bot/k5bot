@@ -22,7 +22,7 @@ class Statistics
     when :version
       msg.reply(version_string)
     when :about
-      msg.reply('K5 bot - an open-source IRC bot written in Ruby. You can find its sources at https://github.com/k5bot/k5bot')
+      msg.reply('K5 bot - an open-source IRC bot written in Ruby. You can find its source at https://github.com/k5bot/k5bot')
     end
   end
 
