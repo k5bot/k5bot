@@ -83,8 +83,9 @@ uses .seen command on you. Example: .seenwhile drinking beer",
 
       sought_user = msg.bot.find_user_by_nick(sought_nick)
 
-      if sought_user && sought_user.uid
-        seen_data = get_seen_info(sought_user)
+      if (sought_user && sought_user.uid) || @seen[sought_nick]
+        seen_data = if sought_user && sought_user.uid then get_seen_info(sought_user) else @seen[sought_nick] end
+
         if seen_data && seen_data[:time]
           as = format_ago_string(seen_data[:time])
 
@@ -103,7 +104,7 @@ uses .seen command on you. Example: .seenwhile drinking beer",
             case seen_data[:type]
               when :act
                 # Ensure that whatever sentence comes before ends with '.'
-                m = '. ' + sought_user.nick + ' ' + m
+                m = '. ' + seen_data[:nick] + ' ' + m
               else # :msg
                 m = ' saying: ' + m
             end
@@ -112,13 +113,13 @@ uses .seen command on you. Example: .seenwhile drinking beer",
             m = '.'
           end
 
-          reply = [sought_user.nick, 'was last seen', as, cs, sw].select {|x| x}.join(' ')
+          reply = [seen_data[:nick], 'was last seen', as, cs, sw].select {|x| x}.join(' ')
 
           reply += m
 
           msg.reply(reply)
         else
-          msg.reply("#{msg.nick}: I have not seen #{sought_user.nick}.")
+          msg.reply("#{msg.nick}: I have not seen #{seen_data[:nick]}.")
         end
       else
         msg.reply("#{msg.nick}: I do not know who that is.")
