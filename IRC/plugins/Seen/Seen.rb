@@ -68,7 +68,7 @@ uses .seen command on you. Example: .seenwhile drinking beer",
       sought_nick = msg.tail
 
       if !sought_nick || sought_nick.casecmp(msg.nick) == 0
-        seen_data = get_seen_info(msg.user)
+        seen_data = user_seen_info(msg.user)
         if seen_data && seen_data[:while]
           msg.reply("#{msg.nick}: watching you #{seen_data[:while]}.")
         else
@@ -83,10 +83,10 @@ uses .seen command on you. Example: .seenwhile drinking beer",
 
       sought_user = msg.bot.find_user_by_nick(sought_nick)
 
-      if (sought_user && sought_user.uid) || @seen[sought_nick]
-        seen_data = if sought_user && sought_user.uid then get_seen_info(sought_user) else @seen[sought_nick] end
+      seen_data = if sought_user then user_seen_info(sought_user) else nick_seen_info(sought_nick) end
 
-        if seen_data && seen_data[:time]
+      if seen_data
+        if seen_data[:time]
           as = format_ago_string(seen_data[:time])
 
           if seen_data[:channel] && msg.channelname
@@ -134,8 +134,16 @@ uses .seen command on you. Example: .seenwhile drinking beer",
     end
   end
 
-  def get_seen_info(user)
+  def user_seen_info(user)
     @seen[user.uid]
+  end
+
+  def nick_seen_info(nick)
+    begin
+      @seen.find{|user, data| data[:nick] == nick }.last
+    rescue
+      nil
+    end
   end
 
   def update_seen_info(user, data)
