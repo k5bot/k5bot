@@ -139,7 +139,7 @@ uses .seen command on you. Example: .seenwhile drinking beer",
   end
 
   def nick_seen_info(nick)
-    @seen.find{|user, data| data[:nick] == nick }&.last
+    @seen.values.find{|e| e[:nick] == nick }
   end
 
   def update_seen_info(user, data)
