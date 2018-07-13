@@ -7,7 +7,7 @@
 # The KANJIDIC Dictionary File (KANJIDIC) used by this plugin comes from Jim Breen's JMdict/KANJIDIC Project.
 # Copyright is held by the Electronic Dictionary Research Group at Monash University.
 #
-# http://www.csse.monash.edu.au/~jwb/kanjidic.html
+# http://www.edrdg.org/kanjidic/kanjidic.html
 
 require 'IRC/IRCPlugin'
 require 'uri'

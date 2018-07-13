@@ -7,7 +7,7 @@
 # The KANJIDIC2 Dictionary File (KANJIDIC2) used by this plugin comes from Jim Breen's JMdict/KANJIDIC Project.
 # Copyright is held by the Electronic Dictionary Research Group at Monash University.
 #
-# http://www.csse.monash.edu.au/~jwb/kanjidic.html
+# http://www.edrdg.org/kanjidic/kanjidic.html
 
 require 'uri'
 
@@ -22,7 +22,7 @@ class KANJIDIC2
   COMMANDS = {
     :k => {
         nil => "looks up a given kanji, or shows list of kanji satisfying given search terms, \
-using Jim Breen's KANJIDIC2( http://www.csse.monash.edu.au/~jwb/kanjidic_doc.html ), \
+using Jim Breen's KANJIDIC2( http://www.edrdg.org/kanjidic/kanjidic_doc.html ), \
 and GSF kanji list kindly provided by Con Kolivas( http://ck.kolivas.org/Japanese/entries/index.html )",
         :terms1 => "Words in meanings ('west sake'), \
 kun-yomi stems (in hiragana), \

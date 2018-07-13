@@ -7,7 +7,7 @@
 # The EDICT2 Dictionary File (edict2) used by this plugin comes from Jim Breen's JMdict/EDICT Project.
 # Copyright is held by the Electronic Dictionary Research Group at Monash University.
 #
-# http://www.csse.monash.edu.au/~jwb/edict.html
+# http://www.edrdg.org/jmdict/edict.html
 
 require 'rubygems'
 require 'bundler/setup'
