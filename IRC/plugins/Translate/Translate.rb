@@ -41,7 +41,7 @@ class Translate
     [possibles[l_from], possibles[l_to]]
   end
 
-  GOOGLE_SUPPORTED = make_lang_service_format_map(%w(auto en ja ko fr pt de it es no ru fi hu sv da pl lt nl sw ar sr el), {:zh => 'zh-CN', :tw => 'zh-TW'})
+  GOOGLE_SUPPORTED = make_lang_service_format_map(%w(auto ar da de el en es fi fr hu it ja ko lt nl no pl pt ru sr sv sw), {:zh => 'zh-CN', :tw => 'zh-TW'})
   HONYAKU_SUPPORTED = make_lang_service_format_map(%w(en ja ko fr pt zh de it es))
   EXCITE_SUPPORTED = make_lang_service_format_map([], {:en => 'EN', :ja => 'JA'})
   KNOWN_SERVICES = {
@@ -57,29 +57,29 @@ class Translate
   # [Shortcut form for commands, Language description for help]
   LANGUAGE_INFO = {
       :auto => ['_', 'Auto-detected language'],
-      :en => %w(en English),
-      :ja => %w(ja Japanese),
-      :zh => ['zh', 'Simplified Chinese'],
-      :tw => ['tw', 'Traditional Chinese'],
-      :ko => %w(ko Korean),
-      :fr => %w(fr French),
-      :pt => %w(pt Portuguese),
-      :de => %w(de German),
-      :it => %w(it Italian),
-      :es => %w(es Spanish),
-      :no => %w(no Norwegian),
-      :ru => %w(ru Russian),
-      :fi => %w(fi Finnish),
-      :hu => %w(hu Hungarian),
-      :sv => %w(sv Swedish),
+      :ar => %w(ar Arabic),
       :da => %w(da Danish),
-      :pl => %w(pl Polish),
+      :de => %w(de German),
+      :el => %w(el Greek),
+      :en => %w(en English),
+      :es => %w(es Spanish),
+      :fi => %w(fi Finnish),
+      :fr => %w(fr French),
+      :hu => %w(hu Hungarian),
+      :it => %w(it Italian),
+      :ja => %w(ja Japanese),
+      :ko => %w(ko Korean),
       :lt => %w(lt Lithuanian),
       :nl => %w(nl Dutch),
-      :sw => %w(sw Swahili),
-      :ar => %w(ar Arabic),
+      :no => %w(no Norwegian),
+      :pl => %w(pl Polish),
+      :pt => %w(pt Portuguese),
+      :ru => %w(ru Russian),
       :sr => %w(sr Serbian),
-      :el => %w(el Greek),
+      :sv => %w(sv Swedish),
+      :sw => %w(sw Swahili),
+      :tw => ['tw', 'Traditional Chinese'],
+      :zh => ['zh', 'Simplified Chinese'],
   }
 
   def self.get_language_info(lang)
