@@ -334,9 +334,6 @@ class Translate
       translation = json[0]
       translation = translation[0] if translation
       translation = translation[0] if translation
-      if translation && translation.downcase.gsub(/\s+/, '').eql?(text.downcase.gsub(/\s+/, ''))
-        translation = nil
-      end
       translation = translation + ' ' if translation
 
       detected_language = json[2]
