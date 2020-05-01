@@ -507,7 +507,7 @@ class Translate
     end
   end
 
-  EXCITE_BASE_URL = 'http://www.excite.co.jp/world/english/'
+  EXCITE_BASE_URL = 'https://www.excite.co.jp/world/english/'
 
   def excite_translate(text, lp)
     lp = auto_detect_ja_lp(text, %w(EN JA), %w(JA EN)) unless lp
