@@ -120,6 +120,8 @@ accept either index (1 is the most recent one) or substring of the desired URL",
     text = nil
 
     fetch_by_uri(uri) do |result|
+      # Net::HTTPResponse.uri only has the uri if the request used an URI instance.
+      result['uri'] = uri
       text, _ = format_http_info(result)
     end
 
@@ -141,10 +143,23 @@ accept either index (1 is the most recent one) or substring of the desired URL",
       doc = html_to_nokogiri(result)
       return [] unless doc
 
-      text_node = doc.css('title')[0]
-      return [] unless text_node
+      title = nil
 
-      title = text_node.text.chomp
+      # Youtube started setting the title dynamically with JS instead of just
+      # the HTML tag. Steal it from a meta HTML tag for twitter.
+      if Addressable::URI.parse(result['uri']).host =~ /^(www\.)?youtu(\.be|be\.com)/
+        title_meta = doc.css('meta[name="twitter:title"]')
+
+        return [] unless title_meta
+
+        title = title_meta.attr("content").value.chomp
+      else
+        text_node = doc.css('title')[0]
+
+        return [] unless text_node
+
+        title = text_node.text.chomp
+      end
 
       title.gsub!(/[ \t\n\f\r]+/, ' ')
       title.strip!
