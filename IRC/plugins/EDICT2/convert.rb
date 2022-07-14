@@ -61,7 +61,10 @@ class Converter
         freq, word, _ = l.strip.split("\t", 3)
         [word, freq.to_i]
       end
-    end] rescue {}
+    end] rescue begin
+        puts "NO FREQUENCY FILE"
+        {}
+    end
 
     references_count = Hash.new(0)
 
