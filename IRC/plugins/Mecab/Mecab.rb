@@ -144,9 +144,9 @@ class Mecab
 
   def process_with_mecab(text)
     begin
-      output = @tagger.parse(text.encode(@config[:encoding] || 'EUC-JP'))
+      output = @tagger.parse(text.encode(@config[:encoding] || 'UTF-8'))
 
-      output.force_encoding(@config[:encoding] || 'EUC-JP').encode('UTF-8').each_line do |line|
+      output.force_encoding(@config[:encoding] || 'UTF-8').encode('UTF-8').each_line do |line|
         break if line.start_with?('EOS')
 
         # "なっ\tナッ\tなる\t動詞-自立\t五段・ラ行\t連用タ接続"
