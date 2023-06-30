@@ -21,23 +21,6 @@ class Module
   end
 end
 
-module Sequel
-  class Database
-    alias_method :old_dataset_method, :dataset
-
-    def dataset(*args)
-      # HACK: avoid instance variable not initialized warnings,
-      # by setting missing variables in Database's default_dataset
-      ds = old_dataset_method(*args)
-      ds.instance_variable_set(:@columns, nil)
-      ds.instance_variable_set(:@skip_symbol_cache, nil)
-      ds.instance_variable_set(:@frozen, nil)
-      ds.row_proc = nil
-      ds
-    end
-  end
-end
-
 module SequelHelpers
   # Convenience/consistence wrapper to Sequel.connect(), with some workarounds
   def database_connect(*args, &block)
