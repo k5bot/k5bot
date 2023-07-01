@@ -20,7 +20,7 @@ class IRCUserListener
   def on_connection(msg)
     return if @users
 
-    @users = @storage.read('users') || {}
+    @users = @storage.read('users', custom_classes=[IRCBot::IRCUser]) || {}
 
     @nicks = {}
     @users.values.each { |u| @nicks[normalize(u.nick)] = u }

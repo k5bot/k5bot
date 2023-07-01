@@ -21,7 +21,7 @@ uses .seen command on you. Example: .seenwhile drinking beer",
   def afterLoad
     @storage = @plugin_manager.plugins[:StorageYAML]
 
-    @seen = @storage.read('seen') || {}
+    @seen = @storage.read('seen', custom_classes=[Symbol, Time]) || {}
   end
 
   def beforeUnload

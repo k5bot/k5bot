@@ -16,7 +16,7 @@ class MapDoc
   def afterLoad
     @storage = @plugin_manager.plugins[:StorageYAML]
 
-    @catalog = @storage.read('mapdoc') || {}
+    @catalog = @storage.read('mapdoc', custom_classes=[Symbol]) || {}
   end
 
   def commands

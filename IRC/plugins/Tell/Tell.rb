@@ -25,8 +25,8 @@ class Tell
   def afterLoad
     @storage = @plugin_manager.plugins[:StorageYAML]
 
-    @tell = @storage.read('tell') || {}
-    @memo = @storage.read('memo') || {}
+    @tell = @storage.read('tell', custom_classes=[Symbol, Time]) || {}
+    @memo = @storage.read('memo', custom_classes=[Time]) || {}
   end
 
   def beforeUnload

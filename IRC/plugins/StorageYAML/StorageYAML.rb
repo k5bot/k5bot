@@ -38,10 +38,10 @@ class StorageYAML
   end
 
   # Reads data from store
-  def read(store)
+  def read(store, custom_classes=[])
     return unless store
     file = "#{@data_directory}/#{store}"
     return unless File.exist?(file)
-    YAML.load_file(file)
+    YAML.load_file(file, permitted_classes: custom_classes)
   end
 end

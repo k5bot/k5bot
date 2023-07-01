@@ -43,7 +43,7 @@ class Router
   def afterLoad
     @storage = @plugin_manager.plugins[:StorageYAML]
 
-    @rules = @storage.read('router') || {}
+    @rules = @storage.read('router', custom_classes=[Time, Symbol]) || {}
 
     parse_rules
   end
