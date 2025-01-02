@@ -10,6 +10,7 @@ class Dice
   include IRCPlugin
   DESCRIPTION = 'Dice plugin.'
   COMMANDS = {
+    :choose => "chooses one of the given options, e.g. 'choose A or B' -> A)",
     :roll => "rolls the dice. Supports simple dice notation \
 (e.g. 2d6 means roll two 6-sided dice, the default when the argument is omitted)",
   }
