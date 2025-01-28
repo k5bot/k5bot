@@ -130,7 +130,7 @@ class NumberSpell
   end
 
   def sanitize(number_string)
-    num = number_string.to_s.delete(' ')
+    num = number_string.to_s.delete(' ,')
     return unless num =~ /^[-\d]+$/
     num.to_i
   end
