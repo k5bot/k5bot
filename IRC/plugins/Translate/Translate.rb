@@ -4,7 +4,6 @@
 
 # Translate plugin
 
-require 'rubygems'
 require 'nokogiri'
 require 'net/http'
 require 'json'

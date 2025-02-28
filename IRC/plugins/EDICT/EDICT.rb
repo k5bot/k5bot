@@ -9,8 +9,6 @@
 #
 # http://www.edrdg.org/jmdict/edict.html
 
-require 'rubygems'
-require 'bundler/setup'
 require 'sequel'
 
 require 'IRC/IRCPlugin'

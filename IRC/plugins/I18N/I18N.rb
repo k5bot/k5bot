@@ -4,8 +4,6 @@
 
 # Internationalization plugin
 
-require 'rubygems'
-require 'bundler/setup'
 require 'i18n'
 
 require 'IRC/IRCPlugin'

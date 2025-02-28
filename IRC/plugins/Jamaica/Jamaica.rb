@@ -4,8 +4,6 @@
 
 # Jamaica plugin.
 
-require 'rubygems'
-require 'bundler/setup'
 
 require 'IRC/IRCPlugin'
 

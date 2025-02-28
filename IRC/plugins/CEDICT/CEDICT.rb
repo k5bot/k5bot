@@ -4,8 +4,6 @@
 
 # CEDICT plugin
 
-require 'rubygems'
-require 'bundler/setup'
 require 'sequel'
 
 require 'IRC/IRCPlugin'

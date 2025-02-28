@@ -6,8 +6,6 @@
 
 require 'IRC/IRCPlugin'
 
-require 'rubygems'
-require 'bundler/setup'
 require 'google_custom_search_api'
 
 class Googler

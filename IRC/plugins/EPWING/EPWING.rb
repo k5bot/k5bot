@@ -4,8 +4,6 @@
 
 # EPWING plugin. Provides lookup functionality for dictionaries in EPWING format.
 
-require 'rubygems'
-require 'bundler/setup'
 require 'eb'
 require 'ostruct'
 

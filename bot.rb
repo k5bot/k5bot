@@ -8,8 +8,6 @@ $VERBOSE = true
 
 $stdout.sync = true
 
-require 'rubygems'
-require 'bundler/setup'
 require 'i18n'
 require 'i18n/backend/fallbacks'
 require 'yaml'

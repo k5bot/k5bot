@@ -6,8 +6,6 @@
 
 require 'IRC/IRCPlugin'
 
-require 'rubygems'
-require 'bundler/setup'
 require 'ting'
 require 'ruby-pinyin'
 
