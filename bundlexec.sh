@@ -13,4 +13,4 @@ for path in $(gem env GEM_PATH);do
 	done
 done
 
-RUBYLIB="$rubylib" "$@"
+exec RUBYLIB="$rubylib" "$@"
